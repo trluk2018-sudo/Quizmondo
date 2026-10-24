@@ -1,0 +1,58 @@
+{# QuizHub Module: About Arena #}
+{% set cfg = mod.get_config() if mod and mod.get_config else (module_cfg or {}) %}
+<section class="py-20 bg-slate-950 border-b border-purple-500/20 text-slate-100" id="about">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <!-- Left Visual Card with Real Arcade Photo -->
+      <div class="lg:col-span-5 relative">
+        <div class="rounded-2xl overflow-hidden border-2 border-purple-500/40 shadow-2xl relative group">
+          <img src="{{ url_for('static', filename='img/quizhub_arcade.jpg') }}" alt="Arcade Game Controls" class="w-full h-80 object-cover transform group-hover:scale-105 transition duration-500">
+          <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent"></div>
+          <div class="absolute bottom-6 left-6 right-6 space-y-3">
+            <span class="text-xs font-black uppercase tracking-widest text-amber-400">ESTABLISHED {{ cfg.get('year_established') or '2021' }}</span>
+            <h3 class="text-2xl font-black text-white leading-tight">The Ultimate Brain Gaming &amp; Trivia Stadium</h3>
+            <div class="pt-3 border-t border-white/20 grid grid-cols-2 gap-4">
+              <div>
+                <div class="text-2xl font-black text-cyan-400">{{ cfg.get('stat1_val') or '50,000+' }}</div>
+                <div class="text-[10px] text-slate-300 uppercase tracking-wider font-bold">{{ cfg.get('stat1_lbl') or 'Trivia Questions' }}</div>
+              </div>
+              <div>
+                <div class="text-2xl font-black text-pink-400">{{ cfg.get('stat2_val') or '99.9%' }}</div>
+                <div class="text-[10px] text-slate-300 uppercase tracking-wider font-bold">{{ cfg.get('stat2_lbl') or 'Fair-Play Guarantee' }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Content -->
+      <div class="lg:col-span-7 space-y-6">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-bold uppercase tracking-wider">
+          🧠 {{ cfg.get('badge') or 'HOW TRIVIA ARENA WORKS' }}
+        </div>
+
+        <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
+          {{ cfg.get('headline') or 'Level Up Your Knowledge in Competitive Trivia Battles' }}
+        </h2>
+
+        <p class="text-sm text-slate-300 leading-relaxed">
+          {{ cfg.get('subtext') or 'Whether you are playing solo brain teasers, challenging your friends in private quiz rooms, or battling live in hourly multiplayer tournaments, TriviaMatrix provides rapid-fire questions, instant scoring, and global leaderboards.' }}
+        </p>
+
+        <!-- Checklist -->
+        <div class="space-y-3 pt-2">
+          {% for i in ['check_1', 'check_2', 'check_3'] %}
+          {% if cfg.get(i) %}
+          <div class="flex items-start gap-3">
+            <div class="w-6 h-6 rounded-full bg-purple-500/30 text-amber-400 flex items-center justify-center shrink-0 mt-0.5 border border-purple-400/40 text-xs font-bold">
+              &check;
+            </div>
+            <span class="text-sm font-semibold text-slate-200">{{ cfg.get(i) }}</span>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

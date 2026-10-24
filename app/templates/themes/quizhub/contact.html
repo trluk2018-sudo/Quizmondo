@@ -1,0 +1,76 @@
+{% extends "themes/quizhub/base.html" %}
+
+{% block title %}Arena Operations &amp; Contact &mdash; {{ site_title }}{% endblock %}
+
+{% block content %}
+<div class="space-y-0 text-slate-100">
+  <section class="bg-gradient-to-r from-slate-950 via-[#1e1438] to-slate-900 text-white py-14 border-b-2 border-purple-500/30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <span class="text-xs font-black uppercase tracking-widest text-amber-400">ARENA SUPPORT &amp; REFEREE DESK</span>
+      <h1 class="text-3xl sm:text-5xl font-black tracking-tight mt-1">Arena Match Operations &amp; Support</h1>
+    </div>
+  </section>
+
+  <!-- Modules Above Content -->
+  {% if modules_above %}
+    {% for mod in modules_above %}
+      {% include "themes/quizhub/modules/render_module.html" %}
+    {% endfor %}
+  {% endif %}
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <div class="lg:col-span-7">
+        <form action="{{ url_for('public.contact') }}" method="POST" class="bg-slate-950/90 border-2 border-purple-500/30 rounded-2xl p-8 space-y-6 shadow-2xl">
+          <div class="space-y-1">
+            <h3 class="text-xl font-black text-white">Send Match Operations A Message</h3>
+            <p class="text-xs text-slate-400">Tournament hosting, custom question packs, account verification, or corporate league inquiries.</p>
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400 mb-2">Player / Organizer Name</label>
+            <input type="text" name="name" required placeholder="Your name or gamer tag" class="w-full text-xs px-4 py-3 rounded-xl bg-slate-900 border border-purple-500/30 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400">
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400 mb-2">Email Address</label>
+            <input type="email" name="email" required placeholder="player@domain.com" class="w-full text-xs px-4 py-3 rounded-xl bg-slate-900 border border-purple-500/30 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400">
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400 mb-2">Message Brief</label>
+            <textarea name="message" rows="5" required placeholder="Describe your tournament requirements or question..." class="w-full text-xs px-4 py-3 rounded-xl bg-slate-900 border border-purple-500/30 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"></textarea>
+          </div>
+          <button type="submit" class="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 via-purple-600 to-pink-500 hover:from-cyan-400 hover:to-pink-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-purple-500/30 transition">
+            Transmit Message ⚡
+          </button>
+        </form>
+      </div>
+
+      <div class="lg:col-span-5 space-y-6">
+        <div class="bg-slate-950/90 border border-purple-500/30 rounded-2xl p-8 space-y-6 shadow-2xl">
+          <h3 class="text-lg font-black text-white border-b border-purple-500/20 pb-3">Arena Command Center</h3>
+          <div class="space-y-4 text-xs">
+            <div>
+              <span class="block text-slate-400 font-bold uppercase tracking-wider">Tournament Dispatch Hotline</span>
+              <span class="text-base font-bold text-amber-400">{{ settings.get('contact_phone', '+44 800 999 1234') }}</span>
+            </div>
+            <div>
+              <span class="block text-slate-400 font-bold uppercase tracking-wider">Match Referee Desk</span>
+              <span class="text-sm font-bold text-cyan-400">{{ settings.get('contact_email', 'referee@triviamatrix.local') }}</span>
+            </div>
+            <div>
+              <span class="block text-slate-400 font-bold uppercase tracking-wider">Arena Operational Hours</span>
+              <span class="text-slate-300">24/7 Matchmaking &bull; Hourly Tournaments Live</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modules Below Content -->
+  {% if modules_below %}
+    {% for mod in modules_below %}
+      {% include "themes/quizhub/modules/render_module.html" %}
+    {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "public/base.html" %}
+
+{% block title %}Articles &amp; News &mdash; {{ site_title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="border-b border-slate-200 pb-4 mb-8">
+    <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Articles &amp; News</h1>
+    <p class="text-xs text-slate-500 mt-1">Explore all published articles, stories and updates.</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-12">
+    <!-- Main Articles Feed (3 columns) -->
+    <div class="lg:col-span-3 space-y-10">
+      {% if pagination.items %}
+      <div class="divide-y divide-slate-200">
+        {% for post in pagination.items %}
+        <article class="py-8 first:pt-0 flex flex-col sm:flex-row gap-6 items-start">
+          {% if post.featured_image %}
+          <div class="w-full sm:w-48 aspect-video sm:aspect-square shrink-0 overflow-hidden rounded bg-slate-100">
+            <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="object-cover w-full h-full">
+          </div>
+          {% endif %}
+          <div class="space-y-2 flex-1">
+            <div class="flex items-center gap-2 text-xs text-slate-400">
+              <span class="font-semibold text-blue-600 uppercase">{{ post.category.name if post.category else 'General' }}</span>
+              <span>&bull;</span>
+              <span>{{ post.created_at.strftime('%B %d, %Y') }}</span>
+            </div>
+            <h2 class="text-xl font-bold text-slate-900 hover:text-blue-600 transition leading-snug">
+              <a href="{{ url_for('public.post_detail', slug=post.slug) }}">{{ post.title }}</a>
+            </h2>
+            <p class="text-sm text-slate-600 line-clamp-3 leading-relaxed">
+              {{ post.excerpt or (post.content|striptags|truncate(160)) }}
+            </p>
+            <div class="pt-2">
+              <a href="{{ url_for('public.post_detail', slug=post.slug) }}" class="text-xs font-semibold text-blue-600 hover:underline">
+                Read full article &rarr;
+              </a>
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination Controls -->
+      {% if pagination.pages > 1 %}
+      <div class="flex items-center justify-between border-t border-slate-200 pt-6 text-xs">
+        {% if pagination.has_prev %}
+        <a href="{{ url_for('public.posts', page=pagination.prev_num) }}" class="px-3 py-1.5 border border-slate-300 rounded hover:bg-slate-50 font-medium">
+          &larr; Previous Page
+        </a>
+        {% else %}
+        <div></div>
+        {% endif %}
+        <span class="text-slate-400">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+        {% if pagination.has_next %}
+        <a href="{{ url_for('public.posts', page=pagination.next_num) }}" class="px-3 py-1.5 border border-slate-300 rounded hover:bg-slate-50 font-medium">
+          Next Page &rarr;
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% else %}
+      <p class="text-sm text-slate-400 italic py-8">No articles published yet.</p>
+      {% endif %}
+    </div>
+
+    <!-- Sidebar (1 column) -->
+    <aside class="space-y-8">
+      {% if categories %}
+      <div class="bg-slate-50 border border-slate-200 p-5 rounded">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-200 pb-2 mb-3">Categories</h3>
+        <ul class="space-y-2 text-xs">
+          {% for cat in categories %}
+          <li>
+            <a href="{{ url_for('public.category_detail', slug=cat.slug) }}" class="text-slate-600 hover:text-blue-600 flex items-center justify-between">
+              <span>{{ cat.name }}</span>
+              <span class="text-slate-400 font-mono text-[10px]">({{ cat.posts.count() }})</span>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      <!-- Custom Widgets -->
+      {% for w in right_widgets %}
+      <div class="bg-slate-50 border border-slate-200 p-5 rounded space-y-2">
+        {% if w.title %}
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-200 pb-2">{{ w.title }}</h3>
+        {% endif %}
+        <div class="text-xs text-slate-600 leading-relaxed">
+          {% if w.widget_type == 'custom_html' %}
+          {{ w.content|safe }}
+          {% elif w.widget_type == 'recent_posts' %}
+          <ul class="space-y-2">
+            {% for rp in recent_posts %}
+            <li><a href="{{ url_for('public.post_detail', slug=rp.slug) }}" class="hover:text-blue-600 font-medium block truncate">{{ rp.title }}</a></li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          {{ w.content }}
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </aside>
+  </div>
+</div>
+{% endblock %}

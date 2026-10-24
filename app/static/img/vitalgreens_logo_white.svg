@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 64" fill="none" class="h-10 w-auto">
+  <defs>
+    <linearGradient id="vgGradW" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="leafGradW" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#6ee7b7" />
+    </linearGradient>
+  </defs>
+  <!-- Botanical Leaf Icon -->
+  <rect x="4" y="6" width="52" height="52" rx="14" fill="#064e3b" stroke="#34d399" stroke-width="1.5" />
+  <path d="M30 14 C42 16, 46 26, 44 38 C42 46, 34 50, 24 48 C16 46, 14 38, 16 28 C18 18, 24 14, 30 14 Z" fill="url(#leafGradW)" />
+  <path d="M22 42 C26 34, 32 26, 40 20" stroke="#064e3b" stroke-width="2.5" stroke-linecap="round" />
+  <circle cx="34" cy="36" r="3" fill="#f59e0b" />
+  <!-- Brand Typography -->
+  <text x="68" y="36" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="900" fill="#ffffff" letter-spacing="-0.5">Vital<tspan fill="#34d399">Greens</tspan></text>
+  <text x="69" y="50" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="700" fill="#a7f3d0" letter-spacing="2.5">ORGANIC &amp; WELLNESS</text>
+</svg>

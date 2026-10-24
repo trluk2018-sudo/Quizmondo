@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" fill="none" class="w-full h-auto">
+  <defs>
+    <linearGradient id="tcP1Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#022d62" />
+      <stop offset="100%" stop-color="#081426" />
+    </linearGradient>
+    <linearGradient id="tcP1Red" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ef3139" />
+      <stop offset="100%" stop-color="#b91c1c" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#tcP1Grad)" />
+  <!-- Grid Matrix Lines -->
+  <g stroke="#ffffff" stroke-opacity="0.06" stroke-width="1">
+    <line x1="0" y1="90" x2="800" y2="90" />
+    <line x1="0" y1="180" x2="800" y2="180" />
+    <line x1="0" y1="270" x2="800" y2="270" />
+    <line x1="0" y1="360" x2="800" y2="360" />
+    <line x1="160" y1="0" x2="160" y2="450" />
+    <line x1="320" y1="0" x2="320" y2="450" />
+    <line x1="480" y1="0" x2="480" y2="450" />
+    <line x1="640" y1="0" x2="640" y2="450" />
+  </g>
+  <!-- Cyber Perimeter Shield Graphic -->
+  <circle cx="400" cy="210" r="130" stroke="#38bdf8" stroke-opacity="0.25" stroke-dasharray="6 6" stroke-width="2" />
+  <circle cx="400" cy="210" r="95" fill="#0f172a" stroke="#0284c7" stroke-width="2" />
+  <path d="M400 150 L455 178 V222 C455 258 400 286 400 286 C400 286 345 258 345 222 V178 Z" fill="url(#tcP1Red)" />
+  <path d="M380 215 L395 230 L425 195" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- Floating Node Elements -->
+  <rect x="180" y="140" width="120" height="50" rx="8" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5" />
+  <text x="240" y="170" fill="#38bdf8" font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle">IAM &#8226; AUTH</text>
+  <rect x="500" y="240" width="130" height="50" rx="8" fill="#1e293b" stroke="#ef3139" stroke-width="1.5" />
+  <text x="565" y="270" fill="#fca5a5" font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle">ZERO-TRUST</text>
+  <!-- Banner Title Tag -->
+  <rect x="40" y="40" width="220" height="34" rx="6" fill="#ef3139" fill-opacity="0.15" stroke="#ef3139" stroke-width="1" />
+  <text x="55" y="62" fill="#ef3139" font-family="sans-serif" font-size="13" font-weight="bold">CYBER SECURITY ARCHITECTURE</text>
+  <text x="400" y="380" fill="#ffffff" font-family="sans-serif" font-size="22" font-weight="800" text-anchor="middle">Zero-Trust Perimeter Defense</text>
+  <text x="400" y="410" fill="#94a3b8" font-family="sans-serif" font-size="14" text-anchor="middle">Enterprise Multi-Cloud Security Standards</text>
+</svg>

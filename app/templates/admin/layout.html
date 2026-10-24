@@ -1,0 +1,218 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Home Page Layout and Sections{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl space-y-8">
+  <!-- Top Bar -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-4 gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Home Page Layout and Sections</h1>
+      <p class="text-xs text-slate-500 mt-1">Arrange, customize, add or remove modular sections displayed on your homepage.</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" onclick="document.getElementById('add_module_modal').classList.remove('hidden')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded shadow-sm transition flex items-center gap-1.5">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        + Add Module
+      </button>
+
+      <form action="{{ url_for('admin.module_restore_defaults') }}" method="POST" class="inline" onsubmit="return confirm('Reset homepage layout modules to original Hi-soft template kit defaults?');">
+        <input type="hidden" name="owner_type" value="home">
+        <input type="hidden" name="return_url" value="{{ url_for('admin.layout') }}">
+        <button type="submit" class="px-3.5 py-2 border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded transition">
+          Restore Defaults
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <form method="POST" id="layout_form" class="space-y-8">
+    <input type="hidden" id="module_order_input" name="module_order" value="">
+    <input type="hidden" id="deleted_home_module_ids" name="deleted_module_ids" value="">
+
+    <!-- Content Modules Ordering Section -->
+    <div class="bg-white border border-slate-200 p-6 space-y-4 rounded-lg shadow-sm">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Homepage Content Modules</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Toggle visibility, reorder using Move Up/Down, or click <strong>Edit Content</strong> to customize all text, colors, and images for that section.</p>
+        </div>
+        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded shadow-sm transition">
+          Save Arrangement
+        </button>
+      </div>
+
+      <div id="module_order_list" class="space-y-3">
+        {% for mod in home_modules %}
+        {% set defn = available_modules.get(mod.module_type, {}) %}
+        <div class="module-item flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-lg transition {% if not mod.is_enabled %}opacity-60 bg-slate-100/70{% endif %}" data-module-id="{{ mod.id }}">
+          <div class="flex items-center gap-3 min-w-0">
+            <input type="checkbox" name="enabled_modules" value="{{ mod.id }}" {% if mod.is_enabled %}checked{% endif %} class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-800 text-sm truncate">{{ mod.title or defn.name or mod.module_type }}</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-200 text-slate-700 uppercase">{{ mod.module_type }}</span>
+                {% if not mod.is_enabled %}
+                <span class="text-[10px] text-amber-600 font-semibold">(Disabled)</span>
+                {% endif %}
+              </div>
+              {% set cfg_sub = (mod.get_config().get('headline') or mod.get_config().get('subtext') or mod.get_config().get('subhead') or mod.title) if (mod and mod.get_config) else '' %}
+              <p class="text-xs text-slate-500 truncate mt-0.5">{{ cfg_sub or defn.description or 'Custom section' }}</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <!-- Edit Content Button -->
+            <a href="{{ url_for('admin.module_edit', module_id=mod.id, return_url=url_for('admin.layout')) }}" class="px-2.5 py-1.5 rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-semibold transition flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              Edit Content
+            </a>
+
+            <!-- Move Up / Down Buttons -->
+            <button type="button" onclick="moveModule(this, -1)" class="p-1.5 border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 rounded transition" title="Move Up">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+            </button>
+            <button type="button" onclick="moveModule(this, 1)" class="p-1.5 border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 rounded transition" title="Move Down">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+
+            <!-- Remove Button -->
+            <button type="button" onclick="deleteModule('{{ mod.id }}', '{{ mod.title or mod.module_type }}')" class="p-1.5 border border-red-200 bg-white hover:bg-red-50 text-red-600 rounded transition" title="Remove Module">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </button>
+          </div>
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-xs text-slate-400 italic">
+          No modules currently on the homepage. Click <strong>+ Add Module</strong> above or <strong>Restore Defaults</strong>.
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="flex justify-end pt-2">
+      <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded shadow-sm transition">
+        Save Homepage Layout
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Add Module Modal -->
+<div id="add_module_modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-xl shadow-xl border border-slate-200 max-w-lg w-full p-6 space-y-4">
+    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+      <h3 class="text-base font-bold text-slate-900">Add New Section Module</h3>
+      <button type="button" onclick="document.getElementById('add_module_modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">&times;</button>
+    </div>
+
+    <form action="{{ url_for('admin.module_add') }}" method="POST" class="space-y-4">
+      <input type="hidden" name="owner_type" value="home">
+      <input type="hidden" name="placement" value="above">
+      <input type="hidden" name="return_url" value="{{ url_for('admin.layout') }}">
+
+      <div>
+        <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Select Module Type</label>
+        <select name="module_type" required class="w-full text-sm border border-slate-300 rounded px-3 py-2 bg-white">
+          {% for mkey, mdefn in available_modules.items() %}
+          <option value="{{ mkey }}">{{ mdefn.name }} &mdash; {{ mdefn.badge }}</option>
+          {% endfor %}
+        </select>
+        <p class="text-[11px] text-slate-500 mt-1">Once added, you can click "Edit Content" to customize every text string and style.</p>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+        <button type="button" onclick="document.getElementById('add_module_modal').classList.add('hidden')" class="px-4 py-2 border border-slate-300 text-xs font-semibold rounded text-slate-700 hover:bg-slate-50">
+          Cancel
+        </button>
+        <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition shadow-sm">
+          Add Section to Homepage
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Hidden Delete Form -->
+<form id="delete_module_form" action="" method="POST" class="hidden">
+  <input type="hidden" name="return_url" value="{{ url_for('admin.layout') }}">
+</form>
+
+<script>
+function moveModule(btn, dir) {
+  var item = btn.closest('.module-item');
+  var list = document.getElementById('module_order_list');
+  if (!item || !list) return;
+  if (dir === -1) {
+    var prev = item.previousElementSibling;
+    while (prev && !prev.classList.contains('module-item')) {
+      prev = prev.previousElementSibling;
+    }
+    if (prev) {
+      list.insertBefore(item, prev);
+    }
+  } else if (dir === 1) {
+    var next = item.nextElementSibling;
+    while (next && !next.classList.contains('module-item')) {
+      next = next.nextElementSibling;
+    }
+    if (next) {
+      list.insertBefore(item, next.nextElementSibling);
+    }
+  }
+  syncModuleOrder();
+}
+
+function syncModuleOrder() {
+  var list = document.getElementById('module_order_list');
+  var input = document.getElementById('module_order_input');
+  if (!list || !input) return;
+  var items = list.querySelectorAll('.module-item');
+  var ids = [];
+  items.forEach(function(el) {
+    ids.push(el.getAttribute('data-module-id'));
+  });
+  input.value = ids.join(',');
+}
+
+function deleteModule(id, title) {
+  if (confirm("Remove '" + title + "' from the homepage?")) {
+    var item = document.querySelector('.module-item[data-module-id="' + id + '"]');
+    if (item) {
+      item.remove();
+    }
+    var delInput = document.getElementById('deleted_home_module_ids');
+    if (delInput) {
+      var dels = delInput.value ? delInput.value.split(',') : [];
+      if (!dels.includes(String(id))) {
+        dels.push(String(id));
+        delInput.value = dels.join(',');
+      }
+    }
+    syncModuleOrder();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  syncModuleOrder();
+  var form = document.getElementById('layout_form');
+  if (form) {
+    form.addEventListener('submit', syncModuleOrder);
+  }
+  var checkboxes = document.querySelectorAll('input[name="enabled_modules"]');
+  checkboxes.forEach(function(cb) {
+    cb.addEventListener('change', function() {
+      var item = cb.closest('.module-item');
+      if (item) {
+        if (cb.checked) {
+          item.classList.remove('opacity-60', 'bg-slate-100/70');
+        } else {
+          item.classList.add('opacity-60', 'bg-slate-100/70');
+        }
+      }
+      syncModuleOrder();
+    });
+  });
+});
+</script>
+{% endblock %}

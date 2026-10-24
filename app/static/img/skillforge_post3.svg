@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" fill="none" class="w-full h-auto">
+  <defs>
+    <linearGradient id="sfP3Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e1b4b" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#sfP3Grad)" />
+  <!-- Kubernetes Cluster Service Mesh Graphic -->
+  <polygon points="400,100 470,140 470,220 400,260 330,220 330,140" fill="#1e293b" stroke="#38bdf8" stroke-width="3" />
+  <circle cx="400" cy="180" r="25" fill="#38bdf8" />
+  <path d="M400 165 L415 180 L400 195 L385 180 Z" fill="#0f172a" />
+  <!-- Satellite nodes -->
+  <circle cx="250" cy="180" r="15" fill="#6366f1" />
+  <line x1="265" y1="180" x2="330" y2="180" stroke="#818cf8" stroke-width="2" stroke-dasharray="4 4" />
+  <circle cx="550" cy="180" r="15" fill="#6366f1" />
+  <line x1="470" y1="180" x2="535" y2="180" stroke="#818cf8" stroke-width="2" stroke-dasharray="4 4" />
+
+  <rect x="40" y="40" width="220" height="34" rx="4" fill="#0284c7" fill-opacity="0.25" stroke="#38bdf8" stroke-width="1.5" />
+  <text x="150" y="62" fill="#7dd3fc" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle">CLOUD NATIVE &#8226; K8S</text>
+  <text x="400" y="360" fill="#ffffff" font-family="sans-serif" font-size="24" font-weight="900" text-anchor="middle">Securing Microservices Mesh</text>
+  <text x="400" y="395" fill="#94a3b8" font-family="sans-serif" font-size="14" text-anchor="middle">Zero-Trust mTLS Patterns for Production Kubernetes Clusters</text>
+</svg>

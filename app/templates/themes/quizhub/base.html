@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full scroll-smooth bg-slate-900 text-slate-100 antialiased">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  {# Dynamic SEO Metadata #}
+  {% set cur_meta_title = (page.meta_title if page and page.meta_title else (post.meta_title if post and post.meta_title else (settings.get('meta_title') or site_title))) %}
+  {% set cur_meta_desc = (page.meta_description if page and page.meta_description else (post.meta_description if post and post.meta_description else (post.excerpt if post and post.excerpt else (page.excerpt if page and page.excerpt else settings.get('meta_description', ''))))) %}
+  {% set cur_meta_keywords = (page.meta_keywords if page and page.meta_keywords else (post.meta_keywords if post and post.meta_keywords else settings.get('meta_keywords', ''))) %}
+  {% set cur_canonical = (page.canonical_url if page and page.canonical_url else (post.canonical_url if post and post.canonical_url else request.base_url)) %}
+  {% set cur_og_image = (page.og_image if page and page.og_image else (post.og_image if post and post.og_image else (post.featured_image if post and post.featured_image else (settings.get('site_logo') or '')))) %}
+  {% set is_noindex = (page.no_index if page and page.no_index else (post.no_index if post and post.no_index else False)) %}
+
+  <title>{% block title %}{{ cur_meta_title }} &mdash; Quizmondo Arena &bull; Live Interactive Quizzes &amp; Tournaments{% endblock %}</title>
+  {% if cur_meta_desc %}<meta name="description" content="{{ cur_meta_desc }}">{% endif %}
+  {% if cur_meta_keywords %}<meta name="keywords" content="{{ cur_meta_keywords }}">{% endif %}
+  <link rel="canonical" href="{{ cur_canonical }}">
+  {% if is_noindex %}<meta name="robots" content="noindex, nofollow">{% else %}<meta name="robots" content="index, follow">{% endif %}
+
+  <!-- Local Compiled Tailwind CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.min.css') }}">
+
+  <!-- Theme Settings & Branding -->
+  {% set hdr_style = settings.get('header_style', 'classic_sticky') %}
+  {% set hdr_bg = settings.get('header_bg_color', '#0F172A') %}
+  {% set hdr_text = settings.get('header_text_color', '#F8FAFC') %}
+  {% set hdr_accent = settings.get('header_accent_color', '#06B6D4') %}
+  {% set site_logo = settings.get('site_logo') %}
+
+  <style>
+    :root {
+      --color-quiz-slate: #0F172A;
+      --color-quiz-cyan: #06B6D4;
+      --color-quiz-blue: #3B82F6;
+    }
+  </style>
+
+  {% if settings.get('google_analytics_id') %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ settings.get('google_analytics_id') }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '{{ settings.get("google_analytics_id") }}');
+  </script>
+  {% endif %}
+
+  {% block head_extra %}{% endblock %}
+</head>
+<body class="flex min-h-full flex-col bg-slate-900 font-sans text-slate-100">
+
+  <!-- TriviaMatrix Top Status Bar -->
+  <div class="bg-slate-950 text-slate-400 text-xs py-2 px-4 border-b border-cyan-500/20 hidden sm:block">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 font-mono text-[10px] font-bold uppercase">
+          <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+          Arena Cluster Active
+        </span>
+        <span class="font-mono text-slate-400 text-[11px]">Live Tournaments: 1,840 Active Players &bull; 42 Concurrent Match Rooms</span>
+      </div>
+      <div class="flex items-center gap-4 text-xs font-mono text-slate-400">
+        <a href="#" class="hover:text-cyan-400 transition">Global Leaderboard</a>
+        <span>|</span>
+        <a href="{{ url_for('admin.dashboard') }}" class="hover:text-cyan-400 transition">Control Deck</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- TriviaMatrix Header -->
+  <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-cyan-500/30 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        <!-- Logo -->
+        <a href="{{ url_for('public.home') }}" class="flex items-center gap-3">
+          {% if site_logo %}
+          <img src="{{ site_logo }}" alt="{{ site_title }}" class="h-10 w-auto object-contain">
+          {% else %}
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-purple-600 flex items-center justify-center text-slate-950 font-black text-xl shadow-cyan-500/20 shadow-lg">
+            Q
+          </div>
+          <div class="flex flex-col">
+            <span class="font-black text-xl tracking-tight text-white font-mono">{{ site_title }}</span>
+            <span class="text-[10px] uppercase font-bold text-cyan-400 tracking-wider">Live Trivia Arena</span>
+          </div>
+          {% endif %}
+        </a>
+
+        <!-- Navigation Links -->
+        <nav class="hidden md:flex items-center space-x-7 text-sm font-semibold text-slate-200">
+          {% for item in header_nav %}
+          {% if item.children %}
+          <div class="relative group py-2">
+            <a href="{{ item.url }}" {% if item.open_new_tab %}target="_blank" rel="noopener"{% endif %} class="hover:text-cyan-400 transition flex items-center gap-1.5 py-1 font-mono text-xs">
+              <span>{{ item.title }}</span>
+              <svg class="w-3.5 h-3.5 opacity-60 group-hover:rotate-180 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </a>
+            <div class="absolute left-0 top-full pt-2 w-56 hidden group-hover:block z-50">
+              <div class="bg-slate-900 border border-cyan-500/30 rounded-xl shadow-2xl py-2 divide-y divide-white/5 font-mono text-xs">
+                {% for sub in item.children %}
+                <a href="{{ sub.url }}" {% if sub.open_new_tab %}target="_blank" rel="noopener"{% endif %} class="block px-4 py-2 text-slate-300 hover:text-cyan-400 hover:bg-slate-800/80 transition">
+                  {{ sub.title }}
+                </a>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          {% else %}
+          <a href="{{ item.url }}" {% if item.open_new_tab %}target="_blank" rel="noopener"{% endif %} class="hover:text-cyan-400 transition py-1 font-mono text-xs">{{ item.title }}</a>
+          {% endif %}
+          {% endfor %}
+        </nav>
+
+        <!-- CTA -->
+        <div class="flex items-center gap-3">
+          <a href="{{ url_for('public.contact') }}" class="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold uppercase tracking-wider shadow-lg shadow-cyan-500/25 transition">
+            Join Live Match &rarr;
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+    {% for category, msg in messages %}
+    <div class="p-3 text-sm rounded border {% if category == 'error' %}bg-red-950 text-red-200 border-red-800{% elif category == 'success' %}bg-emerald-950 text-emerald-200 border-emerald-800{% else %}bg-slate-950 text-cyan-300 border-cyan-800{% endif %}">
+      {{ msg }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <!-- Main Content -->
+  <main class="flex-grow">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- TriviaMatrix Footer -->
+  <footer class="bg-slate-950 text-slate-400 mt-20 pt-16 pb-8 border-t border-cyan-500/30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-white/10">
+        <div class="space-y-4">
+          <div class="flex items-center gap-2">
+            {% if settings.get('footer_logo') or site_logo %}
+            <img src="{{ settings.get('footer_logo') or site_logo }}" alt="{{ site_title }}" class="h-8 w-auto">
+            {% endif %}
+            <h4 class="font-black text-xl text-white font-mono">{{ site_title }}</h4>
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            High-stakes multiplayer arena, interactive brain competitions, daily trivia tournaments, and live esports challenges.
+          </p>
+          <div class="text-xs text-slate-400 space-y-1 font-mono">
+            <p><strong>Status:</strong> Quizmondo Live Arena Operational</p>
+            <p><strong>Support:</strong> {{ settings.get('contact_email', 'arena@quizmondo.com') }}</p>
+          </div>
+        </div>
+
+        <div>
+          <h5 class="text-xs font-bold uppercase tracking-wider text-cyan-400 mb-3 font-mono">Disciplines &amp; Modes</h5>
+          <ul class="text-xs text-slate-400 space-y-2 font-mono">
+            {% for item in solutions_nav %}
+            <li><a href="{{ item.url }}" {% if item.open_new_tab %}target="_blank" rel="noopener"{% endif %} class="hover:text-cyan-400 transition">{{ item.title }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <div>
+          <h5 class="text-xs font-bold uppercase tracking-wider text-cyan-400 mb-3 font-mono">Arena Quick Links</h5>
+          <ul class="text-xs text-slate-400 space-y-2 font-mono">
+            {% for item in footer_nav %}
+            <li><a href="{{ item.url }}" {% if item.open_new_tab %}target="_blank" rel="noopener"{% endif %} class="hover:text-cyan-400 transition">{{ item.title }}</a></li>
+            {% endfor %}
+            <li><a href="{{ url_for('public.sitemap') }}" class="hover:text-cyan-400 transition">XML Sitemap</a></li>
+          </ul>
+        </div>
+
+        <div class="space-y-3">
+          <h5 class="text-xs font-bold uppercase tracking-wider text-cyan-400 font-mono">Daily Tournaments</h5>
+          <p class="text-xs text-slate-400">Compete in scheduled daily trivia cups, climb the leaderboard, and unlock tournament trophies.</p>
+          <a href="{{ url_for('public.contact') }}" class="inline-block px-4 py-2 rounded bg-slate-800 hover:bg-slate-700 text-cyan-400 text-xs font-mono font-bold border border-cyan-500/40 transition">
+            Join Daily Tournament &rarr;
+          </a>
+        </div>
+      </div>
+
+      <div class="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4 font-mono">
+        <div>
+          <p>{{ settings.get('footer_copyright') or ("&copy; " ~ site_title ~ " &mdash; TriviaMatrix Arena. All rights reserved.") }}</p>
+          {% if settings.get('footer_attribution') %}
+          <p class="text-[11px] text-slate-500 mt-1">{{ settings.get('footer_attribution') }}</p>
+          {% endif %}
+        </div>
+        <p>Powered by Quizmondo</p>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

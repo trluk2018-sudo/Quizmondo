@@ -1,0 +1,60 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Media Library{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl space-y-6">
+  <!-- Top bar -->
+  <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Media Library</h1>
+      <p class="text-xs text-slate-500 mt-1">Upload and manage images, graphics, and documents.</p>
+    </div>
+  </div>
+
+  <!-- Upload Box -->
+  <div class="bg-white border border-dashed border-slate-300 p-6 rounded text-center">
+    <form action="{{ url_for('admin.media_upload') }}" method="POST" enctype="multipart/form-data" class="space-y-3">
+      <div class="text-sm font-semibold text-slate-700">Upload New Media</div>
+      <p class="text-xs text-slate-400">PNG, JPG, GIF, WebP, SVG, PDF up to 16MB</p>
+      <div class="flex items-center justify-center gap-4 pt-2">
+        <input type="file" name="file" required class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded shadow-sm transition">
+          Upload
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Media Grid -->
+  <div class="bg-white border border-slate-200 p-6">
+    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-4">Uploaded Files ({{ media|length }})</h2>
+    {% if media %}
+    <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
+      {% for item in media %}
+      <div class="group relative border border-slate-200 rounded p-2 bg-slate-50 flex flex-col justify-between">
+        <div class="h-28 flex items-center justify-center overflow-hidden bg-white rounded border border-slate-100 mb-2">
+          {% if 'image' in item.file_type %}
+          <img src="{{ item.file_path }}" alt="{{ item.alt_text or item.original_name }}" class="object-cover h-full w-full">
+          {% else %}
+          <span class="text-xs text-slate-400 font-mono">{{ item.original_name.split('.')[-1]|upper }}</span>
+          {% endif %}
+        </div>
+        <div class="text-[11px] font-medium text-slate-800 truncate" title="{{ item.original_name }}">
+          {{ item.original_name }}
+        </div>
+        <div class="mt-2 flex items-center justify-between text-[10px]">
+          <button type="button" onclick="navigator.clipboard.writeText('{{ item.file_path }}'); alert('File URL copied to clipboard: {{ item.file_path }}');" class="text-blue-600 hover:underline">Copy URL</button>
+          <form action="{{ url_for('admin.media_delete', media_id=item.id) }}" method="POST" class="inline" onsubmit="return confirm('Delete this media file?');">
+            <button type="submit" class="text-red-500 hover:underline">Delete</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-xs text-slate-400 italic text-center py-8">No media files uploaded yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" fill="none">
+  <defs>
+    <linearGradient id="cyberBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f0728"/>
+      <stop offset="50%" stop-color="#190a3a"/>
+      <stop offset="100%" stop-color="#050212"/>
+    </linearGradient>
+    <linearGradient id="neonGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="50%" stop-color="#ec4899"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <radialGradient id="stageLight" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#050212" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background Stage -->
+  <rect width="800" height="600" rx="24" fill="url(#cyberBg)"/>
+  <circle cx="400" cy="240" r="320" fill="url(#stageLight)"/>
+
+  <!-- Perspective Arena Grid Lines -->
+  <g stroke="#8b5cf6" stroke-opacity="0.2" stroke-width="1.5">
+    <line x1="100" y1="560" x2="350" y2="340"/>
+    <line x1="250" y1="560" x2="380" y2="340"/>
+    <line x1="400" y1="560" x2="400" y2="340"/>
+    <line x1="550" y1="560" x2="420" y2="340"/>
+    <line x1="700" y1="560" x2="450" y2="340"/>
+    <line x1="150" y1="520" x2="650" y2="520"/>
+    <line x1="220" y1="460" x2="580" y2="460"/>
+    <line x1="290" y1="400" x2="510" y2="400"/>
+  </g>
+
+  <!-- Floating Holographic Hexagons -->
+  <polygon points="120,160 150,140 180,160 180,195 150,215 120,195" stroke="#06b6d4" stroke-width="2" fill="#06b6d4" fill-opacity="0.1" filter="url(#glow)"/>
+  <polygon points="620,140 655,120 690,140 690,180 655,200 620,180" stroke="#ec4899" stroke-width="2" fill="#ec4899" fill-opacity="0.1" filter="url(#glow)"/>
+
+  <!-- Central Holographic Quiz Screen / Buzzer Console -->
+  <rect x="220" y="120" width="360" height="230" rx="20" fill="#130924" stroke="url(#neonGlow)" stroke-width="3" filter="url(#glow)"/>
+  
+  <!-- Question Screen Header -->
+  <rect x="240" y="140" width="320" height="40" rx="8" fill="#1e103b"/>
+  <circle cx="260" cy="160" r="5" fill="#ef4444"/>
+  <circle cx="275" cy="160" r="5" fill="#eab308"/>
+  <circle cx="290" cy="160" r="5" fill="#22c55e"/>
+  <text x="320" y="165" font-family="system-ui, sans-serif" font-weight="900" font-size="12" fill="#06b6d4" letter-spacing="2">LIVE TRIVIA TOURNAMENT</text>
+  <rect x="500" y="148" width="50" height="24" rx="12" fill="#8b5cf6"/>
+  <text x="515" y="164" font-family="monospace" font-weight="bold" font-size="12" fill="#ffffff">0:14</text>
+
+  <!-- Question Prompt -->
+  <text x="250" y="210" font-family="system-ui, sans-serif" font-weight="800" font-size="15" fill="#ffffff">Q: Which planet has the most moons?</text>
+
+  <!-- 4 Interactive Option Buttons -->
+  <rect x="250" y="235" width="140" height="42" rx="8" fill="#1b1236" stroke="#8b5cf6" stroke-width="1.5"/>
+  <text x="265" y="261" font-family="system-ui, sans-serif" font-weight="bold" font-size="12" fill="#c084fc">A. Jupiter</text>
+
+  <rect x="410" y="235" width="140" height="42" rx="8" fill="#065f46" stroke="#10b981" stroke-width="2" filter="url(#glow)"/>
+  <text x="425" y="261" font-family="system-ui, sans-serif" font-weight="bold" font-size="12" fill="#34d399">B. Saturn ✓ (146)</text>
+
+  <rect x="250" y="290" width="140" height="42" rx="8" fill="#1b1236" stroke="#8b5cf6" stroke-width="1.5"/>
+  <text x="265" y="316" font-family="system-ui, sans-serif" font-weight="bold" font-size="12" fill="#c084fc">C. Uranus</text>
+
+  <rect x="410" y="290" width="140" height="42" rx="8" fill="#1b1236" stroke="#8b5cf6" stroke-width="1.5"/>
+  <text x="425" y="316" font-family="system-ui, sans-serif" font-weight="bold" font-size="12" fill="#c084fc">D. Neptune</text>
+
+  <!-- Central Live Buzzer Podium -->
+  <polygon points="340,360 460,360 480,470 320,470" fill="#170c2e" stroke="#8b5cf6" stroke-width="2"/>
+  <ellipse cx="400" cy="360" rx="60" ry="16" fill="#8b5cf6" filter="url(#glow)"/>
+  <ellipse cx="400" cy="358" rx="45" ry="12" fill="#ec4899" filter="url(#glow)"/>
+  <ellipse cx="400" cy="356" rx="30" ry="8" fill="#ffffff"/>
+
+  <!-- Live Telemetry Floating Badges -->
+  <g transform="translate(100, 320)">
+    <rect width="130" height="60" rx="12" fill="#130924" stroke="#06b6d4" stroke-width="1.5"/>
+    <text x="15" y="26" font-family="system-ui, sans-serif" font-weight="900" font-size="16" fill="#06b6d4">+1,450 XP</text>
+    <text x="15" y="46" font-family="system-ui, sans-serif" font-weight="bold" font-size="10" fill="#94a3b8" letter-spacing="1">STREAK: 7 WINS</text>
+  </g>
+
+  <g transform="translate(570, 320)">
+    <rect width="130" height="60" rx="12" fill="#130924" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="15" y="26" font-family="system-ui, sans-serif" font-weight="900" font-size="16" fill="#f59e0b">#1 RANK</text>
+    <text x="15" y="46" font-family="system-ui, sans-serif" font-weight="bold" font-size="10" fill="#94a3b8" letter-spacing="1">ARENA LEADER</text>
+  </g>
+</svg>

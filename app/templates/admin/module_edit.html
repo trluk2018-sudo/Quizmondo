@@ -1,0 +1,607 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Edit Module &mdash; {{ module.title or module.module_type }}{% endblock %}
+
+{% block content %}
+{% set cfg = module.get_config() %}
+<div class="max-w-4xl space-y-6">
+  <!-- Top Bar -->
+  <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+    <div>
+      <div class="flex items-center gap-2 text-xs text-slate-500 mb-1">
+        {% if parent_label %}
+        <span>Attached to: <strong>{{ parent_label }}</strong></span>
+        <span>&bull;</span>
+        {% endif %}
+        <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-mono text-[10px] uppercase font-bold">{{ module.module_type }}</span>
+      </div>
+      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Edit Module: {{ module.title or defn.name }}</h1>
+    </div>
+    <div>
+      <a href="{{ return_url }}" class="text-xs text-slate-600 hover:text-slate-900 px-3 py-2">&larr; Return without saving</a>
+    </div>
+  </div>
+
+  <form method="POST" class="space-y-6">
+    <input type="hidden" name="return_url" value="{{ return_url }}">
+
+    <!-- General Settings Card -->
+    <div class="bg-white border border-slate-200 rounded-lg p-6 space-y-4 shadow-sm">
+      <h2 class="text-sm font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-2">Module Properties</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Module Title / Admin Label</label>
+          <input type="text" name="title" value="{{ module.title or defn.name }}" required class="w-full text-sm border border-slate-300 rounded px-3 py-2">
+          <p class="text-[11px] text-slate-400 mt-1">Label shown in the module reordering list.</p>
+        </div>
+
+        {% if not module.is_home %}
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Page Placement</label>
+          <select name="placement" class="w-full text-sm border border-slate-300 rounded px-3 py-2">
+            <option value="above" {% if module.placement == 'above' %}selected{% endif %}>Above Core Page Content</option>
+            <option value="below" {% if module.placement == 'below' %}selected{% endif %}>Below Core Page Content</option>
+          </select>
+          <p class="text-[11px] text-slate-400 mt-1">Position relative to this page's main text.</p>
+        </div>
+        {% endif %}
+
+        <div class="sm:col-span-2 flex items-center gap-2 pt-2">
+          <input type="checkbox" name="is_enabled" id="is_enabled" value="1" {% if module.is_enabled %}checked{% endif %} class="h-4 w-4 rounded text-blue-600">
+          <label for="is_enabled" class="text-xs font-medium text-slate-800 cursor-pointer">Module is Active &amp; Visible on this page</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Type-Specific Content Customization Card -->
+    <div class="bg-white border border-slate-200 rounded-lg p-6 space-y-6 shadow-sm">
+      <div class="border-b border-slate-100 pb-3">
+        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-900">Custom Content &amp; Styling</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Changes made here are 100% independent and only apply to this specific module instance.</p>
+      </div>
+
+      <!-- Universal Typography & Palette Styling Section (Applies to all modules) -->
+      <div class="bg-slate-50/90 border border-slate-200 rounded-xl p-5 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-900">Typography &amp; Palette Styles</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 uppercase">Universal Color Engine</span>
+          </div>
+          <span class="text-[11px] text-slate-400">Set independent color pickers and opacity sliders for this module</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Font / Text Color + Opacity -->
+          <div class="bg-white border border-slate-200 rounded-lg p-3 space-y-2">
+            <label class="block text-xs font-bold uppercase text-slate-700">Font / Text Color</label>
+            <div class="flex items-center gap-1.5">
+              {% set cur_fc = cfg.get('font_color_custom') or (cfg.get('font_color') if cfg.get('font_color') not in ('default', 'custom', none) else '#1e293b') %}
+              {% set cur_fc_hex = cur_fc if cur_fc.startswith('#') else '#1E293B' %}
+              <input type="color" id="cfg_font_picker" value="{{ cur_fc_hex }}" oninput="document.getElementById('cfg_font_color').value = this.value.toUpperCase()" class="h-8 w-11 p-0.5 rounded border border-slate-300 cursor-pointer">
+              <input type="text" name="cfg_font_color" id="cfg_font_color" value="{{ cfg.get('font_color', cur_fc_hex) }}" oninput="if(this.value.match(/^#[0-9A-Fa-f]{6}$/)) document.getElementById('cfg_font_picker').value = this.value" class="w-full text-xs font-mono uppercase border border-slate-300 rounded px-2.5 py-1.5">
+            </div>
+            <div>
+              <div class="flex justify-between items-center text-[10px] text-slate-500 mb-0.5">
+                <span>Font Opacity</span>
+                <span id="cfg_font_op_val" class="font-mono font-bold text-blue-600">{{ cfg.get('font_opacity', '100') }}%</span>
+              </div>
+              <input type="range" name="cfg_font_opacity" min="0" max="100" value="{{ cfg.get('font_opacity', '100') }}" oninput="document.getElementById('cfg_font_op_val').innerText = this.value + '%'" class="w-full accent-blue-600">
+            </div>
+          </div>
+
+          <!-- Accent / Heading Color + Opacity -->
+          <div class="bg-white border border-slate-200 rounded-lg p-3 space-y-2">
+            <label class="block text-xs font-bold uppercase text-slate-700">Accent / Kicker Color</label>
+            <div class="flex items-center gap-1.5">
+              {% set cur_ac = cfg.get('accent_color_custom') or (cfg.get('accent_color') if cfg.get('accent_color') != 'custom' else '#ef3139') or '#ef3139' %}
+              {% set cur_ac_hex = cur_ac if cur_ac.startswith('#') else '#EF3139' %}
+              <input type="color" id="cfg_accent_picker" value="{{ cur_ac_hex }}" oninput="document.getElementById('cfg_accent_color').value = this.value.toUpperCase()" class="h-8 w-11 p-0.5 rounded border border-slate-300 cursor-pointer">
+              <input type="text" name="cfg_accent_color" id="cfg_accent_color" value="{{ cfg.get('accent_color', cur_ac_hex) }}" oninput="if(this.value.match(/^#[0-9A-Fa-f]{6}$/)) document.getElementById('cfg_accent_picker').value = this.value" class="w-full text-xs font-mono uppercase border border-slate-300 rounded px-2.5 py-1.5">
+            </div>
+            <div>
+              <div class="flex justify-between items-center text-[10px] text-slate-500 mb-0.5">
+                <span>Accent Opacity</span>
+                <span id="cfg_accent_op_val" class="font-mono font-bold text-blue-600">{{ cfg.get('accent_opacity', '100') }}%</span>
+              </div>
+              <input type="range" name="cfg_accent_opacity" min="0" max="100" value="{{ cfg.get('accent_opacity', '100') }}" oninput="document.getElementById('cfg_accent_op_val').innerText = this.value + '%'" class="w-full accent-blue-600">
+            </div>
+          </div>
+
+          <!-- Module Custom Background + Opacity -->
+          <div class="bg-white border border-slate-200 rounded-lg p-3 space-y-2">
+            <label class="block text-xs font-bold uppercase text-slate-700">Module Background</label>
+            <div class="flex items-center gap-1.5">
+              {% set cur_bg = cfg.get('bg_color') or '#ffffff' %}
+              {% set cur_bg_hex = cur_bg if cur_bg.startswith('#') else '#FFFFFF' %}
+              <input type="color" id="cfg_bg_picker" value="{{ cur_bg_hex }}" oninput="document.getElementById('cfg_bg_color').value = this.value.toUpperCase()" class="h-8 w-11 p-0.5 rounded border border-slate-300 cursor-pointer">
+              <input type="text" name="cfg_bg_color" id="cfg_bg_color" value="{{ cfg.get('bg_color', '') }}" placeholder="Default theme bg" oninput="if(this.value.match(/^#[0-9A-Fa-f]{6}$/)) document.getElementById('cfg_bg_picker').value = this.value" class="w-full text-xs font-mono uppercase border border-slate-300 rounded px-2.5 py-1.5">
+            </div>
+            <div>
+              <div class="flex justify-between items-center text-[10px] text-slate-500 mb-0.5">
+                <span>Background Opacity</span>
+                <span id="cfg_bg_op_val" class="font-mono font-bold text-blue-600">{{ cfg.get('bg_opacity', '100') }}%</span>
+              </div>
+              <input type="range" name="cfg_bg_opacity" min="0" max="100" value="{{ cfg.get('bg_opacity', '100') }}" oninput="document.getElementById('cfg_bg_op_val').innerText = this.value + '%'" class="w-full accent-blue-600">
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200">
+          <!-- Font Style -->
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Font / Typography Style</label>
+            <select name="cfg_font_style" class="w-full text-xs border border-slate-300 rounded px-2.5 py-2 bg-white">
+              <option value="sans" {% if cfg.get('font_style', 'sans') == 'sans' %}selected{% endif %}>Modern Clean Sans</option>
+              <option value="serif" {% if cfg.get('font_style') == 'serif' %}selected{% endif %}>Editorial Serif</option>
+              <option value="mono" {% if cfg.get('font_style') == 'mono' %}selected{% endif %}>Technical Monospace</option>
+              <option value="bold-display" {% if cfg.get('font_style') == 'bold-display' %}selected{% endif %}>Heavy Bold Display</option>
+              <option value="uppercase-wide" {% if cfg.get('font_style') == 'uppercase-wide' %}selected{% endif %}>Uppercase Tracking Wide</option>
+            </select>
+          </div>
+
+          <!-- Accent Style -->
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Accent Badge Style</label>
+            <select name="cfg_accent_style" class="w-full text-xs border border-slate-300 rounded px-2.5 py-2 bg-white">
+              <option value="pill" {% if cfg.get('accent_style', 'pill') == 'pill' %}selected{% endif %}>Letterspaced Kicker</option>
+              <option value="solid" {% if cfg.get('accent_style') == 'solid' %}selected{% endif %}>Solid Pill Badge</option>
+              <option value="underline" {% if cfg.get('accent_style') == 'underline' %}selected{% endif %}>Accent Underline Bar</option>
+              <option value="border-bar" {% if cfg.get('accent_style') == 'border-bar' %}selected{% endif %}>Left Accent Bar</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {# ==================== 1. HERO BANNER ==================== #}
+      {% if module.module_type == 'hero' %}
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Badge Tagline</label>
+            <input type="text" name="cfg_badge" value="{{ cfg.get('badge', '') }}" class="w-full text-xs border border-slate-300 rounded px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Background Palette Style</label>
+            <select name="cfg_bg_style" class="w-full text-xs border border-slate-300 rounded px-3 py-2">
+              <option value="gradient-navy" {% if cfg.get('bg_style') == 'gradient-navy' %}selected{% endif %}>Hi-soft Navy Gradient (Default)</option>
+              <option value="deep-slate" {% if cfg.get('bg_style') == 'deep-slate' %}selected{% endif %}>Deep Slate Dark</option>
+              <option value="crimson-dark" {% if cfg.get('bg_style') == 'crimson-dark' %}selected{% endif %}>Crimson Dark (#380407)</option>
+              <option value="white" {% if cfg.get('bg_style') == 'white' %}selected{% endif %}>Clean Light White</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Headline Greeting</label>
+          <input type="text" name="cfg_headline" value="{{ cfg.get('headline', '') }}" class="w-full text-sm font-bold border border-slate-300 rounded px-3 py-2">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Subtext Description</label>
+          <textarea name="cfg_subtext" rows="3" class="w-full text-xs border border-slate-300 rounded px-3 py-2">{{ cfg.get('subtext', '') }}</textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Primary Button Label</label>
+            <input type="text" name="cfg_primary_btn_text" value="{{ cfg.get('primary_btn_text', '') }}" class="w-full text-xs border border-slate-300 rounded px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Primary Button URL</label>
+            <input type="text" name="cfg_primary_btn_url" value="{{ cfg.get('primary_btn_url', '') }}" class="w-full text-xs border border-slate-300 rounded px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Secondary Button Label</label>
+            <input type="text" name="cfg_secondary_btn_text" value="{{ cfg.get('secondary_btn_text', '') }}" class="w-full text-xs border border-slate-300 rounded px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Secondary Button URL</label>
+            <input type="text" name="cfg_secondary_btn_url" value="{{ cfg.get('secondary_btn_url', '') }}" class="w-full text-xs border border-slate-300 rounded px-3 py-2">
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-100 space-y-3">
+          <h3 class="text-xs font-bold uppercase text-slate-800">Benchmark Metrics Box</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600">Metric 1 Val</label>
+              <input type="text" name="cfg_metric_val_1" value="{{ cfg.get('metric_val_1', '') }}" class="w-full text-xs border border-slate-300 rounded px-2 py-1.5 font-bold">
+              <input type="text" name="cfg_metric_lbl_1" value="{{ cfg.get('metric_lbl_1', '') }}" class="w-full text-[11px] border border-slate-300 rounded px-2 py-1 mt-1 text-slate-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600">Metric 2 Val</label>
+              <input type="text" name="cfg_metric_val_2" value="{{ cfg.get('metric_val_2', '') }}" class="w-full text-xs border border-slate-300 rounded px-2 py-1.5 font-bold text-[#ef3139]">
+              <input type="text" name="cfg_metric_lbl_2" value="{{ cfg.get('metric_lbl_2', '') }}" class="w-full text-[11px] border border-slate-300 rounded px-2 py-1 mt-1 text-slate-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600">Metric 3 Val</label>
+              <input type="text" name="cfg_metric_val_3" value="{{ cfg.get('metric_val_3', '') }}" class="w-full text-xs border border-slate-300 rounded px-2 py-1.5 font-bold">
+              <input type="text" name="cfg_metric_lbl_3" value="{{ cfg.get('metric_lbl_3', '') }}" class="w-full text-[11px] border border-slate-300 rounded px-2 py-1 mt-1 text-slate-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600">Metric 4 Val</label>
+              <input type="text" name="cfg_metric_val_4" value="{{ cfg.get('metric_val_4', '') }}" class="w-full text-xs border border-slate-300 rounded px-2 py-1.5 font-bold text-[#ef3139]">
+              <input type="text" name="cfg_metric_lbl_4" value="{{ cfg.get('metric_lbl_4', '') }}" class="w-full text-[11px] border border-slate-300 rounded px-2 py-1 mt-1 text-slate-500">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Certification Footnote</label>
+            <input type="text" name="cfg_cert_text" value="{{ cfg.get('cert_text', '') }}" class="w-full text-xs border border-slate-300 rounded px-3 py-2">
+          </div>
+        </div>
+
+        <!-- YouTube Video Background Box -->
+        <div class="pt-4 border-t border-slate-200 bg-slate-50/70 p-4 rounded-lg space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Hero YouTube Video Background</h3>
+            </div>
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <input type="checkbox" name="cfg_yt_enabled" value="1" {% if cfg.get('yt_enabled') == '1' or cfg.get('yt_enabled') == True or (cfg.get('yt_video_url') and not 'yt_enabled' in cfg) %}checked{% endif %} class="rounded border-slate-300 text-red-600">
+              <span class="text-xs font-semibold text-slate-700">Enable Video Background</span>
+            </label>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">YouTube Video URL or Video ID</label>
+            <input type="text" name="cfg_yt_video_url" value="{{ cfg.get('yt_video_url', '') }}" placeholder="e.g. https://www.youtube.com/watch?v=dQw4w9WgXcQ or dQw4w9WgXcQ" class="w-full text-xs font-mono border border-slate-300 rounded px-3 py-2 bg-white">
+            <p class="text-[10px] text-slate-400 mt-0.5">Supports full YouTube watch URLs, youtu.be short links, embed URLs, or raw 11-character video IDs.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Start Time (Seconds)</label>
+              <input type="number" min="0" name="cfg_yt_start" value="{{ cfg.get('yt_start', '') }}" placeholder="e.g. 5 (optional)" class="w-full text-xs border border-slate-300 rounded px-2.5 py-1.5 bg-white">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">End Time (Seconds)</label>
+              <input type="number" min="0" name="cfg_yt_end" value="{{ cfg.get('yt_end', '') }}" placeholder="e.g. 45 (optional)" class="w-full text-xs border border-slate-300 rounded px-2.5 py-1.5 bg-white">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Overlay Fill Color</label>
+              <div class="flex items-center gap-1.5">
+                <input type="color" name="cfg_yt_overlay_color" value="{{ cfg.get('yt_overlay_color', '#022d62') }}" class="h-8 w-10 p-0.5 rounded border border-slate-300 cursor-pointer">
+                <input type="text" oninput="this.previousElementSibling.value = this.value" value="{{ cfg.get('yt_overlay_color', '#022d62') }}" class="w-full text-xs font-mono border border-slate-300 rounded px-2 py-1 bg-white">
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Overlay Opacity (<span id="yt_opacity_val">{{ cfg.get('yt_overlay_opacity', 75) }}</span>%)</label>
+              <input type="range" min="0" max="100" name="cfg_yt_overlay_opacity" value="{{ cfg.get('yt_overlay_opacity', 75) }}" oninput="document.getElementById('yt_opacity_val').innerText = this.value" class="w-full accent-blue-600 mt-2">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# ==================== 2. CONTACT INFO CARDS ==================== #}
+      {% elif module.module_type == 'contact_cards' %}
+      <div class="space-y-6">
+        <div class="border border-slate-200 rounded-lg p-4 bg-slate-50 space-y-3">
+          <h3 class="text-xs font-bold uppercase text-[#022d62]">Card 1 (Headquarters / Address)</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Title</label>
+              <input type="text" name="cfg_card1_title" value="{{ cfg.get('card1_title', 'Headquarters') }}" class="w-full text-xs border border-slate-300 rounded px-2 py-1.5">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Icon Style</label>
+              <select name="cfg_card1_icon" class="w-full text-xs border border-slate-300 rounded px-2 py-1.5">
+                <option value="location" {% if cfg.get('card1_icon') == 'location' %}selected{% endif %}>Location Pin</option>
+                <option value="building" {% if cfg.get('card1_icon') == 'building' %}selected{% endif %}>Office Building</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Address / Details Text</label>
+            <textarea name="cfg_card1_text" rows="2" class="w-full text-xs border border-slate-300 rounded px-2 py-1.5">{{ cfg.get('card1_text', '') }}</textarea>
+          </div>
+        </div>
+
+        <div class="border border-slate-200 rounded-lg p-4 bg-slate-50 space-y-3">
+          <h3 class="text-xs font-bold uppercase text-[#ef3139]">Card 2 (Telephone / Hotline)</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Title</label>
+              <input type="text" name="cfg_card2_title" value="{{ cfg.get('card2_title', 'Direct Telephone') }}" class="w-full text-xs border border-slate-300 rounded px-2 py-1.5">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Phone Number</label>
+              <input type="text" name="cfg_card2_text" value="{{ cfg.get('card2_text', '') }}" class="w-full text-xs border border-slate-300 rounded px-2 py-1.5">
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Operating Hours / Availability Subtext</label>
+            <input type="text" name="cfg_card2_subtext" value="{{ cfg.get('card2_subtext', '') }}" class="w-full text-xs border border-slate-300 rounded px-2 py-1.5">
+          </div>
+        </div>
+
+        <div class="border border-slate-200 rounded-lg p-4 bg-slate-50 space-y-3">
+          <h3 class="text-xs font-bold uppercase text-[#022d62]">Card 3 (Email / Inquiries)</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Title</label>
+              <input type="text" name="cfg_card3_title" value="{{ cfg.get('card3_title', 'Email Inquiries') }}" class="w-full text-xs border border-slate-300 rounded px-2 py-1.5">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Email Address</label>
+              <input type="email" name="cfg_card3_text" value="{{ cfg.get('card3_text', '') }}" class="w-full text-xs border border-slate-300 rounded px-2 py-1.5">
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">SLA / Response Guarantee Subtext</label>
+            <input type="text" name="cfg_card3_subtext" value="{{ cfg.get('card3_subtext', '') }}" class="w-full text-xs border border-slate-300 rounded px-2 py-1.5">
+          </div>
+        </div>
+      </div>
+
+      {# ==================== 3. CONSULTATION FORM ==================== #}
+      {% elif module.module_type in ('contact_form', 'contact') %}
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Badge Tagline</label>
+            <input type="text" name="cfg_badge" value="{{ cfg.get('badge', '') }}" class="w-full text-xs border border-slate-300 rounded px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Submit Button Label</label>
+            <input type="text" name="cfg_button_text" value="{{ cfg.get('button_text', 'Submit Request →') }}" class="w-full text-xs border border-slate-300 rounded px-3 py-2">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Headline Title</label>
+          <input type="text" name="cfg_headline" value="{{ cfg.get('headline', '') }}" class="w-full text-sm font-bold border border-slate-300 rounded px-3 py-2">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Introduction Paragraph</label>
+          <textarea name="cfg_subtext" rows="3" class="w-full text-xs border border-slate-300 rounded px-3 py-2">{{ cfg.get('subtext', '') }}</textarea>
+        </div>
+
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+          <label class="block text-xs font-bold uppercase text-[#022d62]">Sidebar Emergency / Support Note</label>
+          <input type="text" name="cfg_noc_title" value="{{ cfg.get('noc_title', '') }}" placeholder="Emergency Support Title" class="w-full text-xs border border-slate-300 rounded px-2 py-1.5">
+          <textarea name="cfg_noc_text" rows="2" placeholder="Support Note Body..." class="w-full text-xs border border-slate-300 rounded px-2 py-1.5">{{ cfg.get('noc_text', '') }}</textarea>
+        </div>
+      </div>
+
+      {# ==================== 4. FEATURES STRIP ==================== #}
+      {% elif module.module_type == 'features_strip' %}
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Background Style</label>
+          <select name="cfg_bg_style" class="w-full text-xs border border-slate-300 rounded px-3 py-2">
+            <option value="white" {% if cfg.get('bg_style') == 'white' %}selected{% endif %}>Clean White</option>
+            <option value="slate-50" {% if cfg.get('bg_style') == 'slate-50' %}selected{% endif %}>Soft Slate Gray</option>
+            <option value="navy" {% if cfg.get('bg_style') == 'navy' %}selected{% endif %}>Enterprise Navy</option>
+          </select>
+        </div>
+
+        {% for i in [1, 2, 3] %}
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+          <span class="text-xs font-bold uppercase text-slate-700">Feature {{ i }}</span>
+          <input type="text" name="cfg_item{{ i }}_title" value="{{ cfg.get('item' ~ i ~ '_title') or cfg.get('col' ~ i ~ '_title', '') }}" placeholder="Feature Title" class="w-full text-xs border border-slate-300 rounded px-2 py-1.5">
+          <textarea name="cfg_item{{ i }}_text" rows="2" placeholder="Feature Description..." class="w-full text-xs border border-slate-300 rounded px-2 py-1.5">{{ cfg.get('item' ~ i ~ '_text') or cfg.get('col' ~ i ~ '_desc', '') }}</textarea>
+        </div>
+        {% endfor %}
+      </div>
+
+      {# ==================== 5. ABOUT & CAPABILITIES ==================== #}
+      {% elif module.module_type == 'about' %}
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Badge Tagline</label>
+            <input type="text" name="cfg_badge" value="{{ cfg.get('badge', '') }}" class="w-full text-xs border border-slate-300 rounded px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Year Established</label>
+            <input type="text" name="cfg_year_established" value="{{ cfg.get('year_established', '2010') }}" class="w-full text-xs border border-slate-300 rounded px-3 py-2">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Headline</label>
+          <input type="text" name="cfg_headline" value="{{ cfg.get('headline', '') }}" class="w-full text-sm font-bold border border-slate-300 rounded px-3 py-2">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Story / Subtext</label>
+          <textarea name="cfg_subtext" rows="3" class="w-full text-xs border border-slate-300 rounded px-3 py-2">{{ cfg.get('subtext', '') }}</textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-50 border border-slate-200 rounded-lg">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600">Stat 1 Value &amp; Label</label>
+            <input type="text" name="cfg_stat1_val" value="{{ cfg.get('stat1_val', '500+') }}" class="w-full text-xs border border-slate-300 rounded px-2 py-1">
+            <input type="text" name="cfg_stat1_lbl" value="{{ cfg.get('stat1_lbl', 'Workloads Managed') }}" class="w-full text-[11px] border border-slate-300 rounded px-2 py-1 mt-1 text-slate-500">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600">Stat 2 Value &amp; Label</label>
+            <input type="text" name="cfg_stat2_val" value="{{ cfg.get('stat2_val', '99.99%') }}" class="w-full text-xs border border-slate-300 rounded px-2 py-1">
+            <input type="text" name="cfg_stat2_lbl" value="{{ cfg.get('stat2_lbl', 'SLA Availability') }}" class="w-full text-[11px] border border-slate-300 rounded px-2 py-1 mt-1 text-slate-500">
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-xs font-semibold uppercase text-slate-700">Checkmark Bullet Points</label>
+          {% for i in ['check_1', 'check_2', 'check_3'] %}
+          <input type="text" name="cfg_{{ i }}" value="{{ cfg.get(i, '') }}" placeholder="Bullet Point {{ loop.index }}" class="w-full text-xs border border-slate-300 rounded px-2 py-1.5">
+          {% endfor %}
+        </div>
+      </div>
+
+      {# ==================== 6. SERVICES GRID ==================== #}
+      {% elif module.module_type == 'services' %}
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Section Headline</label>
+          <input type="text" name="cfg_headline" value="{{ cfg.get('headline', '') }}" class="w-full text-sm font-bold border border-slate-300 rounded px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Section Subtext</label>
+          <input type="text" name="cfg_subtext" value="{{ cfg.get('subtext', '') }}" class="w-full text-xs border border-slate-300 rounded px-3 py-2">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          {% for i in range(1, 7) %}
+          <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+            <span class="text-xs font-bold text-slate-700">Service {{ i }}</span>
+            <input type="text" name="cfg_srv{{ i }}_title" value="{{ cfg.get('srv' ~ i ~ '_title', '') }}" placeholder="Service Title" class="w-full text-xs border border-slate-300 rounded px-2 py-1.5">
+            <textarea name="cfg_srv{{ i }}_text" rows="2" placeholder="Short Description..." class="w-full text-xs border border-slate-300 rounded px-2 py-1">{{ cfg.get('srv' ~ i ~ '_text', '') }}</textarea>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      {# ==================== 7. CASE STUDIES ==================== #}
+      {% elif module.module_type == 'case_studies' %}
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Section Headline</label>
+          <input type="text" name="cfg_headline" value="{{ cfg.get('headline', '') }}" class="w-full text-sm font-bold border border-slate-300 rounded px-3 py-2">
+        </div>
+        {% for i in range(1, 4) %}
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+          <span class="text-xs font-bold uppercase text-slate-700">Case Study {{ i }}</span>
+          <input type="text" name="cfg_cs{{ i }}_tag" value="{{ cfg.get('cs' ~ i ~ '_tag', '') }}" placeholder="Category / Tag" class="w-full text-xs border border-slate-300 rounded px-2 py-1">
+          <input type="text" name="cfg_cs{{ i }}_title" value="{{ cfg.get('cs' ~ i ~ '_title', '') }}" placeholder="Headline / Client Scenario" class="w-full text-xs border border-slate-300 rounded px-2 py-1 font-semibold">
+          <textarea name="cfg_cs{{ i }}_result" rows="2" placeholder="Key measurable result achieved..." class="w-full text-xs border border-slate-300 rounded px-2 py-1">{{ cfg.get('cs' ~ i ~ '_result', '') }}</textarea>
+        </div>
+        {% endfor %}
+      </div>
+
+      {# ==================== 8. TESTIMONIALS ==================== #}
+      {% elif module.module_type == 'testimonials' %}
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Section Headline</label>
+          <input type="text" name="cfg_headline" value="{{ cfg.get('headline', '') }}" class="w-full text-sm font-bold border border-slate-300 rounded px-3 py-2">
+        </div>
+        {% for i in [1, 2] %}
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+          <span class="text-xs font-bold uppercase text-slate-700">Testimonial {{ i }}</span>
+          <textarea name="cfg_t{{ i }}_quote" rows="3" placeholder="Client Quote..." class="w-full text-xs border border-slate-300 rounded px-2 py-1.5">{{ cfg.get('t' ~ i ~ '_quote', '') }}</textarea>
+          <div class="grid grid-cols-2 gap-2">
+            <input type="text" name="cfg_t{{ i }}_author" value="{{ cfg.get('t' ~ i ~ '_author', '') }}" placeholder="Executive Name" class="w-full text-xs border border-slate-300 rounded px-2 py-1">
+            <input type="text" name="cfg_t{{ i }}_role" value="{{ cfg.get('t' ~ i ~ '_role', '') }}" placeholder="Job Title, Company" class="w-full text-xs border border-slate-300 rounded px-2 py-1">
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      {# ==================== 9. TRUST STRIP ==================== #}
+      {% elif module.module_type == 'trust_strip' %}
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Headline</label>
+          <input type="text" name="cfg_headline" value="{{ cfg.get('headline', '') }}" class="w-full text-xs border border-slate-300 rounded px-3 py-2">
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {% for i in range(1, 5) %}
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Partner / Badge {{ i }}</label>
+            <input type="text" name="cfg_badge{{ i }}" value="{{ cfg.get('badge' ~ i, '') }}" class="w-full text-xs border border-slate-300 rounded px-2 py-1.5">
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      {# ==================== 10. POSTS FEED ==================== #}
+      {% elif module.module_type == 'posts' %}
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Headline</label>
+          <input type="text" name="cfg_headline" value="{{ cfg.get('headline', '') }}" class="w-full text-sm font-bold border border-slate-300 rounded px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Subtext</label>
+          <input type="text" name="cfg_subtext" value="{{ cfg.get('subtext', '') }}" class="w-full text-xs border border-slate-300 rounded px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Number of Articles to Display</label>
+          <input type="number" name="cfg_count" value="{{ cfg.get('count', '3') }}" min="1" max="12" class="w-32 text-xs border border-slate-300 rounded px-2 py-1.5">
+        </div>
+      </div>
+
+      {# ==================== 11. TEXT & EXCERPT / RICH TEXT ==================== #}
+      {% elif module.module_type in ['text', 'rich_text'] %}
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Badge Tagline</label>
+            <input type="text" name="cfg_badge" value="{{ cfg.get('badge', '') }}" placeholder="e.g. Overview or Executive Summary" class="w-full text-xs border border-slate-300 rounded px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Background Style</label>
+            <select name="cfg_bg_style" class="w-full text-xs border border-slate-300 rounded px-3 py-2">
+              <option value="white" {% if cfg.get('bg_style') == 'white' %}selected{% endif %}>Clean White</option>
+              <option value="slate-50" {% if cfg.get('bg_style') == 'slate-50' %}selected{% endif %}>Soft Slate Gray</option>
+              <option value="navy" {% if cfg.get('bg_style') == 'navy' %}selected{% endif %}>Navy Dark</option>
+              <option value="blue-50" {% if cfg.get('bg_style') == 'blue-50' %}selected{% endif %}>Subtle Blue Tint</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Headline</label>
+          <input type="text" name="cfg_headline" value="{{ cfg.get('headline', '') }}" placeholder="Enter block headline..." class="w-full text-sm font-bold border border-slate-300 rounded px-3 py-2">
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-semibold uppercase text-slate-700">Excerpt / Lead Callout Section</label>
+            <span class="text-[11px] text-blue-600 font-semibold">Styled when filled in</span>
+          </div>
+          <textarea name="cfg_excerpt" rows="3" placeholder="Enter an optional lead summary or excerpt to highlight..." class="w-full text-xs border border-slate-300 rounded px-3 py-2 leading-relaxed">{{ cfg.get('excerpt', '') }}</textarea>
+          <p class="text-[11px] text-slate-500 mt-1">If filled in, this will display with prominent emphasis styling (accent border and contrasting card background). If left empty, it is hidden cleanly.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Content Body (HTML or Text)</label>
+          <textarea name="cfg_body" rows="6" placeholder="Enter paragraph text or rich HTML..." class="w-full text-xs font-mono border border-slate-300 rounded px-3 py-2">{{ cfg.get('body', '') }}</textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Action Button Label (Optional)</label>
+            <input type="text" name="cfg_button_text" value="{{ cfg.get('button_text', '') }}" placeholder="e.g. Learn More" class="w-full text-xs border border-slate-300 rounded px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Action Button URL (Optional)</label>
+            <input type="text" name="cfg_button_url" value="{{ cfg.get('button_url', '') }}" placeholder="e.g. /about or #services" class="w-full text-xs border border-slate-300 rounded px-3 py-2">
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center justify-between pt-2">
+      <div class="flex items-center gap-3">
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs px-6 py-2.5 rounded shadow-sm transition">
+          Save Module Configuration
+        </button>
+        <a href="{{ return_url }}" class="text-xs text-slate-600 hover:text-slate-900 font-medium px-3 py-2">
+          Cancel
+        </a>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+function toggleCustomColor(select, targetId) {
+  var wrap = document.getElementById(targetId);
+  if (!wrap) return;
+  if (select.value === 'custom') {
+    wrap.classList.remove('hidden');
+    var input = wrap.querySelector('input');
+    if (input) input.focus();
+  } else {
+    wrap.classList.add('hidden');
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" fill="none" class="w-full h-auto">
+  <defs>
+    <linearGradient id="tmP1Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#020617" />
+      <stop offset="100%" stop-color="#082f49" />
+    </linearGradient>
+    <linearGradient id="tmGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047" />
+      <stop offset="100%" stop-color="#ca8a04" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#tmP1Grad)" />
+  <!-- Neon Trophy & Arena Banner -->
+  <circle cx="400" cy="180" r="100" stroke="#06b6d4" stroke-width="2" stroke-opacity="0.4" stroke-dasharray="4 4" />
+  <!-- Trophy SVG -->
+  <path d="M360 120 H440 V170 C440 200 410 220 400 220 C390 220 360 200 360 170 Z" fill="url(#tmGold)" />
+  <path d="M360 135 H340 C330 135 330 165 350 165 H360" stroke="#facc15" stroke-width="4" fill="none" />
+  <path d="M440 135 H460 C470 135 470 165 450 165 H440" stroke="#facc15" stroke-width="4" fill="none" />
+  <rect x="390" y="220" width="20" height="30" fill="#a16207" />
+  <rect x="360" y="250" width="80" height="15" rx="3" fill="#ca8a04" />
+
+  <rect x="40" y="40" width="220" height="34" rx="4" fill="#0891b2" fill-opacity="0.25" stroke="#06b6d4" stroke-width="1.5" />
+  <text x="150" y="62" fill="#22d3ee" font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle">&#8226; TOURNAMENT CIRCUIT</text>
+  <text x="400" y="360" fill="#ffffff" font-family="monospace" font-size="24" font-weight="900" text-anchor="middle">World Trivia Championship 2026</text>
+  <text x="400" y="395" fill="#38bdf8" font-family="monospace" font-size="14" text-anchor="middle">Global Qualifiers &#8226; $50,000 Prize Arena &#8226; Live Bracket</text>
+</svg>

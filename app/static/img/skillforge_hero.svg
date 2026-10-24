@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" fill="none">
+  <defs>
+    <linearGradient id="codeBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="blueGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="50%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="600" rx="24" fill="url(#codeBg)"/>
+
+  <!-- Code Editor Window -->
+  <g transform="translate(180, 110)">
+    <rect width="440" height="300" rx="16" fill="#0f172a" stroke="#3b82f6" stroke-width="2" stroke-opacity="0.8" filter="drop-shadow(0 20px 25px rgba(0,0,0,0.5))"/>
+    
+    <!-- Window Bar -->
+    <rect width="440" height="38" rx="16" fill="#1e293b"/>
+    <rect y="24" width="440" height="14" fill="#1e293b"/>
+    <circle cx="24" cy="19" r="6" fill="#ef4444"/>
+    <circle cx="42" cy="19" r="6" fill="#f59e0b"/>
+    <circle cx="60" cy="19" r="6" fill="#10b981"/>
+    <text x="140" y="24" font-family="monospace" font-size="12" fill="#94a3b8">skillforge_masterclass.py</text>
+
+    <!-- Syntax Code Lines -->
+    <text x="30" y="70" font-family="monospace" font-size="13" fill="#ec4899">import</text>
+    <text x="85" y="70" font-family="monospace" font-size="13" fill="#38bdf8">cloud_architecture</text>
+    <text x="240" y="70" font-family="monospace" font-size="13" fill="#ec4899">as</text>
+    <text x="265" y="70" font-family="monospace" font-size="13" fill="#ffffff">academy</text>
+
+    <text x="30" y="105" font-family="monospace" font-size="13" fill="#6366f1">@academy.certified_course</text>
+    <text x="30" y="130" font-family="monospace" font-size="13" fill="#3b82f6">def</text>
+    <text x="65" y="130" font-family="monospace" font-size="13" fill="#facc15">master_fullstack_ai</text>
+    <text x="235" y="130" font-family="monospace" font-size="13" fill="#94a3b8">(student):</text>
+
+    <text x="60" y="160" font-family="monospace" font-size="13" fill="#38bdf8">skills</text>
+    <text x="115" y="160" font-family="monospace" font-size="13" fill="#ffffff">=</text>
+    <text x="135" y="160" font-family="monospace" font-size="13" fill="#a7f3d0">["Python", "Kubernetes", "LLMs", "FastAPI"]</text>
+
+    <text x="60" y="190" font-family="monospace" font-size="13" fill="#38bdf8">diploma</text>
+    <text x="125" y="190" font-family="monospace" font-size="13" fill="#ffffff">=</text>
+    <text x="145" y="190" font-family="monospace" font-size="13" fill="#ffffff">student.graduate(skills, verified=</text>
+    <text x="400" y="190" font-family="monospace" font-size="13" fill="#22c55e">True</text>
+    <text x="430" y="190" font-family="monospace" font-size="13" fill="#ffffff">)</text>
+
+    <text x="60" y="225" font-family="monospace" font-size="13" fill="#ec4899">return</text>
+    <text x="120" y="225" font-family="monospace" font-size="13" fill="#38bdf8">diploma.issue_linkedin_credentials()</text>
+
+    <rect x="30" y="255" width="380" height="28" rx="6" fill="#1e293b"/>
+    <text x="45" y="274" font-family="monospace" font-size="11" fill="#34d399">✓ 100% Code Passed • 45,000+ Alumni Certified</text>
+  </g>
+
+  <!-- Verified Certificate Floating Badge -->
+  <g transform="translate(100, 390)">
+    <rect width="210" height="85" rx="16" fill="#1e1b4b" stroke="#f59e0b" stroke-width="2"/>
+    <circle cx="45" cy="42" r="22" fill="#f59e0b"/>
+    <text x="35" y="50" font-family="system-ui, sans-serif" font-weight="900" font-size="24" fill="#0f172a">★</text>
+    <text x="80" y="36" font-family="system-ui, sans-serif" font-weight="900" font-size="13" fill="#ffffff">VERIFIED DIPLOMA</text>
+    <text x="80" y="54" font-family="system-ui, sans-serif" font-weight="600" font-size="10" fill="#cbd5e1">Cryptographic Seal</text>
+    <text x="80" y="70" font-family="monospace" font-size="9" fill="#f59e0b">ID: SKILL-9428-UK</text>
+  </g>
+
+  <!-- Floating Alumni Badge Right -->
+  <g transform="translate(510, 390)">
+    <rect width="200" height="85" rx="16" fill="#0f172a" stroke="#3b82f6" stroke-width="2"/>
+    <text x="25" y="36" font-family="system-ui, sans-serif" font-weight="900" font-size="20" fill="#3b82f6">98%</text>
+    <text x="75" y="36" font-family="system-ui, sans-serif" font-weight="bold" font-size="12" fill="#ffffff">PLACEMENT</text>
+    <text x="25" y="58" font-family="system-ui, sans-serif" font-weight="500" font-size="11" fill="#94a3b8">Graduates hired across leading global tech teams</text>
+  </g>
+</svg>

@@ -1,0 +1,144 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Themes &amp; Template Kits{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl space-y-8">
+  <div class="border-b border-slate-200 pb-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Themes &amp; Template Kits</h1>
+        <p class="text-xs text-slate-500 mt-1">Select from pre-engineered, responsive design presets with authentic layouts, colors, and content modules.</p>
+      </div>
+      <a href="{{ url_for('admin.layout') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-xs transition">
+        <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+        </svg>
+        Customize Active Layout &rarr;
+      </a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    {% for theme in themes %}
+    <div class="bg-white border rounded-xl overflow-hidden shadow-xs flex flex-col justify-between transition hover:shadow-md {% if theme.key == active_theme %}border-2 border-blue-600 ring-2 ring-blue-100{% else %}border-slate-200{% endif %}">
+      <div>
+        <!-- Color Preview Header Strip -->
+        <div class="h-28 p-6 flex flex-col justify-between text-white relative overflow-hidden" style="background-color: {{ theme.color }};">
+          <div class="flex items-center justify-between z-10">
+            <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded {% if theme.key == active_theme %}bg-emerald-500 text-white{% else %}bg-white/20 text-white{% endif %}">
+              {{ 'Active Theme' if theme.key == active_theme else theme.badge }}
+            </span>
+            <div class="w-4 h-4 rounded-full border-2 border-white shadow-xs" style="background-color: {{ theme.accent }};"></div>
+          </div>
+          <div class="z-10">
+            <h3 class="text-xl font-black text-white tracking-tight">{{ theme.name }}</h3>
+          </div>
+        </div>
+
+        <div class="p-6 space-y-3">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ theme.category }}</div>
+          <p class="text-xs text-slate-600 leading-relaxed">{{ theme.description }}</p>
+        </div>
+      </div>
+
+      <div class="p-6 pt-0">
+        {% if theme.key == active_theme %}
+        <div class="w-full py-2 bg-emerald-50 text-emerald-700 text-xs font-bold text-center rounded border border-emerald-200 flex items-center justify-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          Currently Active Theme
+        </div>
+        {% else %}
+        <button type="button" onclick="openThemeWarningModal('{{ theme.key }}', '{{ theme.name|escape }}')" class="w-full py-2 bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-wider rounded transition">
+          Activate Theme &rarr;
+        </button>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Theme Overwrite Warning Confirmation Modal -->
+<div id="themeWarningModal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-in fade-in duration-200">
+    <div class="flex items-start gap-4">
+      <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <div class="space-y-1">
+        <h3 class="text-lg font-bold text-slate-900 tracking-tight">Overwrite Site Content with Theme Preset?</h3>
+        <p class="text-xs text-slate-500">You are about to switch the active site theme to <strong id="modalThemeTargetName" class="text-slate-900"></strong>.</p>
+      </div>
+    </div>
+
+    <!-- Alert Box -->
+    <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs leading-relaxed space-y-2">
+      <p class="font-bold flex items-center gap-1.5 text-amber-800">
+        <span>⚠️</span> Notice: This action will overwrite existing homepage content
+      </p>
+      <p>
+        Activating this theme imports authentic preset layouts, colors, typography, brand assets, and modular sections for <span id="modalThemeNoticeName" class="font-bold"></span>.
+      </p>
+      <ul class="list-disc list-inside space-y-1 text-amber-950 text-[11px] pt-1">
+        <li>Replaces all homepage layout modules with the new theme's sections.</li>
+        <li>Updates pages (About, Contact) and blog articles to match the theme's vertical.</li>
+        <li>Updates header &amp; footer branding, logos, colors, and media attributions.</li>
+        <li>Refreshes footer widgets (brand logo, vertical focus menu, newsletter).</li>
+      </ul>
+      <p class="text-[11px] text-amber-800 italic pt-1">
+        You can re-customize, reorder, or edit all modules anytime under <strong>Home Page Layout and Sections</strong>.
+      </p>
+    </div>
+
+    <!-- Modal Actions -->
+    <div class="flex items-center justify-end gap-3 pt-2">
+      <button type="button" onclick="closeThemeWarningModal()" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition">
+        Cancel
+      </button>
+      <form id="themeSwitchForm" method="POST">
+        <input type="hidden" name="theme_key" id="modalThemeKeyInput" value="">
+        <button type="submit" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider shadow-sm transition flex items-center gap-1.5">
+          <span>Proceed &amp; Overwrite Preset</span>
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function openThemeWarningModal(themeKey, themeName) {
+  document.getElementById('modalThemeKeyInput').value = themeKey;
+  document.getElementById('modalThemeTargetName').textContent = themeName;
+  document.getElementById('modalThemeNoticeName').textContent = themeName;
+  const modal = document.getElementById('themeWarningModal');
+  modal.classList.remove('hidden');
+}
+
+function closeThemeWarningModal() {
+  const modal = document.getElementById('themeWarningModal');
+  modal.classList.add('hidden');
+}
+
+// Close on backdrop click
+document.getElementById('themeWarningModal')?.addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeThemeWarningModal();
+  }
+});
+
+// Close on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeThemeWarningModal();
+  }
+});
+</script>
+{% endblock %}

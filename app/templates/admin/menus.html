@@ -1,0 +1,653 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Navigation Menus &amp; GUI Arrangement{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl space-y-8">
+  <!-- Top Bar -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-4 gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Navigation Menus &amp; Submenus</h1>
+      <p class="text-xs text-slate-500 mt-1">Drag and drop menu items to visually rearrange order, drop items into parent rows to create submenus, and drag submenus out to promote to top level.</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <span id="save_status_indicator" class="hidden text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 transition">
+        Arrangement Saved
+      </span>
+      <button type="button" onclick="saveMenuArrangements()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded shadow-sm transition flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        Save Menu Order
+      </button>
+    </div>
+  </div>
+
+  <!-- Banner: Link between Navigation Menus and Footer Menu Widgets -->
+  <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+        &equiv;
+      </div>
+      <div>
+        <span class="font-bold text-blue-900 block">Footer Navigation Columns &amp; Menu Widgets</span>
+        <span class="text-blue-700 text-[11px]">Configure and assign your navigation menus as widgets across the 4-column footer layout in the Footer Customizer.</span>
+      </div>
+    </div>
+    <a href="{{ url_for('admin.footer_settings') }}" class="px-3.5 py-1.5 bg-white border border-blue-300 text-blue-700 hover:bg-blue-100 font-semibold rounded shrink-0 shadow-2xs transition flex items-center gap-1">
+      Open Footer Customizer &rarr;
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Left Column: Add New Menu Item Box -->
+    <div class="bg-white border border-slate-200 p-6 space-y-5 rounded-xl shadow-xs h-fit">
+      <div class="border-b border-slate-100 pb-2">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">Add Menu Item</h2>
+        <p class="text-[11px] text-slate-500 mt-0.5">Create a new top-level link or nested submenu item.</p>
+      </div>
+
+      <form method="POST" class="space-y-4">
+        <input type="hidden" name="action" value="add">
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Menu Location</label>
+          <select name="location" id="menu_location_select" onchange="toggleParentSelector(this.value)" class="w-full text-xs border border-slate-300 rounded px-3 py-2 bg-white">
+            <option value="header">Header Navigation (Supports Submenus)</option>
+            <option value="solutions">IT Solutions Menu (Footer Column 2)</option>
+            <option value="footer">Footer Navigation (Quick Links)</option>
+          </select>
+        </div>
+
+        <div id="parent_item_wrap">
+          <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Parent Item (For Submenu Dropdown)</label>
+          <select name="parent_id" class="w-full text-xs border border-slate-300 rounded px-3 py-2 bg-white">
+            <option value="">-- None (Top-Level Menu Item) --</option>
+            {% for p in all_header_items %}
+            <option value="{{ p.id }}">{{ p.title }} (Submenu of {{ p.title }})</option>
+            {% endfor %}
+          </select>
+          <p class="text-[10px] text-slate-400 mt-1">Selecting a parent nests this link under that item as a dropdown.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Navigation Label</label>
+          <input type="text" name="title" required placeholder="e.g. Services, About Us..." class="w-full text-xs px-3 py-2 border border-slate-300 rounded">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Target URL / Path</label>
+          <input type="text" name="url" required placeholder="/about or https://..." class="w-full text-xs px-3 py-2 border border-slate-300 rounded font-mono">
+        </div>
+
+        <div class="flex items-center gap-2 pt-1">
+          <input type="checkbox" id="open_new_tab" name="open_new_tab" value="1" class="rounded border-slate-300 text-blue-600">
+          <label for="open_new_tab" class="text-xs text-slate-700 cursor-pointer">Open link in new tab (_blank)</label>
+        </div>
+
+        {% if pages %}
+        <div class="pt-3 border-t border-slate-100">
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">Auto-fill from existing page:</label>
+          <select onchange="if(this.value){ document.querySelector('input[name=title]').value = this.options[this.selectedIndex].text; document.querySelector('input[name=url]').value = this.value; }" class="w-full text-xs border border-slate-200 rounded px-2 py-1.5 text-slate-600 bg-white">
+            <option value="">-- Choose page to autofill --</option>
+            {% for p in pages %}
+            <option value="/{{ p.slug }}">{{ p.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+
+        <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded shadow-sm transition">
+          + Add Menu Item
+        </button>
+      </form>
+    </div>
+
+    <!-- Right 2 Columns: GUI Drag-and-Drop Arrangement -->
+    <div class="lg:col-span-2 space-y-6">
+      <!-- Header Menu Card -->
+      <div class="bg-white border border-slate-200 p-6 rounded-xl shadow-xs space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+              <span>Header Navigation &amp; Dropdowns</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 uppercase">Hierarchical Drag &amp; Drop GUI</span>
+            </h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">Drag any item up/down to reorder, drag onto the dashed box to nest as a submenu, or drag submenus out to promote to top level.</p>
+          </div>
+          <span class="text-xs text-slate-400 font-mono">{{ header_items|length }} top items</span>
+        </div>
+
+        <!-- Draggable Header Items List -->
+        <div id="header_menu_dnd_list" class="space-y-3 min-h-[50px]">
+          {% for item in header_items %}
+          <div class="menu-item-row top-item-row bg-slate-50 border border-slate-200 rounded-lg p-3 transition hover:shadow-xs space-y-2.5" draggable="true" data-id="{{ item.id }}" data-location="header">
+            <!-- Row Header Content -->
+            <div class="flex items-center justify-between gap-3">
+              <!-- Drag Handle & Title -->
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="cursor-grab text-slate-400 hover:text-slate-700 py-1 px-0.5 active:cursor-grabbing shrink-0" title="Drag to reorder or nest">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M7 2a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4zM7 8a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4zM7 14a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4z"/>
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-slate-800 text-sm truncate">{{ item.title }}</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-white border border-slate-200 text-slate-600 truncate">{{ item.url }}</span>
+                    <span class="sub-counter px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 {% if not item.children %}hidden{% endif %}">
+                      {{ item.children|length }} sub-items
+                    </span>
+                    {% if item.open_new_tab %}
+                    <span class="text-[10px] text-slate-400 font-mono" title="Opens in new tab">&nearr; tab</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button type="button" onclick="openEditModal('{{ item.id }}', '{{ item.title }}', '{{ item.url }}', '{{ item.parent_id or '' }}', {{ 'true' if item.open_new_tab else 'false' }}, 'header')" class="px-2 py-1 rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-semibold transition flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                  Edit
+                </button>
+
+                <form method="POST" class="inline">
+                  <input type="hidden" name="action" value="move_up">
+                  <input type="hidden" name="item_id" value="{{ item.id }}">
+                  <button type="submit" class="p-1 border border-slate-200 rounded hover:bg-white text-slate-600 text-xs" title="Move Up">&uarr;</button>
+                </form>
+                <form method="POST" class="inline">
+                  <input type="hidden" name="action" value="move_down">
+                  <input type="hidden" name="item_id" value="{{ item.id }}">
+                  <button type="submit" class="p-1 border border-slate-200 rounded hover:bg-white text-slate-600 text-xs" title="Move Down">&darr;</button>
+                </form>
+
+                <form method="POST" class="inline" onsubmit="return confirm('Remove link and all nested submenus?');">
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="item_id" value="{{ item.id }}">
+                  <button type="submit" class="p-1 border border-red-200 rounded hover:bg-red-50 text-red-600 text-xs" title="Remove">&times;</button>
+                </form>
+              </div>
+            </div>
+
+            <!-- Submenu Drop Container (Always rendered for every top item) -->
+            <div class="ml-6 pl-4 border-l-2 border-blue-200 space-y-2 sub-dnd-container" data-parent-target="{{ item.id }}">
+              {% for sub in item.children %}
+              <div class="menu-item-row sub-item-row bg-white border border-slate-200/90 rounded-md p-2 flex items-center justify-between gap-2 shadow-2xs" draggable="true" data-id="{{ sub.id }}" data-parent-id="{{ item.id }}" data-location="header">
+                <div class="flex items-center gap-2 min-w-0">
+                  <div class="cursor-grab text-slate-400 hover:text-slate-700 py-0.5 px-0.5 active:cursor-grabbing shrink-0" title="Drag submenu">
+                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M7 2a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4zM7 8a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4zM7 14a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4z"/>
+                    </svg>
+                  </div>
+                  <span class="text-blue-500 font-bold text-xs">&rdsh;</span>
+                  <span class="font-semibold text-slate-800 text-xs truncate">{{ sub.title }}</span>
+                  <span class="text-[10px] text-slate-400 font-mono truncate">{{ sub.url }}</span>
+                  {% if sub.open_new_tab %}
+                  <span class="text-[9px] text-slate-400 font-mono">&nearr;</span>
+                  {% endif %}
+                </div>
+
+                <div class="flex items-center gap-1 shrink-0">
+                  <button type="button" onclick="openEditModal('{{ sub.id }}', '{{ sub.title }}', '{{ sub.url }}', '{{ sub.parent_id }}', {{ 'true' if sub.open_new_tab else 'false' }}, 'header')" class="px-1.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 text-[11px] font-semibold">
+                    Edit
+                  </button>
+                  <form method="POST" class="inline">
+                    <input type="hidden" name="action" value="move_up">
+                    <input type="hidden" name="item_id" value="{{ sub.id }}">
+                    <button type="submit" class="p-0.5 px-1 border border-slate-200 rounded hover:bg-slate-50 text-slate-600 text-[10px]">&uarr;</button>
+                  </form>
+                  <form method="POST" class="inline">
+                    <input type="hidden" name="action" value="move_down">
+                    <input type="hidden" name="item_id" value="{{ sub.id }}">
+                    <button type="submit" class="p-0.5 px-1 border border-slate-200 rounded hover:bg-slate-50 text-slate-600 text-[10px]">&darr;</button>
+                  </form>
+                  <form method="POST" class="inline" onsubmit="return confirm('Remove submenu link?');">
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="item_id" value="{{ sub.id }}">
+                    <button type="submit" class="p-0.5 px-1 border border-red-200 rounded hover:bg-red-50 text-red-600 text-[10px]">&times;</button>
+                  </form>
+                </div>
+              </div>
+              {% endfor %}
+
+              <!-- Drop Target Hint for empty or additional sub items -->
+              <div class="nest-drop-hint text-[11px] text-slate-400 py-1.5 px-3 border border-dashed border-blue-200 hover:border-blue-400 hover:bg-blue-50/60 rounded-md text-center transition cursor-pointer select-none {% if item.children %}hidden{% endif %}">
+                &plus; Drop menu item here to nest under {{ item.title }}
+              </div>
+            </div>
+          </div>
+          {% else %}
+          <div class="text-xs text-slate-400 italic p-4 bg-slate-50 border border-slate-200 rounded text-center">
+            No header items configured. Use the form on the left to add your first menu item.
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- IT Solutions Menu Card (Footer Column 2) -->
+      <div class="bg-white border border-slate-200 p-6 rounded-xl shadow-xs space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+              <span>IT Solutions Links (Footer Column 2)</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 uppercase">Footer Col 2 Menu</span>
+            </h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">Directly controls the services &amp; solutions navigation list rendered in Footer Column 2.</p>
+          </div>
+          <span class="text-xs text-slate-400 font-mono">{{ solutions_items|length }} items</span>
+        </div>
+
+        <div id="solutions_menu_dnd_list" class="space-y-2">
+          {% for item in solutions_items %}
+          <div class="menu-item-row bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex items-center justify-between gap-3 transition hover:shadow-xs" draggable="true" data-id="{{ item.id }}" data-location="solutions">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="cursor-grab text-slate-400 hover:text-slate-700 py-1 px-0.5 active:cursor-grabbing shrink-0" title="Drag to rearrange">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M7 2a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4zM7 8a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4zM7 14a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4z"/>
+                </svg>
+              </div>
+              <span class="font-bold text-slate-800 text-xs truncate">{{ item.title }}</span>
+              <span class="text-xs text-slate-400 font-mono truncate">{{ item.url }}</span>
+            </div>
+
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button type="button" onclick="openEditModal('{{ item.id }}', '{{ item.title }}', '{{ item.url }}', '', {{ 'true' if item.open_new_tab else 'false' }}, 'solutions')" class="px-2 py-1 rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-semibold">
+                Edit
+              </button>
+              <form method="POST" class="inline">
+                <input type="hidden" name="action" value="move_up">
+                <input type="hidden" name="item_id" value="{{ item.id }}">
+                <button type="submit" class="p-1 border border-slate-200 rounded hover:bg-white text-slate-600 text-xs">&uarr;</button>
+              </form>
+              <form method="POST" class="inline">
+                <input type="hidden" name="action" value="move_down">
+                <input type="hidden" name="item_id" value="{{ item.id }}">
+                <button type="submit" class="p-1 border border-slate-200 rounded hover:bg-white text-slate-600 text-xs">&darr;</button>
+              </form>
+              <form method="POST" class="inline" onsubmit="return confirm('Remove link?');">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="item_id" value="{{ item.id }}">
+                <button type="submit" class="p-1 border border-red-200 rounded hover:bg-red-50 text-red-600 text-xs">&times;</button>
+              </form>
+            </div>
+          </div>
+          {% else %}
+          <div class="text-xs text-slate-400 italic p-4 bg-slate-50 border border-slate-200 rounded text-center">
+            No IT solutions items configured.
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Footer Menu Card -->
+      <div class="bg-white border border-slate-200 p-6 rounded-xl shadow-xs space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+            <span>Footer Navigation Links</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 uppercase">Drag &amp; Drop</span>
+          </h3>
+          <span class="text-xs text-slate-400 font-mono">{{ footer_items|length }} items</span>
+        </div>
+
+        <div id="footer_menu_dnd_list" class="space-y-2">
+          {% for item in footer_items %}
+          <div class="menu-item-row bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex items-center justify-between gap-3 transition hover:shadow-xs" draggable="true" data-id="{{ item.id }}" data-location="footer">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="cursor-grab text-slate-400 hover:text-slate-700 py-1 px-0.5 active:cursor-grabbing shrink-0" title="Drag to rearrange">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M7 2a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4zM7 8a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4zM7 14a2 2 0 100 4 2 2 0 000-4zm6 0a2 2 0 100 4 2 2 0 000-4z"/>
+                </svg>
+              </div>
+              <span class="font-bold text-slate-800 text-xs truncate">{{ item.title }}</span>
+              <span class="text-xs text-slate-400 font-mono truncate">{{ item.url }}</span>
+            </div>
+
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button type="button" onclick="openEditModal('{{ item.id }}', '{{ item.title }}', '{{ item.url }}', '', {{ 'true' if item.open_new_tab else 'false' }}, 'footer')" class="px-2 py-1 rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-semibold">
+                Edit
+              </button>
+              <form method="POST" class="inline">
+                <input type="hidden" name="action" value="move_up">
+                <input type="hidden" name="item_id" value="{{ item.id }}">
+                <button type="submit" class="p-1 border border-slate-200 rounded hover:bg-white text-slate-600 text-xs">&uarr;</button>
+              </form>
+              <form method="POST" class="inline">
+                <input type="hidden" name="action" value="move_down">
+                <input type="hidden" name="item_id" value="{{ item.id }}">
+                <button type="submit" class="p-1 border border-slate-200 rounded hover:bg-white text-slate-600 text-xs">&darr;</button>
+              </form>
+              <form method="POST" class="inline" onsubmit="return confirm('Remove footer link?');">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="item_id" value="{{ item.id }}">
+                <button type="submit" class="p-1 border border-red-200 rounded hover:bg-red-50 text-red-600 text-xs">&times;</button>
+              </form>
+            </div>
+          </div>
+          {% else %}
+          <div class="text-xs text-slate-400 italic p-4 bg-slate-50 border border-slate-200 rounded text-center">
+            No footer items configured.
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Edit Menu Item GUI -->
+<div id="edit_menu_modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-xl shadow-xl border border-slate-200 max-w-md w-full p-6 space-y-4">
+    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+      <h3 class="text-base font-bold text-slate-900">Edit Navigation Item</h3>
+      <button type="button" onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+    </div>
+
+    <form method="POST" class="space-y-4">
+      <input type="hidden" name="action" value="edit">
+      <input type="hidden" name="item_id" id="edit_modal_item_id" value="">
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Navigation Label</label>
+        <input type="text" name="title" id="edit_modal_title" required class="w-full text-xs px-3 py-2 border border-slate-300 rounded">
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Target URL / Path</label>
+        <input type="text" name="url" id="edit_modal_url" required class="w-full text-xs font-mono px-3 py-2 border border-slate-300 rounded">
+      </div>
+
+      <div id="edit_parent_wrap">
+        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Parent Item (For Submenu Dropdown)</label>
+        <select name="parent_id" id="edit_modal_parent_id" class="w-full text-xs border border-slate-300 rounded px-3 py-2 bg-white">
+          <option value="">-- None (Top-Level Menu Item) --</option>
+          {% for p in all_header_items %}
+          <option value="{{ p.id }}">{{ p.title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="flex items-center gap-2 pt-1">
+        <input type="checkbox" id="edit_modal_open_new_tab" name="open_new_tab" value="1" class="rounded border-slate-300 text-blue-600">
+        <label for="edit_modal_open_new_tab" class="text-xs text-slate-700 cursor-pointer">Open link in new tab (_blank)</label>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+        <button type="button" onclick="closeEditModal()" class="px-4 py-2 border border-slate-300 text-xs font-semibold rounded text-slate-700 hover:bg-slate-50">
+          Cancel
+        </button>
+        <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition shadow-sm">
+          Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function toggleParentSelector(locationVal) {
+  var wrap = document.getElementById('parent_item_wrap');
+  if (!wrap) return;
+  if (locationVal === 'header') {
+    wrap.classList.remove('hidden');
+  } else {
+    wrap.classList.add('hidden');
+  }
+}
+
+function openEditModal(id, title, url, parentId, openNewTab, location) {
+  document.getElementById('edit_modal_item_id').value = id;
+  document.getElementById('edit_modal_title').value = title;
+  document.getElementById('edit_modal_url').value = url;
+  document.getElementById('edit_modal_parent_id').value = parentId || '';
+  document.getElementById('edit_modal_open_new_tab').checked = !!openNewTab;
+
+  var parentWrap = document.getElementById('edit_parent_wrap');
+  if (parentWrap) {
+    if (location === 'footer') {
+      parentWrap.classList.add('hidden');
+    } else {
+      parentWrap.classList.remove('hidden');
+    }
+  }
+
+  document.getElementById('edit_menu_modal').classList.remove('hidden');
+}
+
+function closeEditModal() {
+  document.getElementById('edit_menu_modal').classList.add('hidden');
+}
+
+// =========================================================================
+// HTML5 Drag and Drop Submenu & Reorder GUI Engine
+// =========================================================================
+var draggedElement = null;
+
+function initMenuDnD() {
+  var items = document.querySelectorAll('.menu-item-row');
+  var subContainers = document.querySelectorAll('.sub-dnd-container');
+  var mainHeaderList = document.getElementById('header_menu_dnd_list');
+
+  items.forEach(function(item) {
+    item.addEventListener('dragstart', function(e) {
+      draggedElement = item;
+      item.classList.add('opacity-40', 'ring-2', 'ring-blue-500');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', item.getAttribute('data-id'));
+      // Show drop hints
+      document.querySelectorAll('.nest-drop-hint').forEach(function(hint) {
+        hint.classList.remove('hidden');
+      });
+      e.stopPropagation();
+    });
+
+    item.addEventListener('dragend', function() {
+      item.classList.remove('opacity-40', 'ring-2', 'ring-blue-500');
+      document.querySelectorAll('.menu-item-row').forEach(function(el) {
+        el.classList.remove('border-t-2', 'border-b-2', 'border-blue-600', 'bg-blue-50/50');
+      });
+      document.querySelectorAll('.sub-dnd-container').forEach(function(el) {
+        el.classList.remove('ring-2', 'ring-blue-400', 'bg-blue-50/30');
+      });
+      // Update drop hints visibility based on whether container has children
+      updateSubCountersAndHints();
+      draggedElement = null;
+      saveMenuArrangements();
+    });
+
+    item.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      if (!draggedElement || draggedElement === item) return;
+      if (draggedElement.contains(item)) return; // Don't drag parent into its own child
+
+      var rect = item.getBoundingClientRect();
+      var midY = rect.top + rect.height / 2;
+      if (e.clientY < midY) {
+        item.classList.add('border-t-2', 'border-blue-600');
+        item.classList.remove('border-b-2');
+      } else {
+        item.classList.add('border-b-2', 'border-blue-600');
+        item.classList.remove('border-t-2');
+      }
+      e.stopPropagation();
+    });
+
+    item.addEventListener('dragleave', function() {
+      item.classList.remove('border-t-2', 'border-b-2', 'border-blue-600');
+    });
+
+    item.addEventListener('drop', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      item.classList.remove('border-t-2', 'border-b-2', 'border-blue-600');
+      if (!draggedElement || draggedElement === item) return;
+      if (draggedElement.contains(item)) return;
+
+      var rect = item.getBoundingClientRect();
+      var midY = rect.top + rect.height / 2;
+
+      // If dropped directly on another item, insert before or after that item
+      if (e.clientY < midY) {
+        item.parentElement.insertBefore(draggedElement, item);
+      } else {
+        item.parentElement.insertBefore(draggedElement, item.nextSibling);
+      }
+      transformSubclasses(draggedElement);
+    });
+  });
+
+  // Handle dropping into sub-containers (nesting into submenu)
+  subContainers.forEach(function(container) {
+    container.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      if (!draggedElement) return;
+      if (draggedElement.contains(container)) return;
+      container.classList.add('ring-2', 'ring-blue-400', 'bg-blue-50/40');
+      e.stopPropagation();
+    });
+
+    container.addEventListener('dragleave', function() {
+      container.classList.remove('ring-2', 'ring-blue-400', 'bg-blue-50/40');
+    });
+
+    container.addEventListener('drop', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      container.classList.remove('ring-2', 'ring-blue-400', 'bg-blue-50/40');
+      if (!draggedElement) return;
+      if (draggedElement.contains(container)) return;
+
+      var hint = container.querySelector('.nest-drop-hint');
+      if (hint) {
+        container.insertBefore(draggedElement, hint);
+      } else {
+        container.appendChild(draggedElement);
+      }
+      transformSubclasses(draggedElement);
+    });
+  });
+
+  // Handle dropping back onto top-level header list (un-nesting)
+  if (mainHeaderList) {
+    mainHeaderList.addEventListener('dragover', function(e) {
+      e.preventDefault();
+    });
+
+    mainHeaderList.addEventListener('drop', function(e) {
+      if (e.target === mainHeaderList && draggedElement) {
+        e.preventDefault();
+        mainHeaderList.appendChild(draggedElement);
+        transformSubclasses(draggedElement);
+      }
+    });
+  }
+}
+
+function transformSubclasses(el) {
+  if (!el) return;
+  var isNested = !!el.closest('.sub-dnd-container');
+  if (isNested) {
+    el.classList.remove('top-item-row', 'bg-slate-50', 'p-3');
+    el.classList.add('sub-item-row', 'bg-white', 'p-2');
+    var parentRow = el.closest('.top-item-row');
+    if (parentRow) {
+      el.setAttribute('data-parent-id', parentRow.getAttribute('data-id'));
+    }
+  } else {
+    el.classList.add('top-item-row', 'bg-slate-50', 'p-3');
+    el.classList.remove('sub-item-row', 'bg-white', 'p-2');
+    el.removeAttribute('data-parent-id');
+  }
+}
+
+function updateSubCountersAndHints() {
+  document.querySelectorAll('.top-item-row').forEach(function(row) {
+    var subContainer = row.querySelector('.sub-dnd-container');
+    var hint = row.querySelector('.nest-drop-hint');
+    var counter = row.querySelector('.sub-counter');
+    if (!subContainer) return;
+
+    var childRows = subContainer.querySelectorAll('.sub-item-row');
+    if (childRows.length > 0) {
+      if (hint) hint.classList.add('hidden');
+      if (counter) {
+        counter.classList.remove('hidden');
+        counter.innerText = childRows.length + ' sub-items';
+      }
+    } else {
+      if (hint) hint.classList.remove('hidden');
+      if (counter) counter.classList.add('hidden');
+    }
+  });
+}
+
+function saveMenuArrangements() {
+  var orderData = [];
+  var currOrder = 1;
+
+  // Process top-level header items
+  var headerRows = document.querySelectorAll('#header_menu_dnd_list > .top-item-row');
+  headerRows.forEach(function(row) {
+    var id = row.getAttribute('data-id');
+    if (id) {
+      orderData.push({ id: parseInt(id), sort_order: currOrder++, parent_id: null });
+    }
+    // Sub-items
+    var subRows = row.querySelectorAll('.sub-dnd-container > .sub-item-row');
+    var subOrder = 1;
+    subRows.forEach(function(sub) {
+      var subId = sub.getAttribute('data-id');
+      if (subId) {
+        orderData.push({ id: parseInt(subId), sort_order: subOrder++, parent_id: parseInt(id) });
+      }
+    });
+  });
+
+  // Process IT solutions items
+  var solutionsRows = document.querySelectorAll('#solutions_menu_dnd_list > .menu-item-row');
+  var solutionsOrder = 1;
+  solutionsRows.forEach(function(row) {
+    var id = row.getAttribute('data-id');
+    if (id) {
+      orderData.push({ id: parseInt(id), sort_order: solutionsOrder++, parent_id: null });
+    }
+  });
+
+  // Process footer items
+  var footerRows = document.querySelectorAll('#footer_menu_dnd_list > .menu-item-row');
+  var footerOrder = 1;
+  footerRows.forEach(function(row) {
+    var id = row.getAttribute('data-id');
+    if (id) {
+      orderData.push({ id: parseInt(id), sort_order: footerOrder++, parent_id: null });
+    }
+  });
+
+  // Post to server via Fetch API
+  var formData = new FormData();
+  formData.append('action', 'reorder');
+  formData.append('order_data', JSON.stringify(orderData));
+
+  fetch("{{ url_for('admin.menus') }}", {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  }).then(function(res) {
+    return res.json();
+  }).then(function(data) {
+    var badge = document.getElementById('save_status_indicator');
+    if (badge) {
+      badge.classList.remove('hidden');
+      setTimeout(function() {
+        badge.classList.add('hidden');
+      }, 2500);
+    }
+  }).catch(function(err) {
+    console.error('Save failed:', err);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initMenuDnD);
+</script>
+{% endblock %}

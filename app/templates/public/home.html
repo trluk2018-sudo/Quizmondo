@@ -1,0 +1,145 @@
+{% extends "public/base.html" %}
+
+{% block title %}{{ settings.get('meta_title') or site_title }}{% endblock %}
+
+{% block content %}
+<div class="space-y-16">
+  {% for mod in active_modules %}
+
+  {# ---------------- 1. Hero / Welcome Module ---------------- #}
+  {% if mod == 'hero' %}
+  <section class="bg-slate-50 border-b border-slate-200 py-16 sm:py-24">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+      <h1 class="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight">
+        {{ settings.get('home_hero_title') or ('Welcome to ' ~ site_title) }}
+      </h1>
+      <p class="max-w-2xl mx-auto text-base sm:text-lg text-slate-600 leading-relaxed">
+        {{ settings.get('home_hero_subtitle') or site_tagline }}
+      </p>
+      {% if settings.get('home_hero_button_label') and settings.get('home_hero_button_url') %}
+      <div class="pt-2">
+        <a href="{{ settings.get('home_hero_button_url') }}" class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded shadow-sm transition">
+          {{ settings.get('home_hero_button_label') }} &rarr;
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  {# ---------------- 2. Latest Posts Module ---------------- #}
+  {% elif mod == 'posts' %}
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-8">
+      <div>
+        <h2 class="text-xl font-bold text-slate-900 tracking-tight">Latest Articles &amp; News</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Recent updates, stories and announcements.</p>
+      </div>
+      <a href="{{ url_for('public.posts') }}" class="text-xs font-semibold text-blue-600 hover:underline">
+        View All Articles &rarr;
+      </a>
+    </div>
+
+    {% if latest_posts %}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {% for post in latest_posts %}
+      <article class="flex flex-col justify-between border-b md:border-b-0 pb-6 md:pb-0 border-slate-100">
+        <div class="space-y-3">
+          {% if post.featured_image %}
+          <div class="aspect-video w-full overflow-hidden rounded bg-slate-100">
+            <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="object-cover w-full h-full hover:scale-105 transition duration-300">
+          </div>
+          {% endif %}
+          <div class="text-xs font-semibold text-blue-600 uppercase tracking-wide">
+            {{ post.category.name if post.category else 'General' }}
+          </div>
+          <h3 class="text-lg font-bold text-slate-900 hover:text-blue-600 transition leading-snug">
+            <a href="{{ url_for('public.post_detail', slug=post.slug) }}">{{ post.title }}</a>
+          </h3>
+          <p class="text-xs text-slate-600 line-clamp-3 leading-relaxed">
+            {{ post.excerpt or (post.content|striptags|truncate(120)) }}
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-400">
+          {{ post.created_at.strftime('%B %d, %Y') }}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-xs text-slate-400 italic py-6">No articles published yet.</p>
+    {% endif %}
+  </section>
+
+  {# ---------------- 3. Custom Feature Highlights Module ---------------- #}
+  {% elif mod == 'custom_content' %}
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="border-t border-slate-200 pt-12">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+        <div class="border-l-2 border-blue-600 pl-4 space-y-2">
+          <h3 class="font-bold text-base text-slate-900">Modern Architecture</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">Powered by Python Flask and local compiled Tailwind CSS for maximum rendering performance and zero external dependencies.</p>
+        </div>
+        <div class="border-l-2 border-slate-400 pl-4 space-y-2">
+          <h3 class="font-bold text-base text-slate-900">WordPress-Style Control</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">Familiar publishing workflow with articles, static pages, media upload library, and customizable sidebar widgets.</p>
+        </div>
+        <div class="border-l-2 border-slate-400 pl-4 space-y-2">
+          <h3 class="font-bold text-base text-slate-900">SaaS &amp; Coolify Ready</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">Containerized with multi-stage Docker builds and built-in SSO hooks to deploy instantly from your Portside Server Manager panel.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ---------------- 4. Contact & Quick Enquiry Module ---------------- #}
+  {% elif mod == 'contact' %}
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="border-t border-slate-200 pt-12">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <div class="space-y-4">
+          <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Get in Touch</h2>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Have questions or want to learn more about our work? Reach out and we'll be delighted to assist you.
+          </p>
+          {% if settings.get('contact_email') %}
+          <div class="text-xs text-slate-600">
+            <strong>Email:</strong> <a href="mailto:{{ settings.get('contact_email') }}" class="text-blue-600 hover:underline">{{ settings.get('contact_email') }}</a>
+          </div>
+          {% endif %}
+          {% if settings.get('contact_phone') %}
+          <div class="text-xs text-slate-600">
+            <strong>Phone:</strong> {{ settings.get('contact_phone') }}
+          </div>
+          {% endif %}
+          {% if settings.get('contact_address') %}
+          <div class="text-xs text-slate-600">
+            <strong>Location:</strong> {{ settings.get('contact_address') }}
+          </div>
+          {% endif %}
+        </div>
+
+        <form action="{{ url_for('public.contact') }}" method="POST" class="bg-slate-50 border border-slate-200 p-6 rounded space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Your Name</label>
+            <input type="text" name="name" required class="w-full text-xs px-3 py-2 border border-slate-300 rounded bg-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Your Email</label>
+            <input type="email" name="email" required class="w-full text-xs px-3 py-2 border border-slate-300 rounded bg-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Message</label>
+            <textarea name="message" rows="4" required class="w-full text-xs px-3 py-2 border border-slate-300 rounded bg-white"></textarea>
+          </div>
+          <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded shadow-sm transition">
+            Send Message
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {% endfor %}
+</div>
+{% endblock %}

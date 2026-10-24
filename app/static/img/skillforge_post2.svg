@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" fill="none" class="w-full h-auto">
+  <defs>
+    <linearGradient id="sfP2Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#111827" />
+      <stop offset="100%" stop-color="#1f2937" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#sfP2Grad)" />
+  <!-- Rust Crab / Memory Safety Gear -->
+  <circle cx="400" cy="180" r="85" fill="#030712" stroke="#ea580c" stroke-width="4" stroke-dasharray="12 4" />
+  <circle cx="400" cy="180" r="50" fill="#ea580c" />
+  <text x="400" y="190" fill="#ffffff" font-family="monospace" font-size="28" font-weight="900" text-anchor="middle">RUST</text>
+  <text x="400" y="240" fill="#fb923c" font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle">ZERO-COST ABSTRACTIONS</text>
+
+  <rect x="40" y="40" width="220" height="34" rx="4" fill="#ea580c" fill-opacity="0.25" stroke="#f97316" stroke-width="1.5" />
+  <text x="150" y="62" fill="#fdba74" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle">SYSTEMS ARCHITECTURE</text>
+  <text x="400" y="360" fill="#ffffff" font-family="sans-serif" font-size="24" font-weight="900" text-anchor="middle">The Rise of Rust in Systems</text>
+  <text x="400" y="395" fill="#9ca3af" font-family="sans-serif" font-size="14" text-anchor="middle">Memory Safety Without Garbage Collection in Cloud Infrastructure</text>
+</svg>

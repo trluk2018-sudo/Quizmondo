@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - SECRET_KEY=sitebuilder-express-dev-secret-key-change-in-prod
+      - DATABASE_URL=sqlite:///instance/sitebuilder.sqlite
+      - APP_PUBLIC_URL=http://localhost:8000
+    volumes:
+      - ./instance:/app/instance
+      - ./app/static/uploads:/app/app/static/uploads
+    restart: unless-stopped

@@ -1,0 +1,50 @@
+{# QuizHub Module: Tournament News & Tactics Posts #}
+{% set cfg = mod.get_config() if mod and mod.get_config else (module_cfg or {}) %}
+<section class="py-20 bg-slate-900 border-b border-purple-500/20 text-slate-100" id="posts">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-purple-500/20 pb-6">
+      <div>
+        <span class="text-xs font-black uppercase tracking-widest text-cyan-400">ARENA NEWS &amp; TACTICS</span>
+        <h2 class="text-3xl font-black text-white tracking-tight mt-1">
+          {{ cfg.get('headline') or 'Latest Quiz Articles &amp; Tournament Dispatches' }}
+        </h2>
+      </div>
+      <a href="{{ url_for('public.posts') }}" class="text-xs font-bold text-amber-400 hover:text-amber-300 uppercase tracking-wider transition">
+        View All Articles &rarr;
+      </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {% set display_posts = (latest_posts or recent_posts or [])[:3] %}
+      {% if display_posts %}
+        {% for p in display_posts %}
+        <article class="bg-slate-950/90 border border-purple-500/30 rounded-2xl overflow-hidden hover:border-cyan-400 transition group flex flex-col justify-between shadow-xl">
+          <div>
+            <div class="h-48 overflow-hidden relative">
+              <img src="{{ p.featured_image or url_for('static', filename='img/quizhub_esports.jpg') }}" alt="{{ p.title }}" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent"></div>
+              {% if p.category %}
+              <span class="absolute bottom-3 left-3 text-[10px] font-black uppercase px-2.5 py-1 rounded bg-purple-600/90 text-white">
+                {{ p.category.name }}
+              </span>
+              {% endif %}
+            </div>
+            <div class="p-6 space-y-2">
+              <span class="text-[10px] font-mono text-slate-400">{{ p.created_at.strftime('%B %d, %Y') }}</span>
+              <h3 class="text-lg font-black text-white group-hover:text-cyan-400 transition leading-snug">
+                <a href="{{ url_for('public.post_detail', slug=p.slug) }}">{{ p.title }}</a>
+              </h3>
+              <p class="text-xs text-slate-300 line-clamp-2 leading-relaxed">{{ p.excerpt }}</p>
+            </div>
+          </div>
+          <div class="p-6 pt-0">
+            <a href="{{ url_for('public.post_detail', slug=p.slug) }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 group-hover:text-amber-300 uppercase tracking-wider">
+              Read Strategy &rarr;
+            </a>
+          </div>
+        </article>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</section>

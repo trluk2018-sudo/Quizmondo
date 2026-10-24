@@ -1,0 +1,25 @@
+{% extends "themes/quizhub/base.html" %}
+
+{% block title %}{{ settings.get('meta_title') or site_title }} &bull; Live Interactive Quizzes, Brain Games &amp; Tournaments{% endblock %}
+
+{% block content %}
+<div class="space-y-0 text-slate-100">
+  {% if home_modules %}
+    {% for mod in home_modules %}
+      {% include "themes/quizhub/modules/render_module.html" %}
+      {% if mod.module_type == 'hero' %}
+        {% include "themes/quizhub/modules/daily_quiz.html" %}
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    {# Fallback to default active_modules #}
+    {% for mod_key in active_modules %}
+      {% set mod = {'module_type': mod_key, 'is_enabled': True, 'get_config': none} %}
+      {% include "themes/quizhub/modules/render_module.html" %}
+      {% if mod_key == 'hero' %}
+        {% include "themes/quizhub/modules/daily_quiz.html" %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}

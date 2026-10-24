@@ -1,0 +1,49 @@
+{# QuizHub Module: Features Strip #}
+{% set cfg = mod.get_config() if mod and mod.get_config else (module_cfg or {}) %}
+{% set raw_bg = cfg.get('bg_color') %}
+{% set custom_bg_color = raw_bg|rgba(cfg.get('bg_opacity', 100)) if (raw_bg and raw_bg not in ('default', 'transparent', '')) else none %}
+{% set bg = cfg.get('bg_style') %}
+<section class="py-14 border-b border-purple-500/20 text-slate-100 transition-colors {% if not custom_bg_color %}{% if bg == 'white' %}bg-white text-slate-800{% elif bg == 'slate-50' %}bg-slate-900{% elif bg == 'navy' %}bg-[#1e1b4b]{% else %}bg-slate-900{% endif %}{% endif %}" style="{% if custom_bg_color %}background-color: {{ custom_bg_color }} !important;{% elif bg == 'navy' %}background-color: #1e1b4b !important;{% elif bg == 'slate-50' %}background-color: #0f172a !important;{% elif bg == 'white' %}background-color: #ffffff !important; color: #0f172a !important;{% endif %}">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Col 1 -->
+      <div class="bg-slate-950/80 border border-purple-500/30 rounded-2xl p-7 space-y-4 hover:border-cyan-400 transition group shadow-lg">
+        <div class="w-14 h-14 rounded-2xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-3xl group-hover:scale-110 transition">
+          🎮
+        </div>
+        <h3 class="text-xl font-black text-white group-hover:text-cyan-400 transition">
+          {{ cfg.get('item1_title') or cfg.get('col1_title') or 'Live Arcade Matchmaking' }}
+        </h3>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          {{ cfg.get('item1_text') or cfg.get('col1_desc') or 'Jump into fast-paced 60-second quiz showdowns with real-time buzzer rounds and live opponent score updates.' }}
+        </p>
+      </div>
+
+      <!-- Col 2 -->
+      <div class="bg-slate-950/80 border border-purple-500/30 rounded-2xl p-7 space-y-4 hover:border-amber-400 transition group shadow-lg">
+        <div class="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-3xl group-hover:scale-110 transition">
+          🏆
+        </div>
+        <h3 class="text-xl font-black text-white group-hover:text-amber-400 transition">
+          {{ cfg.get('item2_title') or cfg.get('col2_title') or 'Ranked Elo & Trophy Leagues' }}
+        </h3>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          {{ cfg.get('item2_text') or cfg.get('col2_desc') or 'Progress from Bronze Rookie to Grandmaster Trivia Master with ranked divisions, daily tournaments, and trophy rooms.' }}
+        </p>
+      </div>
+
+      <!-- Col 3 -->
+      <div class="bg-slate-950/80 border border-purple-500/30 rounded-2xl p-7 space-y-4 hover:border-pink-400 transition group shadow-lg">
+        <div class="w-14 h-14 rounded-2xl bg-pink-500/20 border border-pink-400/40 flex items-center justify-center text-3xl group-hover:scale-110 transition">
+          ⚡
+        </div>
+        <h3 class="text-xl font-black text-white group-hover:text-pink-400 transition">
+          {{ cfg.get('item3_title') or cfg.get('col3_title') or '50,000+ Verified Trivia Questions' }}
+        </h3>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          {{ cfg.get('item3_text') or cfg.get('col3_desc') or 'Curated by trivia editors across pop culture, retro gaming, science, history, cinema, music, and brain-teasers.' }}
+        </p>
+      </div>
+    </div>
+  </div>
+</section>

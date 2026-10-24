@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50 text-slate-800 antialiased">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ settings.get('meta_title') or site_title }}{% endblock %}</title>
+  {% if settings.get('meta_description') %}
+  <meta name="description" content="{{ settings.get('meta_description') }}">
+  {% endif %}
+  {% if settings.get('meta_keywords') %}
+  <meta name="keywords" content="{{ settings.get('meta_keywords') }}">
+  {% endif %}
+
+  <!-- Compiled Local Tailwind CSS (No CDN) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.min.css') }}">
+
+  <style>
+    :root {
+      --accent-color: {{ settings.get('layout_accent_color', '#2563eb') }};
+    }
+  </style>
+
+  {% block head_extra %}{% endblock %}
+</head>
+<body class="flex min-h-full flex-col bg-white">
+  <!-- Top announcement or accent line -->
+  <div class="h-1 bg-blue-600"></div>
+
+  <!-- Header & Navigation -->
+  <header class="border-b border-slate-200 bg-white sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Brand / Site Title -->
+        <div class="flex items-center gap-3">
+          <a href="{{ url_for('public.home') }}" class="font-bold text-xl tracking-tight text-slate-900 hover:text-blue-600 transition">
+            {{ site_title }}
+          </a>
+          {% if site_tagline %}
+          <span class="hidden md:inline-block text-xs text-slate-400 border-l border-slate-200 pl-3">
+            {{ site_tagline }}
+          </span>
+          {% endif %}
+        </div>
+
+        <!-- Desktop Navigation -->
+        <nav class="hidden md:flex items-center space-x-6 text-sm font-medium text-slate-600">
+          {% for item in header_nav %}
+          <a href="{{ item.url }}" {% if item.open_new_tab %}target="_blank" rel="noopener"{% endif %} class="hover:text-blue-600 transition">
+            {{ item.title }}
+          </a>
+          {% endfor %}
+        </nav>
+
+        <!-- Search / Admin link -->
+        <div class="flex items-center gap-4">
+          <a href="{{ url_for('admin.dashboard') }}" class="text-xs font-semibold px-3 py-1.5 border border-slate-200 rounded-md text-slate-600 hover:text-slate-900 hover:border-slate-400 transition">
+            Admin
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+    {% for category, msg in messages %}
+    <div class="p-3 text-sm rounded-md mb-2 {% if category == 'error' %}bg-red-50 text-red-700 border border-red-200{% elif category == 'success' %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+      {{ msg }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <!-- Main Content Layout -->
+  <main class="flex-grow">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Clean Unboxed Footer -->
+  <footer class="border-t border-slate-200 bg-slate-50 mt-16 py-12 text-sm text-slate-600">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div class="md:col-span-2 space-y-3">
+          <div class="font-bold text-base text-slate-900">{{ site_title }}</div>
+          <p class="text-slate-500 text-xs max-w-sm">{{ site_tagline or 'A clean, modern publication platform powered by SiteBuilder Express.' }}</p>
+          {% if settings.get('contact_email') %}
+          <div class="text-xs text-slate-500">Contact: <a href="mailto:{{ settings.get('contact_email') }}" class="text-blue-600 hover:underline">{{ settings.get('contact_email') }}</a></div>
+          {% endif %}
+        </div>
+
+        <div>
+          <h4 class="font-semibold text-slate-900 text-xs uppercase tracking-wider mb-3">Navigation</h4>
+          <ul class="space-y-2 text-xs">
+            {% for item in footer_nav %}
+            <li><a href="{{ item.url }}" class="hover:text-blue-600 transition">{{ item.title }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-semibold text-slate-900 text-xs uppercase tracking-wider mb-3">Connect</h4>
+          <div class="flex flex-col space-y-2 text-xs">
+            {% if settings.get('social_twitter') %}<a href="{{ settings.get('social_twitter') }}" target="_blank" rel="noopener" class="hover:text-blue-600">Twitter / X</a>{% endif %}
+            {% if settings.get('social_facebook') %}<a href="{{ settings.get('social_facebook') }}" target="_blank" rel="noopener" class="hover:text-blue-600">Facebook</a>{% endif %}
+            {% if settings.get('social_instagram') %}<a href="{{ settings.get('social_instagram') }}" target="_blank" rel="noopener" class="hover:text-blue-600">Instagram</a>{% endif %}
+            {% if settings.get('social_youtube') %}<a href="{{ settings.get('social_youtube') }}" target="_blank" rel="noopener" class="hover:text-blue-600">YouTube</a>{% endif %}
+            <a href="{{ url_for('public.sitemap') }}" class="hover:text-blue-600">Sitemap</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="border-t border-slate-200 mt-8 pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400">
+        <p>&copy; {{ site_title }}. All rights reserved.</p>
+        <p>Built with SiteBuilder Express</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

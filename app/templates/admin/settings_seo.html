@@ -1,0 +1,84 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Global SEO &amp; Analytics Settings{% endblock %}
+
+{% block content %}
+<form method="POST" class="max-w-4xl space-y-8">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-4 gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Search Engine Optimization &amp; Analytics</h1>
+      <p class="text-xs text-slate-500 mt-1">Configure global search meta tags, social sharing defaults, and Google Analytics tracking.</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="/sitemap.xml" target="_blank" class="px-3 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded shadow-xs transition flex items-center gap-1.5">
+        <span>View sitemap.xml</span>
+        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+      </a>
+      <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded shadow-sm transition">
+        Save SEO Settings
+      </button>
+    </div>
+  </div>
+
+  <!-- Search Engine Metadata Card -->
+  <div class="bg-white border border-slate-200 rounded-xl p-6 space-y-5 shadow-xs">
+    <div class="border-b border-slate-100 pb-2 flex items-center justify-between">
+      <div>
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">Global Search Meta Directives</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Used as the default meta tags when individual pages or posts do not override them.</p>
+      </div>
+      <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 uppercase">Search Fallbacks</span>
+    </div>
+
+    <div>
+      <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Global Meta Title Template</label>
+      <input type="text" name="meta_title" value="{{ settings.get('meta_title', '') }}" placeholder="e.g. Hi-soft - Enterprise Cloud & IT Solutions" class="w-full text-xs px-3 py-2 border border-slate-300 rounded bg-white">
+      <p class="text-[11px] text-slate-400 mt-0.5">Shown in browser tabs and as the primary headline in Google search results.</p>
+    </div>
+
+    <div>
+      <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Global Meta Description</label>
+      <textarea name="meta_description" rows="3" placeholder="A concise 150-160 character description of your website for search engines..." class="w-full text-xs px-3 py-2 border border-slate-300 rounded leading-relaxed bg-white">{{ settings.get('meta_description', '') }}</textarea>
+      <p class="text-[11px] text-slate-400 mt-0.5">Displays beneath your search title snippet in Google, Bing, and DuckDuckGo.</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Global Meta Keywords</label>
+        <input type="text" name="meta_keywords" value="{{ settings.get('meta_keywords', '') }}" placeholder="cloud, IT solutions, DevOps, enterprise" class="w-full text-xs px-3 py-2 border border-slate-300 rounded bg-white">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Default Social Share Image (og:image)</label>
+        <input type="text" name="default_og_image" value="{{ settings.get('default_og_image', '') }}" placeholder="/static/img/... or https://..." class="w-full text-xs font-mono px-3 py-2 border border-slate-300 rounded bg-white">
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytics & Webmaster Verification Card -->
+  <div class="bg-white border border-slate-200 rounded-xl p-6 space-y-5 shadow-xs">
+    <div class="border-b border-slate-100 pb-2">
+      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">Analytics &amp; Verification</h2>
+      <p class="text-xs text-slate-500 mt-0.5">Connect third-party telemetry tools and Google Webmaster console verification.</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Google Analytics Measurement ID</label>
+        <input type="text" name="google_analytics_id" value="{{ settings.get('google_analytics_id', '') }}" placeholder="G-XXXXXXXXXX" class="w-full text-xs font-mono px-3 py-2 border border-slate-300 rounded bg-white">
+        <p class="text-[11px] text-slate-400 mt-0.5">Automatically injects gtag.js into the public site &lt;head&gt;.</p>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Google Search Console Verification Tag</label>
+        <input type="text" name="google_site_verification" value="{{ settings.get('google_site_verification', '') }}" placeholder="google-site-verification token" class="w-full text-xs font-mono px-3 py-2 border border-slate-300 rounded bg-white">
+        <p class="text-[11px] text-slate-400 mt-0.5">Outputs &lt;meta name="google-site-verification" content="..."&gt;.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex justify-end">
+    <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded shadow-sm transition">
+      Save SEO Settings
+    </button>
+  </div>
+</form>
+{% endblock %}

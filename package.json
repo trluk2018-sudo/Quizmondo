@@ -1,0 +1,29 @@
+{
+  "name": "quizmondo",
+  "version": "1.0.0",
+  "description": "Quizmondo - Live Trivia Arenas, Daily Brain Challenges & Tournament Platform",
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/input.css -o ./app/static/css/tailwind.min.css --minify",
+    "watch:css": "tailwindcss -i ./src/input.css -o ./app/static/css/tailwind.min.css --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trluk2018-sudo/Quizmondo.git"
+  },
+  "keywords": [
+    "trivia",
+    "quiz",
+    "brain-games",
+    "esports",
+    "cms",
+    "flask",
+    "python",
+    "tailwind"
+  ],
+  "author": "trluk2018-sudo",
+  "license": "MIT",
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "tailwindcss": "^4.3.3"
+  }
+}

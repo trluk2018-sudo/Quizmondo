@@ -1,0 +1,180 @@
+{# QuizHub Interactive Live Quiz Arena Widget #}
+<section class="py-16 bg-gradient-to-b from-[#130924] via-slate-950 to-slate-900 border-b-2 border-purple-500/30 text-slate-100" id="daily-challenge">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-slate-950/95 border-2 border-purple-500/40 rounded-3xl p-8 sm:p-12 space-y-8 shadow-2xl relative overflow-hidden backdrop-blur">
+      <!-- Glow ambient lights -->
+      <div class="absolute -top-12 -right-12 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-12 -left-12 w-64 h-64 bg-pink-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Live Challenge Header -->
+      <div class="flex flex-wrap items-center justify-between border-b border-purple-500/20 pb-4 gap-3 relative z-10">
+        <span class="text-xs font-mono font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+          <span id="quizBadgeText">DAILY BRAIN CHALLENGE &bull; QUESTION #842</span>
+        </span>
+        <div class="flex items-center gap-2">
+          <span class="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-mono font-bold" id="quizStreakBadge">
+            STREAK: <span id="quizStreakCount">0</span>
+          </span>
+          <span class="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-mono font-bold" id="quizRewardBadge">
+            +100 XP REWARD
+          </span>
+        </div>
+      </div>
+
+      <!-- Question Text -->
+      <div class="space-y-2 relative z-10">
+        <h3 class="text-xl sm:text-2xl font-black text-white font-mono leading-snug" id="quizQuestionTitle">
+          Which planet in our solar system has the highest number of confirmed moons?
+        </h3>
+        <p class="text-xs text-slate-400 font-mono" id="quizQuestionSubtext">
+          Select your answer below to evaluate your speed &amp; score instantly.
+        </p>
+      </div>
+
+      <!-- 4 Clickable Options -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 relative z-10" id="quizOptionButtons">
+        <button type="button" onclick="submitQuizOption('A')" id="btnOptA" class="quiz-btn p-4 rounded-xl border border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition transform hover:-translate-y-0.5">
+          <span class="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-400/30 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">A</span>
+          <span class="text-sm font-mono text-slate-200" id="lblOptA">Jupiter</span>
+        </button>
+
+        <button type="button" onclick="submitQuizOption('B')" id="btnOptB" class="quiz-btn p-4 rounded-xl border border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition transform hover:-translate-y-0.5">
+          <span class="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-400/30 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">B</span>
+          <span class="text-sm font-mono text-slate-200" id="lblOptB">Saturn</span>
+        </button>
+
+        <button type="button" onclick="submitQuizOption('C')" id="btnOptC" class="quiz-btn p-4 rounded-xl border border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition transform hover:-translate-y-0.5">
+          <span class="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-400/30 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">C</span>
+          <span class="text-sm font-mono text-slate-200" id="lblOptC">Uranus</span>
+        </button>
+
+        <button type="button" onclick="submitQuizOption('D')" id="btnOptD" class="quiz-btn p-4 rounded-xl border border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition transform hover:-translate-y-0.5">
+          <span class="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-400/30 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">D</span>
+          <span class="text-sm font-mono text-slate-200" id="lblOptD">Neptune</span>
+        </button>
+      </div>
+
+      <!-- Instant Score & Explanation Box (hidden by default) -->
+      <div id="quizResultBox" class="hidden p-6 rounded-2xl border transition-all space-y-4 font-mono text-xs relative z-10">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+          <span id="quizResultTitle" class="font-black text-sm"></span>
+          <span class="px-2.5 py-1 rounded bg-white/10 font-bold uppercase" id="quizXpBadge">+100 XP AWARDED</span>
+        </div>
+        <p id="quizResultExplanation" class="text-slate-300 leading-relaxed"></p>
+        <div class="pt-2 flex justify-end">
+          <button type="button" onclick="loadNextQuizQuestion()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-slate-950 font-black uppercase tracking-wider text-xs shadow-md transition">
+            Next Challenge &rarr;
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+var quizQuestions = [
+  {
+    badge: 'DAILY BRAIN CHALLENGE • QUESTION #842',
+    question: 'Which planet in our solar system has the highest number of confirmed moons?',
+    options: { A: 'Jupiter', B: 'Saturn', C: 'Uranus', D: 'Neptune' },
+    correct: 'B',
+    correctTitle: '🎉 CORRECT! Saturn is the Moon King.',
+    correctExp: 'Saturn currently has 146 confirmed moons officially recognized by the International Astronomical Union, surpassing Jupiter\'s 95 confirmed moons.',
+    wrongTitle: '❌ INCORRECT! The correct answer is B. Saturn.',
+    wrongExp: 'While Jupiter was long considered the leader, recent discoveries confirmed Saturn possesses 146 moons, making it the supreme satellite titan of our solar system.'
+  },
+  {
+    badge: 'SCIENCE ARENA • QUESTION #843',
+    question: 'What is the chemical symbol for the precious metal Gold?',
+    options: { A: 'Ag', B: 'Fe', C: 'Au', D: 'Gd' },
+    correct: 'C',
+    correctTitle: '🎉 BRILLIANT! Au is Gold.',
+    correctExp: 'Au originates from the Latin word "Aurum", meaning shining dawn. Silver is Ag (Argentum) and Iron is Fe (Ferrum).',
+    wrongTitle: '❌ INCORRECT! The symbol is C. Au.',
+    wrongExp: 'Gold\'s chemical symbol is Au (from Latin "Aurum"). Ag represents Silver, while Fe represents Iron.'
+  },
+  {
+    badge: 'GAMING HISTORY • QUESTION #844',
+    question: 'In which year was the original Nintendo Entertainment System (NES) released in North America?',
+    options: { A: '1983', B: '1985', C: '1989', D: '1991' },
+    correct: 'B',
+    correctTitle: '🎉 SPOT ON! 1985 ushered in the 8-bit era.',
+    correctExp: 'The NES launched in a limited New York test market in October 1985 before rolling out nationwide across North America in early 1986.',
+    wrongTitle: '❌ MISSED IT! It was B. 1985.',
+    wrongExp: 'The Famicom debuted in Japan in 1983, but the redesigned NES launched in North America in October 1985.'
+  }
+];
+
+var currentQuizIndex = 0;
+var quizStreak = 0;
+var answeredCurrent = false;
+
+function renderCurrentQuiz() {
+  var q = quizQuestions[currentQuizIndex];
+  document.getElementById('quizBadgeText').textContent = q.badge;
+  document.getElementById('quizQuestionTitle').textContent = q.question;
+  document.getElementById('lblOptA').textContent = q.options.A;
+  document.getElementById('lblOptB').textContent = q.options.B;
+  document.getElementById('lblOptC').textContent = q.options.C;
+  document.getElementById('lblOptD').textContent = q.options.D;
+  
+  // Reset buttons
+  ['A', 'B', 'C', 'D'].forEach(function(opt) {
+    var btn = document.getElementById('btnOpt' + opt);
+    btn.className = 'quiz-btn p-4 rounded-xl border border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition transform hover:-translate-y-0.5';
+    btn.disabled = false;
+  });
+  
+  var resultBox = document.getElementById('quizResultBox');
+  resultBox.classList.add('hidden');
+  answeredCurrent = false;
+}
+
+function submitQuizOption(choice) {
+  if (answeredCurrent) return;
+  answeredCurrent = true;
+
+  var q = quizQuestions[currentQuizIndex];
+  var resultBox = document.getElementById('quizResultBox');
+  var resultTitle = document.getElementById('quizResultTitle');
+  var resultExp = document.getElementById('quizResultExplanation');
+  var xpBadge = document.getElementById('quizXpBadge');
+  
+  // Highlight chosen button and correct button
+  ['A', 'B', 'C', 'D'].forEach(function(opt) {
+    var btn = document.getElementById('btnOpt' + opt);
+    btn.disabled = true;
+    if (opt === q.correct) {
+      btn.className = 'quiz-btn p-4 rounded-xl border-2 border-emerald-500 bg-emerald-950/70 text-left flex items-center gap-3';
+    } else if (opt === choice) {
+      btn.className = 'quiz-btn p-4 rounded-xl border-2 border-rose-500 bg-rose-950/70 text-left flex items-center gap-3';
+    }
+  });
+
+  resultBox.classList.remove('hidden');
+
+  if (choice === q.correct) {
+    quizStreak += 1;
+    resultBox.className = 'p-6 rounded-2xl border-2 border-emerald-500 bg-emerald-950/90 text-emerald-200 space-y-4 font-mono text-xs shadow-xl relative z-10';
+    resultTitle.textContent = q.correctTitle;
+    resultExp.textContent = q.correctExp;
+    xpBadge.className = 'px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 font-bold uppercase';
+    xpBadge.textContent = '+100 XP ADDED TO PROFILE';
+  } else {
+    quizStreak = 0;
+    resultBox.className = 'p-6 rounded-2xl border-2 border-rose-500 bg-rose-950/90 text-rose-200 space-y-4 font-mono text-xs shadow-xl relative z-10';
+    resultTitle.textContent = q.wrongTitle;
+    resultExp.textContent = q.wrongExp;
+    xpBadge.className = 'px-2.5 py-1 rounded bg-rose-500/20 text-rose-300 font-bold uppercase';
+    xpBadge.textContent = '+10 XP CONSOLATION';
+  }
+
+  document.getElementById('quizStreakCount').textContent = quizStreak;
+}
+
+function loadNextQuizQuestion() {
+  currentQuizIndex = (currentQuizIndex + 1) % quizQuestions.length;
+  renderCurrentQuiz();
+}
+</script>

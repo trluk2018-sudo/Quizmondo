@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" fill="none" class="w-full h-auto">
+  <defs>
+    <linearGradient id="afP1Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#09090b" />
+      <stop offset="100%" stop-color="#18181b" />
+    </linearGradient>
+    <linearGradient id="afAmber" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#ea580c" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#afP1Grad)" />
+  <!-- Olympic Barbell Plates Graphic -->
+  <line x1="160" y1="200" x2="640" y2="200" stroke="#71717a" stroke-width="12" stroke-linecap="round" />
+  <rect x="250" y="110" width="30" height="180" rx="6" fill="#18181b" stroke="#f59e0b" stroke-width="3" />
+  <rect x="290" y="130" width="25" height="140" rx="4" fill="#27272a" stroke="#d4d4d8" stroke-width="2" />
+  <rect x="520" y="110" width="30" height="180" rx="6" fill="#18181b" stroke="#f59e0b" stroke-width="3" />
+  <rect x="485" y="130" width="25" height="140" rx="4" fill="#27272a" stroke="#d4d4d8" stroke-width="2" />
+  <circle cx="400" cy="200" r="30" fill="url(#afAmber)" />
+  <text x="400" y="206" fill="#000000" font-family="sans-serif" font-size="14" font-weight="900" text-anchor="middle">20KG</text>
+
+  <rect x="40" y="40" width="220" height="34" rx="4" fill="#f59e0b" fill-opacity="0.15" stroke="#f59e0b" stroke-width="1.5" />
+  <text x="150" y="62" fill="#fbbf24" font-family="sans-serif" font-size="12" font-weight="900" text-anchor="middle">STRENGTH &amp; CONDITIONING</text>
+  <text x="400" y="360" fill="#ffffff" font-family="sans-serif" font-size="24" font-weight="900" text-anchor="middle">The Science of Hypertrophy</text>
+  <text x="400" y="395" fill="#a1a1aa" font-family="sans-serif" font-size="14" text-anchor="middle">Progressive Overload Protocols in Olympic Barbell Training</text>
+</svg>

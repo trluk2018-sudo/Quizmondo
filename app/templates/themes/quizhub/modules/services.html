@@ -1,0 +1,57 @@
+{# QuizHub Module: Quiz Disciplines & Game Modes #}
+{% set cfg = mod.get_config() if mod and mod.get_config else (module_cfg or {}) %}
+<section class="py-20 bg-slate-900 border-b border-purple-500/20 text-slate-100" id="services">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+    <div class="text-center max-w-3xl mx-auto space-y-3">
+      <span class="text-xs font-black uppercase tracking-widest text-amber-400">QUIZ DISCIPLINES &amp; GAME MODES</span>
+      <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">
+        {{ cfg.get('headline') or 'Select Your Quiz Discipline &amp; Jump In' }}
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-300">
+        {{ cfg.get('subhead') or 'Hundreds of interactive trivia tracks, rapid-fire blitz rounds, and multiplayer leaderboards.' }}
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- Service 1 -->
+      <div class="bg-slate-950/90 border border-purple-500/30 rounded-2xl p-6 space-y-4 hover:border-amber-400 transition group flex flex-col justify-between shadow-xl">
+        <div class="space-y-3">
+          <div class="w-12 h-12 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-2xl group-hover:scale-110 transition">🕹️</div>
+          <h3 class="text-lg font-black text-white group-hover:text-amber-400 transition">{{ cfg.get('s1_title') or 'Retro Arcade & Pop Culture' }}</h3>
+          <p class="text-xs text-slate-300 leading-relaxed">{{ cfg.get('s1_desc') or '80s and 90s gaming, blockbuster cinema, cult classic TV shows, and legendary music albums.' }}</p>
+        </div>
+        <a href="#quiz-arena" class="block w-full py-2.5 rounded-xl bg-purple-900/60 hover:bg-amber-500 hover:text-black text-amber-300 text-xs font-black uppercase tracking-wider text-center border border-purple-500/40 transition">Play Blitz Round &rarr;</a>
+      </div>
+
+      <!-- Service 2 -->
+      <div class="bg-slate-950/90 border border-purple-500/30 rounded-2xl p-6 space-y-4 hover:border-cyan-400 transition group flex flex-col justify-between shadow-xl">
+        <div class="space-y-3">
+          <div class="w-12 h-12 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-2xl group-hover:scale-110 transition">🚀</div>
+          <h3 class="text-lg font-black text-white group-hover:text-cyan-400 transition">{{ cfg.get('s2_title') or 'Science, Space & Tech Trivia' }}</h3>
+          <p class="text-xs text-slate-300 leading-relaxed">{{ cfg.get('s2_desc') or 'Quantum discoveries, astrophysical mysteries, coding algorithms, and planetary exploration.' }}</p>
+        </div>
+        <a href="#quiz-arena" class="block w-full py-2.5 rounded-xl bg-cyan-950/60 hover:bg-cyan-400 hover:text-black text-cyan-300 text-xs font-black uppercase tracking-wider text-center border border-cyan-500/40 transition">Play Science Cup &rarr;</a>
+      </div>
+
+      <!-- Service 3 -->
+      <div class="bg-slate-950/90 border border-purple-500/30 rounded-2xl p-6 space-y-4 hover:border-pink-400 transition group flex flex-col justify-between shadow-xl">
+        <div class="space-y-3">
+          <div class="w-12 h-12 rounded-xl bg-pink-500/20 border border-pink-400/40 flex items-center justify-center text-2xl group-hover:scale-110 transition">🌍</div>
+          <h3 class="text-lg font-black text-white group-hover:text-pink-400 transition">{{ cfg.get('s3_title') or 'World Geography & History' }}</h3>
+          <p class="text-xs text-slate-300 leading-relaxed">{{ cfg.get('s3_desc') or 'Ancient empires, global capitals, historic milestones, flags, and world landmarks.' }}</p>
+        </div>
+        <a href="#quiz-arena" class="block w-full py-2.5 rounded-xl bg-pink-950/60 hover:bg-pink-500 hover:text-white text-pink-300 text-xs font-black uppercase tracking-wider text-center border border-pink-500/40 transition">Play World Trivia &rarr;</a>
+      </div>
+
+      <!-- Service 4 -->
+      <div class="bg-slate-950/90 border border-purple-500/30 rounded-2xl p-6 space-y-4 hover:border-emerald-400 transition group flex flex-col justify-between shadow-xl">
+        <div class="space-y-3">
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-2xl group-hover:scale-110 transition">⚡</div>
+          <h3 class="text-lg font-black text-white group-hover:text-emerald-400 transition">{{ cfg.get('s4_title') or 'Speed Buzzer Showdowns' }}</h3>
+          <p class="text-xs text-slate-300 leading-relaxed">{{ cfg.get('s4_desc') or 'Fast-paced elimination matches where response time under 5 seconds earns double multiplier points.' }}</p>
+        </div>
+        <a href="#quiz-arena" class="block w-full py-2.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-400 hover:text-black text-emerald-300 text-xs font-black uppercase tracking-wider text-center border border-emerald-500/40 transition">Enter Buzzer Arena &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>

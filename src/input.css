@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+.module-wrapper[style*="background-color"] > section {
+  background-color: transparent !important;
+}
+

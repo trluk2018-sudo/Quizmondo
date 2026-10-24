@@ -1,0 +1,311 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Widgets &amp; Sidebars{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl space-y-8">
+  <!-- Top Bar -->
+  <div class="border-b border-slate-200 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Widgets &amp; Sidebars Manager</h1>
+      <p class="text-xs text-slate-500 mt-1">Configure, style, and reorder widgets across the left/right sidebars and 4-column footer areas. Every widget supports independent color pickers and opacity sliders.</p>
+    </div>
+    <a href="{{ url_for('admin.footer_settings') }}" class="px-3.5 py-2 bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 text-xs font-semibold rounded shadow-2xs transition flex items-center gap-1.5 shrink-0">
+      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+      Open 4-Column Footer Customizer
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Add Widget Box -->
+    <div class="bg-white border border-slate-200 p-5 space-y-4 rounded-xl shadow-xs min-w-0">
+      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-2">Add New Widget</h2>
+      <form method="POST" class="space-y-4">
+        <input type="hidden" name="action" value="add">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Target Area</label>
+          <select name="sidebar_id" class="w-full text-xs border border-slate-300 rounded px-2.5 py-2 bg-white">
+            <option value="sidebar-right">Right Sidebar</option>
+            <option value="sidebar-left">Left Sidebar</option>
+            <option value="footer-1">Footer Column 1</option>
+            <option value="footer-2">Footer Column 2</option>
+            <option value="footer-3">Footer Column 3</option>
+            <option value="footer-4">Footer Column 4</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Widget Type</label>
+          <select name="widget_type" onchange="toggleWidgetExtras(this.value)" class="w-full text-xs border border-slate-300 rounded px-2.5 py-2 bg-white">
+            <option value="recent_posts">Recent Posts</option>
+            <option value="menu_widget">Menu Widget (Navigation Links)</option>
+            <option value="categories">Categories List</option>
+            <option value="custom_html">Custom Text / HTML</option>
+            <option value="brand_logo">Brand Logo &amp; Summary</option>
+            <option value="newsletter">Newsletter Form</option>
+            <option value="contact_card">Contact Info Card</option>
+            <option value="search">Search Bar</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Widget Title</label>
+          <input type="text" name="title" placeholder="e.g. Recent Dispatches (or blank)" class="w-full text-xs px-2.5 py-2 border border-slate-300 rounded">
+          <p class="text-[10px] text-slate-400 mt-0.5">Leave blank for no heading bar.</p>
+        </div>
+
+        <!-- Extra for Menu Widget -->
+        <div id="w_extra_menu" class="hidden space-y-1">
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Navigation Menu Location</label>
+          <select name="menu_location" class="w-full text-xs border border-slate-300 rounded px-2.5 py-2 bg-white">
+            <option value="solutions">IT Solutions Menu (5 Practice Areas)</option>
+            <option value="footer">Footer Navigation Menu (Quick Links)</option>
+            <option value="header">Header Navigation Menu</option>
+          </select>
+          <p class="text-[10px] text-slate-400">Configure menu links in <a href="{{ url_for('admin.menus') }}" class="underline text-blue-600">Menus GUI</a>.</p>
+        </div>
+
+        <!-- Extra for Brand Logo -->
+        <div id="w_extra_brand" class="hidden space-y-2">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Logo URL</label>
+            <input type="text" name="logo_url" placeholder="/static/img/tekclub_logo.svg" class="w-full text-xs font-mono px-2 py-1.5 border border-slate-300 rounded">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Company Bio</label>
+            <textarea name="description" rows="2" placeholder="Enterprise IT solutions..." class="w-full text-xs p-2 border border-slate-300 rounded"></textarea>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Content / Body (for Custom HTML)</label>
+          <textarea name="content" rows="3" placeholder="Optional HTML or announcement text..." class="w-full text-xs p-2 border border-slate-300 rounded font-mono"></textarea>
+        </div>
+
+        <!-- Palette & Opacity Controls for Widget -->
+        <div class="pt-3 border-t border-slate-100 space-y-3 min-w-0">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-[#022d62] block">Color Pickers &amp; Opacity Sliders</span>
+
+          <div class="grid grid-cols-2 gap-2.5 min-w-0">
+            <!-- Background Color + Opacity -->
+            <div class="space-y-1 min-w-0">
+              <label class="block text-[10px] font-semibold uppercase text-slate-600 truncate" title="Background Color">Background Color</label>
+              <div class="flex items-center gap-1.5 min-w-0">
+                <input type="color" id="add_w_bg_picker" value="#f8fafc" oninput="document.getElementById('add_w_bg_text').value = this.value.toUpperCase()" class="h-8 w-8 shrink-0 p-0.5 rounded border border-slate-300 cursor-pointer">
+                <input type="text" name="bg_color" id="add_w_bg_text" value="#F8FAFC" oninput="if(this.value.match(/^#[0-9A-Fa-f]{6}$/)) document.getElementById('add_w_bg_picker').value = this.value" class="w-full min-w-0 flex-1 text-xs font-mono border border-slate-300 rounded px-1.5 py-1 uppercase">
+              </div>
+              <div class="flex items-center gap-1.5 min-w-0">
+                <input type="range" name="bg_opacity" min="0" max="100" value="100" oninput="document.getElementById('add_w_bg_op_val').innerText = this.value + '%'" class="w-full min-w-0 accent-blue-600 cursor-pointer">
+                <span id="add_w_bg_op_val" class="text-[10px] font-mono font-bold text-slate-600 shrink-0 w-7 text-right">100%</span>
+              </div>
+            </div>
+
+            <!-- Font Color + Opacity -->
+            <div class="space-y-1 min-w-0">
+              <label class="block text-[10px] font-semibold uppercase text-slate-600 truncate" title="Font / Text Color">Font / Text Color</label>
+              <div class="flex items-center gap-1.5 min-w-0">
+                <input type="color" id="add_w_font_picker" value="#1e293b" oninput="document.getElementById('add_w_font_text').value = this.value.toUpperCase()" class="h-8 w-8 shrink-0 p-0.5 rounded border border-slate-300 cursor-pointer">
+                <input type="text" name="font_color" id="add_w_font_text" value="#1E293B" oninput="if(this.value.match(/^#[0-9A-Fa-f]{6}$/)) document.getElementById('add_w_font_picker').value = this.value" class="w-full min-w-0 flex-1 text-xs font-mono border border-slate-300 rounded px-1.5 py-1 uppercase">
+              </div>
+              <div class="flex items-center gap-1.5 min-w-0">
+                <input type="range" name="font_opacity" min="0" max="100" value="100" oninput="document.getElementById('add_w_font_op_val').innerText = this.value + '%'" class="w-full min-w-0 accent-blue-600 cursor-pointer">
+                <span id="add_w_font_op_val" class="text-[10px] font-mono font-bold text-slate-600 shrink-0 w-7 text-right">100%</span>
+              </div>
+            </div>
+
+            <!-- Accent Color + Opacity -->
+            <div class="space-y-1 min-w-0">
+              <label class="block text-[10px] font-semibold uppercase text-slate-600 truncate" title="Accent / Heading Color">Accent / Heading Color</label>
+              <div class="flex items-center gap-1.5 min-w-0">
+                <input type="color" id="add_w_accent_picker" value="#022d62" oninput="document.getElementById('add_w_accent_text').value = this.value.toUpperCase()" class="h-8 w-8 shrink-0 p-0.5 rounded border border-slate-300 cursor-pointer">
+                <input type="text" name="accent_color" id="add_w_accent_text" value="#022D62" oninput="if(this.value.match(/^#[0-9A-Fa-f]{6}$/)) document.getElementById('add_w_accent_picker').value = this.value" class="w-full min-w-0 flex-1 text-xs font-mono border border-slate-300 rounded px-1.5 py-1 uppercase">
+              </div>
+              <div class="flex items-center gap-1.5 min-w-0">
+                <input type="range" name="accent_opacity" min="0" max="100" value="100" oninput="document.getElementById('add_w_accent_op_val').innerText = this.value + '%'" class="w-full min-w-0 accent-blue-600 cursor-pointer">
+                <span id="add_w_accent_op_val" class="text-[10px] font-mono font-bold text-slate-600 shrink-0 w-7 text-right">100%</span>
+              </div>
+            </div>
+
+            <!-- Font Style -->
+            <div class="space-y-1 min-w-0">
+              <label class="block text-[10px] font-semibold uppercase text-slate-600 truncate" title="Font Typography Style">Font Typography Style</label>
+              <select name="font_style" class="w-full min-w-0 text-xs border border-slate-300 rounded px-2 py-1.5 bg-white">
+                <option value="sans">Modern Sans</option>
+                <option value="serif">Editorial Serif</option>
+                <option value="mono">Technical Monospace</option>
+              </select>
+              <span class="text-[10px] text-slate-400 block truncate">Heading &amp; text family</span>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded shadow-sm transition">
+          + Add Widget
+        </button>
+      </form>
+    </div>
+
+    <!-- Active Sidebars Display -->
+    <div class="lg:col-span-2 space-y-6">
+      <!-- Right Sidebar -->
+      <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-xs">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Right Sidebar Active Widgets</h3>
+          <span class="text-[11px] text-slate-400 font-mono">{{ right_widgets|length }} widgets</span>
+        </div>
+
+        <ul class="divide-y divide-slate-100 text-sm">
+          {% for w in right_widgets %}
+          {% set wcfg = w.get_config() if w and w.get_config else {} %}
+          <li class="py-3 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-800 text-xs">{{ w.title if w.title else '(No Title Heading)' }}</span>
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-600 uppercase">{{ w.widget_type|replace('_', ' ') }}</span>
+                {% if wcfg.get('bg_color') %}
+                <span class="inline-block w-2.5 h-2.5 rounded-full border border-slate-300" style="background-color: {{ wcfg.get('bg_color') }};" title="Background"></span>
+                {% endif %}
+                {% if wcfg.get('accent_color') %}
+                <span class="inline-block w-2.5 h-2.5 rounded-full border border-slate-300" style="background-color: {{ wcfg.get('accent_color') }};" title="Accent"></span>
+                {% endif %}
+              </div>
+              {% if w.content %}
+              <p class="text-[11px] text-slate-400 truncate mt-0.5 max-w-sm">{{ w.content }}</p>
+              {% endif %}
+            </div>
+
+            <div class="flex items-center gap-1.5 shrink-0">
+              <!-- Move Up / Down -->
+              <form method="POST" action="{{ url_for('admin.widgets') }}" class="inline">
+                <input type="hidden" name="action" value="move_up">
+                <input type="hidden" name="widget_id" value="{{ w.id }}">
+                <button type="submit" class="p-1 border border-slate-200 rounded hover:bg-slate-50 text-slate-600 text-xs cursor-pointer" title="Move Up">&uarr;</button>
+              </form>
+              <form method="POST" action="{{ url_for('admin.widgets') }}" class="inline">
+                <input type="hidden" name="action" value="move_down">
+                <input type="hidden" name="widget_id" value="{{ w.id }}">
+                <button type="submit" class="p-1 border border-slate-200 rounded hover:bg-slate-50 text-slate-600 text-xs cursor-pointer" title="Move Down">&darr;</button>
+              </form>
+
+              <!-- Remove -->
+              <form method="POST" action="{{ url_for('admin.widgets') }}" class="inline" onsubmit="return confirm('Remove widget?');">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="widget_id" value="{{ w.id }}">
+                <button type="submit" class="p-1 text-xs text-red-500 hover:text-red-700 hover:underline ml-1 cursor-pointer">Remove</button>
+              </form>
+            </div>
+          </li>
+          {% else %}
+          <li class="py-4 text-xs text-slate-400 italic">No widgets in right sidebar.</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <!-- Left Sidebar -->
+      <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-xs">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Left Sidebar Active Widgets</h3>
+          <span class="text-[11px] text-slate-400 font-mono">{{ left_widgets|length }} widgets</span>
+        </div>
+
+        <ul class="divide-y divide-slate-100 text-sm">
+          {% for w in left_widgets %}
+          {% set wcfg = w.get_config() if w and w.get_config else {} %}
+          <li class="py-3 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-800 text-xs">{{ w.title if w.title else '(No Title Heading)' }}</span>
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-600 uppercase">{{ w.widget_type|replace('_', ' ') }}</span>
+                {% if wcfg.get('bg_color') %}
+                <span class="inline-block w-2.5 h-2.5 rounded-full border border-slate-300" style="background-color: {{ wcfg.get('bg_color') }};" title="Background"></span>
+                {% endif %}
+                {% if wcfg.get('accent_color') %}
+                <span class="inline-block w-2.5 h-2.5 rounded-full border border-slate-300" style="background-color: {{ wcfg.get('accent_color') }};" title="Accent"></span>
+                {% endif %}
+              </div>
+              {% if w.content %}
+              <p class="text-[11px] text-slate-400 truncate mt-0.5 max-w-sm">{{ w.content }}</p>
+              {% endif %}
+            </div>
+
+            <div class="flex items-center gap-1.5 shrink-0">
+              <!-- Move Up / Down -->
+              <form method="POST" action="{{ url_for('admin.widgets') }}" class="inline">
+                <input type="hidden" name="action" value="move_up">
+                <input type="hidden" name="widget_id" value="{{ w.id }}">
+                <button type="submit" class="p-1 border border-slate-200 rounded hover:bg-slate-50 text-slate-600 text-xs cursor-pointer" title="Move Up">&uarr;</button>
+              </form>
+              <form method="POST" action="{{ url_for('admin.widgets') }}" class="inline">
+                <input type="hidden" name="action" value="move_down">
+                <input type="hidden" name="widget_id" value="{{ w.id }}">
+                <button type="submit" class="p-1 border border-slate-200 rounded hover:bg-slate-50 text-slate-600 text-xs cursor-pointer" title="Move Down">&darr;</button>
+              </form>
+
+              <!-- Remove -->
+              <form method="POST" action="{{ url_for('admin.widgets') }}" class="inline" onsubmit="return confirm('Remove widget?');">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="widget_id" value="{{ w.id }}">
+                <button type="submit" class="p-1 text-xs text-red-500 hover:text-red-700 hover:underline ml-1 cursor-pointer">Remove</button>
+              </form>
+            </div>
+          </li>
+          {% else %}
+          <li class="py-4 text-xs text-slate-400 italic">No widgets in left sidebar.</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <!-- Footer Columns Overview Card -->
+      <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-xs space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">4-Column Footer Widgets Summary</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">Manage columns visually in the dedicated customizer.</p>
+          </div>
+          <a href="{{ url_for('admin.footer_settings') }}" class="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline">
+            Manage Footer Columns &rarr;
+          </a>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+          <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+            <span class="text-[10px] uppercase font-bold text-slate-500 block">Col 1</span>
+            <span class="text-lg font-bold text-slate-800">{{ col1_widgets|length }}</span>
+            <span class="text-[10px] text-slate-400 block">widgets</span>
+          </div>
+          <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+            <span class="text-[10px] uppercase font-bold text-slate-500 block">Col 2</span>
+            <span class="text-lg font-bold text-slate-800">{{ col2_widgets|length }}</span>
+            <span class="text-[10px] text-slate-400 block">widgets</span>
+          </div>
+          <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+            <span class="text-[10px] uppercase font-bold text-slate-500 block">Col 3</span>
+            <span class="text-lg font-bold text-slate-800">{{ col3_widgets|length }}</span>
+            <span class="text-[10px] text-slate-400 block">widgets</span>
+          </div>
+          <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+            <span class="text-[10px] uppercase font-bold text-slate-500 block">Col 4</span>
+            <span class="text-lg font-bold text-slate-800">{{ col4_widgets|length }}</span>
+            <span class="text-[10px] text-slate-400 block">widgets</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleWidgetExtras(type) {
+  var menuWrap = document.getElementById('w_extra_menu');
+  var brandWrap = document.getElementById('w_extra_brand');
+  if (menuWrap) menuWrap.classList.add('hidden');
+  if (brandWrap) brandWrap.classList.add('hidden');
+
+  if (type === 'menu_widget') {
+    if (menuWrap) menuWrap.classList.remove('hidden');
+  } else if (type === 'brand_logo') {
+    if (brandWrap) brandWrap.classList.remove('hidden');
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,35 @@
+{# QuizHub Module: Tournament Host & Inquiry Form #}
+{% set cfg = mod.get_config() if mod and mod.get_config else (module_cfg or {}) %}
+<section class="py-20 bg-slate-900 border-b border-purple-500/20 text-slate-100" id="contact">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+    <div class="text-center space-y-2">
+      <span class="text-xs font-black uppercase tracking-widest text-amber-400">{{ cfg.get('kicker') or 'HOST AN EVENT' }}</span>
+      <h2 class="text-3xl font-black text-white tracking-tight">
+        {{ cfg.get('headline') or 'Host a Private Tournament or Corporate Trivia Arena' }}
+      </h2>
+      <p class="text-xs text-slate-400">
+        {{ cfg.get('subhead') or 'Inquire about branded quiz leagues, custom question packs, and private enterprise servers.' }}
+      </p>
+    </div>
+
+    <form action="{{ url_for('public.contact') }}" method="POST" class="bg-slate-950/90 border-2 border-purple-500/30 rounded-2xl p-8 space-y-6 shadow-2xl">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400 mb-2">Gamer Tag / Name</label>
+          <input type="text" name="name" required placeholder="e.g. PixelMaster" class="w-full text-xs px-4 py-3 rounded-xl bg-slate-900 border border-purple-500/30 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400">
+        </div>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400 mb-2">Email Address</label>
+          <input type="email" name="email" required placeholder="player@domain.com" class="w-full text-xs px-4 py-3 rounded-xl bg-slate-900 border border-purple-500/30 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400">
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400 mb-2">Tournament Type &amp; Requirements</label>
+        <textarea name="message" rows="4" required placeholder="Tell us about your team size, preferred question themes, date, or league rules..." class="w-full text-xs px-4 py-3 rounded-xl bg-slate-900 border border-purple-500/30 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"></textarea>
+      </div>
+      <button type="submit" class="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 via-purple-600 to-pink-500 hover:from-cyan-400 hover:to-pink-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-purple-500/30 transition">
+        {{ cfg.get('submit_btn_text') or 'Submit Tournament Inquiry ⚡' }}
+      </button>
+    </form>
+  </div>
+</section>

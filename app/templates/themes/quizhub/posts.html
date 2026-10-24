@@ -1,0 +1,136 @@
+{% extends "themes/quizhub/base.html" %}
+
+{% block title %}Arena Dispatches &amp; Tactics &mdash; {{ site_title }}{% endblock %}
+
+{% block content %}
+<div class="space-y-0 text-slate-100">
+  <section class="bg-gradient-to-r from-slate-950 via-[#1e1438] to-slate-900 text-white py-14 border-b-2 border-purple-500/30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <span class="text-xs font-black uppercase tracking-widest text-amber-400">TRIVIAMATRIX KNOWLEDGE BASE</span>
+      <h1 class="text-3xl sm:text-5xl font-black tracking-tight mt-1">Tournament Dispatches &amp; Tactics</h1>
+    </div>
+  </section>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <!-- Articles Feed (8 cols) -->
+      <div class="lg:col-span-8 space-y-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          {% for p in pagination.items %}
+          <article class="bg-slate-950/90 border border-purple-500/30 rounded-2xl overflow-hidden hover:border-cyan-400 transition group flex flex-col justify-between shadow-xl">
+            <div>
+              <div class="h-48 overflow-hidden relative">
+                <img src="{{ p.featured_image or url_for('static', filename='img/quizhub_esports.jpg') }}" alt="{{ p.title }}" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent"></div>
+                {% if p.category %}
+                <span class="absolute bottom-3 left-3 text-[10px] font-black uppercase px-2.5 py-1 rounded bg-purple-600/90 text-white">
+                  {{ p.category.name }}
+                </span>
+                {% endif %}
+              </div>
+              <div class="p-6 space-y-2">
+                <span class="text-[10px] font-mono text-slate-400">{{ p.created_at.strftime('%B %d, %Y') }}</span>
+                <h3 class="text-lg font-black text-white group-hover:text-cyan-400 transition leading-snug">
+                  <a href="{{ url_for('public.post_detail', slug=p.slug) }}">{{ p.title }}</a>
+                </h3>
+                <p class="text-xs text-slate-300 line-clamp-3 leading-relaxed">{{ p.excerpt }}</p>
+              </div>
+            </div>
+            <div class="p-6 pt-0">
+              <a href="{{ url_for('public.post_detail', slug=p.slug) }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 group-hover:text-amber-300 uppercase tracking-wider">
+                Read Tactical Guide &rarr;
+              </a>
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+
+        {% if pagination.pages > 1 %}
+        <div class="flex items-center justify-between border-t border-purple-500/20 pt-6 text-xs font-mono">
+          {% if pagination.has_prev %}
+          <a href="{{ url_for('public.posts', page=pagination.prev_num) }}" class="px-4 py-2 border border-purple-500/40 rounded text-cyan-400 hover:bg-slate-800">
+            &larr; Previous Stage
+          </a>
+          {% else %}
+          <div></div>
+          {% endif %}
+          <span class="text-slate-400">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+          {% if pagination.has_next %}
+          <a href="{{ url_for('public.posts', page=pagination.next_num) }}" class="px-4 py-2 border border-purple-500/40 rounded text-cyan-400 hover:bg-slate-800">
+            Next Stage &rarr;
+          </a>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Right Sidebar Column (4 cols) -->
+      <aside class="lg:col-span-4 space-y-8">
+        {% for w in right_widgets %}
+        <div class="bg-slate-950/90 border border-purple-500/30 p-6 rounded-2xl space-y-3 shadow-xl">
+          {% if w.title %}
+          <h3 class="text-xs font-black uppercase tracking-wider text-amber-400 border-b border-purple-500/20 pb-2">{{ w.title }}</h3>
+          {% endif %}
+          <div class="text-xs leading-relaxed text-slate-300">
+            {% if w.widget_type == 'recent_posts' %}
+            <ul class="space-y-3">
+              {% for rp in recent_posts %}
+              <li class="space-y-1">
+                <a href="{{ url_for('public.post_detail', slug=rp.slug) }}" class="font-bold text-white hover:text-cyan-400 block line-clamp-2 transition">
+                  {{ rp.title }}
+                </a>
+                <span class="text-[10px] text-slate-400">{{ rp.created_at.strftime('%b %d, %Y') }}</span>
+              </li>
+              {% endfor %}
+            </ul>
+            {% elif w.widget_type == 'categories' %}
+            <ul class="space-y-2 font-mono">
+              {% for cat in categories %}
+              <li>
+                <a href="{{ url_for('public.category_detail', slug=cat.slug) }}" class="flex items-center justify-between py-1 text-slate-300 hover:text-amber-400 transition">
+                  <span>{{ cat.name }}</span>
+                  <span class="text-cyan-400 text-[11px]">({{ cat.posts.count() }})</span>
+                </a>
+              </li>
+              {% endfor %}
+            </ul>
+            {% elif w.widget_type == 'custom_html' %}
+            {{ w.content|safe }}
+            {% else %}
+            {{ w.content }}
+            {% endif %}
+          </div>
+        </div>
+        {% else %}
+        <div class="bg-slate-950/90 border border-purple-500/30 p-6 rounded-2xl space-y-3 shadow-xl">
+          <h3 class="text-xs font-black uppercase tracking-wider text-amber-400 border-b border-purple-500/20 pb-2">Arena Match Logs</h3>
+          <ul class="space-y-3 text-xs">
+            {% for rp in recent_posts %}
+            <li class="space-y-1">
+              <a href="{{ url_for('public.post_detail', slug=rp.slug) }}" class="font-bold text-white hover:text-cyan-400 block line-clamp-2 transition">
+                {{ rp.title }}
+              </a>
+              <span class="text-[10px] text-slate-400">{{ rp.created_at.strftime('%b %d, %Y') }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div class="bg-slate-950/90 border border-purple-500/30 p-6 rounded-2xl space-y-3 shadow-xl">
+          <h3 class="text-xs font-black uppercase tracking-wider text-amber-400 border-b border-purple-500/20 pb-2">Battle Categories</h3>
+          <ul class="space-y-2 font-mono text-xs">
+            {% for cat in categories %}
+            <li>
+              <a href="{{ url_for('public.category_detail', slug=cat.slug) }}" class="flex items-center justify-between py-1 text-slate-300 hover:text-amber-400 transition">
+                <span>{{ cat.name }}</span>
+                <span class="text-cyan-400 text-[11px]">({{ cat.posts.count() }})</span>
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endfor %}
+      </aside>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Posts{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl space-y-6">
+  <!-- Top bar with Add New button -->
+  <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Posts</h1>
+      <p class="text-xs text-slate-500 mt-1">Manage articles, news and announcements.</p>
+    </div>
+    <a href="{{ url_for('admin.post_new') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded shadow-sm transition">
+      + Add New Post
+    </a>
+  </div>
+
+  <!-- Status filter tabs -->
+  <div class="flex items-center space-x-3 text-xs text-slate-500 border-b border-slate-200 pb-2">
+    <a href="{{ url_for('admin.posts') }}" class="{% if not current_status %}font-bold text-blue-600{% else %}hover:text-slate-800{% endif %}">
+      All ({{ posts|length }})
+    </a>
+    <span>|</span>
+    <a href="{{ url_for('admin.posts', status='publish') }}" class="{% if current_status == 'publish' %}font-bold text-blue-600{% else %}hover:text-slate-800{% endif %}">
+      Published
+    </a>
+    <span>|</span>
+    <a href="{{ url_for('admin.posts', status='draft') }}" class="{% if current_status == 'draft' %}font-bold text-blue-600{% else %}hover:text-slate-800{% endif %}">
+      Drafts
+    </a>
+  </div>
+
+  <!-- Posts Table -->
+  <div class="bg-white border border-slate-200 overflow-hidden">
+    <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+      <thead class="bg-slate-50 text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+        <tr>
+          <th scope="col" class="px-6 py-3">Title</th>
+          <th scope="col" class="px-6 py-3">Category</th>
+          <th scope="col" class="px-6 py-3">Status</th>
+          <th scope="col" class="px-6 py-3">Date</th>
+          <th scope="col" class="px-6 py-3 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for post in posts %}
+        <tr class="hover:bg-slate-50 transition">
+          <td class="px-6 py-3.5">
+            <a href="{{ url_for('admin.post_edit', post_id=post.id) }}" class="font-semibold text-slate-900 hover:text-blue-600">
+              {{ post.title }}
+            </a>
+            <div class="text-xs text-slate-400 mt-0.5">/posts/{{ post.slug }}</div>
+          </td>
+          <td class="px-6 py-3.5 text-xs text-slate-600">
+            {{ post.category.name if post.category else 'Uncategorized' }}
+          </td>
+          <td class="px-6 py-3.5">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium {% if post.status == 'publish' %}bg-emerald-50 text-emerald-700{% else %}bg-slate-100 text-slate-600{% endif %}">
+              {{ post.status|capitalize }}
+            </span>
+          </td>
+          <td class="px-6 py-3.5 text-xs text-slate-500">
+            {{ post.created_at.strftime('%Y/%m/%d') }}
+          </td>
+          <td class="px-6 py-3.5 text-right space-x-2 text-xs">
+            <a href="{{ url_for('admin.post_edit', post_id=post.id) }}" class="text-blue-600 hover:underline">Edit</a>
+            <form action="{{ url_for('admin.post_delete', post_id=post.id) }}" method="POST" class="inline" onsubmit="return confirm('Delete this post?');">
+              <button type="submit" class="text-red-600 hover:underline">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" class="px-6 py-8 text-center text-xs text-slate-400 italic">
+            No posts found.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

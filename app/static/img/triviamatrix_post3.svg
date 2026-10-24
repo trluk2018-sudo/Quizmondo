@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" fill="none" class="w-full h-auto">
+  <defs>
+    <linearGradient id="tmP3Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#050811" />
+      <stop offset="100%" stop-color="#1e1b4b" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#tmP3Grad)" />
+  <!-- Champion Spotlight Podium -->
+  <rect x="250" y="210" width="80" height="80" fill="#1e293b" stroke="#64748b" stroke-width="2" />
+  <text x="290" y="255" fill="#94a3b8" font-family="monospace" font-size="24" font-weight="900" text-anchor="middle">#2</text>
+  <rect x="360" y="160" width="80" height="130" fill="#312e81" stroke="#818cf8" stroke-width="2" />
+  <text x="400" y="230" fill="#facc15" font-family="monospace" font-size="32" font-weight="900" text-anchor="middle">#1</text>
+  <rect x="470" y="230" width="80" height="60" fill="#1e293b" stroke="#64748b" stroke-width="2" />
+  <text x="510" y="265" fill="#b45309" font-family="monospace" font-size="24" font-weight="900" text-anchor="middle">#3</text>
+
+  <rect x="40" y="40" width="220" height="34" rx="4" fill="#6366f1" fill-opacity="0.25" stroke="#818cf8" stroke-width="1.5" />
+  <text x="150" y="62" fill="#c7d2fe" font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle">COMMUNITY SPOTLIGHT</text>
+  <text x="400" y="360" fill="#ffffff" font-family="monospace" font-size="24" font-weight="900" text-anchor="middle">Meet the Undefeated Champion</text>
+  <text x="400" y="395" fill="#a5b4fc" font-family="monospace" font-size="14" text-anchor="middle">Inside the 48-Win Streak of Matrix Grandmaster &apos;VortexMind&apos;</text>
+</svg>

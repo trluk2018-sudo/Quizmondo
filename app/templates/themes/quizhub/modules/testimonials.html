@@ -1,0 +1,39 @@
+{# QuizHub Module: Testimonials & Trust #}
+{% set cfg = mod.get_config() if mod and mod.get_config else (module_cfg or {}) %}
+<section class="py-20 bg-slate-950 border-b border-purple-500/20 text-slate-100">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+    <div class="text-center max-w-2xl mx-auto space-y-2">
+      <span class="text-xs font-black uppercase tracking-widest text-amber-400">PLAYER REVIEWS</span>
+      <h2 class="text-3xl font-black text-white tracking-tight">What Quiz Champions Are Saying</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="bg-slate-900/90 border border-purple-500/30 rounded-2xl p-6 space-y-4">
+        <div class="text-amber-400 text-lg">★★★★★</div>
+        <p class="text-xs text-slate-300 leading-relaxed italic">"{{ cfg.get('t1_quote') or 'The multiplayer buzzer rounds are pure adrenaline. There is no other trivia app with this level of polish and real-time competition!' }}"</p>
+        <div class="pt-3 border-t border-purple-500/20 flex items-center justify-between">
+          <span class="text-sm font-black text-white">{{ cfg.get('t1_author') or 'Alex Rivers' }}</span>
+          <span class="text-[10px] font-mono text-cyan-400">Elo 2,410 &bull; Grandmaster</span>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/90 border border-purple-500/30 rounded-2xl p-6 space-y-4">
+        <div class="text-amber-400 text-lg">★★★★★</div>
+        <p class="text-xs text-slate-300 leading-relaxed italic">"{{ cfg.get('t2_quote') or 'Our company hosted a Friday corporate tournament on TriviaMatrix for 200 engineers. It was the smoothest, most exciting event of the year!' }}"</p>
+        <div class="pt-3 border-t border-purple-500/20 flex items-center justify-between">
+          <span class="text-sm font-black text-white">{{ cfg.get('t2_author') or 'Sarah Jenkins' }}</span>
+          <span class="text-[10px] font-mono text-amber-400">Team League Organizer</span>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/90 border border-purple-500/30 rounded-2xl p-6 space-y-4">
+        <div class="text-amber-400 text-lg">★★★★★</div>
+        <p class="text-xs text-slate-300 leading-relaxed italic">"{{ cfg.get('t3_quote') or 'The Question of the Day is my morning coffee ritual. The explanations after each question actually make you smarter every single day.' }}"</p>
+        <div class="pt-3 border-t border-purple-500/20 flex items-center justify-between">
+          <span class="text-sm font-black text-white">{{ cfg.get('t3_author') or 'David Chen' }}</span>
+          <span class="text-[10px] font-mono text-pink-400">Daily Streak: 120 Days</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

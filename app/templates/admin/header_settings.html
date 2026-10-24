@@ -1,0 +1,295 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Header Styles &amp; Logo Customizer{% endblock %}
+
+{% block content %}
+<form method="POST" enctype="multipart/form-data" class="max-w-5xl space-y-8">
+  <!-- Top Bar -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-4 gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Header Layout Styles &amp; Logo</h1>
+      <p class="text-xs text-slate-500 mt-1">Select from 5 distinct header layouts, adjust background colors, typography, and customize your site branding logo.</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="/" target="_blank" class="px-3 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded shadow-xs transition flex items-center gap-1">
+        <span>View Public Site</span>
+        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+      </a>
+      <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded shadow-sm transition">
+        Save Header &amp; Logo Settings
+      </button>
+    </div>
+  </div>
+
+  <!-- Section 1: Logo & Branding Identity -->
+  <div class="bg-white border border-slate-200 rounded-lg p-6 space-y-6 shadow-sm">
+    <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+      <div>
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">Site Logo &amp; Brand Emblem</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Upload a custom logo image, use the Tek Club demo asset, or specify an external image URL.</p>
+      </div>
+      <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 uppercase">SVG / PNG Supported</span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+      <!-- Live Logo Preview Box -->
+      <div class="md:col-span-5 bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center min-h-[140px] text-center">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Current Active Logo Preview</span>
+        <div id="logo_preview_wrap" class="p-3 bg-white rounded-lg border border-slate-200 shadow-xs flex items-center justify-center max-w-full">
+          {% if settings.get('site_logo') %}
+          <img id="logo_img_preview" src="{{ settings.get('site_logo') }}" alt="Site Logo" class="max-h-12 w-auto object-contain">
+          {% else %}
+          <div id="logo_text_fallback" class="px-4 py-2 font-black text-slate-800 text-lg tracking-tight">
+            {{ settings.get('site_title', 'SiteBuilder Express') }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Upload & Selector Controls -->
+      <div class="md:col-span-7 space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Upload New Logo Image</label>
+          <input type="file" name="logo_file" accept="image/*,.svg" class="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded p-1">
+          <p class="text-[11px] text-slate-400 mt-1">Recommended size: 240x60px to 360x90px (Transparent SVG or PNG preferred).</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Or Logo File URL / Static Path</label>
+          <div class="flex items-center gap-2">
+            <input type="text" name="site_logo" id="site_logo_input" value="{{ settings.get('site_logo', '') }}" placeholder="/static/img/tekclub_logo.svg" class="flex-1 text-xs font-mono px-3 py-2 border border-slate-300 rounded">
+            <button type="button" onclick="setDemoLogo()" class="px-3 py-2 bg-emerald-50 border border-emerald-300 text-emerald-800 hover:bg-emerald-100 text-xs font-semibold rounded shrink-0 transition flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+              Use Tek Club (Tk.co.uk) Logo
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: 5 Selectable Header Layout Variations -->
+  <div class="bg-white border border-slate-200 rounded-lg p-6 space-y-6 shadow-sm">
+    <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+      <div>
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">5 Header Layout Styles</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Choose the structural layout variation that best matches your website aesthetic.</p>
+      </div>
+      <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 uppercase">Interactive Selector</span>
+    </div>
+
+    {% set active_hdr_style = settings.get('header_style', 'classic_sticky') %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <!-- Style 1: Classic Sticky Nav -->
+      <label class="relative flex flex-col p-4 rounded-xl border-2 cursor-pointer transition hover:border-blue-400 {% if active_hdr_style == 'classic_sticky' %}border-blue-600 bg-blue-50/40 ring-2 ring-blue-100{% else %}border-slate-200 bg-white{% endif %}">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-slate-900">1. Classic Sticky Nav</span>
+          <input type="radio" name="header_style" value="classic_sticky" {% if active_hdr_style == 'classic_sticky' %}checked{% endif %} class="h-4 w-4 text-blue-600 border-slate-300">
+        </div>
+        <!-- Visual Schematic Diagram -->
+        <div class="bg-slate-100 border border-slate-200 rounded-lg p-2.5 space-y-1.5 my-2">
+          <div class="h-2 w-full bg-[#022d62] rounded-xs flex items-center px-1">
+            <span class="h-1 w-6 bg-white/40 rounded-full"></span>
+          </div>
+          <div class="h-7 bg-white rounded border border-slate-200 flex items-center justify-between px-2">
+            <span class="h-3 w-10 bg-blue-600 rounded"></span>
+            <div class="flex gap-1">
+              <span class="h-2 w-5 bg-slate-300 rounded-full"></span>
+              <span class="h-2 w-5 bg-slate-300 rounded-full"></span>
+              <span class="h-2 w-5 bg-slate-300 rounded-full"></span>
+            </div>
+            <span class="h-3.5 w-10 bg-[#ef3139] rounded"></span>
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-500 mt-1">Full-width top utility contact strip with fixed sticky header. Logo on left, navigation and CTA button on right.</p>
+      </label>
+
+      <!-- Style 2: Centered Stacked Header -->
+      <label class="relative flex flex-col p-4 rounded-xl border-2 cursor-pointer transition hover:border-blue-400 {% if active_hdr_style == 'centered_stacked' %}border-blue-600 bg-blue-50/40 ring-2 ring-blue-100{% else %}border-slate-200 bg-white{% endif %}">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-slate-900">2. Centered Stacked Header</span>
+          <input type="radio" name="header_style" value="centered_stacked" {% if active_hdr_style == 'centered_stacked' %}checked{% endif %} class="h-4 w-4 text-blue-600 border-slate-300">
+        </div>
+        <div class="bg-slate-100 border border-slate-200 rounded-lg p-2.5 space-y-1.5 my-2">
+          <div class="h-5 bg-white rounded border border-slate-200 flex items-center justify-center">
+            <span class="h-3 w-14 bg-blue-600 rounded"></span>
+          </div>
+          <div class="h-4 bg-white/80 rounded border-t border-b border-slate-200 flex items-center justify-center gap-1.5">
+            <span class="h-1.5 w-5 bg-slate-400 rounded-full"></span>
+            <span class="h-1.5 w-5 bg-slate-400 rounded-full"></span>
+            <span class="h-1.5 w-5 bg-slate-400 rounded-full"></span>
+            <span class="h-1.5 w-5 bg-slate-400 rounded-full"></span>
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-500 mt-1">Logo prominently centered at the top with a dedicated clean horizontal navigation bar centered underneath.</p>
+      </label>
+
+      <!-- Style 3: Split Navigation -->
+      <label class="relative flex flex-col p-4 rounded-xl border-2 cursor-pointer transition hover:border-blue-400 {% if active_hdr_style == 'split_nav' %}border-blue-600 bg-blue-50/40 ring-2 ring-blue-100{% else %}border-slate-200 bg-white{% endif %}">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-slate-900">3. Split Navigation (Balanced)</span>
+          <input type="radio" name="header_style" value="split_nav" {% if active_hdr_style == 'split_nav' %}checked{% endif %} class="h-4 w-4 text-blue-600 border-slate-300">
+        </div>
+        <div class="bg-slate-100 border border-slate-200 rounded-lg p-2.5 space-y-1.5 my-2">
+          <div class="h-8 bg-white rounded border border-slate-200 flex items-center justify-between px-2">
+            <div class="flex gap-1">
+              <span class="h-2 w-5 bg-slate-400 rounded-full"></span>
+              <span class="h-2 w-5 bg-slate-400 rounded-full"></span>
+            </div>
+            <span class="h-3.5 w-12 bg-blue-600 rounded"></span>
+            <div class="flex items-center gap-1.5">
+              <span class="h-2 w-5 bg-slate-400 rounded-full"></span>
+              <span class="h-3 w-8 bg-[#ef3139] rounded"></span>
+            </div>
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-500 mt-1">Brand logo anchored in the exact visual center, split between left navigation links and right navigation links + CTA.</p>
+      </label>
+
+      <!-- Style 4: Minimalist Clean -->
+      <label class="relative flex flex-col p-4 rounded-xl border-2 cursor-pointer transition hover:border-blue-400 {% if active_hdr_style == 'minimal_clean' %}border-blue-600 bg-blue-50/40 ring-2 ring-blue-100{% else %}border-slate-200 bg-white{% endif %}">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-slate-900">4. Minimalist Modern</span>
+          <input type="radio" name="header_style" value="minimal_clean" {% if active_hdr_style == 'minimal_clean' %}checked{% endif %} class="h-4 w-4 text-blue-600 border-slate-300">
+        </div>
+        <div class="bg-slate-100 border border-slate-200 rounded-lg p-2.5 space-y-1.5 my-2">
+          <div class="h-8 bg-white rounded-full border border-slate-200 flex items-center justify-between px-3">
+            <span class="h-3 w-8 bg-slate-800 rounded"></span>
+            <div class="flex gap-1.5">
+              <span class="h-2 w-6 bg-slate-400 rounded-full"></span>
+              <span class="h-2 w-6 bg-slate-400 rounded-full"></span>
+            </div>
+            <span class="h-3 w-9 bg-blue-600 rounded-full"></span>
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-500 mt-1">Lightweight, borderless aesthetic with generous negative space, sleek pill navigation indicators, and modern pill CTA.</p>
+      </label>
+
+      <!-- Style 5: Transparent Overlay -->
+      <label class="relative flex flex-col p-4 rounded-xl border-2 cursor-pointer transition hover:border-blue-400 {% if active_hdr_style == 'transparent_overlay' %}border-blue-600 bg-blue-50/40 ring-2 ring-blue-100{% else %}border-slate-200 bg-white{% endif %}">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-slate-900">5. Transparent Hero Overlay</span>
+          <input type="radio" name="header_style" value="transparent_overlay" {% if active_hdr_style == 'transparent_overlay' %}checked{% endif %} class="h-4 w-4 text-blue-600 border-slate-300">
+        </div>
+        <div class="bg-[#022d62] rounded-lg p-2.5 space-y-1.5 my-2 relative overflow-hidden">
+          <div class="h-8 bg-white/10 backdrop-blur rounded border border-white/20 flex items-center justify-between px-2">
+            <span class="h-3 w-10 bg-white rounded"></span>
+            <div class="flex gap-1">
+              <span class="h-1.5 w-5 bg-white/70 rounded-full"></span>
+              <span class="h-1.5 w-5 bg-white/70 rounded-full"></span>
+            </div>
+            <span class="h-3 w-9 bg-[#ef3139] rounded"></span>
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-500 mt-1">Floats over top of the hero banner / background video with backdrop blur glassmorphic styling and high-contrast links.</p>
+      </label>
+    </div>
+  </div>
+
+  <!-- Section 3: Header Colors & Typography Controls -->
+  <div class="bg-white border border-slate-200 rounded-lg p-6 space-y-6 shadow-sm">
+    <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+      <div>
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">Header Color Palette &amp; Typography</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Control background color, text color, accent highlight color, and font families for the public header.</p>
+      </div>
+      <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 uppercase">Style Engine</span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Background Color + Opacity -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Header Background</label>
+        <div class="flex items-center gap-1.5">
+          <input type="color" name="header_bg_color" id="header_bg_color" value="{{ settings.get('header_bg_color', '#ffffff') }}" class="h-9 w-12 p-0.5 rounded border border-slate-300 cursor-pointer">
+          <input type="text" oninput="document.getElementById('header_bg_color').value = this.value" value="{{ settings.get('header_bg_color', '#ffffff') }}" class="w-full text-xs font-mono uppercase border border-slate-300 rounded px-2.5 py-2">
+        </div>
+        <div class="mt-1 flex items-center gap-2">
+          <input type="range" name="header_bg_opacity" id="header_bg_opacity" min="0" max="100" value="{{ settings.get('header_bg_opacity', '100') }}" oninput="document.getElementById('hdr_bg_op_val').innerText = this.value + '%'" class="w-full accent-blue-600">
+          <span id="hdr_bg_op_val" class="text-[10px] font-mono font-bold text-slate-600 shrink-0">{{ settings.get('header_bg_opacity', '100') }}%</span>
+        </div>
+      </div>
+
+      <!-- Text / Link Color + Opacity -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Nav Font &amp; Text Color</label>
+        <div class="flex items-center gap-1.5">
+          <input type="color" name="header_text_color" id="header_text_color" value="{{ settings.get('header_text_color', '#022d62') }}" class="h-9 w-12 p-0.5 rounded border border-slate-300 cursor-pointer">
+          <input type="text" oninput="document.getElementById('header_text_color').value = this.value" value="{{ settings.get('header_text_color', '#022d62') }}" class="w-full text-xs font-mono uppercase border border-slate-300 rounded px-2.5 py-2">
+        </div>
+        <div class="mt-1 flex items-center gap-2">
+          <input type="range" name="header_text_opacity" id="header_text_opacity" min="0" max="100" value="{{ settings.get('header_text_opacity', '100') }}" oninput="document.getElementById('hdr_text_op_val').innerText = this.value + '%'" class="w-full accent-blue-600">
+          <span id="hdr_text_op_val" class="text-[10px] font-mono font-bold text-slate-600 shrink-0">{{ settings.get('header_text_opacity', '100') }}%</span>
+        </div>
+      </div>
+
+      <!-- Accent Color + Opacity -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Accent &amp; CTA Color</label>
+        <div class="flex items-center gap-1.5">
+          <input type="color" name="header_accent_color" id="header_accent_color" value="{{ settings.get('header_accent_color', '#ef3139') }}" class="h-9 w-12 p-0.5 rounded border border-slate-300 cursor-pointer">
+          <input type="text" oninput="document.getElementById('header_accent_color').value = this.value" value="{{ settings.get('header_accent_color', '#ef3139') }}" class="w-full text-xs font-mono uppercase border border-slate-300 rounded px-2.5 py-2">
+        </div>
+        <div class="mt-1 flex items-center gap-2">
+          <input type="range" name="header_accent_opacity" id="header_accent_opacity" min="0" max="100" value="{{ settings.get('header_accent_opacity', '100') }}" oninput="document.getElementById('hdr_accent_op_val').innerText = this.value + '%'" class="w-full accent-blue-600">
+          <span id="hdr_accent_op_val" class="text-[10px] font-mono font-bold text-slate-600 shrink-0">{{ settings.get('header_accent_opacity', '100') }}%</span>
+        </div>
+      </div>
+
+      <!-- Typography Style -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Header Font Family / Style</label>
+        <select name="header_font_style" class="w-full text-xs border border-slate-300 rounded px-2.5 py-2 bg-white">
+          <option value="sans" {% if settings.get('header_font_style', 'sans') == 'sans' %}selected{% endif %}>Modern Clean Sans</option>
+          <option value="serif" {% if settings.get('header_font_style') == 'serif' %}selected{% endif %}>Editorial Serif</option>
+          <option value="mono" {% if settings.get('header_font_style') == 'mono' %}selected{% endif %}>Technical Monospace</option>
+          <option value="uppercase" {% if settings.get('header_font_style') == 'uppercase' %}selected{% endif %}>Uppercase Tracking Wide</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Toggle & Buttons -->
+    <div class="pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+      <div>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" name="header_show_topbar" value="1" {% if settings.get('header_show_topbar', '1') == '1' %}checked{% endif %} class="rounded border-slate-300 text-blue-600">
+          <span class="text-xs font-semibold text-slate-800">Show Top Contact &amp; Social Bar</span>
+        </label>
+        <p class="text-[11px] text-slate-400 mt-0.5">Displays phone, email, and social icons above the main header.</p>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">CTA Action Button Text</label>
+        <input type="text" name="header_cta_text" value="{{ settings.get('header_cta_text', 'Get a Quote') }}" class="w-full text-xs border border-slate-300 rounded px-2.5 py-2">
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">CTA Action Destination URL</label>
+        <input type="text" name="header_cta_url" value="{{ settings.get('header_cta_url', '/contact') }}" class="w-full text-xs font-mono border border-slate-300 rounded px-2.5 py-2">
+      </div>
+    </div>
+  </div>
+
+  <div class="flex justify-end">
+    <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded shadow-sm transition">
+      Save Header &amp; Logo Settings
+    </button>
+  </div>
+</form>
+
+<script>
+function setDemoLogo() {
+  document.getElementById('site_logo_input').value = '/static/img/tekclub_logo.svg';
+  var previewImg = document.getElementById('logo_img_preview');
+  if (previewImg) {
+    previewImg.src = '/static/img/tekclub_logo.svg';
+  } else {
+    var wrap = document.getElementById('logo_preview_wrap');
+    if (wrap) {
+      wrap.innerHTML = '<img id="logo_img_preview" src="/static/img/tekclub_logo.svg" alt="Site Logo" class="max-h-12 w-auto object-contain">';
+    }
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,502 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ 'Edit Page: ' ~ page.title if page else 'Create New Page' }}{% endblock %}
+
+{% block content %}
+<form id="page_form" method="POST" class="space-y-6">
+  <!-- Hidden inputs for module management -->
+  <input type="hidden" id="module_order_input" name="module_order" value="{{ (modules_above|map(attribute='id')|list + modules_below|map(attribute='id')|list)|join(',') }}">
+  <input type="hidden" id="deleted_module_ids_input" name="deleted_module_ids" value="">
+  <input type="hidden" id="staged_modules_json_input" name="staged_modules_json" value="[]">
+
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-4 gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">{{ 'Edit Page: ' ~ page.title if page else 'Create New Page' }}</h1>
+      <p class="text-xs text-slate-500 mt-1">Manage content, section modules, template settings, and SEO metadata.</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="{{ url_for('admin.pages') }}" class="px-3.5 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded transition">
+        &larr; Back to Pages
+      </a>
+      {% if page %}
+      <a href="/{{ page.slug }}" target="_blank" class="px-3.5 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded shadow-xs transition flex items-center gap-1">
+        <span>View Live</span>
+        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+      </a>
+      {% endif %}
+      <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded shadow-sm transition">
+        {{ 'Save Page & Modules' if page else 'Publish Page & Create Modules' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Left Main Column: Page Body & Modules -->
+    <div class="lg:col-span-2 space-y-6">
+      <!-- Title & Slug Card -->
+      <div class="bg-white border border-slate-200 rounded-lg p-6 space-y-4 shadow-sm">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Page Title</label>
+          <input type="text" name="title" value="{{ page.title if page else '' }}" required placeholder="e.g. About Us, Cloud Solutions, IT Consulting..." class="w-full text-base font-bold px-3 py-2 border border-slate-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Slug / URL Path</label>
+          <div class="flex items-center text-xs text-slate-500 font-mono">
+            <span class="bg-slate-100 border border-r-0 border-slate-300 px-3 py-2 rounded-l">/</span>
+            <input type="text" name="slug" value="{{ page.slug if page else '' }}" placeholder="auto-generated-from-title" class="flex-1 px-3 py-2 border border-slate-300 rounded-r font-mono">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Main Page Body Content</label>
+          <textarea name="content" rows="10" placeholder="Write page content in HTML or plain text..." class="w-full text-xs font-mono p-3 border border-slate-300 rounded leading-relaxed focus:border-blue-500 focus:ring-1 focus:ring-blue-500">{{ page.content if page else '' }}</textarea>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700">Page Excerpt (Optional Summary / Lead Callout)</label>
+            <span class="text-[11px] text-blue-600 font-semibold">Styled when filled in</span>
+          </div>
+          <textarea name="excerpt" rows="3" placeholder="Enter an optional lead summary, callout, or excerpt..." class="w-full text-xs p-2.5 border border-slate-300 rounded leading-relaxed focus:border-blue-500 focus:ring-1 focus:ring-blue-500">{{ page.excerpt if page else '' }}</textarea>
+          <p class="text-[11px] text-slate-400 mt-1">If filled in, this will display with styled emphasis callout formatting directly above the core page content.</p>
+        </div>
+      </div>
+
+      <!-- Section Modules Builder (Active on both new and existing pages) -->
+      <div class="bg-white border border-slate-200 rounded-lg p-6 space-y-6 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-3">
+          <div>
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-900">Page Section Modules</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Customize, reorder, or add modules above and below this page's content.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="openAddModuleModal()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded shadow-sm transition flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              + Add Module
+            </button>
+            {% if page %}
+            <button type="button" onclick="restorePageDefaults()" class="px-3 py-1.5 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded transition">
+              Restore Defaults
+            </button>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Group 1: Above Content Modules -->
+        <div class="space-y-3">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-[#022d62]">1. Modules Placed Above Content</span>
+            <span id="above_count_badge" class="text-[11px] text-slate-400">({{ modules_above|length }} active)</span>
+          </div>
+
+          <div id="modules_above_list" class="space-y-2.5">
+            {% for mod in modules_above %}
+            {% set defn = available_modules.get(mod.module_type, {}) %}
+            <div class="module-item flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200 rounded-lg transition {% if not mod.is_enabled %}opacity-60 bg-slate-100/70{% endif %}" data-module-id="{{ mod.id }}">
+              <div class="flex items-center gap-3 min-w-0">
+                <input type="checkbox" name="enabled_modules" value="{{ mod.id }}" {% if mod.is_enabled %}checked{% endif %} class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-slate-800 text-sm truncate">{{ mod.title or defn.name or mod.module_type }}</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-200 text-slate-700 uppercase">{{ mod.module_type }}</span>
+                    {% if not mod.is_enabled %}
+                    <span class="text-[10px] text-amber-600 font-semibold">(Disabled)</span>
+                    {% endif %}
+                  </div>
+                  <p class="text-xs text-slate-500 truncate mt-0.5">{{ defn.description or 'Custom section' }}</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 shrink-0">
+                <a href="{{ url_for('admin.module_edit', module_id=mod.id, return_url=url_for('admin.page_edit', page_id=page.id)) }}" class="px-2.5 py-1.5 rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-semibold transition flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                  Edit Content
+                </a>
+                <button type="button" onclick="moveModule(this, -1)" class="p-1.5 border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 rounded transition" title="Move Up">&uarr;</button>
+                <button type="button" onclick="moveModule(this, 1)" class="p-1.5 border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 rounded transition" title="Move Down">&darr;</button>
+                <button type="button" onclick="deleteModule('{{ mod.id }}', '{{ mod.title or mod.module_type }}')" class="p-1.5 border border-red-200 bg-white hover:bg-red-50 text-red-600 rounded transition" title="Remove Module">&times;</button>
+              </div>
+            </div>
+            {% endfor %}
+            <div id="above_empty_msg" class="text-xs text-slate-400 italic p-3 bg-slate-50 border border-slate-200 rounded text-center {% if modules_above %}hidden{% endif %}">
+              No modules placed above content. Click <strong>+ Add Module</strong> to add a banner, info cards, or hero.
+            </div>
+          </div>
+        </div>
+
+        <!-- Group 2: Below Content Modules -->
+        <div class="space-y-3 pt-4 border-t border-slate-100">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-[#022d62]">2. Modules Placed Below Content</span>
+            <span id="below_count_badge" class="text-[11px] text-slate-400">({{ modules_below|length }} active)</span>
+          </div>
+
+          <div id="modules_below_list" class="space-y-2.5">
+            {% for mod in modules_below %}
+            {% set defn = available_modules.get(mod.module_type, {}) %}
+            <div class="module-item flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200 rounded-lg transition {% if not mod.is_enabled %}opacity-60 bg-slate-100/70{% endif %}" data-module-id="{{ mod.id }}">
+              <div class="flex items-center gap-3 min-w-0">
+                <input type="checkbox" name="enabled_modules" value="{{ mod.id }}" {% if mod.is_enabled %}checked{% endif %} class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-slate-800 text-sm truncate">{{ mod.title or defn.name or mod.module_type }}</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-200 text-slate-700 uppercase">{{ mod.module_type }}</span>
+                    {% if not mod.is_enabled %}
+                    <span class="text-[10px] text-amber-600 font-semibold">(Disabled)</span>
+                    {% endif %}
+                  </div>
+                  <p class="text-xs text-slate-500 truncate mt-0.5">{{ defn.description or 'Custom section' }}</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 shrink-0">
+                <a href="{{ url_for('admin.module_edit', module_id=mod.id, return_url=url_for('admin.page_edit', page_id=page.id)) }}" class="px-2.5 py-1.5 rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-semibold transition flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                  Edit Content
+                </a>
+                <button type="button" onclick="moveModule(this, -1)" class="p-1.5 border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 rounded transition" title="Move Up">&uarr;</button>
+                <button type="button" onclick="moveModule(this, 1)" class="p-1.5 border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 rounded transition" title="Move Down">&darr;</button>
+                <button type="button" onclick="deleteModule('{{ mod.id }}', '{{ mod.title or mod.module_type }}')" class="p-1.5 border border-red-200 bg-white hover:bg-red-50 text-red-600 rounded transition" title="Remove Module">&times;</button>
+              </div>
+            </div>
+            {% endfor %}
+            <div id="below_empty_msg" class="text-xs text-slate-400 italic p-3 bg-slate-50 border border-slate-200 rounded text-center {% if modules_below %}hidden{% endif %}">
+              No modules placed below content. Click <strong>+ Add Module</strong> to add consultation forms, testimonials, or services.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEO & Social Graph Settings Card -->
+      <div class="bg-white border border-slate-200 rounded-lg p-6 space-y-4 shadow-sm">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">SEO &amp; Social Graph</h2>
+            <p class="text-[11px] text-slate-500 mt-0.5">Control how this page displays in Google search results and social previews.</p>
+          </div>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 uppercase">Search Ready</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Custom Meta Title</label>
+            <input type="text" name="meta_title" value="{{ page.meta_title if page else '' }}" placeholder="Defaults to page title..." class="w-full text-xs px-3 py-2 border border-slate-300 rounded">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Target Keywords</label>
+            <input type="text" name="meta_keywords" value="{{ page.meta_keywords if page else '' }}" placeholder="cloud, IT solutions, support..." class="w-full text-xs px-3 py-2 border border-slate-300 rounded">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Meta Description</label>
+          <textarea name="meta_description" rows="2" placeholder="Brief summary for Google search snippet..." class="w-full text-xs px-3 py-2 border border-slate-300 rounded leading-relaxed">{{ page.meta_description if page else '' }}</textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Canonical URL</label>
+            <input type="text" name="canonical_url" value="{{ page.canonical_url if page else '' }}" placeholder="https://example.com/..." class="w-full text-xs font-mono px-3 py-2 border border-slate-300 rounded">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Social Share Image (og:image)</label>
+            <input type="text" name="og_image" value="{{ page.og_image if page else '' }}" placeholder="/static/uploads/... or https://..." class="w-full text-xs font-mono px-3 py-2 border border-slate-300 rounded">
+          </div>
+        </div>
+
+        <div class="pt-2">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" name="no_index" value="1" {% if page and page.no_index %}checked{% endif %} class="rounded border-slate-300 text-red-600">
+            <span class="text-xs font-semibold text-slate-700">Discourage Search Engines from Indexing This Page (noindex)</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar Column: Page Attributes -->
+    <div class="space-y-6">
+      <div class="bg-white border border-slate-200 rounded-lg p-5 space-y-4 shadow-sm">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-2">Page Settings</h3>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Status</label>
+          <select name="status" class="w-full text-xs border border-slate-300 rounded px-2.5 py-2 bg-white">
+            <option value="publish" {% if not page or page.status == 'publish' %}selected{% endif %}>Published</option>
+            <option value="draft" {% if page and page.status == 'draft' %}selected{% endif %}>Draft</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Page Template</label>
+          <select name="template" class="w-full text-xs border border-slate-300 rounded px-2.5 py-2 bg-white">
+            <option value="default" {% if not page or page.template == 'default' %}selected{% endif %}>Default Template (Sidebar)</option>
+            <option value="full-width" {% if page and page.template == 'full-width' %}selected{% endif %}>Full Width (No Sidebar)</option>
+            <option value="contact" {% if page and page.template == 'contact' %}selected{% endif %}>Contact Form Template</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Menu Order</label>
+          <input type="number" name="sort_order" value="{{ page.sort_order if page else 0 }}" class="w-full text-xs border border-slate-300 rounded px-2.5 py-2">
+        </div>
+
+        <div class="pt-2 border-t border-slate-100">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" name="show_in_nav" value="1" {% if not page or page.show_in_nav %}checked{% endif %} class="rounded border-slate-300 text-blue-600">
+            <span class="text-xs text-slate-700">Display link in navigation</span>
+          </label>
+        </div>
+
+        <div class="pt-2">
+          <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded shadow-sm transition">
+            {{ 'Save Page & Modules' if page else 'Publish Page' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<!-- Add Module Modal -->
+<div id="add_module_modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-xl shadow-xl border border-slate-200 max-w-lg w-full p-6 space-y-4">
+    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+      <h3 class="text-base font-bold text-slate-900">Add Section Module</h3>
+      <button type="button" onclick="closeAddModuleModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+    </div>
+
+    <form id="add_module_dialog_form" action="{{ url_for('admin.module_add') if page else '#' }}" method="POST" class="space-y-4">
+      {% if page %}
+      <input type="hidden" name="owner_type" value="page">
+      <input type="hidden" name="owner_id" value="{{ page.id }}">
+      <input type="hidden" name="return_url" value="{{ url_for('admin.page_edit', page_id=page.id) }}">
+      {% endif %}
+
+      <div>
+        <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Select Module Type</label>
+        <select id="modal_module_type" name="module_type" required class="w-full text-xs border border-slate-300 rounded px-3 py-2 bg-white">
+          {% for mkey, mdefn in available_modules.items() %}
+          <option value="{{ mkey }}" data-desc="{{ mdefn.description or '' }}" data-name="{{ mdefn.name }}">{{ mdefn.name }} &mdash; {{ mdefn.badge }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Placement on Page</label>
+        <select id="modal_placement" name="placement" required class="w-full text-xs border border-slate-300 rounded px-3 py-2 bg-white">
+          <option value="above">Above Content Body (Top Section)</option>
+          <option value="below">Below Content Body (Bottom Section)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold uppercase text-slate-700 mb-1">Custom Section Title (Optional)</label>
+        <input type="text" id="modal_custom_title" name="title" placeholder="Leave empty for module default name..." class="w-full text-xs border border-slate-300 rounded px-3 py-2">
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+        <button type="button" onclick="closeAddModuleModal()" class="px-4 py-2 border border-slate-300 text-xs font-semibold rounded text-slate-700 hover:bg-slate-50">
+          Cancel
+        </button>
+        <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition shadow-sm">
+          Add Module
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if page %}
+<form id="restore_defaults_form" action="{{ url_for('admin.module_restore_defaults') }}" method="POST" class="hidden">
+  <input type="hidden" name="owner_type" value="page">
+  <input type="hidden" name="owner_id" value="{{ page.id }}">
+  <input type="hidden" name="return_url" value="{{ url_for('admin.page_edit', page_id=page.id) }}">
+</form>
+{% endif %}
+
+<script>
+var pageExists = {{ 'true' if page else 'false' }};
+var stagedModules = [];
+
+function openAddModuleModal() {
+  document.getElementById('add_module_modal').classList.remove('hidden');
+}
+
+function closeAddModuleModal() {
+  document.getElementById('add_module_modal').classList.add('hidden');
+}
+
+// Intercept modal form if page is new (stage module in client DOM)
+document.getElementById('add_module_dialog_form').addEventListener('submit', function(e) {
+  if (!pageExists) {
+    e.preventDefault();
+    var select = document.getElementById('modal_module_type');
+    var selectedOpt = select.options[select.selectedIndex];
+    var mType = select.value;
+    var mName = selectedOpt.getAttribute('data-name') || mType;
+    var mDesc = selectedOpt.getAttribute('data-desc') || 'Custom section module';
+    var placement = document.getElementById('modal_placement').value;
+    var customTitle = (document.getElementById('modal_custom_title').value || '').trim() || mName;
+
+    var tempId = 'staged_' + Date.now();
+    stagedModules.push({
+      module_type: mType,
+      title: customTitle,
+      placement: placement,
+      is_enabled: true
+    });
+
+    var targetList = document.getElementById(placement === 'above' ? 'modules_above_list' : 'modules_below_list');
+    var emptyMsg = document.getElementById(placement === 'above' ? 'above_empty_msg' : 'below_empty_msg');
+    if (emptyMsg) emptyMsg.classList.add('hidden');
+
+    var card = document.createElement('div');
+    card.className = 'module-item flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200 rounded-lg transition';
+    card.setAttribute('data-module-id', tempId);
+    card.setAttribute('data-staged-type', mType);
+    card.setAttribute('data-placement', placement);
+    card.innerHTML = `
+      <div class="flex items-center gap-3 min-w-0">
+        <input type="checkbox" checked class="h-4 w-4 rounded border-slate-300 text-blue-600" onchange="toggleStagedModule('${tempId}', this.checked)">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-slate-800 text-sm truncate">${customTitle}</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-100 text-blue-800 uppercase">${mType}</span>
+            <span class="text-[10px] text-emerald-600 font-semibold">(Staged)</span>
+          </div>
+          <p class="text-xs text-slate-500 truncate mt-0.5">${mDesc}</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <span class="text-[11px] text-slate-400 italic">Saved with page</span>
+        <button type="button" onclick="moveModule(this, -1)" class="p-1.5 border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 rounded transition">&uarr;</button>
+        <button type="button" onclick="moveModule(this, 1)" class="p-1.5 border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 rounded transition">&darr;</button>
+        <button type="button" onclick="removeStagedModule('${tempId}', this)" class="p-1.5 border border-red-200 bg-white hover:bg-red-50 text-red-600 rounded transition">&times;</button>
+      </div>
+    `;
+
+    if (emptyMsg) {
+      targetList.insertBefore(card, emptyMsg);
+    } else {
+      targetList.appendChild(card);
+    }
+    syncPageModuleOrder();
+    updateStagedInput();
+    closeAddModuleModal();
+    document.getElementById('modal_custom_title').value = '';
+  }
+});
+
+function toggleStagedModule(tempId, isEnabled) {
+  var item = stagedModules.find(m => m.tempId === tempId);
+  if (item) item.is_enabled = isEnabled;
+  updateStagedInput();
+}
+
+function removeStagedModule(tempId, btn) {
+  var card = btn.closest('.module-item');
+  if (card) card.remove();
+  stagedModules = stagedModules.filter(m => m.tempId !== tempId);
+  syncPageModuleOrder();
+  updateStagedInput();
+}
+
+function updateStagedInput() {
+  // Re-read active staged cards from DOM to respect re-ordering
+  var cards = document.querySelectorAll('.module-item[data-staged-type]');
+  var reordered = [];
+  cards.forEach(function(c) {
+    var mType = c.getAttribute('data-staged-type');
+    var placement = c.closest('#modules_below_list') ? 'below' : 'above';
+    var tempId = c.getAttribute('data-module-id');
+    var title = c.querySelector('.truncate')?.innerText || mType;
+    var isEnabled = c.querySelector('input[type="checkbox"]')?.checked ?? true;
+    reordered.push({
+      temp_id: tempId,
+      module_type: mType,
+      title: title,
+      placement: placement,
+      is_enabled: isEnabled
+    });
+  });
+  document.getElementById('staged_modules_json_input').value = JSON.stringify(reordered);
+
+  // Update counters
+  var aboveItems = document.querySelectorAll('#modules_above_list .module-item').length;
+  var belowItems = document.querySelectorAll('#modules_below_list .module-item').length;
+  document.getElementById('above_count_badge').innerText = '(' + aboveItems + ' active)';
+  document.getElementById('below_count_badge').innerText = '(' + belowItems + ' active)';
+}
+
+function moveModule(btn, dir) {
+  var item = btn.closest('.module-item');
+  var parentList = item ? item.parentElement : null;
+  if (!item || !parentList) return;
+  if (dir === -1) {
+    var prev = item.previousElementSibling;
+    while (prev && !prev.classList.contains('module-item')) {
+      prev = prev.previousElementSibling;
+    }
+    if (prev) {
+      parentList.insertBefore(item, prev);
+    }
+  } else if (dir === 1) {
+    var next = item.nextElementSibling;
+    while (next && !next.classList.contains('module-item')) {
+      next = next.nextElementSibling;
+    }
+    if (next) {
+      parentList.insertBefore(item, next.nextElementSibling);
+    }
+  }
+  syncPageModuleOrder();
+  updateStagedInput();
+}
+
+function syncPageModuleOrder() {
+  var items = document.querySelectorAll('#modules_above_list .module-item, #modules_below_list .module-item');
+  var input = document.getElementById('module_order_input');
+  if (!input) return;
+  var ids = [];
+  items.forEach(function(el) {
+    var id = el.getAttribute('data-module-id');
+    if (id) ids.push(id);
+  });
+  input.value = ids.join(',');
+}
+
+function deleteModule(id, title) {
+  if (confirm("Remove '" + title + "' from this page?")) {
+    var item = document.querySelector('.module-item[data-module-id="' + id + '"]');
+    if (item) item.remove();
+    var delInput = document.getElementById('deleted_module_ids_input');
+    if (delInput) {
+      var dels = delInput.value ? delInput.value.split(',') : [];
+      if (!dels.includes(String(id))) {
+        dels.push(String(id));
+        delInput.value = dels.join(',');
+      }
+    }
+    syncPageModuleOrder();
+  }
+}
+
+function restorePageDefaults() {
+  if (confirm("Reset modules for this page back to default template layout?")) {
+    document.getElementById('restore_defaults_form').submit();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  syncPageModuleOrder();
+  var form = document.getElementById('page_form');
+  if (form) {
+    form.addEventListener('submit', function() {
+      syncPageModuleOrder();
+      updateStagedInput();
+    });
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,51 @@
+{# QuizHub / TriviaMatrix Universal Module Renderer #}
+{% if mod.is_enabled %}
+  {% set cfg = mod.get_config() if mod and mod.get_config else (module_cfg or {}) %}
+  {% set raw_font = cfg.get('font_color_custom') or (cfg.get('font_color') if cfg.get('font_color') not in ('default', 'custom', none) else none) %}
+  {% set custom_font_color = raw_font|rgba(cfg.get('font_opacity', 100)) if raw_font else none %}
+  {% set raw_accent = cfg.get('accent_color_custom') or (cfg.get('accent_color') if cfg.get('accent_color') != 'custom' else '#8b5cf6') or '#8b5cf6' %}
+  {% set custom_accent_color = raw_accent|rgba(cfg.get('accent_opacity', 100)) if raw_accent else '#8b5cf6' %}
+  {% set raw_bg = cfg.get('bg_color') %}
+  {% set custom_bg_color = raw_bg|rgba(cfg.get('bg_opacity', 100)) if (raw_bg and raw_bg not in ('default', 'transparent', '')) else none %}
+  {% set custom_font_style = cfg.get('font_style', 'sans') %}
+
+  {% set mod_dom_id = 'mod-wrap-' ~ (mod.id if (mod and mod.id) else (mod.module_type ~ '-' ~ loop.index if loop else 'default')) %}
+
+  <div id="{{ mod_dom_id }}" class="module-wrapper {% if custom_font_style == 'serif' %}font-serif{% elif custom_font_style == 'mono' %}font-mono{% elif custom_font_style == 'bold-display' %}font-black tracking-tight{% elif custom_font_style == 'uppercase-wide' %}tracking-wider{% endif %}" style="{% if custom_bg_color %}background-color: {{ custom_bg_color }} !important;{% endif %}{% if custom_font_color %}color: {{ custom_font_color }} !important;{% endif %}">
+    {% if custom_bg_color %}
+    <style>
+      #{{ mod_dom_id }} > section { background-color: transparent !important; }
+      {% if custom_font_color %}
+      #{{ mod_dom_id }} > section { color: inherit !important; }
+      {% endif %}
+    </style>
+    {% endif %}
+    {% if mod.module_type == 'hero' %}
+      {% include "themes/quizhub/modules/hero.html" %}
+    {% elif mod.module_type == 'features_strip' %}
+      {% include "themes/quizhub/modules/features_strip.html" %}
+    {% elif mod.module_type == 'about' %}
+      {% include "themes/quizhub/modules/about.html" %}
+    {% elif mod.module_type == 'services' %}
+      {% include "themes/quizhub/modules/services.html" %}
+    {% elif mod.module_type == 'case_studies' %}
+      {% include "themes/quizhub/modules/case_studies.html" %}
+    {% elif mod.module_type == 'posts' %}
+      {% include "themes/quizhub/modules/posts.html" %}
+    {% elif mod.module_type == 'testimonials' %}
+      {% include "themes/quizhub/modules/testimonials.html" %}
+    {% elif mod.module_type == 'trust_strip' %}
+      {% include "themes/quizhub/modules/trust_strip.html" %}
+    {% elif mod.module_type == 'contact_form' or mod.module_type == 'contact' %}
+      {% include "themes/quizhub/modules/contact_form.html" %}
+    {% elif mod.module_type == 'text' %}
+      <section class="py-12 bg-slate-900 border-b border-cyan-500/20 text-slate-100">
+        <div class="max-w-4xl mx-auto px-4 prose prose-invert prose-cyan">{{ cfg.get('content') or mod.title }}</div>
+      </section>
+    {% elif mod.module_type == 'rich_text' %}
+      <section class="py-12 bg-slate-900 border-b border-cyan-500/20 text-slate-100">
+        <div class="max-w-4xl mx-auto px-4 prose prose-invert prose-cyan">{{ (cfg.get('content') or mod.title)|safe }}</div>
+      </section>
+    {% endif %}
+  </div>
+{% endif %}
