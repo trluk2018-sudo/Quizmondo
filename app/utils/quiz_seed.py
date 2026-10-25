@@ -664,9 +664,9 @@ SEED_PACKS = [
         ]
     },
     {
-        'title': 'Rhyme Time & House of Games Enigmas',
+        'title': 'Rhyme Time & Wordplay Enigmas',
         'slug': 'words-rhymes',
-        'description': 'BBC House of Games style rhyming pairs, literary riddles, and linguistic wit.',
+        'description': 'Clever rhyming pairs, literary riddles, and linguistic wit.',
         'icon': '📚',
         'category_slug': 'words-rhymes',
         'questions': [
@@ -682,15 +682,31 @@ SEED_PACKS = [
                 'prompt': 'RHYME TIME: A portable electronic gadget used for math arithmetic, and a large semi-aquatic reptile with sharp teeth?',
                 'options': {'A': 'Abacus & Platypus', 'B': 'Calculator & Alligator', 'C': 'Compass & Walrus', 'D': 'Screen & Marine'},
                 'correct': 'B',
-                'explanation': 'Calculator and Alligator rhyme perfectly in classic House of Games format.',
+                'explanation': 'Calculator and Alligator form an exact phonetic rhyme pair.',
                 'difficulty': 'easy',
                 'type': 'classic'
             },
             {
-                'prompt': 'RHYME TIME: A small handheld flashlight torch, and a covered front entrance porch?',
+                'prompt': 'RHYME TIME: A portable battery beam of light for dark rooms, and a covered architectural veranda at a front doorway?',
                 'options': {'A': 'Lantern & Cistern', 'B': 'Torch & Porch', 'C': 'Lamp & Ramp', 'D': 'Flare & Stair'},
                 'correct': 'B',
-                'explanation': 'Torch and Porch are classic single-syllable British rhyme pairs.',
+                'explanation': 'Torch and Porch are classic single-syllable rhyming words.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'RHYME TIME: A delicious chilled dairy dessert scooped into a waffle cone, and a loud, terrified vocal shriek?',
+                'options': {'A': 'Parfait & Buffet', 'B': 'Gelato & Staccato', 'C': 'Ice Cream & Scream', 'D': 'Sundae & Monday'},
+                'correct': 'C',
+                'explanation': 'Ice Cream and Scream rhyme cleanly!',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'RHYME TIME: A curved yellow tropical fruit packed with potassium, and a patterned cloth handkerchief worn around the head or neck?',
+                'options': {'A': 'Mango & Fandango', 'B': 'Banana & Bandana', 'C': 'Papaya & Wire', 'D': 'Melon & Felon'},
+                'correct': 'B',
+                'explanation': 'Banana and Bandana form a classic 3-syllable rhyming pair!',
                 'difficulty': 'easy',
                 'type': 'classic'
             },
@@ -853,10 +869,10 @@ SEED_POSTS = [
         'category_name': 'Audio & Science'
     },
     {
-        'title': 'BBC House of Games & Quiz Planet: Why Asynchronous Turn-Based Duels Are the Future',
-        'slug': 'bbc-house-of-games-quiz-planet-why-turn-based-duels-rule',
+        'title': 'Why Asynchronous Turn-Based Quiz Duels Are the Future of Trivia',
+        'slug': 'why-turn-based-quiz-duels-are-the-future',
         'excerpt': 'Why modern players prefer taking their turn during coffee breaks over waiting in rigid synchronous lobbies.',
-        'content': '''<p>The success of television shows like BBC\'s Richard Osman\'s House of Games and viral mobile apps like Quiz Planet highlights a powerful truth: players love clever, multi-format trivia games, but they have busy lives.</p>
+        'content': '''<p>The success of television trivia tournaments and viral mobile quiz duels highlights a powerful truth: players love clever, multi-format trivia games, but they have busy lives.</p>
 <p>Asynchronous turn-based play allows you to play Round 1 in the morning, send a WhatsApp nudge to your best friend, and let them play their turn whenever they have a free moment. Fair, thrilling, and infinitely replayable.</p>''',
         'category_name': 'Game Design & TV Lore'
     }
@@ -873,6 +889,10 @@ def seed_quizmondo_full_environment():
     SiteSetting.set('active_theme', 'quizhub')
     SiteSetting.set('footer_copyright', '© 2026 Quizmondo.com. All rights reserved.')
     SiteSetting.set('footer_about_text', 'Quizmondo is the premier gamified brain arena featuring turn-based WhatsApp duels, weekly pub quiz leagues, community quiz decks, and prize vault rewards.')
+
+    # Remove legacy leaky questions
+    QuizQuestion.query.filter(QuizQuestion.prompt.ilike('%flashlight torch%')).delete(synchronize_session=False)
+    db.session.commit()
 
     # 2. Synchronize Question Packs & Questions
     for pack_data in SEED_PACKS:
@@ -891,6 +911,10 @@ def seed_quizmondo_full_environment():
             db.session.add(pack)
             db.session.flush()
         else:
+            pack.title = pack_data['title']
+            pack.description = pack_data['description']
+            pack.icon = pack_data['icon']
+            pack.category_slug = pack_data['category_slug']
             pack.question_count = len(pack_data['questions'])
 
         for q_item in pack_data['questions']:
@@ -917,6 +941,10 @@ def seed_quizmondo_full_environment():
                 existing_q.question_type = q_item.get('type', existing_q.question_type or 'classic')
                 existing_q.media_url = q_item.get('media_url', existing_q.media_url or '')
                 existing_q.status = 'approved'
+                existing_q.explanation = q_item['explanation']
+                existing_q.options_json = json.dumps(q_item['options'])
+                existing_q.correct_option = q_item['correct']
+                existing_q.category_name = pack_data['title']
 
     # 3. Synchronize Pub Leagues
     for lg_data in SEED_LEAGUES:

@@ -75,7 +75,7 @@ MODULE_DEFINITIONS = {
         'default_config': {
             'badge': 'GAME ENGINE & PHILOSOPHY',
             'headline': 'Where Knowledge Meets Arcade Gaming & TV Game Show Thrills',
-            'subtext': 'Inspired by timeless classics like Quiz Planet, BBC House of Games, and authentic pub quiz culture, Quizmondo re-imagines trivia for the mobile web era with zero app store gatekeepers.',
+            'subtext': 'Inspired by timeless classics like Quiz Planet, television brain championships, and authentic pub quiz culture, Quizmondo re-imagines trivia for the mobile web era with zero app store gatekeepers.',
             'year_established': '2026',
             'check_1': 'Zero-bandwidth procedural Web Audio synthesizer with arcade heartbeat timers',
             'check_2': 'Multi-format rounds: Classic 4-choice, YouTube music/video clips, and visual puzzles',

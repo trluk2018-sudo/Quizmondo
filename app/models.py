@@ -431,11 +431,44 @@ class PubLeague(db.Model):
     teams_json = db.Column(db.Text, default='[]')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def get_teams(self) -> list:
+    def is_virtual_league(self) -> bool:
+        s = (self.slug or '').lower()
+        n = (self.name or '').lower()
+        v = (self.venue_name or '').lower()
+        return 'online' in s or 'cyber' in s or 'virtual' in n or 'virtual' in v
+
+    def get_state(self) -> dict:
         try:
-            return json.loads(self.teams_json or '[]')
+            data = json.loads(self.teams_json or '{}')
+            if isinstance(data, dict):
+                data.setdefault('teams', [])
+                data.setdefault('current_round', 1)
+                data.setdefault('round_status', 'active' if self.is_virtual_league() else 'waiting')
+                data.setdefault('answers_revealed', False)
+                return data
+            elif isinstance(data, list):
+                return {
+                    'teams': data,
+                    'current_round': 1,
+                    'round_status': 'active' if self.is_virtual_league() else 'waiting',
+                    'answers_revealed': False
+                }
         except Exception:
-            return []
+            pass
+        return {
+            'teams': [],
+            'current_round': 1,
+            'round_status': 'active' if self.is_virtual_league() else 'waiting',
+            'answers_revealed': False
+        }
+
+    def set_state(self, state: dict):
+        self.teams_json = json.dumps(state)
+
+    def get_teams(self) -> list:
+        return self.get_state().get('teams', [])
 
     def set_teams(self, teams: list):
-        self.teams_json = json.dumps(teams or [])
+        state = self.get_state()
+        state['teams'] = teams
+        self.set_state(state)

@@ -1,6 +1,6 @@
 {% extends "themes/quizhub/base.html" %}
 
-{% block title %}{{ league.name }} • Round {{ current_round }} of 5 • Quizmondo{% endblock %}
+{% block title %}{{ league.name }} • Round {{ current_round }} • Quizmondo{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-[#090317] text-slate-100 font-sans py-8 sm:py-12 relative overflow-hidden flex flex-col justify-center">
@@ -20,6 +20,15 @@
             <span>{{ round_info.icon }}</span>
             <span>ROUND {{ current_round }} OF 5: {{ round_info.name }}</span>
           </span>
+          {% if not is_virtual %}
+          <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold border border-amber-500/30">
+            IN-VENUE PUB QUIZ
+          </span>
+          {% else %}
+          <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[10px] font-mono font-bold border border-cyan-500/30">
+            ONLINE VIRTUAL LEAGUE
+          </span>
+          {% endif %}
         </div>
 
         <div class="font-mono text-xs flex items-center gap-2">
@@ -36,69 +45,118 @@
       </div>
     </div>
 
-    <!-- MAIN GAME CARD -->
+    <!-- MAIN GAME CONTAINER -->
     <div id="pubQuizContainer" class="p-6 sm:p-10 rounded-3xl bg-slate-950/95 border-2 border-purple-500/40 backdrop-blur shadow-2xl space-y-8 relative overflow-hidden">
-      
-      <!-- Top Row: Round Status & Timer -->
-      <div class="flex items-center justify-between">
-        <div class="space-y-0.5 font-mono text-xs">
-          <div class="flex items-center gap-2">
-            <span class="text-cyan-400 font-bold block" id="qCategoryBadge">{{ round_info.name|upper }}</span>
-            <span id="pubCounter" class="text-xs font-mono text-amber-400 font-bold">Q 1 / {{ questions|length }}</span>
-          </div>
-          <span class="text-[11px] text-slate-400">
-            {% if current_round == 5 %}
-            ⚡ Double Points Wipeout Round! 150 Pts + Speed Bonus
-            {% else %}
-            100 Pts + Speed Bonus per accurate buzzer answer
-            {% endif %}
+
+      <!-- 1. WAITING FOR QUIZMASTER SCREEN (In-venue mode when host has not started round yet) -->
+      <div id="waitingForHostScreen" class="{% if is_virtual or state.round_status == 'active' %}hidden{% endif %} py-12 text-center space-y-6">
+        <div class="w-20 h-20 rounded-3xl bg-amber-500/20 border-2 border-amber-400/50 flex items-center justify-center text-4xl mx-auto shadow-xl animate-bounce">
+          🍻
+        </div>
+        <div class="space-y-2">
+          <span class="text-xs font-mono font-bold uppercase tracking-widest text-amber-400">
+            TABLE {{ table_num }} REGISTERED &bull; {{ team_name }}
           </span>
+          <h2 class="text-2xl sm:text-3xl font-black text-white font-mono">
+            Waiting for Quizmaster to Start Round {{ current_round }}
+          </h2>
+          <p class="text-xs text-slate-300 max-w-md mx-auto font-mono leading-relaxed">
+            Grab a drink at the bar and get your table ready! As soon as the Quizmaster activates Round {{ current_round }} ({{ round_info.name }}) on the big screen, questions will launch here automatically.
+          </p>
+        </div>
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-950/60 border border-purple-500/30 text-cyan-300 font-mono text-xs">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+          <span>Listening for Quizmaster on Big Screen TV...</span>
+        </div>
+      </div>
+
+      <!-- 2. ACTIVE QUESTIONS SCREEN -->
+      <div id="activeQuizScreen" class="{% if not is_virtual and state.round_status != 'active' %}hidden{% endif %} space-y-8">
+        <!-- Top Row: Round Status & Timer -->
+        <div class="flex items-center justify-between">
+          <div class="space-y-0.5 font-mono text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-cyan-400 font-bold block" id="qCategoryBadge">{{ round_info.name|upper }}</span>
+              <span id="pubCounter" class="text-xs font-mono text-amber-400 font-bold">Q 1 / {{ questions|length }}</span>
+            </div>
+            <span class="text-[11px] text-slate-400">
+              {% if not is_virtual %}
+              🔒 In-venue scoring: lock in your choice. Official results revealed on the big screen!
+              {% elif current_round == 5 %}
+              ⚡ Double Points Wipeout Round! 150 Pts + Speed Bonus
+              {% else %}
+              100 Pts + Speed Bonus per accurate buzzer answer
+              {% endif %}
+            </span>
+          </div>
+
+          <!-- Timer Circle (Logic-controlled for virtual; relaxed in venue) -->
+          <div class="relative w-16 h-16 flex items-center justify-center font-mono font-black text-xl text-white">
+            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="42" fill="none" stroke="#1e1045" stroke-width="8" />
+              <circle id="timerCircle" cx="50" cy="50" r="42" fill="none" stroke="#06b6d4" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-linear" />
+            </svg>
+            <span id="timerText" class="absolute">15</span>
+          </div>
         </div>
 
-        <!-- Timer Circle -->
-        <div class="relative w-16 h-16 flex items-center justify-center font-mono font-black text-xl text-white">
-          <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="42" fill="none" stroke="#1e1045" stroke-width="8" />
-            <circle id="timerCircle" cx="50" cy="50" r="42" fill="none" stroke="#06b6d4" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-linear" />
-          </svg>
-          <span id="timerText" class="absolute">15</span>
+        <!-- Question Title -->
+        <div class="min-h-[64px]">
+          <h2 id="qPrompt" class="text-xl sm:text-2xl font-black font-mono text-white leading-snug">
+            Loading pub round question...
+          </h2>
+        </div>
+
+        <!-- 4 Option Buttons -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2" id="optionsGrid">
+          <button type="button" onclick="choosePubAnswer('A')" id="btnA" class="p-4 rounded-2xl border-2 border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition">
+            <span class="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">A</span>
+            <span class="text-sm font-mono text-slate-200" id="lblA">Option A</span>
+          </button>
+          <button type="button" onclick="choosePubAnswer('B')" id="btnB" class="p-4 rounded-2xl border-2 border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition">
+            <span class="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">B</span>
+            <span class="text-sm font-mono text-slate-200" id="lblB">Option B</span>
+          </button>
+          <button type="button" onclick="choosePubAnswer('C')" id="btnC" class="p-4 rounded-2xl border-2 border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition">
+            <span class="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">C</span>
+            <span class="text-sm font-mono text-slate-200" id="lblC">Option C</span>
+          </button>
+          <button type="button" onclick="choosePubAnswer('D')" id="btnD" class="p-4 rounded-2xl border-2 border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition">
+            <span class="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">D</span>
+            <span class="text-sm font-mono text-slate-200" id="lblD">Option D</span>
+          </button>
+        </div>
+
+        <!-- Feedback callout (Neutral lock-in in venue; instant in virtual) -->
+        <div id="feedbackBox" class="hidden p-4 rounded-2xl border font-mono text-xs">
+          <span id="feedbackText" class="font-bold block"></span>
+          <span id="feedbackExp" class="text-slate-300 text-[11px] block mt-1"></span>
         </div>
       </div>
 
-      <!-- Question Title -->
-      <div class="min-h-[64px]">
-        <h2 id="qPrompt" class="text-xl sm:text-2xl font-black font-mono text-white leading-snug">
-          Loading pub round question...
-        </h2>
+      <!-- 3. SUBMISSIONS LOCKED / WAITING FOR REVEAL SCREEN (In-venue after completing 5 questions) -->
+      <div id="submissionsLockedScreen" class="hidden py-10 text-center space-y-6">
+        <div class="w-20 h-20 rounded-3xl bg-emerald-500/20 border-2 border-emerald-400/50 flex items-center justify-center text-4xl mx-auto shadow-xl">
+          🔒
+        </div>
+        <div class="space-y-2">
+          <span class="text-xs font-mono font-bold uppercase tracking-widest text-emerald-400">
+            ROUND {{ current_round }} ANSWERS SUBMITTED!
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-black text-white font-mono">
+            Table {{ table_num }} is Locked In
+          </h2>
+          <p class="text-xs text-slate-300 max-w-md mx-auto font-mono leading-relaxed">
+            Your table's 5 answers have been securely recorded. Sit back and relax while other tables finish. The Quizmaster will reveal the official answers and updated table scores on the big-screen projector shortly!
+          </p>
+        </div>
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 border border-purple-500/30 text-amber-300 font-mono text-xs">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span>Waiting for Quizmaster reveal...</span>
+        </div>
       </div>
 
-      <!-- 4 Option Buttons -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2" id="optionsGrid">
-        <button type="button" onclick="choosePubAnswer('A')" id="btnA" class="p-4 rounded-2xl border-2 border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition">
-          <span class="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">A</span>
-          <span class="text-sm font-mono text-slate-200" id="lblA">Option A</span>
-        </button>
-        <button type="button" onclick="choosePubAnswer('B')" id="btnB" class="p-4 rounded-2xl border-2 border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition">
-          <span class="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">B</span>
-          <span class="text-sm font-mono text-slate-200" id="lblB">Option B</span>
-        </button>
-        <button type="button" onclick="choosePubAnswer('C')" id="btnC" class="p-4 rounded-2xl border-2 border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition">
-          <span class="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">C</span>
-          <span class="text-sm font-mono text-slate-200" id="lblC">Option C</span>
-        </button>
-        <button type="button" onclick="choosePubAnswer('D')" id="btnD" class="p-4 rounded-2xl border-2 border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition">
-          <span class="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">D</span>
-          <span class="text-sm font-mono text-slate-200" id="lblD">Option D</span>
-        </button>
-      </div>
-
-      <!-- Feedback callout -->
-      <div id="feedbackBox" class="hidden p-4 rounded-2xl border font-mono text-xs">
-        <span id="feedbackText" class="font-bold block"></span>
-        <span id="feedbackExp" class="text-slate-300 text-[11px] block mt-1"></span>
-      </div>
-
-      <!-- ROUND COMPLETION / INTERMISSION OVERLAY (Hidden initially) -->
+      <!-- 4. ROUND COMPLETION / REVEAL INTERMISSION MODAL -->
       <div id="roundIntermissionModal" class="hidden absolute inset-0 bg-[#0c0520]/98 backdrop-blur-md z-30 p-6 sm:p-10 flex flex-col justify-center items-center text-center space-y-6">
         <div class="w-20 h-20 rounded-3xl bg-purple-500/20 border-2 border-cyan-400/60 flex items-center justify-center text-4xl shadow-xl">
           <span id="intermissionIcon">{{ round_info.icon }}</span>
@@ -112,7 +170,7 @@
             {{ round_info.name }}
           </h2>
           <p id="intermissionSubtitle" class="text-xs text-slate-400 max-w-md mx-auto font-mono">
-            Scores have been submitted and synchronized with the venue leaderboard.
+            Scores have been synchronized with the venue leaderboard.
           </p>
         </div>
 
@@ -161,12 +219,61 @@ var currentRound = {{ current_round }};
 var leagueSlug = "{{ league.slug }}";
 var tableNum = "{{ table_num }}";
 var teamName = "{{ team_name }}";
+var isVirtual = {{ 'true' if is_virtual else 'false' }};
+var initialRoundStatus = "{{ state.round_status }}";
+var initialAnswersRevealed = {{ 'true' if state.answers_revealed else 'false' }};
+
 var currentIndex = 0;
 var totalScore = 0;
 var timer = 15;
 var timerInterval = null;
 var answered = false;
 var CIRCUMFERENCE = 264;
+var pollInterval = null;
+
+// Polling function for In-Venue Pub Quiz
+function pollVenueState() {
+  if (isVirtual) return;
+
+  fetch('/arena/leagues/' + encodeURIComponent(leagueSlug) + '/state')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.success) return;
+
+      // Host started the round
+      if (data.current_round === currentRound && data.round_status === 'active') {
+        var waitScreen = document.getElementById('waitingForHostScreen');
+        var quizScreen = document.getElementById('activeQuizScreen');
+        if (waitScreen && !waitScreen.classList.contains('hidden')) {
+          waitScreen.classList.add('hidden');
+          quizScreen.classList.remove('hidden');
+          loadQuestion();
+        }
+      }
+
+      // Host revealed answers
+      if (data.current_round === currentRound && data.answers_revealed) {
+        var lockScreen = document.getElementById('submissionsLockedScreen');
+        if (lockScreen && !lockScreen.classList.contains('hidden')) {
+          lockScreen.classList.add('hidden');
+          showIntermission({
+            completed_round: currentRound,
+            round_score: totalScore,
+            total_score: totalScore,
+            rank: 1,
+            next_round: currentRound < 5 ? currentRound + 1 : null,
+            next_round_title: currentRound < 5 ? 'Next Round' : 'Tournament Complete'
+          });
+        }
+      }
+
+      // Host advanced to next round
+      if (data.current_round > currentRound) {
+        window.location.href = '/arena/leagues/' + encodeURIComponent(leagueSlug) + '/room?round=' + data.current_round + '&table=' + encodeURIComponent(tableNum) + '&team=' + encodeURIComponent(teamName);
+      }
+    })
+    .catch(function(err) {});
+}
 
 function loadQuestion() {
   if (currentIndex >= rawQuestions.length) {
@@ -222,10 +329,41 @@ function choosePubAnswer(choice) {
   clearInterval(timerInterval);
 
   var q = rawQuestions[currentIndex];
-  var isCorrect = (choice === q.correct_option);
   var box = document.getElementById('feedbackBox');
   box.classList.remove('hidden');
 
+  // CRITICAL: In-Venue mode does NOT reveal correct/incorrect!
+  if (!isVirtual) {
+    if (choice !== 'TIMEOUT') {
+      var chosenBtn = document.getElementById('btn' + choice);
+      chosenBtn.className = 'p-4 rounded-2xl border-2 border-cyan-400 bg-cyan-950/80 text-left flex items-center gap-3 text-cyan-200';
+      box.className = 'p-4 rounded-2xl border border-cyan-500/50 bg-cyan-950/90 text-cyan-300 font-mono text-xs';
+      document.getElementById('feedbackText').textContent = '🔒 Table ' + tableNum + ' Locked In: Option ' + choice;
+      document.getElementById('feedbackExp').textContent = 'Answer recorded. Official scores revealed by Quizmaster at end of round.';
+      
+      // Calculate score internally without revealing
+      if (q.correct_option && choice === q.correct_option) {
+        var pts = 100 + (timer * 2);
+        if (currentRound === 5) pts = Math.round(pts * 1.5);
+        totalScore += pts;
+      }
+    } else {
+      box.className = 'p-4 rounded-2xl border border-slate-700 bg-slate-900 text-slate-400 font-mono text-xs';
+      document.getElementById('feedbackText').textContent = '⏱️ Time Expired on Question ' + (currentIndex + 1);
+      document.getElementById('feedbackExp').textContent = 'Moving to next question...';
+    }
+
+    if (window.quizAudio) window.quizAudio.playTick();
+
+    setTimeout(function() {
+      currentIndex++;
+      loadQuestion();
+    }, 1200);
+    return;
+  }
+
+  // Virtual Mode (Online) Logic
+  var isCorrect = (choice === q.correct_option);
   var ptsEarned = 0;
   if (choice !== 'TIMEOUT') {
     var chosenBtn = document.getElementById('btn' + choice);
@@ -249,7 +387,6 @@ function choosePubAnswer(choice) {
     document.getElementById('feedbackText').textContent = '⏱️ TIME EXPIRED! Correct answer was ' + q.correct_option;
   }
 
-  // Highlight correct button
   if (q.correct_option) {
     var cBtn = document.getElementById('btn' + q.correct_option);
     if (cBtn) cBtn.classList.add('ring-2', 'ring-emerald-400');
@@ -278,18 +415,28 @@ function finishRound() {
   })
   .then(function(res) { return res.json(); })
   .then(function(data) {
-    showIntermission(data);
+    if (!isVirtual) {
+      // In-venue mode: show submissions locked screen and await Quizmaster reveal
+      document.getElementById('activeQuizScreen').classList.add('hidden');
+      document.getElementById('submissionsLockedScreen').classList.remove('hidden');
+    } else {
+      showIntermission(data);
+    }
   })
   .catch(function(err) {
-    console.error('Error submitting round score:', err);
-    showIntermission({
-      completed_round: currentRound,
-      round_score: totalScore,
-      total_score: totalScore,
-      rank: 1,
-      next_round: currentRound < 5 ? currentRound + 1 : null,
-      next_round_title: currentRound < 5 ? 'Next Round' : 'Tournament Complete'
-    });
+    if (!isVirtual) {
+      document.getElementById('activeQuizScreen').classList.add('hidden');
+      document.getElementById('submissionsLockedScreen').classList.remove('hidden');
+    } else {
+      showIntermission({
+        completed_round: currentRound,
+        round_score: totalScore,
+        total_score: totalScore,
+        rank: 1,
+        next_round: currentRound < 5 ? currentRound + 1 : null,
+        next_round_title: currentRound < 5 ? 'Next Round' : 'Tournament Complete'
+      });
+    }
   });
 }
 
@@ -318,6 +465,12 @@ function showIntermission(data) {
   }
 }
 
-loadQuestion();
+// Initialize
+if (isVirtual || initialRoundStatus === 'active') {
+  loadQuestion();
+} else {
+  // Start polling in venue mode
+  pollInterval = setInterval(pollVenueState, 2000);
+}
 </script>
 {% endblock %}

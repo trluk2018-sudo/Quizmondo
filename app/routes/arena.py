@@ -191,12 +191,17 @@ def match_lobby(match_code):
         elif is_player2 and match.current_turn == 2:
             my_turn = True
 
-    # WhatsApp share message
+    # WhatsApp share & nudge messages point DIRECTLY into the playable round
     base_url = current_app.config.get('APP_PUBLIC_URL', request.host_url.rstrip('/'))
-    invite_url = f"{base_url}/arena/match/{match.match_code}"
+    play_url = f"{base_url}/arena/match/{match.match_code}/play"
+    invite_url = play_url
     whatsapp_text = (
-        f"🎮 Duel Challenge on Quizmondo! I challenge you to a trivia showdown. "
-        f"Tap here to play your round: {invite_url}"
+        f"🎮 Duel Challenge on Quizmondo! {player.display_name} challenged you to a trivia duel! "
+        f"Tap here to play your questions now: {play_url}"
+    )
+    whatsapp_nudge_text = (
+        f"🔔 Hey! It's your turn in our Quizmondo trivia duel vs {player.display_name}! "
+        f"Tap here to play your questions now: {play_url}"
     )
 
     all_rounds = match.rounds.all()
@@ -212,8 +217,15 @@ def match_lobby(match_code):
         my_turn=my_turn,
         all_rounds=all_rounds,
         invite_url=invite_url,
-        whatsapp_text=whatsapp_text
+        whatsapp_text=whatsapp_text,
+        whatsapp_nudge_text=whatsapp_nudge_text
     )
+
+
+@arena_bp.route('/match/<match_code>/nudge')
+def match_nudge_redirect(match_code):
+    """Deep link for WhatsApp nudge: auto-claims player 2 if open and sends directly into the playable questions!"""
+    return redirect(url_for('arena.play_round', match_code=match_code))
 
 
 @arena_bp.route('/match/<match_code>/play')
@@ -225,8 +237,17 @@ def play_round(match_code):
     is_player1 = (match.player1_session == player.session_key)
     is_player2 = (match.player2_session == player.session_key)
     if not (is_player1 or is_player2):
-        flash("You are viewing as a spectator. Challenge a friend to start your own match!", "info")
-        return redirect(url_for('arena.match_lobby', match_code=match_code))
+        # If Player 2 is unassigned, auto-claim Player 2 immediately for this challenger!
+        if not match.player2_session or match.player2_session in ('pending_invite', ''):
+            match.player2_session = player.session_key
+            match.player2_name = player.display_name
+            match.player2_avatar = player.avatar_key
+            match.status = 'in_progress'
+            db.session.commit()
+            is_player2 = True
+        else:
+            flash("You are viewing as a spectator. Challenge a friend to start your own match!", "info")
+            return redirect(url_for('arena.match_lobby', match_code=match_code))
 
     active_round = match.rounds.filter_by(round_number=match.current_round).first()
     if not active_round:
@@ -703,24 +724,84 @@ PUB_ROUNDS_CONFIG = {
 }
 
 
+@arena_bp.route('/leagues/<slug>/state')
+def league_state(slug):
+    """Real-time pub quiz state polling endpoint for TV projectors and player buzzer phones."""
+    league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
+    state = league.get_state()
+    current_round = state.get('current_round', 1)
+    return jsonify({
+        'success': True,
+        'is_virtual': league.is_virtual_league(),
+        'current_round': current_round,
+        'round_status': state.get('round_status', 'active' if league.is_virtual_league() else 'waiting'),
+        'answers_revealed': state.get('answers_revealed', False),
+        'round_title': PUB_ROUNDS_CONFIG.get(current_round, {}).get('name', 'Round ' + str(current_round))
+    })
+
+
+@arena_bp.route('/leagues/<slug>/admin/control', methods=['POST'])
+def league_admin_control(slug):
+    """Host / Quizmaster admin controls to start rounds, lock answers, and reveal scores."""
+    league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
+    pin = (request.form.get('pin') or '').strip()
+    if pin != league.pin_code:
+        return jsonify({'success': False, 'error': 'Invalid Host PIN'}), 403
+
+    action = request.form.get('action')
+    state = league.get_state()
+
+    if action == 'start_round':
+        r = int(request.form.get('round') or state.get('current_round', 1))
+        state['current_round'] = r
+        state['round_status'] = 'active'
+        state['answers_revealed'] = False
+    elif action == 'close_round':
+        state['round_status'] = 'closed'
+    elif action == 'reveal_answers':
+        state['answers_revealed'] = True
+    elif action == 'advance_round':
+        curr = state.get('current_round', 1)
+        if curr < 5:
+            state['current_round'] = curr + 1
+            state['round_status'] = 'waiting' if not league.is_virtual_league() else 'active'
+            state['answers_revealed'] = False
+        else:
+            state['round_status'] = 'finished'
+            state['answers_revealed'] = True
+    elif action == 'reset':
+        state['current_round'] = 1
+        state['round_status'] = 'waiting' if not league.is_virtual_league() else 'active'
+        state['answers_revealed'] = False
+
+    league.set_state(state)
+    db.session.commit()
+    return jsonify({'success': True, 'state': state})
+
+
 @arena_bp.route('/leagues/<slug>/room', methods=['GET', 'POST'])
 def league_room(slug):
     """Live Pub Quiz Interactive Session with 5 Themed Rounds."""
     player = get_current_player()
     league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
+    is_virtual = league.is_virtual_league()
+    state = league.get_state()
 
     # Verify PIN if this is a physical in-venue pub quiz
     pin_attempt = (request.args.get('pin') or request.form.get('pin') or session.get(f'pub_pin_{slug}') or '').strip()
-    is_online = ('online' in slug or 'cyber' in slug or 'virtual' in league.name.lower())
-    if not is_online and league.pin_code and pin_attempt != league.pin_code:
+    if not is_virtual and league.pin_code and pin_attempt != league.pin_code:
         flash(f"Please enter the 4-digit Table Room PIN displayed on the venue screen to join {league.name}.", "error")
         return redirect(url_for('arena.league_lounge', slug=slug))
     if pin_attempt == league.pin_code:
         session[f'pub_pin_{slug}'] = pin_attempt
 
-    current_round = int(request.args.get('round', 1))
-    if current_round < 1 or current_round > 5:
-        current_round = 1
+    # In virtual mode, round can be requested via args; in venue mode, quizmaster controls active round
+    if is_virtual:
+        current_round = int(request.args.get('round', 1))
+        if current_round < 1 or current_round > 5:
+            current_round = 1
+    else:
+        current_round = state.get('current_round', 1)
 
     round_info = PUB_ROUNDS_CONFIG.get(current_round, PUB_ROUNDS_CONFIG[1])
     table_num = request.args.get('table') or session.get('pub_table_num') or '1'
@@ -736,7 +817,9 @@ def league_room(slug):
         extra_q = QuizQuestion.query.filter(QuizQuestion.category_slug != cat_slug).limit(5 - len(questions)).all()
         questions = list(questions) + list(extra_q)
 
-    questions_json = [q.to_dict(include_answer=True) for q in questions]
+    # For client side: in virtual mode or if answers revealed, include correct answer; in live venue quiz, mask correct answers!
+    include_ans = is_virtual or state.get('answers_revealed', False)
+    questions_json = [q.to_dict(include_answer=include_ans) for q in questions]
 
     if request.method == 'POST':
         round_score = int(request.form.get('score', 0))
@@ -791,26 +874,38 @@ def league_room(slug):
         current_round=current_round,
         round_info=round_info,
         questions=questions,
-        questions_json=questions_json
+        questions_json=questions_json,
+        is_virtual=is_virtual,
+        state=state
     )
 
 
 @arena_bp.route('/leagues/<slug>/tv')
 def league_tv(slug):
-    """Big-Screen TV Projector View for Pub and Bar Monitors."""
+    """Big-screen pub quiz display for TV projectors with live quizmaster host controls."""
     league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
+    is_virtual = league.is_virtual_league()
+    state = league.get_state()
+    current_round = state.get('current_round', 1)
+    round_info = PUB_ROUNDS_CONFIG.get(current_round, PUB_ROUNDS_CONFIG[1])
+
+    # Get questions for current round to display answer key when revealed
+    cat_slug = round_info['cat_slug']
+    questions = QuizQuestion.query.filter_by(category_slug=cat_slug).limit(5).all()
+    if len(questions) < 5:
+        extra_q = QuizQuestion.query.filter(QuizQuestion.category_slug != cat_slug).limit(5 - len(questions)).all()
+        questions = list(questions) + list(extra_q)
+
     teams = league.get_teams()
-    if not teams:
-        teams = [
-            {'name': 'The Quizly Bears', 'score': 480, 'members': 4, 'rank': 1},
-            {'name': 'Tequila Mockingbird', 'score': 420, 'members': 3, 'rank': 2},
-            {'name': 'Trivia Newton John', 'score': 390, 'members': 5, 'rank': 3},
-            {'name': 'Quiz Pro Quo', 'score': 350, 'members': 2, 'rank': 4}
-        ]
     return render_template(
         'themes/quizhub/arena_league_tv.html',
         league=league,
-        teams=teams
+        teams=teams,
+        state=state,
+        current_round=current_round,
+        round_info=round_info,
+        questions=questions,
+        is_virtual=is_virtual
     )
 
 
