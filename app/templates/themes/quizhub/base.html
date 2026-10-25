@@ -123,12 +123,54 @@
           {% endfor %}
         </nav>
 
-        <!-- CTA Button -->
-        <div class="flex items-center gap-3">
-          <a href="{{ url_for('arena.dashboard') }}" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-slate-950 text-xs font-mono font-black uppercase tracking-wider shadow-lg shadow-purple-500/25 transition transform hover:scale-105 flex items-center gap-2">
-            <span>Play Arena Duels 🎮</span>
+        <!-- Header Actions & Mobile Menu Toggle -->
+        <div class="flex items-center gap-2 sm:gap-3">
+          {% if request.path == '/' or not request.path.startswith('/arena') %}
+          <a href="{{ url_for('arena.dashboard') }}" class="hidden sm:flex px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-slate-950 text-xs font-mono font-black uppercase tracking-wider shadow-lg shadow-purple-500/25 transition transform hover:scale-105 items-center gap-1.5">
+            <span>Play Duels 🎮</span>
           </a>
+          {% endif %}
+
+          <!-- Mobile Hamburger Toggle Button -->
+          <button type="button" id="mobileMenuBtn" aria-label="Toggle Navigation Menu" class="md:hidden p-2 rounded-xl bg-slate-900 border border-purple-500/30 text-purple-300 hover:text-white hover:border-cyan-400 transition flex items-center justify-center">
+            <svg id="menuIconOpen" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <svg id="menuIconClose" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
+      </div>
+    </div>
+
+    <!-- Mobile Navigation Drawer -->
+    <div id="mobileMenuDrawer" class="hidden md:hidden border-t border-purple-500/20 bg-[#080214]/98 px-4 py-5 space-y-2 font-mono text-xs shadow-2xl">
+      <a href="{{ url_for('public.home') }}" class="block px-3.5 py-2.5 rounded-xl text-slate-200 hover:bg-purple-900/40 hover:text-cyan-300 transition">
+        🏠 Home
+      </a>
+      <a href="{{ url_for('arena.dashboard') }}" class="block px-3.5 py-2.5 rounded-xl bg-purple-950/60 border border-purple-500/40 text-purple-200 font-bold hover:bg-purple-900/60 transition">
+        🎮 Arena Duels Lobby
+      </a>
+      <a href="{{ url_for('arena.packs_directory') }}" class="block px-3.5 py-2.5 rounded-xl text-slate-200 hover:bg-purple-900/40 hover:text-cyan-300 transition">
+        📦 Trivia Packs &amp; Decks
+      </a>
+      <a href="{{ url_for('arena.leaderboard') }}" class="block px-3.5 py-2.5 rounded-xl text-slate-200 hover:bg-purple-900/40 hover:text-cyan-300 transition">
+        🏆 Global Leaderboard
+      </a>
+      <a href="{{ url_for('arena.leagues') }}" class="block px-3.5 py-2.5 rounded-xl text-slate-200 hover:bg-purple-900/40 hover:text-cyan-300 transition">
+        🍻 Pub Quiz Leagues
+      </a>
+      <a href="{{ url_for('public.posts') }}" class="block px-3.5 py-2.5 rounded-xl text-slate-200 hover:bg-purple-900/40 hover:text-cyan-300 transition">
+        📰 Battle Guides &amp; Dispatches
+      </a>
+      <a href="{{ url_for('public.contact') }}" class="block px-3.5 py-2.5 rounded-xl text-slate-200 hover:bg-purple-900/40 hover:text-cyan-300 transition">
+        ✉️ Support Desk
+      </a>
+      <div class="pt-2">
+        <a href="{{ url_for('arena.dashboard') }}" class="block w-full text-center py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-slate-950 font-black uppercase tracking-wider shadow-lg">
+          Launch Arena &rarr;
+        </a>
       </div>
     </div>
   </header>
@@ -211,5 +253,27 @@
     </div>
   </footer>
 
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var btn = document.getElementById('mobileMenuBtn');
+      var drawer = document.getElementById('mobileMenuDrawer');
+      var iconOpen = document.getElementById('menuIconOpen');
+      var iconClose = document.getElementById('menuIconClose');
+      if (btn && drawer) {
+        btn.addEventListener('click', function() {
+          var isHidden = drawer.classList.contains('hidden');
+          if (isHidden) {
+            drawer.classList.remove('hidden');
+            if (iconOpen) iconOpen.classList.add('hidden');
+            if (iconClose) iconClose.classList.remove('hidden');
+          } else {
+            drawer.classList.add('hidden');
+            if (iconOpen) iconOpen.classList.remove('hidden');
+            if (iconClose) iconClose.classList.add('hidden');
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html>

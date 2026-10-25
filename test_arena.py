@@ -150,5 +150,30 @@ class ArenaTestCase(unittest.TestCase):
         self.assertEqual(res_sub.status_code, 200)
         self.assertIn(b'Round submitted for Team', res_sub.data)
 
+    def test_switch_to_bot_and_continue_duel(self):
+        # 1. Create a friend match
+        res = self.client.post('/arena/new', data={'opponent_mode': 'friend'}, follow_redirects=False)
+        match_code = res.headers['Location'].split('/')[-1]
+
+        # 2. Player 1 submits round 1
+        with self.app.app_context():
+            m = ArenaMatch.query.filter_by(match_code=match_code).first()
+            r = m.rounds.filter_by(round_number=1).first()
+            q_ids = r.get_question_ids()
+            payload = {
+                'answers': [
+                    {'question_id': q_ids[0], 'choice': 'B', 'time_left': 10},
+                    {'question_id': q_ids[1], 'choice': 'C', 'time_left': 12},
+                    {'question_id': q_ids[2], 'choice': 'A', 'time_left': 8}
+                ]
+            }
+        self.client.post(f'/arena/match/{match_code}/submit', json=payload)
+
+        # 3. Now it is waiting for opponent. Switch to bot!
+        res_switch = self.client.post(f'/arena/match/{match_code}/switch-to-bot', follow_redirects=True)
+        self.assertEqual(res_switch.status_code, 200)
+        self.assertIn(b'Cyber Bot Nova', res_switch.data)
+        self.assertIn(b'Play Round 2 Now', res_switch.data)
+
 if __name__ == '__main__':
     unittest.main()

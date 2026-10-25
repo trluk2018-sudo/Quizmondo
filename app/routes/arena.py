@@ -159,8 +159,8 @@ def match_lobby(match_code):
     player = get_current_player()
     match = ArenaMatch.query.filter_by(match_code=match_code).first_or_404()
 
-    # If opening player is not Player 1 and Player 2 slot is open, claim Player 2!
-    if match.player1_session != player.session_key and (not match.player2_session or match.player2_session.startswith('bot')):
+    # If opening player is not Player 1 and Player 2 slot is open (not bot), claim Player 2!
+    if match.player1_session != player.session_key and not match.player2_session:
         match.player2_session = player.session_key
         match.player2_name = player.display_name
         match.player2_avatar = player.avatar_key
@@ -399,6 +399,103 @@ def submit_round(match_code):
         'match_status': match.status,
         'next_round': match.current_round
     })
+
+
+@arena_bp.route('/match/<match_code>/switch-to-bot', methods=['POST'])
+def switch_to_bot(match_code):
+    """Convert an existing match opponent to Cyber Bot Nova and simulate the bot's turn."""
+    player = get_current_player()
+    match = ArenaMatch.query.filter_by(match_code=match_code).first_or_404()
+
+    is_player1 = (match.player1_session == player.session_key)
+    is_player2 = (match.player2_session == player.session_key)
+
+    if not (is_player1 or is_player2):
+        flash("You are not a participant in this match.", "error")
+        return redirect(url_for('arena.match_lobby', match_code=match_code))
+
+    # Determine which slot becomes the bot
+    if is_player1:
+        match.player2_session = 'bot_quizmondo_ai'
+        match.player2_name = 'Cyber Bot Nova'
+        match.player2_avatar = 'nova'
+    else:
+        match.player1_session = 'bot_quizmondo_ai'
+        match.player1_name = 'Cyber Bot Nova'
+        match.player1_avatar = 'nova'
+
+    match.status = 'in_progress'
+
+    # If it is currently the bot's turn, simulate the bot's round immediately!
+    active_round = match.rounds.filter_by(round_number=match.current_round).first()
+    bot_turn = (is_player1 and match.current_turn == 2) or (is_player2 and match.current_turn == 1)
+
+    if active_round and bot_turn:
+        q_ids = active_round.get_question_ids()
+        questions = QuizQuestion.query.filter(QuizQuestion.id.in_(q_ids)).all() if q_ids else []
+        bot_score = 0
+        bot_detailed = []
+        for q in questions:
+            bot_correct = (random.random() < 0.65)
+            bot_pts = q.points + random.randint(20, 50) if bot_correct else 0
+            bot_score += bot_pts
+            bot_detailed.append({
+                'question_id': q.id,
+                'is_correct': bot_correct,
+                'points_awarded': bot_pts
+            })
+
+        if is_player1:
+            active_round.p2_score = bot_score
+            active_round.p2_answers_json = json.dumps(bot_detailed)
+            match.p2_total_score = (match.p2_total_score or 0) + bot_score
+        else:
+            active_round.p1_score = bot_score
+            active_round.p1_answers_json = json.dumps(bot_detailed)
+            match.p1_total_score = (match.p1_total_score or 0) + bot_score
+
+        active_round.status = 'completed'
+
+        if match.current_round >= 6:
+            match.status = 'completed'
+            if match.p1_total_score > match.p2_total_score:
+                match.winner = 1
+                if is_player1:
+                    player.matches_won = (player.matches_won or 0) + 1
+            elif match.p2_total_score > match.p1_total_score:
+                match.winner = 2
+                if is_player2:
+                    player.matches_won = (player.matches_won or 0) + 1
+            else:
+                match.winner = 0
+            player.matches_played = (player.matches_played or 0) + 1
+        else:
+            # Advance to next round!
+            match.current_round += 1
+            match.current_turn = 1 if is_player1 else 2  # Give turn back to human player!
+
+            all_cats = db.session.query(QuizQuestion.category_slug, QuizQuestion.category_name).distinct().all()
+            chosen_cat = random.choice(all_cats) if all_cats else ('general', 'General')
+            next_q = QuizQuestion.query.filter_by(category_slug=chosen_cat[0]).limit(3).all()
+            if not next_q:
+                next_q = QuizQuestion.query.limit(3).all()
+
+            next_round = ArenaRound(
+                match_id=match.id,
+                round_number=match.current_round,
+                category_slug=chosen_cat[0],
+                category_name=chosen_cat[1],
+                chosen_by=match.current_turn,
+                question_ids_json=json.dumps([q.id for q in next_q]),
+                p1_score=0,
+                p2_score=0,
+                status='pending'
+            )
+            db.session.add(next_round)
+
+    db.session.commit()
+    flash("Switched to Cyber Bot Nova! The bot has completed its turn—play your next round!", "success")
+    return redirect(url_for('arena.match_lobby', match_code=match_code))
 
 
 @arena_bp.route('/profile/update', methods=['POST'])

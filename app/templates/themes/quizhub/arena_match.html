@@ -4,14 +4,14 @@
 {% block title %}Duel Match {{ match.match_code }} • Quizmondo Arena{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-[#090317] text-slate-100 font-sans py-8 sm:py-12 relative overflow-hidden">
+<div class="min-h-screen bg-[#090317] text-slate-100 font-sans py-6 sm:py-12 relative overflow-hidden">
   <!-- Glow effects -->
   <div class="absolute top-10 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>
   <div class="absolute bottom-10 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 relative z-10">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 relative z-10">
 
-    <!-- Back to Hub & Audio Bar -->
+    <!-- Back to Hub & Header -->
     <div class="flex items-center justify-between border-b border-purple-500/20 pb-4">
       <a href="{{ url_for('arena.dashboard') }}" class="text-xs font-mono text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5 transition">
         &larr; Back to Arena Hub
@@ -22,69 +22,99 @@
     </div>
 
     <!-- MATCH VERSUS HERO CARD -->
-    <div class="p-6 sm:p-10 rounded-3xl bg-slate-950/90 border-2 border-purple-500/30 backdrop-blur shadow-2xl relative overflow-hidden">
+    <div class="p-5 sm:p-10 rounded-3xl bg-slate-950/90 border-2 border-purple-500/30 backdrop-blur shadow-2xl relative overflow-hidden">
       
-      <div class="grid grid-cols-3 items-center text-center">
+      <!-- Top Row: Prominent Turn Status Banner (Never Collides) -->
+      <div class="flex flex-col items-center justify-center text-center pb-5 mb-5 border-b border-purple-500/20">
+        <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-mono font-bold uppercase tracking-wider shadow-lg {% if match.status == 'completed' %}bg-purple-500/20 text-purple-300 border border-purple-500/40{% elif my_turn %}bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse{% else %}bg-amber-500/20 text-amber-300 border border-amber-500/40{% endif %}">
+          {% if match.status == 'completed' %}
+            🏆 MATCH FINISHED
+          {% elif my_turn %}
+            🎮 YOUR TURN TO PLAY!
+          {% else %}
+            ⏳ WAITING FOR OPPONENT
+          {% endif %}
+        </span>
+        <div class="text-xs font-mono text-slate-400 mt-1.5">Round {{ match.current_round }} of 6</div>
+      </div>
+
+      <!-- 3-Column VS Display: Player 1 VS Player 2 -->
+      <div class="grid grid-cols-3 items-center text-center gap-2 sm:gap-4">
         <!-- Player 1 -->
-        <div class="space-y-3 flex flex-col items-center">
-          {{ render_mascot(match.player1_avatar, 'idle', 'sm', '') }}
-          <div>
-            <div class="font-mono font-black text-sm sm:text-base text-white truncate max-w-[140px]">{{ match.player1_name }}</div>
-            <div class="text-2xl sm:text-4xl font-mono font-black text-purple-400 mt-1">{{ match.p1_total_score }}</div>
-            <div class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">TOTAL POINTS</div>
+        <div class="space-y-2 flex flex-col items-center">
+          <div class="scale-90 sm:scale-100">
+            {{ render_mascot(match.player1_avatar, 'idle', 'sm', '') }}
+          </div>
+          <div class="w-full">
+            <div class="font-mono font-black text-xs sm:text-base text-white truncate max-w-[95px] sm:max-w-[150px] mx-auto" title="{{ match.player1_name }}">
+              {{ match.player1_name }}
+            </div>
+            <div class="text-2xl sm:text-4xl font-mono font-black text-purple-400 mt-0.5">{{ match.p1_total_score }}</div>
+            <div class="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-wider">TOTAL PTS</div>
           </div>
         </div>
 
-        <!-- VS Badge / Turn Status -->
-        <div class="space-y-3 flex flex-col items-center justify-center">
-          <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-purple-600 to-cyan-500 flex items-center justify-center font-mono font-black text-slate-950 text-sm sm:text-lg shadow-lg animate-pulse">
+        <!-- Center VS Circle -->
+        <div class="flex flex-col items-center justify-center">
+          <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr from-purple-600 to-cyan-500 flex items-center justify-center font-mono font-black text-slate-950 text-xs sm:text-base shadow-lg">
             VS
-          </div>
-
-          <div class="space-y-1">
-            <span class="px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider {% if match.status == 'completed' %}bg-purple-500/20 text-purple-300 border border-purple-500/40{% elif my_turn %}bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-bounce{% else %}bg-amber-500/20 text-amber-300 border border-amber-500/40{% endif %}">
-              {% if match.status == 'completed' %}
-                MATCH FINISHED
-              {% elif my_turn %}
-                YOUR TURN! 🎮
-              {% else %}
-                WAITING OPPONENT ⏳
-              {% endif %}
-            </span>
-            <div class="text-xs font-mono text-slate-400">Round {{ match.current_round }} of 6</div>
           </div>
         </div>
 
         <!-- Player 2 -->
-        <div class="space-y-3 flex flex-col items-center">
-          {{ render_mascot(match.player2_avatar, 'idle', 'sm', '') }}
-          <div>
-            <div class="font-mono font-black text-sm sm:text-base text-white truncate max-w-[140px]">{{ match.player2_name }}</div>
-            <div class="text-2xl sm:text-4xl font-mono font-black text-cyan-400 mt-1">{{ match.p2_total_score }}</div>
-            <div class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">TOTAL POINTS</div>
+        <div class="space-y-2 flex flex-col items-center">
+          <div class="scale-90 sm:scale-100">
+            {{ render_mascot(match.player2_avatar, 'idle', 'sm', '') }}
+          </div>
+          <div class="w-full">
+            <div class="font-mono font-black text-xs sm:text-base text-white truncate max-w-[95px] sm:max-w-[150px] mx-auto" title="{{ match.player2_name }}">
+              {{ match.player2_name }}
+            </div>
+            <div class="text-2xl sm:text-4xl font-mono font-black text-cyan-400 mt-0.5">{{ match.p2_total_score }}</div>
+            <div class="text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-wider">TOTAL PTS</div>
           </div>
         </div>
       </div>
 
       <!-- Action Button Area -->
-      <div class="pt-8 border-t border-purple-500/20 mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+      <div class="pt-6 border-t border-purple-500/20 mt-6 space-y-4">
         {% if match.status != 'completed' %}
           {% if my_turn %}
-          <a href="{{ url_for('arena.play_round', match_code=match.match_code) }}" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400 hover:from-emerald-400 hover:to-cyan-300 text-slate-950 font-mono font-black text-sm sm:text-base uppercase tracking-wider shadow-2xl transition transform hover:scale-105 flex items-center justify-center gap-2">
-            <span>Play Round {{ match.current_round }} Now &rarr;</span>
-          </a>
+          <!-- User's Turn to Play -->
+          <div class="flex justify-center">
+            <a href="{{ url_for('arena.play_round', match_code=match.match_code) }}" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400 hover:from-emerald-400 hover:to-cyan-300 text-slate-950 font-mono font-black text-sm sm:text-base uppercase tracking-wider shadow-2xl transition transform hover:scale-105 flex items-center justify-center gap-2">
+              <span>Play Round {{ match.current_round }} Now &rarr;</span>
+            </a>
+          </div>
           {% else %}
-          <!-- Opponent's turn: Nudge via WhatsApp button -->
-          <a href="https://wa.me/?text={{ whatsapp_text|urlencode }}" target="_blank" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition">
-            <span>💬 Nudge on WhatsApp</span>
-          </a>
-          <button type="button" onclick="shareMatchLink()" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-slate-900 border border-purple-500/30 hover:border-cyan-400 text-cyan-300 font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition">
-            <span>🔗 Copy / Share Link</span>
-          </button>
+          <!-- Opponent's turn: Explanatory Helper Box + Action Options -->
+          <div class="p-4 rounded-2xl bg-slate-900/80 border border-purple-500/20 text-center space-y-2">
+            <p class="text-xs font-mono text-slate-300 leading-relaxed">
+              You finished your turn for <strong>Round {{ match.current_round }}</strong>! We're waiting for your opponent to answer their questions.
+            </p>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button type="button" onclick="nudgeOnWhatsApp()" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition active:scale-95">
+              <span>💬 Nudge on WhatsApp</span>
+            </button>
+            <button type="button" onclick="shareMatchLink()" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-slate-900 border border-purple-500/30 hover:border-cyan-400 text-cyan-300 font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95">
+              <span>🔗 Copy / Share Link</span>
+            </button>
+          </div>
+
+          <!-- Instant Bot Play Option so player is never stuck waiting -->
+          <div class="pt-2 flex justify-center">
+            <form action="{{ url_for('arena.switch_to_bot', match_code=match.match_code) }}" method="POST" class="w-full sm:w-auto">
+              <button type="submit" class="w-full px-5 py-3 rounded-2xl bg-purple-900/30 hover:bg-purple-800/50 border border-purple-500/30 text-purple-300 hover:text-white font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition">
+                <span>🤖 Don't want to wait? Play with Bot Nova &rarr;</span>
+              </button>
+            </form>
+          </div>
           {% endif %}
         {% else %}
           <!-- Match Completed Winner Announcement -->
-          <div class="text-center space-y-2">
+          <div class="text-center space-y-3">
             <div class="text-2xl font-black font-mono text-amber-400">
               {% if match.winner == 1 %}
                 🏆 {{ match.player1_name }} WINS!
@@ -94,7 +124,7 @@
                 🤝 IT'S A DRAW!
               {% endif %}
             </div>
-            <a href="{{ url_for('arena.dashboard') }}" class="inline-block px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-mono text-xs font-bold uppercase">
+            <a href="{{ url_for('arena.dashboard') }}" class="inline-block px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-mono text-xs font-bold uppercase shadow-lg">
               Start Rematch in Hub &rarr;
             </a>
           </div>
@@ -146,6 +176,25 @@
 var matchInviteUrl = {{ invite_url|tojson }};
 var whatsappText = {{ whatsapp_text|tojson }};
 
+function nudgeOnWhatsApp() {
+  // Direct universal link without target=_blank so iOS Safari prompts native WhatsApp app
+  var text = encodeURIComponent(whatsappText);
+  var waUrl = "https://api.whatsapp.com/send?text=" + text;
+  
+  // Try native share if on mobile, or direct WhatsApp URL
+  if (navigator.share) {
+    navigator.share({
+      title: 'Quizmondo Duel Match',
+      text: whatsappText,
+      url: matchInviteUrl
+    }).catch(function() {
+      window.location.href = waUrl;
+    });
+  } else {
+    window.location.href = waUrl;
+  }
+}
+
 function shareMatchLink() {
   if (navigator.share) {
     navigator.share({
@@ -161,11 +210,15 @@ function shareMatchLink() {
 }
 
 function copyToClipboard(text) {
-  navigator.clipboard.writeText(text).then(function() {
-    alert("Match invitation link copied to clipboard!\n" + text);
-  }).catch(function() {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      alert("Match invitation link copied to clipboard!\n" + text);
+    }).catch(function() {
+      prompt("Copy this duel link to send to your friend:", text);
+    });
+  } else {
     prompt("Copy this duel link to send to your friend:", text);
-  });
+  }
 }
 </script>
 {% endblock %}
