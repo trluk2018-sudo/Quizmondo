@@ -113,12 +113,12 @@ def dashboard():
     )
 
 
-@arena_bp.route('/new', methods=['POST'])
+@arena_bp.route('/new', methods=['GET', 'POST'])
 def create_match():
     """Create a new head-to-head match or challenge."""
     player = get_current_player()
-    opponent_mode = request.form.get('opponent_mode', 'friend')  # 'friend', 'bot'
-    category_slug = request.form.get('category_slug')
+    opponent_mode = request.form.get('opponent_mode') or request.args.get('opponent_mode', 'friend')  # 'friend', 'bot'
+    category_slug = request.form.get('category_slug') or request.args.get('category_slug')
 
     match_code = f"qm_{secrets.token_hex(4)}"
 
@@ -433,10 +433,11 @@ def submit_round(match_code):
             next_turn = 2 if match.current_turn == 1 else 1
             match.current_turn = next_turn
 
-            # Pick next round category and randomized questions
+            # Pick next round category and randomized questions (excluding questions already in this match)
             all_cats = db.session.query(QuizQuestion.category_slug, QuizQuestion.category_name).distinct().all()
             chosen_cat = random.choice(all_cats) if all_cats else ('general', 'General')
-            next_q = get_random_questions(category_slug=chosen_cat[0], count=3)
+            existing_match_qids = [qid for r in match.rounds for qid in r.get_question_ids()]
+            next_q = get_random_questions(category_slug=chosen_cat[0], count=3, exclude_ids=existing_match_qids)
 
             next_round = ArenaRound(
                 match_id=match.id,
@@ -543,10 +544,11 @@ def switch_to_bot(match_code):
             match.current_round += 1
             match.current_turn = 1 if is_player1 else 2  # Give turn back to human player!
 
-            # Pick next round category and randomized questions
+            # Pick next round category and randomized questions (excluding questions already in this match)
             all_cats = db.session.query(QuizQuestion.category_slug, QuizQuestion.category_name).distinct().all()
             chosen_cat = random.choice(all_cats) if all_cats else ('general', 'General')
-            next_q = get_random_questions(category_slug=chosen_cat[0], count=3)
+            existing_match_qids = [qid for r in match.rounds for qid in r.get_question_ids()]
+            next_q = get_random_questions(category_slug=chosen_cat[0], count=3, exclude_ids=existing_match_qids)
 
             next_round = ArenaRound(
                 match_id=match.id,
@@ -769,6 +771,27 @@ def league_lounge(slug):
     )
 
 
+def get_next_weekly_pub_date():
+    """Calculate the next upcoming Thursday 20:00 GMT for the weekly pub quiz league."""
+    now = datetime.utcnow()
+    # Thursday is weekday 3 (Monday is 0)
+    days_ahead = (3 - now.weekday()) % 7
+    if days_ahead == 0 and now.hour >= 21:
+        days_ahead = 7
+    elif days_ahead == 0 and now.hour < 20:
+        days_ahead = 0
+    elif days_ahead == 0:
+        days_ahead = 7
+    next_date = now + timedelta(days=days_ahead)
+    return next_date.strftime("%A, %d %B %Y at 20:00 GMT")
+
+
+VIRTUAL_PUB_ROUNDS_CONFIG = {
+    1: {'number': 1, 'name': 'Level 1: General Knowledge, Science & Lore', 'cat_slug': 'science-cosmos', 'icon': '🌍', 'desc': 'Warm up your neurons with world history, science, and general news.'},
+    2: {'number': 2, 'name': 'Level 2: Pop Culture, Cinema Titans & Music Legends', 'cat_slug': 'tv-cinema', 'icon': '🎬', 'desc': 'Blockbuster cinema, chart-topping records, and modern pop icons.'},
+    3: {'number': 3, 'name': 'Level 3: Championship Wipeout Lightning Sprint', 'cat_slug': 'gaming-esports', 'icon': '⚡', 'desc': 'High stakes finale! 1.5x score multiplier on all correct answers.'},
+}
+
 PUB_ROUNDS_CONFIG = {
     1: {'number': 1, 'name': 'General Knowledge & News', 'cat_slug': 'world-history', 'icon': '🧠', 'desc': 'Test your broad trivia knowledge across news, landmarks, and science.'},
     2: {'number': 2, 'name': 'Music, Audio & Waveforms', 'cat_slug': 'pop-music', 'icon': '🎵', 'desc': 'Iconic number one records, synthesizers, chiptunes, and rock anthems.'},
@@ -835,7 +858,7 @@ def league_admin_control(slug):
 
 @arena_bp.route('/leagues/<slug>/room', methods=['GET', 'POST'])
 def league_room(slug):
-    """Live Pub Quiz Interactive Session with 5 Themed Rounds."""
+    """Live Pub Quiz Interactive Session with 3 Levels for Virtual or 5 Rounds for Venue."""
     player = get_current_player()
     league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
     is_virtual = league.is_virtual_league()
@@ -849,33 +872,42 @@ def league_room(slug):
     if pin_attempt == league.pin_code:
         session[f'pub_pin_{slug}'] = pin_attempt
 
-    # In virtual mode, round can be requested via args; in venue mode, quizmaster controls active round
+    # In virtual mode: 3 distinct levels; in venue mode: 5 rounds controlled by host
     if is_virtual:
+        total_rounds = 3
         current_round = int(request.args.get('round', 1))
-        if current_round < 1 or current_round > 5:
+        if current_round < 1 or current_round > total_rounds:
             current_round = 1
+        round_info = VIRTUAL_PUB_ROUNDS_CONFIG.get(current_round, VIRTUAL_PUB_ROUNDS_CONFIG[1])
     else:
+        total_rounds = 5
         current_round = state.get('current_round', 1)
+        round_info = PUB_ROUNDS_CONFIG.get(current_round, PUB_ROUNDS_CONFIG[1])
 
-    round_info = PUB_ROUNDS_CONFIG.get(current_round, PUB_ROUNDS_CONFIG[1])
     table_num = request.args.get('table') or session.get('pub_table_num') or '1'
     session['pub_table_num'] = table_num
 
     team_name = request.args.get('team') or session.get('pub_team_name') or f"Table {table_num} • {player.display_name}"
     session['pub_team_name'] = team_name
 
-    # Fetch 5 randomized questions matching this round's category
-    cat_slug = round_info['cat_slug']
-    questions = get_random_questions(category_slug=cat_slug, count=5)
+    # Exclude questions already seen in this session to strictly prevent repeats
+    seen_qids = session.get('pub_seen_qids', [])
+    total_q_count = QuizQuestion.query.count()
+    if len(seen_qids) >= max(10, total_q_count - 10):
+        seen_qids = []
 
-    # For client side: in virtual mode or if answers revealed, include correct answer; in live venue quiz, mask correct answers!
-    include_ans = is_virtual or state.get('answers_revealed', False)
-    questions_json = [q.to_dict(include_answer=include_ans) for q in questions]
+    cat_slug = round_info['cat_slug']
+    questions = get_random_questions(category_slug=cat_slug, count=5, exclude_ids=seen_qids)
+    session['pub_seen_qids'] = list(set(seen_qids + [q.id for q in questions]))
+
+    # Always include answers in payload so client can reveal answers at end of round / quiz
+    questions_json = [q.to_dict(include_answer=True) for q in questions]
 
     if request.method == 'POST':
         round_score = int(request.form.get('score', 0))
-        if current_round == 5:
-            round_score = int(round_score * 1.5)  # 1.5x Wipeout Multiplier
+        # 1.5x Wipeout Multiplier on finale round (Round 3 for Virtual, Round 5 for Venue)
+        if (is_virtual and current_round == 3) or (not is_virtual and current_round == 5):
+            round_score = int(round_score * 1.5)
 
         teams = league.get_teams()
         updated = False
@@ -906,14 +938,20 @@ def league_room(slug):
         db.session.commit()
         player.add_xp(100 + round_score)
 
+        next_round_num = current_round + 1 if current_round < total_rounds else None
+        active_config = VIRTUAL_PUB_ROUNDS_CONFIG if is_virtual else PUB_ROUNDS_CONFIG
+        next_round_title = active_config.get(current_round + 1, {}).get('name', 'Tournament Complete') if current_round < total_rounds else 'Tournament Complete'
+
         return jsonify({
             'success': True,
             'completed_round': current_round,
             'round_score': round_score,
             'total_score': team_entry.get('score', round_score),
             'rank': team_entry.get('rank', 1),
-            'next_round': current_round + 1 if current_round < 5 else None,
-            'next_round_title': PUB_ROUNDS_CONFIG.get(current_round + 1, {}).get('name', 'Tournament Complete') if current_round < 5 else 'Tournament Complete'
+            'total_rounds': total_rounds,
+            'next_round': next_round_num,
+            'next_round_title': next_round_title,
+            'next_pub_date': get_next_weekly_pub_date()
         })
 
     return render_template(
@@ -923,10 +961,12 @@ def league_room(slug):
         team_name=team_name,
         table_num=table_num,
         current_round=current_round,
+        total_rounds=total_rounds,
         round_info=round_info,
         questions=questions,
         questions_json=questions_json,
         is_virtual=is_virtual,
+        next_pub_date=get_next_weekly_pub_date(),
         state=state
     )
 

@@ -946,6 +946,30 @@ def seed_quizmondo_full_environment():
                 existing_q.correct_option = q_item['correct']
                 existing_q.category_name = pack_data['title']
 
+    # 2b. Synchronize Extra Questions
+    try:
+        from .extra_questions import EXTRA_QUESTIONS
+        for cat_slug, q_list in EXTRA_QUESTIONS.items():
+            pack = QuizPack.query.filter_by(category_slug=cat_slug).first()
+            for q_data in q_list:
+                if not QuizQuestion.query.filter_by(prompt=q_data['prompt']).first():
+                    q = QuizQuestion(
+                        category_slug=cat_slug,
+                        category_name=pack.title if pack else cat_slug.replace('-', ' ').title(),
+                        prompt=q_data['prompt'],
+                        question_type=q_data.get('type', 'classic'),
+                        options_json=json.dumps(q_data['options']),
+                        correct_option=q_data['correct'],
+                        explanation=q_data['explanation'],
+                        difficulty=q_data.get('difficulty', 'medium'),
+                        time_limit=15,
+                        points=100
+                    )
+                    db.session.add(q)
+        db.session.commit()
+    except Exception as e:
+        print('Error seeding extra questions:', e)
+
     # 3. Synchronize Pub Leagues
     for lg_data in SEED_LEAGUES:
         league = PubLeague.query.filter_by(slug=lg_data['slug']).first()
