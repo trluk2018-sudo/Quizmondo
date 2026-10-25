@@ -512,4 +512,11 @@ def _seed_defaults():
 
         SiteSetting.set('initial_modules_seeded', '1')
 
+    # Ensure Quizmondo questions, pub leagues, categories, posts, and page modules are synchronized
+    try:
+        from app.utils.quiz_seed import seed_quizmondo_full_environment
+        seed_quizmondo_full_environment()
+    except Exception as e:
+        app.logger.warning(f"Could not synchronize quizmondo seed environment: {e}")
+
     db.session.commit()
