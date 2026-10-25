@@ -440,3 +440,133 @@ def leagues():
         player=player,
         leagues=all_leagues
     )
+
+
+@arena_bp.route('/api/daily')
+def api_daily_questions():
+    """Return database-backed daily brain sprint questions."""
+    questions = QuizQuestion.query.order_by(QuizQuestion.id.asc()).limit(5).all()
+    return jsonify({
+        'success': True,
+        'badge': 'DAILY BRAIN CHALLENGE • LIVE SPRINT',
+        'questions': [q.to_dict(include_answer=True) for q in questions]
+    })
+
+
+# -------------------------------------------------------------------------
+# Community Quiz & Trivia Pack Studio
+# -------------------------------------------------------------------------
+PROFANITY_FLAGS = {'nude', 'viagra', 'casino', 'porn', 'scam', 'hack', 'warez', 'fuck', 'shit', 'bitch', 'asshole'}
+
+
+def passes_safety_filter(text: str) -> bool:
+    if not text:
+        return True
+    lower = text.lower()
+    for bad in PROFANITY_FLAGS:
+        if bad in lower:
+            return False
+    return True
+
+
+@arena_bp.route('/create', methods=['GET', 'POST'])
+def create_question():
+    """Community Quiz and Trivia Pack Studio."""
+    player = get_current_player()
+    
+    if request.method == 'POST':
+        prompt = (request.form.get('prompt') or '').strip()
+        category_slug = (request.form.get('category_slug') or 'general').strip()
+        category_name = (request.form.get('category_name') or 'General Knowledge').strip()
+        question_type = request.form.get('question_type', 'classic')
+        media_url = (request.form.get('media_url') or '').strip()
+        difficulty = request.form.get('difficulty', 'medium')
+        correct_option = request.form.get('correct_option', 'A').strip().upper()
+        explanation = (request.form.get('explanation') or '').strip()
+        pack_slug = (request.form.get('pack_slug') or 'community').strip()
+        author_name = (request.form.get('author_name') or player.display_name).strip()
+
+        options = {
+            'A': (request.form.get('opt_a') or '').strip(),
+            'B': (request.form.get('opt_b') or '').strip(),
+            'C': (request.form.get('opt_c') or '').strip(),
+            'D': (request.form.get('opt_d') or '').strip()
+        }
+
+        if not prompt or not options['A'] or not options['B']:
+            flash("Question prompt and at least options A and B are required.", "error")
+            return redirect(url_for('arena.create_question'))
+
+        # Safety filter
+        combined_text = f"{prompt} {options['A']} {options['B']} {options['C']} {options['D']} {explanation}"
+        is_safe = passes_safety_filter(combined_text)
+        initial_status = 'approved' if is_safe else 'pending'
+
+        q = QuizQuestion(
+            prompt=prompt,
+            question_type=question_type,
+            media_url=media_url,
+            options_json=json.dumps(options),
+            correct_option=correct_option,
+            explanation=explanation,
+            category_slug=category_slug,
+            category_name=category_name,
+            difficulty=difficulty,
+            points=100,
+            time_limit=15,
+            pack_slug=pack_slug,
+            is_community=True,
+            status=initial_status,
+            author_name=author_name
+        )
+        db.session.add(q)
+
+        # Ensure pack exists if custom pack specified
+        pack = QuizPack.query.filter_by(slug=pack_slug).first()
+        if not pack and pack_slug != 'core':
+            pack = QuizPack(
+                title=f"{category_name} Community Pack",
+                slug=pack_slug,
+                description=f"Curated trivia submitted by {author_name} and players.",
+                icon='🧩',
+                category_slug=category_slug,
+                is_community=True,
+                author_name=author_name,
+                question_count=1
+            )
+            db.session.add(pack)
+        elif pack:
+            pack.question_count = (pack.question_count or 0) + 1
+
+        # Reward player for contributing
+        player.add_xp(150)
+        player.coins = (player.coins or 0) + 50
+        db.session.commit()
+
+        if is_safe:
+            flash(f"🎉 Question published to Quizmondo Arena! You earned +150 XP and +50 Coins!", "success")
+        else:
+            flash(f"🛡️ Question submitted! It is in the moderation queue for quick review. You earned +150 XP!", "info")
+
+        return redirect(url_for('arena.dashboard'))
+
+    categories = db.session.query(QuizQuestion.category_slug, QuizQuestion.category_name).distinct().all()
+    packs = QuizPack.query.all()
+    return render_template(
+        'themes/quizhub/arena_create.html',
+        player=player,
+        categories=categories,
+        packs=packs
+    )
+
+
+@arena_bp.route('/packs')
+def packs_directory():
+    """Browse all Core and Community Trivia Packs."""
+    player = get_current_player()
+    all_packs = QuizPack.query.order_by(QuizPack.is_community.asc(), QuizPack.created_at.desc()).all()
+    return render_template(
+        'themes/quizhub/arena_packs.html',
+        player=player,
+        packs=all_packs
+    )

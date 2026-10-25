@@ -76,6 +76,23 @@
           Media Library
         </a>
 
+        <div class="pt-3 pb-1 px-4 text-[11px] font-semibold uppercase tracking-wider text-purple-400 flex items-center justify-between">
+          <span>Arena &amp; Gaming</span>
+          <span class="text-[9px] bg-purple-900/60 text-purple-300 px-1.5 py-0.5 rounded font-mono">LIVE</span>
+        </div>
+        <a href="{{ url_for('admin.questions') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if 'question' in request.endpoint %}bg-purple-900/50 text-white font-medium{% endif %}">
+          Questions &amp; Packs
+        </a>
+        <a href="{{ url_for('admin.duels') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if 'duel' in request.endpoint %}bg-purple-900/50 text-white font-medium{% endif %}">
+          Live Duels &amp; Stats
+        </a>
+        <a href="{{ url_for('admin.players') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if 'player' in request.endpoint %}bg-purple-900/50 text-white font-medium{% endif %}">
+          Players &amp; Ban Hammer
+        </a>
+        <a href="{{ url_for('admin.leagues') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if 'league' in request.endpoint %}bg-purple-900/50 text-white font-medium{% endif %}">
+          Pub Quiz Leagues
+        </a>
+
         <div class="pt-3 pb-1 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Design</div>
         <a href="{{ url_for('admin.themes') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if request.endpoint == 'admin.themes' %}bg-slate-700 text-white font-medium{% endif %}">
           Themes

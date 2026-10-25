@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify
 from werkzeug.utils import secure_filename
-from ..models import db, User, Post, Category, Page, Media, MenuItem, SidebarWidget, SiteSetting, PageModule, slugify
+from ..models import db, User, Post, Category, Page, Media, MenuItem, SidebarWidget, SiteSetting, PageModule, slugify, QuizQuestion, QuizPack, PlayerProfile, ArenaMatch, ArenaRound, PubLeague
 from ..utils.modules import get_default_config, get_module_definition, MODULE_DEFINITIONS
 from .auth import login_required
 
@@ -28,13 +28,24 @@ def dashboard():
     recent_posts = Post.query.order_by(Post.created_at.desc()).limit(5).all()
     recent_pages = Page.query.order_by(Page.updated_at.desc()).limit(5).all()
 
+    questions_count = QuizQuestion.query.count()
+    duels_count = ArenaMatch.query.count()
+    players_count = PlayerProfile.query.count()
+    leagues_count = PubLeague.query.count()
+    recent_duels = ArenaMatch.query.order_by(ArenaMatch.created_at.desc()).limit(5).all()
+
     return render_template(
         'admin/dashboard.html',
         post_count=post_count,
         page_count=page_count,
         media_count=media_count,
         recent_posts=recent_posts,
-        recent_pages=recent_pages
+        recent_pages=recent_pages,
+        questions_count=questions_count,
+        duels_count=duels_count,
+        players_count=players_count,
+        leagues_count=leagues_count,
+        recent_duels=recent_duels
     )
 
 
@@ -1275,3 +1286,282 @@ def settings_seo():
         return redirect(url_for('admin.settings_seo'))
 
     return render_template('admin/settings_seo.html', settings=SiteSetting.get_all())
+
+
+# -------------------------------------------------------------------------
+# Quizmondo Arena & Game Management
+# -------------------------------------------------------------------------
+@admin_bp.route('/questions')
+@login_required
+def questions():
+    category = request.args.get('category')
+    status_filter = request.args.get('status')
+    community_filter = request.args.get('community')
+    search = request.args.get('q', '').strip()
+    
+    query = QuizQuestion.query
+    if category:
+        query = query.filter_by(category_slug=category)
+    if status_filter in ('approved', 'pending', 'rejected'):
+        query = query.filter_by(status=status_filter)
+    if community_filter == '1':
+        query = query.filter_by(is_community=True)
+    elif community_filter == '0':
+        query = query.filter_by(is_community=False)
+    if search:
+        query = query.filter(QuizQuestion.prompt.ilike(f'%{search}%'))
+        
+    all_questions = query.order_by(QuizQuestion.id.desc()).all()
+    categories = db.session.query(QuizQuestion.category_slug, QuizQuestion.category_name).distinct().all()
+    packs = QuizPack.query.all()
+    pending_count = QuizQuestion.query.filter_by(status='pending').count()
+    
+    return render_template(
+        'admin/questions.html',
+        questions=all_questions,
+        categories=categories,
+        packs=packs,
+        current_category=category,
+        current_status=status_filter,
+        current_community=community_filter,
+        pending_count=pending_count,
+        search=search
+    )
+
+
+@admin_bp.route('/questions/<int:id>/status', methods=['POST'])
+@login_required
+def question_set_status(id):
+    q = QuizQuestion.query.get_or_404(id)
+    new_status = request.form.get('status', 'approved')
+    if new_status in ('approved', 'pending', 'rejected'):
+        q.status = new_status
+        db.session.commit()
+        flash(f'Question #{q.id} status updated to {new_status.capitalize()}.', 'success')
+    return redirect(request.referrer or url_for('admin.questions'))
+
+
+@admin_bp.route('/questions/new', methods=['GET', 'POST'])
+@login_required
+def question_new():
+    if request.method == 'POST':
+        prompt = (request.form.get('prompt') or '').strip()
+        cat_slug = (request.form.get('category_slug') or 'general').strip()
+        cat_name = (request.form.get('category_name') or 'General').strip()
+        difficulty = request.form.get('difficulty', 'medium')
+        correct = request.form.get('correct_option', 'A').strip().upper()
+        explanation = request.form.get('explanation', '').strip()
+        
+        options = {
+            'A': request.form.get('opt_a', '').strip(),
+            'B': request.form.get('opt_b', '').strip(),
+            'C': request.form.get('opt_c', '').strip(),
+            'D': request.form.get('opt_d', '').strip()
+        }
+        
+        if not prompt or not options['A'] or not options['B']:
+            flash('Prompt and at least options A and B are required.', 'error')
+            return redirect(url_for('admin.question_new'))
+            
+        q = QuizQuestion(
+            prompt=prompt,
+            category_slug=cat_slug,
+            category_name=cat_name,
+            difficulty=difficulty,
+            options_json=json.dumps(options),
+            correct_option=correct,
+            explanation=explanation,
+            points=100,
+            time_limit=15
+        )
+        db.session.add(q)
+        db.session.commit()
+        flash('Question created successfully in arena bank.', 'success')
+        return redirect(url_for('admin.questions'))
+        
+    categories = db.session.query(QuizQuestion.category_slug, QuizQuestion.category_name).distinct().all()
+    return render_template('admin/question_edit.html', question=None, categories=categories)
+
+
+@admin_bp.route('/questions/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def question_edit(id):
+    q = QuizQuestion.query.get_or_404(id)
+    if request.method == 'POST':
+        q.prompt = (request.form.get('prompt') or '').strip()
+        q.category_slug = (request.form.get('category_slug') or 'general').strip()
+        q.category_name = (request.form.get('category_name') or 'General').strip()
+        q.difficulty = request.form.get('difficulty', 'medium')
+        q.correct_option = request.form.get('correct_option', 'A').strip().upper()
+        q.explanation = request.form.get('explanation', '').strip()
+        
+        options = {
+            'A': request.form.get('opt_a', '').strip(),
+            'B': request.form.get('opt_b', '').strip(),
+            'C': request.form.get('opt_c', '').strip(),
+            'D': request.form.get('opt_d', '').strip()
+        }
+        q.options_json = json.dumps(options)
+        db.session.commit()
+        flash('Question updated successfully.', 'success')
+        return redirect(url_for('admin.questions'))
+        
+    categories = db.session.query(QuizQuestion.category_slug, QuizQuestion.category_name).distinct().all()
+    return render_template('admin/question_edit.html', question=q, categories=categories, options=q.get_options())
+
+
+@admin_bp.route('/questions/<int:id>/delete', methods=['POST'])
+@login_required
+def question_delete(id):
+    q = QuizQuestion.query.get_or_404(id)
+    db.session.delete(q)
+    db.session.commit()
+    flash('Question removed from arena.', 'success')
+    return redirect(url_for('admin.questions'))
+
+
+@admin_bp.route('/questions/import', methods=['POST'])
+@login_required
+def questions_import():
+    file = request.files.get('pack_file')
+    if not file or not file.filename.endswith('.json'):
+        flash('Please upload a valid JSON pack file.', 'error')
+        return redirect(url_for('admin.questions'))
+        
+    try:
+        data = json.load(file)
+        imported_count = 0
+        pack_title = data.get('title', 'Imported Pack')
+        pack_slug = data.get('slug', slugify(pack_title))
+        cat_slug = data.get('category_slug', 'general')
+        
+        pack = QuizPack.query.filter_by(slug=pack_slug).first()
+        if not pack:
+            pack = QuizPack(
+                title=pack_title,
+                slug=pack_slug,
+                description=data.get('description', ''),
+                icon=data.get('icon', '📦'),
+                category_slug=cat_slug,
+                author_name='Admin Import'
+            )
+            db.session.add(pack)
+            db.session.flush()
+            
+        for q_item in data.get('questions', []):
+            prompt = q_item.get('prompt')
+            if not prompt or QuizQuestion.query.filter_by(prompt=prompt).first():
+                continue
+            q = QuizQuestion(
+                prompt=prompt,
+                options_json=json.dumps(q_item.get('options', {})),
+                correct_option=q_item.get('correct', 'A'),
+                explanation=q_item.get('explanation', ''),
+                category_slug=cat_slug,
+                category_name=pack_title,
+                difficulty=q_item.get('difficulty', 'medium'),
+                pack_slug=pack_slug,
+                points=100,
+                time_limit=15
+            )
+            db.session.add(q)
+            imported_count += 1
+            
+        db.session.commit()
+        flash(f'Successfully imported {imported_count} questions from pack "{pack_title}".', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Import error: {str(e)}', 'error')
+        
+    return redirect(url_for('admin.questions'))
+
+
+@admin_bp.route('/questions/export')
+@login_required
+def questions_export():
+    all_q = QuizQuestion.query.all()
+    export_data = {
+        'title': 'Quizmondo Master Question Pack',
+        'slug': 'quizmondo-master-export',
+        'exported_at': datetime.utcnow().isoformat(),
+        'questions': [
+            {
+                'prompt': q.prompt,
+                'options': q.get_options(),
+                'correct': q.correct_option,
+                'explanation': q.explanation,
+                'category_slug': q.category_slug,
+                'category_name': q.category_name,
+                'difficulty': q.difficulty
+            }
+            for q in all_q
+        ]
+    }
+    from flask import Response
+    return Response(
+        json.dumps(export_data, indent=2),
+        mimetype='application/json',
+        headers={'Content-Disposition': 'attachment;filename=quizmondo_questions_export.json'}
+    )
+
+
+@admin_bp.route('/duels')
+@login_required
+def duels():
+    matches = ArenaMatch.query.order_by(ArenaMatch.created_at.desc()).all()
+    return render_template('admin/duels.html', matches=matches)
+
+
+@admin_bp.route('/players')
+@login_required
+def players():
+    search = request.args.get('q', '').strip()
+    query = PlayerProfile.query
+    if search:
+        query = query.filter(PlayerProfile.display_name.ilike(f'%{search}%'))
+    all_players = query.order_by(PlayerProfile.xp.desc()).all()
+    return render_template('admin/players.html', players=all_players, search=search)
+
+
+@admin_bp.route('/players/<int:id>/toggle-ban', methods=['POST'])
+@login_required
+def player_toggle_ban(id):
+    p = PlayerProfile.query.get_or_404(id)
+    p.is_banned = not p.is_banned
+    p.ban_reason = 'Violating fair play guidelines' if p.is_banned else ''
+    db.session.commit()
+    status = 'banned' if p.is_banned else 'unbanned'
+    flash(f'Player {p.display_name} has been {status}.', 'success')
+    return redirect(url_for('admin.players'))
+
+
+@admin_bp.route('/leagues', methods=['GET', 'POST'])
+@login_required
+def leagues():
+    if request.method == 'POST':
+        name = (request.form.get('name') or '').strip()
+        venue = (request.form.get('venue_name') or '').strip()
+        pin = (request.form.get('pin_code') or '').strip()
+        schedule = (request.form.get('schedule_day') or '').strip()
+        desc = (request.form.get('description') or '').strip()
+        
+        if not name or not pin:
+            flash('League name and PIN code are required.', 'error')
+            return redirect(url_for('admin.leagues'))
+            
+        league = PubLeague(
+            name=name,
+            slug=slugify(name),
+            venue_name=venue or 'Virtual Pub Arena',
+            pin_code=pin,
+            schedule_day=schedule or 'Every Thursday at 20:00',
+            description=desc,
+            is_active=True
+        )
+        db.session.add(league)
+        db.session.commit()
+        flash(f'Pub League "{name}" created successfully with PIN {pin}.', 'success')
+        return redirect(url_for('admin.leagues'))
+        
+    all_leagues = PubLeague.query.order_by(PubLeague.created_at.desc()).all()
+    return render_template('admin/leagues.html', leagues=all_leagues)

@@ -1,0 +1,78 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Live Arena Duels &amp; Stats • Quizmondo{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800">Live Arena Duels &amp; Match Activity</h1>
+    <p class="text-xs text-slate-500">Monitor active 6-round head-to-head matches, turn cadence, and scores across players.</p>
+  </div>
+
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider">
+          <tr>
+            <th class="py-3 px-4">Match Code</th>
+            <th class="py-3 px-4">Player 1</th>
+            <th class="py-3 px-4 text-center">Score</th>
+            <th class="py-3 px-4">Player 2</th>
+            <th class="py-3 px-4">Round</th>
+            <th class="py-3 px-4">Status</th>
+            <th class="py-3 px-4 text-right">Created</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for m in matches %}
+          <tr class="hover:bg-slate-50/80 transition">
+            <td class="py-3.5 px-4 font-mono font-bold text-blue-600">
+              <a href="{{ url_for('arena.match_lobby', match_code=m.match_code) }}" target="_blank" class="hover:underline flex items-center gap-1">
+                <span>{{ m.match_code }}</span>
+                <span class="text-[10px] text-slate-400">&nearr;</span>
+              </a>
+            </td>
+            <td class="py-3.5 px-4 font-medium text-slate-800">
+              <div class="flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-bold flex items-center justify-center font-mono">P1</span>
+                <span>{{ m.player1_name }}</span>
+              </div>
+            </td>
+            <td class="py-3.5 px-4 text-center font-mono font-bold text-sm">
+              <span class="text-purple-600">{{ m.p1_total_score }}</span>
+              <span class="text-slate-300 mx-1">-</span>
+              <span class="text-cyan-600">{{ m.p2_total_score }}</span>
+            </td>
+            <td class="py-3.5 px-4 font-medium text-slate-800">
+              <div class="flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-cyan-100 text-cyan-700 text-[10px] font-bold flex items-center justify-center font-mono">P2</span>
+                <span>{{ m.player2_name }}</span>
+              </div>
+            </td>
+            <td class="py-3.5 px-4 font-mono">
+              Round {{ m.current_round }}/6
+            </td>
+            <td class="py-3.5 px-4">
+              <span class="px-2 py-0.5 rounded-full font-mono text-[10px] font-bold uppercase {% if m.status == 'completed' %}bg-slate-100 text-slate-700{% elif m.status == 'in_progress' %}bg-emerald-50 text-emerald-700{% else %}bg-amber-50 text-amber-700{% endif %}">
+                {{ m.status }}
+              </span>
+            </td>
+            <td class="py-3.5 px-4 text-right text-slate-400 font-mono">
+              {{ m.created_at.strftime('%Y-%m-%d %H:%M') if m.created_at else '' }}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" class="py-8 text-center text-slate-400">
+              No arena matches logged yet. Play an instant duel from the Arena Hub.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

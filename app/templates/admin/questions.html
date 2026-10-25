@@ -1,0 +1,194 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Arena Question Bank &amp; Moderation • Quizmondo{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header & Primary Actions -->
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">Arena Question Bank &amp; Moderation</h1>
+      <p class="text-xs text-slate-500">Manage questions, review community player submissions, and export/import JSON packs.</p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2.5">
+      <a href="{{ url_for('admin.questions_export') }}" class="px-3.5 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-sm flex items-center gap-1.5 transition">
+        <span>📥</span> Export JSON Pack
+      </a>
+      <button type="button" onclick="openImportModal()" class="px-3.5 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-sm flex items-center gap-1.5 transition">
+        <span>📦</span> Import JSON Pack
+      </button>
+      <a href="{{ url_for('admin.question_new') }}" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm flex items-center gap-1.5 transition">
+        <span>+</span> Add New Question
+      </a>
+    </div>
+  </div>
+
+  <!-- Moderation Status Tabs -->
+  <div class="flex items-center gap-2 border-b border-slate-200 pb-2 text-xs font-mono">
+    <a href="{{ url_for('admin.questions') }}" class="px-3 py-1.5 rounded-lg {% if not current_status and not current_community %}bg-slate-900 text-white font-bold{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+      All ({{ questions|length }})
+    </a>
+    <a href="{{ url_for('admin.questions', status='pending') }}" class="px-3 py-1.5 rounded-lg flex items-center gap-1.5 {% if current_status == 'pending' %}bg-amber-500 text-slate-950 font-black{% else %}text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200{% endif %}">
+      <span>Pending Moderation</span>
+      {% if pending_count %}
+      <span class="px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[10px] font-bold">{{ pending_count }}</span>
+      {% endif %}
+    </a>
+    <a href="{{ url_for('admin.questions', status='approved') }}" class="px-3 py-1.5 rounded-lg {% if current_status == 'approved' %}bg-emerald-600 text-white font-bold{% else %}text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200{% endif %}">
+      Approved
+    </a>
+    <a href="{{ url_for('admin.questions', community='1') }}" class="px-3 py-1.5 rounded-lg {% if current_community == '1' %}bg-purple-600 text-white font-bold{% else %}text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200{% endif %}">
+      Community Submissions
+    </a>
+  </div>
+
+  <!-- Search & Category Filters -->
+  <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex flex-wrap items-center gap-1.5 text-xs">
+      <a href="{{ url_for('admin.questions') }}" class="px-3 py-1.5 rounded-lg {% if not current_category %}bg-blue-50 text-blue-700 font-bold border border-blue-200{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+        All Categories
+      </a>
+      {% for cat in categories %}
+      <a href="{{ url_for('admin.questions', category=cat[0], status=current_status, community=current_community) }}" class="px-3 py-1.5 rounded-lg {% if current_category == cat[0] %}bg-blue-50 text-blue-700 font-bold border border-blue-200{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+        {{ cat[1] }}
+      </a>
+      {% endfor %}
+    </div>
+
+    <form method="GET" action="{{ url_for('admin.questions') }}" class="w-full sm:w-64">
+      {% if current_status %}<input type="hidden" name="status" value="{{ current_status }}">{% endif %}
+      {% if current_community %}<input type="hidden" name="community" value="{{ current_community }}">{% endif %}
+      <input type="text" name="q" value="{{ search or '' }}" placeholder="Search questions..." class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:outline-none focus:border-blue-500">
+    </form>
+  </div>
+
+  <!-- Questions Table -->
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider">
+          <tr>
+            <th class="py-3 px-4">#</th>
+            <th class="py-3 px-4">Question Prompt</th>
+            <th class="py-3 px-4">Type</th>
+            <th class="py-3 px-4">Category</th>
+            <th class="py-3 px-4">Source &amp; Author</th>
+            <th class="py-3 px-4">Status</th>
+            <th class="py-3 px-4 text-center">Answer</th>
+            <th class="py-3 px-4 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for q in questions %}
+          <tr class="hover:bg-slate-50/80 transition">
+            <td class="py-3.5 px-4 font-mono text-slate-400">#{{ q.id }}</td>
+            <td class="py-3.5 px-4 font-medium text-slate-800 max-w-sm">
+              <div class="line-clamp-2">{{ q.prompt }}</div>
+              {% if q.explanation %}
+              <div class="text-[11px] text-slate-400 mt-0.5 line-clamp-1 italic">{{ q.explanation }}</div>
+              {% endif %}
+            </td>
+            <td class="py-3.5 px-4 font-mono text-[11px]">
+              {% if q.question_type == 'youtube_clip' or q.question_type == 'video' %}
+              <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 font-bold border border-rose-200">📹 Video</span>
+              {% elif q.question_type == 'image' %}
+              <span class="px-2 py-0.5 rounded bg-cyan-50 text-cyan-700 font-bold border border-cyan-200">🖼️ Image</span>
+              {% else %}
+              <span class="text-slate-500">Classic</span>
+              {% endif %}
+            </td>
+            <td class="py-3.5 px-4">
+              <span class="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200 font-mono text-[10px] font-bold">
+                {{ q.category_name }}
+              </span>
+            </td>
+            <td class="py-3.5 px-4">
+              {% if q.is_community %}
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-pink-50 text-pink-700 border border-pink-200 text-[10px] font-bold">
+                <span>👥</span> {{ q.author_name or 'Player' }}
+              </span>
+              {% else %}
+              <span class="text-slate-500 text-[11px]">🏛️ Core Pack</span>
+              {% endif %}
+            </td>
+            <td class="py-3.5 px-4 font-mono text-[10px]">
+              {% if q.status == 'approved' %}
+              <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">Approved</span>
+              {% elif q.status == 'pending' %}
+              <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold animate-pulse">Pending Review</span>
+              {% elif q.status == 'rejected' %}
+              <span class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-bold">Rejected</span>
+              {% else %}
+              <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">Active</span>
+              {% endif %}
+            </td>
+            <td class="py-3.5 px-4 text-center">
+              <span class="w-6 h-6 rounded-full bg-slate-900 text-cyan-300 font-bold font-mono text-[11px] inline-flex items-center justify-center">
+                {{ q.correct_option }}
+              </span>
+            </td>
+            <td class="py-3.5 px-4 text-right space-x-1.5 whitespace-nowrap">
+              {% if q.status == 'pending' %}
+              <form action="{{ url_for('admin.question_set_status', id=q.id) }}" method="POST" class="inline">
+                <input type="hidden" name="status" value="approved">
+                <button type="submit" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold transition">
+                  ✓ Approve
+                </button>
+              </form>
+              <form action="{{ url_for('admin.question_set_status', id=q.id) }}" method="POST" class="inline">
+                <input type="hidden" name="status" value="rejected">
+                <button type="submit" class="px-2 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded text-[10px] font-bold transition">
+                  ✗ Reject
+                </button>
+              </form>
+              {% endif %}
+              <a href="{{ url_for('admin.question_edit', id=q.id) }}" class="text-blue-600 hover:text-blue-800 font-semibold">Edit</a>
+              <form action="{{ url_for('admin.question_delete', id=q.id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this question?');">
+                <button type="submit" class="text-rose-600 hover:text-rose-800 font-semibold">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8" class="py-8 text-center text-slate-400">
+              No questions found. Click "Add New Question" or import a pack to seed questions.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- JSON Pack Import Modal -->
+<div id="importModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+  <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
+    <div class="flex items-center justify-between border-b pb-3">
+      <h3 class="font-bold text-slate-800 text-sm">Import JSON Question Pack</h3>
+      <button type="button" onclick="closeImportModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+    </div>
+
+    <form action="{{ url_for('admin.questions_import') }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
+      <div>
+        <label class="block text-slate-700 font-bold mb-1">Select .JSON Pack File</label>
+        <input type="file" name="pack_file" accept=".json" required class="w-full p-2 border rounded-lg text-slate-600">
+        <p class="text-[11px] text-slate-400 mt-1">Upload a valid Quizmondo JSON pack containing question prompts and answer options.</p>
+      </div>
+
+      <div class="pt-2 flex justify-end gap-2">
+        <button type="button" onclick="closeImportModal()" class="px-4 py-2 border rounded-lg text-slate-600">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg">Start Import</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openImportModal() { document.getElementById('importModal').classList.remove('hidden'); }
+function closeImportModal() { document.getElementById('importModal').classList.add('hidden'); }
+</script>
+{% endblock %}

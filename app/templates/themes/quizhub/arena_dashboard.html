@@ -187,11 +187,21 @@
     <div class="space-y-4 pt-4">
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-black font-mono text-white flex items-center gap-2">
-          <span>📚</span> ARENA PACKS &amp; CATEGORIES
+          <span>📚</span> ARENA PACKS &amp; COMMUNITY QUIZZES
         </h3>
-        <a href="{{ url_for('arena.leagues') }}" class="text-xs font-mono text-cyan-400 hover:underline">
-          Pub Leagues &rarr;
-        </a>
+        <div class="flex items-center gap-3">
+          <a href="{{ url_for('arena.create_question') }}" class="text-xs font-mono font-bold text-amber-400 hover:text-amber-300 hover:underline">
+            + Author Trivia (+150 XP)
+          </a>
+          <span class="text-slate-600">&bull;</span>
+          <a href="{{ url_for('arena.packs_directory') }}" class="text-xs font-mono text-cyan-400 hover:underline">
+            All Packs &rarr;
+          </a>
+          <span class="text-slate-600">&bull;</span>
+          <a href="{{ url_for('arena.leagues') }}" class="text-xs font-mono text-purple-400 hover:underline">
+            Pub Leagues &rarr;
+          </a>
+        </div>
       </div>
 
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">

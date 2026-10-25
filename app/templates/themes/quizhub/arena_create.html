@@ -1,0 +1,287 @@
+{% extends "themes/quizhub/base.html" %}
+{% from "themes/quizhub/mascot_character.html" import render_mascot %}
+
+{% block title %}Trivia Creator Studio • Quizmondo Arena{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#0a0518] text-slate-100 font-sans py-10 relative overflow-hidden">
+  <!-- Glowing nebula orb -->
+  <div class="absolute top-10 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-gradient-to-r from-purple-600/20 via-indigo-600/20 to-pink-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 relative z-10 space-y-8">
+
+    <!-- Top Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-purple-500/20 pb-6">
+      <div class="flex items-center gap-4">
+        {{ render_mascot(player.avatar_key, 'idle', 'sm', '') }}
+        <div>
+          <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-400 bg-cyan-950/60 border border-cyan-800/60 px-2.5 py-0.5 rounded-full">
+            Sporcle & JetPunk Community Studio
+          </span>
+          <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight mt-1">
+            Author Quizmondo Trivia
+          </h1>
+          <p class="text-xs text-slate-400 mt-0.5">
+            Craft brain teasers, YouTube music clips, and visual puzzles for players worldwide.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="px-3 py-1.5 rounded-xl bg-purple-950/80 border border-purple-500/30 font-mono text-xs">
+          <span class="text-amber-400 font-bold">+150 XP</span> &amp; <span class="text-cyan-300 font-bold">+50 Coins</span> per submission
+        </div>
+        <a href="{{ url_for('arena.dashboard') }}" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 hover:border-slate-500 text-xs text-slate-300 transition">
+          &larr; Back to Arena
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Creation Layout: 2 Columns on desktop (Form + Live Hologram Preview) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+      <!-- Form Column (7 cols) -->
+      <div class="lg:col-span-7 bg-slate-950/90 border border-purple-500/30 rounded-3xl p-6 sm:p-8 backdrop-blur shadow-2xl space-y-6">
+        <form method="POST" action="{{ url_for('arena.create_question') }}" id="quizForm" class="space-y-6 text-xs">
+
+          <!-- Question Prompt -->
+          <div class="space-y-1.5">
+            <label class="block font-mono font-bold text-slate-300 uppercase tracking-wider">
+              Question Prompt <span class="text-rose-400">*</span>
+            </label>
+            <textarea name="prompt" id="inPrompt" rows="3" required placeholder="e.g. Which planet in our solar system has the most moons?" class="w-full bg-slate-900/90 border border-purple-500/30 rounded-xl p-3.5 text-slate-100 placeholder-slate-500 font-sans text-sm focus:border-cyan-400 focus:outline-none transition"></textarea>
+          </div>
+
+          <!-- Question Type & Media -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <label class="block font-mono font-bold text-slate-300 uppercase tracking-wider">
+                Trivia Format
+              </label>
+              <select name="question_type" id="inType" onchange="updateMediaVisibility()" class="w-full bg-slate-900 border border-purple-500/30 rounded-xl p-3 text-slate-100 font-mono focus:border-cyan-400 focus:outline-none">
+                <option value="classic">Classic Multiple Choice</option>
+                <option value="youtube_clip">YouTube Video / Audio Clip</option>
+                <option value="image">Visual Image Clue</option>
+              </select>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="block font-mono font-bold text-slate-300 uppercase tracking-wider">
+                Difficulty Level
+              </label>
+              <select name="difficulty" class="w-full bg-slate-900 border border-purple-500/30 rounded-xl p-3 text-slate-100 font-mono focus:border-cyan-400 focus:outline-none">
+                <option value="easy">Easy (+80 XP)</option>
+                <option value="medium" selected>Medium (+100 XP)</option>
+                <option value="hard">Hard (+150 XP)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Optional Media URL Container -->
+          <div id="mediaUrlBox" class="hidden space-y-1.5">
+            <label class="block font-mono font-bold text-cyan-400 uppercase tracking-wider flex items-center justify-between">
+              <span>Media Link (YouTube or Image URL)</span>
+              <span class="text-[10px] text-slate-400 font-sans lowercase">e.g. https://www.youtube.com/watch?v=...</span>
+            </label>
+            <input type="url" name="media_url" id="inMediaUrl" placeholder="https://www.youtube.com/watch?v=..." class="w-full bg-slate-900 border border-cyan-500/40 rounded-xl p-3 text-slate-100 placeholder-slate-600 font-mono focus:border-cyan-400 focus:outline-none">
+          </div>
+
+          <!-- Category Selection -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <label class="block font-mono font-bold text-slate-300 uppercase tracking-wider">Category</label>
+              <select name="category_slug" id="inCatSlug" onchange="handleCategoryChange()" class="w-full bg-slate-900 border border-purple-500/30 rounded-xl p-3 text-slate-100 font-mono focus:border-cyan-400 focus:outline-none">
+                {% for cat in categories %}
+                <option value="{{ cat[0] }}" data-name="{{ cat[1] }}">{{ cat[1] }}</option>
+                {% endfor %}
+                <option value="general" data-name="General Knowledge">General Knowledge</option>
+              </select>
+              <input type="hidden" name="category_name" id="inCatName" value="Science & Cosmos">
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="block font-mono font-bold text-slate-300 uppercase tracking-wider">Target Pack</label>
+              <select name="pack_slug" class="w-full bg-slate-900 border border-purple-500/30 rounded-xl p-3 text-slate-100 font-mono focus:border-cyan-400 focus:outline-none">
+                <option value="community" selected>Community Mega Pack</option>
+                {% for pack in packs %}
+                <option value="{{ pack.slug }}">{{ pack.title }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <!-- 4 Answer Options (A, B, C, D) with Correct Radio -->
+          <div class="space-y-3 pt-2">
+            <label class="block font-mono font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+              <span>Options & Correct Answer</span>
+              <span class="text-[10px] text-amber-400">Click radio button to mark correct answer</span>
+            </label>
+
+            <!-- Option A -->
+            <div class="flex items-center gap-3 bg-slate-900/80 border border-purple-500/20 p-2.5 rounded-xl hover:border-cyan-400/50 transition">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="correct_option" value="A" checked class="w-4 h-4 text-cyan-400 focus:ring-0">
+                <span class="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 flex items-center justify-center font-mono font-bold text-xs">A</span>
+              </label>
+              <input type="text" name="opt_a" id="inOptA" required placeholder="Option A (e.g. Jupiter)" class="flex-1 bg-transparent text-slate-100 font-sans focus:outline-none text-xs">
+            </div>
+
+            <!-- Option B -->
+            <div class="flex items-center gap-3 bg-slate-900/80 border border-purple-500/20 p-2.5 rounded-xl hover:border-cyan-400/50 transition">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="correct_option" value="B" class="w-4 h-4 text-cyan-400 focus:ring-0">
+                <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-300 border border-purple-400/40 flex items-center justify-center font-mono font-bold text-xs">B</span>
+              </label>
+              <input type="text" name="opt_b" id="inOptB" required placeholder="Option B (e.g. Saturn)" class="flex-1 bg-transparent text-slate-100 font-sans focus:outline-none text-xs">
+            </div>
+
+            <!-- Option C -->
+            <div class="flex items-center gap-3 bg-slate-900/80 border border-purple-500/20 p-2.5 rounded-xl hover:border-cyan-400/50 transition">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="correct_option" value="C" class="w-4 h-4 text-cyan-400 focus:ring-0">
+                <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-300 border border-purple-400/40 flex items-center justify-center font-mono font-bold text-xs">C</span>
+              </label>
+              <input type="text" name="opt_c" id="inOptC" placeholder="Option C (e.g. Uranus)" class="flex-1 bg-transparent text-slate-100 font-sans focus:outline-none text-xs">
+            </div>
+
+            <!-- Option D -->
+            <div class="flex items-center gap-3 bg-slate-900/80 border border-purple-500/20 p-2.5 rounded-xl hover:border-cyan-400/50 transition">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="correct_option" value="D" class="w-4 h-4 text-cyan-400 focus:ring-0">
+                <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-300 border border-purple-400/40 flex items-center justify-center font-mono font-bold text-xs">D</span>
+              </label>
+              <input type="text" name="opt_d" id="inOptD" placeholder="Option D (e.g. Neptune)" class="flex-1 bg-transparent text-slate-100 font-sans focus:outline-none text-xs">
+            </div>
+          </div>
+
+          <!-- Explanation & Fun Fact -->
+          <div class="space-y-1.5">
+            <label class="block font-mono font-bold text-slate-300 uppercase tracking-wider">
+              Trivia Lore &amp; Fun Fact (Optional)
+            </label>
+            <input type="text" name="explanation" id="inExp" placeholder="e.g. Saturn currently has 146 confirmed moons recognized by the IAU." class="w-full bg-slate-900 border border-purple-500/30 rounded-xl p-3 text-slate-100 placeholder-slate-600 font-sans focus:border-cyan-400 focus:outline-none">
+          </div>
+
+          <!-- Author attribution -->
+          <div class="space-y-1.5">
+            <label class="block font-mono font-bold text-slate-300 uppercase tracking-wider">
+              Author Display Signature
+            </label>
+            <input type="text" name="author_name" value="{{ player.display_name }}" class="w-full bg-slate-900 border border-purple-500/30 rounded-xl p-3 text-slate-100 font-mono focus:border-cyan-400 focus:outline-none">
+          </div>
+
+          <!-- Submit Action -->
+          <div class="pt-4 border-t border-purple-500/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2 text-slate-400 text-[11px]">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>Automated safety filter active. Instant approval for clean trivia!</span>
+            </div>
+            <button type="submit" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black font-mono text-xs uppercase tracking-wider shadow-lg shadow-cyan-500/20 transition transform hover:-translate-y-0.5">
+              🚀 Publish to Arena
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Live Hologram Preview Column (5 cols) -->
+      <div class="lg:col-span-5 sticky top-8 space-y-4">
+        <div class="flex items-center justify-between text-xs font-mono text-slate-400">
+          <span class="uppercase tracking-wider font-bold">🎮 Live Arena Hologram</span>
+          <span class="text-cyan-400">Player View</span>
+        </div>
+
+        <!-- Preview Arena Card -->
+        <div class="bg-slate-950/95 border-2 border-purple-500/40 rounded-3xl p-6 backdrop-blur shadow-2xl space-y-5">
+          <div class="flex items-center justify-between border-b border-purple-500/20 pb-3">
+            <span id="prevBadge" class="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+              SCIENCE &amp; COSMOS
+            </span>
+            <span class="text-xs font-mono text-cyan-400 font-bold">⏱️ 15s</span>
+          </div>
+
+          <!-- Preview Question Prompt -->
+          <div class="min-h-[50px]">
+            <h3 id="prevPrompt" class="text-sm sm:text-base font-black text-white font-mono leading-snug">
+              Which planet in our solar system has the most moons?
+            </h3>
+          </div>
+
+          <!-- Preview Options -->
+          <div class="space-y-2 font-mono text-xs" id="prevOptions">
+            <div class="p-2.5 rounded-xl border border-purple-500/30 bg-slate-900 flex items-center gap-2.5 text-slate-200">
+              <span class="w-5 h-5 rounded-md bg-purple-500/20 text-cyan-300 flex items-center justify-center font-bold text-[10px]">A</span>
+              <span id="prevOptA">Jupiter</span>
+            </div>
+            <div class="p-2.5 rounded-xl border border-purple-500/30 bg-slate-900 flex items-center gap-2.5 text-slate-200">
+              <span class="w-5 h-5 rounded-md bg-purple-500/20 text-cyan-300 flex items-center justify-center font-bold text-[10px]">B</span>
+              <span id="prevOptB">Saturn</span>
+            </div>
+            <div class="p-2.5 rounded-xl border border-purple-500/30 bg-slate-900 flex items-center gap-2.5 text-slate-200">
+              <span class="w-5 h-5 rounded-md bg-purple-500/20 text-cyan-300 flex items-center justify-center font-bold text-[10px]">C</span>
+              <span id="prevOptC">Uranus</span>
+            </div>
+            <div class="p-2.5 rounded-xl border border-purple-500/30 bg-slate-900 flex items-center gap-2.5 text-slate-200">
+              <span class="w-5 h-5 rounded-md bg-purple-500/20 text-cyan-300 flex items-center justify-center font-bold text-[10px]">D</span>
+              <span id="prevOptD">Neptune</span>
+            </div>
+          </div>
+
+          <!-- Attribution footer -->
+          <div class="pt-3 border-t border-purple-500/20 flex items-center justify-between text-[11px] font-mono text-slate-400">
+            <span>Author: <strong class="text-white" id="prevAuthor">{{ player.display_name }}</strong></span>
+            <span class="text-amber-400 font-bold">+100 PTS</span>
+          </div>
+        </div>
+
+        <!-- Mascot Tip Bubble -->
+        <div class="p-4 rounded-2xl bg-indigo-950/60 border border-indigo-500/30 flex items-center gap-3 text-xs text-indigo-200">
+          <span class="text-2xl">💡</span>
+          <div>
+            <strong class="text-white block font-bold">Pro Tip:</strong>
+            Great trivia has 1 clear correct answer and 3 plausible, intriguing distractors!
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+function updateMediaVisibility() {
+  var type = document.getElementById('inType').value;
+  var box = document.getElementById('mediaUrlBox');
+  if (type === 'youtube_clip' || type === 'image') {
+    box.classList.remove('hidden');
+  } else {
+    box.classList.add('hidden');
+  }
+}
+
+function handleCategoryChange() {
+  var select = document.getElementById('inCatSlug');
+  var opt = select.options[select.selectedIndex];
+  var catName = opt.getAttribute('data-name') || opt.text;
+  document.getElementById('inCatName').value = catName;
+  document.getElementById('prevBadge').textContent = catName.toUpperCase();
+}
+
+// Live preview synchronization
+var promptInput = document.getElementById('inPrompt');
+promptInput.addEventListener('input', function() {
+  document.getElementById('prevPrompt').textContent = this.value || 'Your question prompt will appear here...';
+});
+
+['A', 'B', 'C', 'D'].forEach(function(letter) {
+  var el = document.getElementById('inOpt' + letter);
+  if (el) {
+    el.addEventListener('input', function() {
+      document.getElementById('prevOpt' + letter).textContent = this.value || ('Option ' + letter);
+    });
+  }
+});
+
+handleCategoryChange();
+</script>
+{% endblock %}

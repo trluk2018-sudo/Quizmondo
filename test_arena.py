@@ -70,5 +70,62 @@ class ArenaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertIn(b'PUB LEAGUES', res.data)
 
+    def test_community_question_creation_and_packs(self):
+        # 1. View create form
+        res = self.client.get('/arena/create')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Author Quizmondo Trivia', res.data)
+
+        # 2. Submit clean question
+        post_data = {
+            'prompt': 'What is the speed of light in vacuum?',
+            'question_type': 'classic',
+            'category_slug': 'science-cosmos',
+            'category_name': 'Science & Cosmos',
+            'opt_a': '299,792 km/s',
+            'opt_b': '150,000 km/s',
+            'opt_c': '384,400 km/s',
+            'opt_d': '1,080 km/s',
+            'correct_option': 'A',
+            'explanation': 'Light moves at roughly 300,000 km/s in vacuum.',
+            'difficulty': 'medium',
+            'pack_slug': 'physics-master'
+        }
+        res_post = self.client.post('/arena/create', data=post_data, follow_redirects=True)
+        self.assertEqual(res_post.status_code, 200)
+        self.assertIn(b'Question published to Quizmondo Arena', res_post.data)
+
+        # Verify question in DB
+        with self.app.app_context():
+            q = QuizQuestion.query.filter_by(prompt='What is the speed of light in vacuum?').first()
+            self.assertIsNotNone(q)
+            self.assertEqual(q.status, 'approved')
+            self.assertTrue(q.is_community)
+
+        # 3. View packs directory
+        res_packs = self.client.get('/arena/packs')
+        self.assertEqual(res_packs.status_code, 200)
+        self.assertIn(b'Trivia Packs', res_packs.data)
+
+    def test_profanity_filter_triggers_pending_moderation(self):
+        # Submit question containing flagged keyword
+        post_data = {
+            'prompt': 'Is this a free casino scam test question?',
+            'question_type': 'classic',
+            'category_slug': 'general',
+            'category_name': 'General Knowledge',
+            'opt_a': 'Yes',
+            'opt_b': 'No',
+            'correct_option': 'A'
+        }
+        res_post = self.client.post('/arena/create', data=post_data, follow_redirects=True)
+        self.assertEqual(res_post.status_code, 200)
+        self.assertIn(b'in the moderation queue', res_post.data)
+
+        with self.app.app_context():
+            q = QuizQuestion.query.filter_by(prompt='Is this a free casino scam test question?').first()
+            self.assertIsNotNone(q)
+            self.assertEqual(q.status, 'pending')
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,0 +1,78 @@
+{% extends "themes/quizhub/base.html" %}
+
+{% block title %}Trivia Packs &amp; Custom Categories • Quizmondo Arena{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#0a0518] text-slate-100 font-sans py-12 relative overflow-hidden">
+  <!-- Glowing background effect -->
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-gradient-to-r from-purple-600/15 via-indigo-600/15 to-cyan-600/15 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 relative z-10 space-y-10">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-purple-500/20 pb-6">
+      <div>
+        <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-400 bg-cyan-950/60 border border-cyan-800/60 px-3 py-1 rounded-full">
+          Quizmondo Vault
+        </span>
+        <h1 class="text-3xl sm:text-4xl font-black text-white tracking-tight mt-2">
+          Trivia Packs &amp; Challenges
+        </h1>
+        <p class="text-sm text-slate-400 mt-1 max-w-xl">
+          Explore official master packs and player-created community decks. Challenge opponents in your favorite niches!
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="{{ url_for('arena.create_question') }}" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold font-mono text-xs uppercase tracking-wider shadow-lg shadow-cyan-500/20 transition">
+          + Create Custom Quiz
+        </a>
+        <a href="{{ url_for('arena.dashboard') }}" class="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-slate-500 text-xs text-slate-300 transition">
+          &larr; Arena Lobby
+        </a>
+      </div>
+    </div>
+
+    <!-- Packs Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for pack in packs %}
+      <div class="bg-slate-950/90 border-2 {% if pack.is_community %}border-pink-500/30 hover:border-pink-400{% else %}border-purple-500/30 hover:border-cyan-400{% endif %} rounded-3xl p-6 backdrop-blur shadow-xl transition transform hover:-translate-y-1 flex flex-col justify-between">
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-4xl">{{ pack.icon or '🎮' }}</span>
+            <span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full {% if pack.is_community %}bg-pink-500/20 text-pink-300 border border-pink-500/30{% else %}bg-purple-500/20 text-purple-300 border border-purple-500/30{% endif %} uppercase">
+              {% if pack.is_community %}Community Deck{% else %}Master Deck{% endif %}
+            </span>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-black font-mono text-white tracking-tight">{{ pack.title }}</h3>
+            <p class="text-xs text-slate-400 mt-1 leading-relaxed">{{ pack.description or 'A curated question pack for trivia warriors.' }}</p>
+          </div>
+        </div>
+
+        <div class="pt-6 border-t border-purple-500/20 mt-6 flex items-center justify-between">
+          <div class="font-mono text-xs text-slate-400">
+            <span class="text-cyan-400 font-bold">{{ pack.question_count or 10 }}+</span> Questions
+            <span class="block text-[10px] text-slate-500">By {{ pack.author_name or 'Quizmondo Master' }}</span>
+          </div>
+
+          <form action="{{ url_for('arena.create_match') }}" method="POST">
+            <input type="hidden" name="opponent_mode" value="bot">
+            <input type="hidden" name="category_slug" value="{{ pack.category_slug }}">
+            <button type="submit" class="px-3.5 py-2 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 border border-purple-400/40 text-purple-200 font-mono font-bold text-xs transition">
+              Duel in Pack &rarr;
+            </button>
+          </form>
+        </div>
+      </div>
+      {% else %}
+      <div class="col-span-full py-16 text-center text-slate-500 font-mono text-xs italic">
+        No trivia packs loaded yet. Be the first to create one!
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

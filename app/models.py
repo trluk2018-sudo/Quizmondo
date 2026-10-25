@@ -241,6 +241,7 @@ class QuizQuestion(db.Model):
     time_limit = db.Column(db.Integer, default=15)
     pack_slug = db.Column(db.String(80), index=True, default='core')
     is_community = db.Column(db.Boolean, default=False)
+    status = db.Column(db.String(20), default='approved')  # approved, pending, rejected
     author_name = db.Column(db.String(80), default='Quizmondo Master')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -265,7 +266,9 @@ class QuizQuestion(db.Model):
             'difficulty': self.difficulty,
             'points': self.points,
             'time_limit': self.time_limit,
-            'author_name': self.author_name
+            'author_name': self.author_name,
+            'is_community': self.is_community,
+            'status': self.status
         }
         if include_answer:
             data['correct_option'] = self.correct_option
@@ -287,6 +290,8 @@ class PlayerProfile(db.Model):
     streak_days = db.Column(db.Integer, default=1)
     matches_played = db.Column(db.Integer, default=0)
     matches_won = db.Column(db.Integer, default=0)
+    is_banned = db.Column(db.Boolean, default=False)
+    ban_reason = db.Column(db.String(255), default='')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_active_at = db.Column(db.DateTime, default=datetime.utcnow)
 
