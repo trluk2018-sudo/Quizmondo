@@ -740,6 +740,20 @@ SEED_PACKS = [
 
 SEED_LEAGUES = [
     {
+        'name': 'The Cyber Tavern • Global Online Pub League',
+        'slug': 'global-online-pub-league',
+        'pin_code': '9999',
+        'venue_name': 'Quizmondo Cyber Tavern (Online Virtual Pub)',
+        'description': 'Compete from home! Join a virtual pub squad, rep your local town, and battle remote teams across the globe in online pub quiz showdowns.',
+        'schedule_day': 'Live 24/7 • Hourly Tournaments',
+        'teams': [
+            {'name': 'London Pint Pullers', 'score': 680, 'members': 4, 'rank': 1},
+            {'name': 'Dublin Craic Squad', 'score': 640, 'members': 4, 'rank': 2},
+            {'name': 'Sydney Harbour Brains', 'score': 610, 'members': 3, 'rank': 3},
+            {'name': 'New York Trivia Cartel', 'score': 570, 'members': 5, 'rank': 4}
+        ]
+    },
+    {
         'name': 'The Dog & Partridge Quiz League',
         'slug': 'dog-and-partridge',
         'pin_code': '7742',
@@ -990,7 +1004,7 @@ def seed_quizmondo_full_environment():
         ('Pub Leagues', '/arena/leagues', False),
         ('Leaderboard', '/arena/leaderboard', False),
         ('Quiz Studio', '/arena/create', False),
-        ('Articles', '/posts', False)
+        ('Guides, Facts & Trivia', '/posts', False)
     ]
 
     for idx, (title, url, open_new) in enumerate(nav_links, 1):

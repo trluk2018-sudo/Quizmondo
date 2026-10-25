@@ -22,9 +22,16 @@ AVATAR_PRESETS = [
 
 
 def get_current_player():
-    """Retrieve or initialize the active player profile using session cookie."""
-    player_key = session.get('qm_player_key')
+    """Retrieve or initialize the active player profile using session cookie or user_id."""
+    user_id = session.get('user_id')
     profile = None
+    if user_id:
+        profile = PlayerProfile.query.filter_by(user_id=user_id).first()
+        if profile:
+            session['qm_player_key'] = profile.session_key
+            return profile
+
+    player_key = session.get('qm_player_key')
     if player_key:
         profile = PlayerProfile.query.filter_by(session_key=player_key).first()
 
@@ -34,6 +41,7 @@ def get_current_player():
         rand_avatar = random.choice(AVATAR_PRESETS)['key']
         rand_name = f"Challenger_{random.randint(100, 999)}"
         profile = PlayerProfile(
+            user_id=user_id,
             session_key=new_key,
             display_name=rand_name,
             avatar_key=rand_avatar,
@@ -45,6 +53,9 @@ def get_current_player():
             matches_won=0
         )
         db.session.add(profile)
+        db.session.commit()
+    elif user_id and not profile.user_id:
+        profile.user_id = user_id
         db.session.commit()
 
     return profile
@@ -515,6 +526,112 @@ def update_profile():
     return redirect(url_for('arena.dashboard'))
 
 
+@arena_bp.route('/register', methods=['GET', 'POST'])
+def player_register():
+    """Create a permanent player account to save streaks, XP, coins, and duels."""
+    player = get_current_player()
+    if session.get('user_id'):
+        flash(f"You are already signed in as {session.get('username')}.", "info")
+        return redirect(url_for('arena.dashboard'))
+
+    if request.method == 'POST':
+        username = (request.form.get('username') or '').strip()
+        email = (request.form.get('email') or '').strip().lower()
+        password = request.form.get('password') or ''
+        confirm_password = request.form.get('confirm_password') or ''
+
+        if not username or len(username) < 3:
+            flash("Username must be at least 3 characters long.", "error")
+            return render_template('themes/quizhub/arena_register.html', player=player)
+
+        if not email or '@' not in email:
+            flash("Please enter a valid email address.", "error")
+            return render_template('themes/quizhub/arena_register.html', player=player)
+
+        if len(password) < 6:
+            flash("Password must be at least 6 characters long.", "error")
+            return render_template('themes/quizhub/arena_register.html', player=player)
+
+        if password != confirm_password:
+            flash("Passwords do not match.", "error")
+            return render_template('themes/quizhub/arena_register.html', player=player)
+
+        if User.query.filter_by(username=username).first():
+            flash("That username is already taken. Please choose another.", "error")
+            return render_template('themes/quizhub/arena_register.html', player=player)
+
+        if User.query.filter_by(email=email).first():
+            flash("An account with that email already exists. Try logging in instead.", "error")
+            return render_template('themes/quizhub/arena_register.html', player=player)
+
+        user = User(username=username, email=email, role='player')
+        user.set_password(password)
+        db.session.add(user)
+        db.session.flush()
+
+        player.user_id = user.id
+        player.display_name = username
+        db.session.commit()
+
+        session['user_id'] = user.id
+        session['username'] = user.username
+        session['user_role'] = user.role
+        session['qm_player_key'] = player.session_key
+
+        flash(f"Welcome to Quizmondo, {username}! Your stats, coins, and duels are now permanently saved.", "success")
+        next_url = request.args.get('next')
+        if next_url and next_url.startswith('/'):
+            return redirect(next_url)
+        return redirect(url_for('arena.dashboard'))
+
+    return render_template('themes/quizhub/arena_register.html', player=player)
+
+
+@arena_bp.route('/login', methods=['GET', 'POST'])
+def player_login():
+    """Sign in to access saved player profile, streaks, and tournament ranks."""
+    if session.get('user_id'):
+        return redirect(url_for('arena.dashboard'))
+
+    if request.method == 'POST':
+        login_id = (request.form.get('username') or '').strip()
+        password = request.form.get('password') or ''
+
+        user = User.query.filter((User.username == login_id) | (User.email == login_id.lower())).first()
+        if user and user.check_password(password) and user.is_active:
+            session['user_id'] = user.id
+            session['username'] = user.username
+            session['user_role'] = user.role
+
+            profile = PlayerProfile.query.filter_by(user_id=user.id).first()
+            if profile:
+                session['qm_player_key'] = profile.session_key
+                profile.last_active_at = datetime.utcnow()
+                db.session.commit()
+
+            flash(f"Welcome back, {user.username}!", "success")
+            next_url = request.args.get('next')
+            if next_url and next_url.startswith('/'):
+                return redirect(next_url)
+            return redirect(url_for('arena.dashboard'))
+        else:
+            flash("Invalid username or password.", "error")
+
+    player = get_current_player()
+    return render_template('themes/quizhub/arena_login.html', player=player)
+
+
+@arena_bp.route('/logout')
+def player_logout():
+    """Sign out of player account and revert to guest."""
+    session.pop('user_id', None)
+    session.pop('username', None)
+    session.pop('user_role', None)
+    session.pop('qm_player_key', None)
+    flash("You have been signed out.", "info")
+    return redirect(url_for('arena.dashboard'))
+
+
 @arena_bp.route('/leaderboard')
 def leaderboard():
     """Full global leaderboard ranking table."""
@@ -551,7 +668,8 @@ def league_join():
     if not league:
         flash(f'Room PIN "{pin}" not found. Please ask your venue quizmaster.', 'error')
         return redirect(url_for('arena.leagues'))
-        
+
+    session[f'pub_pin_{league.slug}'] = pin
     return redirect(url_for('arena.league_lounge', slug=league.slug))
 
 
@@ -576,44 +694,102 @@ def league_lounge(slug):
     )
 
 
+PUB_ROUNDS_CONFIG = {
+    1: {'number': 1, 'name': 'General Knowledge & News', 'cat_slug': 'world-history', 'icon': '🧠', 'desc': 'Test your broad trivia knowledge across news, landmarks, and science.'},
+    2: {'number': 2, 'name': 'Music, Audio & Waveforms', 'cat_slug': 'pop-music', 'icon': '🎵', 'desc': 'Iconic number one records, synthesizers, chiptunes, and rock anthems.'},
+    3: {'number': 3, 'name': 'Cinema, Television & Blockbusters', 'cat_slug': 'tv-cinema', 'icon': '🎬', 'desc': 'Cult cinema classics, famous directors, Academy Awards, and TV quotes.'},
+    4: {'number': 4, 'name': 'World Geography & Lost Civilizations', 'cat_slug': 'world-geography', 'icon': '🗺️', 'desc': 'Continental capitals, mountain summits, ancient ruins, and extreme landforms.'},
+    5: {'number': 5, 'name': 'The Big Wipeout Speed Sprint', 'cat_slug': 'gaming-esports', 'icon': '⚡', 'desc': 'Double Points Wipeout Round! Faster buzzer answers award massive bonus points.'},
+}
+
+
 @arena_bp.route('/leagues/<slug>/room', methods=['GET', 'POST'])
 def league_room(slug):
-    """Live Pub Quiz Interactive Session."""
+    """Live Pub Quiz Interactive Session with 5 Themed Rounds."""
     player = get_current_player()
     league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
-    
-    team_name = request.args.get('team') or session.get('pub_team_name') or f"{player.display_name}'s Table"
+
+    # Verify PIN if this is a physical in-venue pub quiz
+    pin_attempt = (request.args.get('pin') or request.form.get('pin') or session.get(f'pub_pin_{slug}') or '').strip()
+    is_online = ('online' in slug or 'cyber' in slug or 'virtual' in league.name.lower())
+    if not is_online and league.pin_code and pin_attempt != league.pin_code:
+        flash(f"Please enter the 4-digit Table Room PIN displayed on the venue screen to join {league.name}.", "error")
+        return redirect(url_for('arena.league_lounge', slug=slug))
+    if pin_attempt == league.pin_code:
+        session[f'pub_pin_{slug}'] = pin_attempt
+
+    current_round = int(request.args.get('round', 1))
+    if current_round < 1 or current_round > 5:
+        current_round = 1
+
+    round_info = PUB_ROUNDS_CONFIG.get(current_round, PUB_ROUNDS_CONFIG[1])
+    table_num = request.args.get('table') or session.get('pub_table_num') or '1'
+    session['pub_table_num'] = table_num
+
+    team_name = request.args.get('team') or session.get('pub_team_name') or f"Table {table_num} • {player.display_name}"
     session['pub_team_name'] = team_name
-    
-    # 5 questions for pub round
-    questions = QuizQuestion.query.order_by(QuizQuestion.id.asc()).limit(5).all()
+
+    # Fetch 5 unique questions matching this round's category
+    cat_slug = round_info['cat_slug']
+    questions = QuizQuestion.query.filter_by(category_slug=cat_slug).limit(5).all()
+    if len(questions) < 5:
+        extra_q = QuizQuestion.query.filter(QuizQuestion.category_slug != cat_slug).limit(5 - len(questions)).all()
+        questions = list(questions) + list(extra_q)
+
     questions_json = [q.to_dict(include_answer=True) for q in questions]
-    
+
     if request.method == 'POST':
         round_score = int(request.form.get('score', 0))
+        if current_round == 5:
+            round_score = int(round_score * 1.5)  # 1.5x Wipeout Multiplier
+
         teams = league.get_teams()
         updated = False
+        team_entry = None
         for t in teams:
             if t.get('name') == team_name:
                 t['score'] = (t.get('score', 0)) + round_score
+                t[f'round_{current_round}'] = round_score
+                team_entry = t
                 updated = True
                 break
+
         if not updated:
-            teams.append({'name': team_name, 'score': round_score, 'members': 1, 'rank': len(teams) + 1})
+            team_entry = {
+                'name': team_name,
+                'score': round_score,
+                'members': 4,
+                'table': table_num,
+                'rank': len(teams) + 1,
+                f'round_{current_round}': round_score
+            }
+            teams.append(team_entry)
+
         teams.sort(key=lambda x: x.get('score', 0), reverse=True)
         for idx, t in enumerate(teams, 1):
             t['rank'] = idx
         league.set_teams(teams)
         db.session.commit()
-        player.add_xp(200)
-        flash(f'🎉 Round submitted for Team "{team_name}"! +{round_score} pts added to venue board.', 'success')
-        return redirect(url_for('arena.league_lounge', slug=league.slug))
-        
+        player.add_xp(100 + round_score)
+
+        return jsonify({
+            'success': True,
+            'completed_round': current_round,
+            'round_score': round_score,
+            'total_score': team_entry.get('score', round_score),
+            'rank': team_entry.get('rank', 1),
+            'next_round': current_round + 1 if current_round < 5 else None,
+            'next_round_title': PUB_ROUNDS_CONFIG.get(current_round + 1, {}).get('name', 'Tournament Complete') if current_round < 5 else 'Tournament Complete'
+        })
+
     return render_template(
         'themes/quizhub/arena_league_room.html',
         player=player,
         league=league,
         team_name=team_name,
+        table_num=table_num,
+        current_round=current_round,
+        round_info=round_info,
         questions=questions,
         questions_json=questions_json
     )
@@ -640,11 +816,28 @@ def league_tv(slug):
 
 @arena_bp.route('/api/daily')
 def api_daily_questions():
-    """Return database-backed daily brain sprint questions."""
-    questions = QuizQuestion.query.order_by(QuizQuestion.id.asc()).limit(5).all()
+    """Return database-backed daily brain sprint questions rotated deterministically by calendar date."""
+    now = datetime.utcnow()
+    date_formatted = now.strftime('%A, %d %B %Y')
+    start_date = datetime(2026, 1, 1)
+    day_diff = max(1, (now - start_date).days + 1)
+    challenge_num = f"#{day_diff}"
+
+    total_q = QuizQuestion.query.count()
+    if total_q > 0:
+        offset = (day_diff * 5) % total_q
+        questions = QuizQuestion.query.order_by(QuizQuestion.id.asc()).offset(offset).limit(5).all()
+        if len(questions) < 5:
+            extra = QuizQuestion.query.order_by(QuizQuestion.id.asc()).limit(5 - len(questions)).all()
+            questions = list(questions) + list(extra)
+    else:
+        questions = []
+
     return jsonify({
         'success': True,
-        'badge': 'DAILY BRAIN CHALLENGE • LIVE SPRINT',
+        'badge': f"DAILY BRAIN CHALLENGE • {now.strftime('%A').upper()}",
+        'date_formatted': date_formatted,
+        'challenge_num': challenge_num,
         'questions': [q.to_dict(include_answer=True) for q in questions]
     })
 
