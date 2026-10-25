@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="icon-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140a33" />
+      <stop offset="50%" stop-color="#0b041c" />
+      <stop offset="100%" stop-color="#05010d" />
+    </linearGradient>
+
+    <!-- Glow Filter -->
+    <filter id="icon-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <linearGradient id="shield-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7" />
+      <stop offset="50%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+
+    <linearGradient id="shield-inner" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0b041c" />
+      <stop offset="100%" stop-color="#1e1045" />
+    </linearGradient>
+
+    <linearGradient id="lightning-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="30%" stop-color="#facc15" />
+      <stop offset="70%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#ef4444" />
+    </linearGradient>
+
+    <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="50%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#8b5cf6" />
+    </linearGradient>
+  </defs>
+
+  <!-- Squircle / App Icon Base -->
+  <rect width="512" height="512" rx="112" fill="url(#icon-bg)" />
+  <rect width="506" height="506" x="3" y="3" rx="109" fill="none" stroke="#8b5cf6" stroke-width="3" stroke-opacity="0.35" />
+
+  <!-- Ambient Glow Behind Crest -->
+  <circle cx="256" cy="256" r="180" fill="#8b5cf6" opacity="0.25" filter="url(#icon-glow)" />
+
+  <!-- Outer Beveled Hexagon Shield -->
+  <polygon points="256,48 436,152 436,360 256,464 76,360 76,152" fill="url(#shield-grad)" filter="url(#icon-glow)" />
+  <!-- Inner Shield Core -->
+  <polygon points="256,66 414,158 414,354 256,446 98,354 98,158" fill="url(#shield-inner)" stroke="#8b5cf6" stroke-width="4" stroke-opacity="0.6" />
+
+  <!-- Planetary 3D Ring Orbit -->
+  <ellipse cx="256" cy="256" rx="200" ry="70" fill="none" stroke="url(#ring-grad)" stroke-width="14" transform="rotate(-28 256 256)" filter="url(#icon-glow)" />
+  <path d="M 90 190 A 200 70 0 0 1 422 322" fill="none" stroke="#f59e0b" stroke-width="6" transform="rotate(-28 256 256)" />
+
+  <!-- Stylized "Q" Core -->
+  <circle cx="246" cy="240" r="92" fill="none" stroke="#ffffff" stroke-width="26" stroke-linecap="round" />
+  <circle cx="246" cy="240" r="62" fill="#0b041c" />
+
+  <!-- Lightning Bolt Tail (Q Kick) -->
+  <polygon points="260,248 370,240 292,316 374,306 244,420 274,330 226,340" fill="url(#lightning-grad)" filter="url(#icon-glow)" />
+
+  <!-- Arcade Sparkles -->
+  <polygon points="140,130 148,105 156,130 180,138 156,146 148,170 140,146 115,138" fill="#38bdf8" />
+  <circle cx="380" cy="150" r="9" fill="#facc15" />
+  <circle cx="120" cy="370" r="8" fill="#a855f7" />
+</svg>

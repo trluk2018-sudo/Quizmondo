@@ -1,0 +1,303 @@
+{% extends "themes/quizhub/base.html" %}
+{% from "themes/quizhub/mascot_character.html" import render_mascot %}
+
+{% block title %}Arena Headquarters • Quizmondo.com{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#090317] text-slate-100 font-sans py-8 sm:py-12 relative overflow-hidden">
+  <!-- Ambient Space Glow -->
+  <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-purple-600/15 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute top-1/3 -right-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 relative z-10">
+
+    <!-- Top Bar: Sound toggle & Branding -->
+    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-purple-500/20 pb-4">
+      <a href="{{ url_for('arena.dashboard') }}" class="flex items-center gap-3">
+        <img src="/static/img/quizmondo_logo.svg" alt="Quizmondo.com" class="h-10 sm:h-12 w-auto">
+      </a>
+
+      <div class="flex items-center gap-3">
+        <!-- Sound Effect Toggle -->
+        <button type="button" onclick="toggleSound()" id="soundToggleBtn" class="px-3.5 py-1.5 rounded-xl border border-purple-500/30 bg-slate-900/80 hover:border-cyan-400 text-xs font-mono text-cyan-300 flex items-center gap-2 transition">
+          <span id="soundIcon">🔊</span>
+          <span id="soundLabel">AUDIO ON</span>
+        </button>
+
+        <!-- PWA Install Button (auto-shown if installable) -->
+        <button type="button" id="pwaInstallBtn" onclick="installPwa()" class="hidden px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 font-black text-xs font-mono uppercase tracking-wider shadow-lg transition transform hover:scale-105">
+          📲 Add App to Phone
+        </button>
+      </div>
+    </div>
+
+    <!-- PLAYER PROFILE HUD -->
+    <div class="bg-slate-950/90 border-2 border-purple-500/30 rounded-3xl p-6 sm:p-8 backdrop-blur shadow-2xl relative overflow-hidden">
+      <div class="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
+        
+        <div class="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
+          <!-- Mascot / Avatar Frame -->
+          <div class="relative cursor-pointer group" onclick="openAvatarModal()">
+            {{ render_mascot(player.avatar_key, 'idle', 'md', '') }}
+            <span class="absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full bg-purple-600 text-[10px] font-mono font-bold text-white border border-purple-300 shadow group-hover:scale-110 transition">
+              EDIT ✏️
+            </span>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+              <h1 class="text-2xl sm:text-3xl font-black font-mono text-white tracking-tight">
+                {{ player.display_name }}
+              </h1>
+              <span class="px-2.5 py-0.5 rounded-md bg-purple-500/20 text-purple-300 font-mono text-xs font-bold border border-purple-500/30">
+                LEVEL {{ player.level }}
+              </span>
+            </div>
+
+            <!-- XP Progress Bar -->
+            <div class="w-64 sm:w-80 space-y-1">
+              <div class="flex justify-between text-[11px] font-mono text-slate-400">
+                <span>XP: {{ player.xp }}</span>
+                <span>Next Level: {{ player.level * 500 }} XP</span>
+              </div>
+              <div class="w-full h-2.5 rounded-full bg-slate-900 border border-purple-500/20 overflow-hidden">
+                {% set xp_progress = ((player.xp % 500) / 500.0 * 100)|round|int %}
+                <div class="h-full bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 transition-all duration-500" style="width: {{ xp_progress }}%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Chips -->
+        <div class="grid grid-cols-3 gap-3 w-full sm:w-auto">
+          <div class="p-3 rounded-2xl bg-slate-900/80 border border-purple-500/20 text-center font-mono">
+            <div class="text-xs text-slate-400">COINS</div>
+            <div class="text-lg font-black text-amber-400">🪙 {{ player.coins }}</div>
+          </div>
+          <div class="p-3 rounded-2xl bg-slate-900/80 border border-purple-500/20 text-center font-mono">
+            <div class="text-xs text-slate-400">STREAK</div>
+            <div class="text-lg font-black text-rose-400">🔥 {{ player.streak_days }}d</div>
+          </div>
+          <div class="p-3 rounded-2xl bg-slate-900/80 border border-purple-500/20 text-center font-mono">
+            <div class="text-xs text-slate-400">RECORD</div>
+            <div class="text-lg font-black text-emerald-400">{{ player.matches_won }}W / {{ player.matches_played }}</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PRIMARY ACTION CARDS -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      
+      <!-- Challenge a Friend Card (WhatsApp Deep Link & Web Share) -->
+      <div class="p-8 rounded-3xl bg-gradient-to-br from-purple-950/60 via-slate-950 to-slate-950 border-2 border-purple-500/40 relative overflow-hidden space-y-4 hover:border-cyan-400 transition-all duration-300">
+        <div class="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-2xl">
+          💬
+        </div>
+        <div class="space-y-1">
+          <h2 class="text-xl font-black font-mono text-white">Challenge a Friend</h2>
+          <p class="text-xs font-mono text-slate-400 leading-relaxed">
+            Send an instant duel invitation via WhatsApp, iMessage, or link. Turn-based 6-round duel!
+          </p>
+        </div>
+        <form action="{{ url_for('arena.create_match') }}" method="POST">
+          <input type="hidden" name="opponent_mode" value="friend">
+          <button type="submit" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-mono font-black text-sm uppercase tracking-wider shadow-xl transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+            <span>Invite on WhatsApp / Share &rarr;</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Instant Solo / AI Match -->
+      <div class="p-8 rounded-3xl bg-gradient-to-br from-cyan-950/50 via-slate-950 to-slate-950 border-2 border-cyan-500/40 relative overflow-hidden space-y-4 hover:border-purple-400 transition-all duration-300">
+        <div class="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-2xl">
+          🤖
+        </div>
+        <div class="space-y-1">
+          <h2 class="text-xl font-black font-mono text-white">Instant AI Duel</h2>
+          <p class="text-xs font-mono text-slate-400 leading-relaxed">
+            No waiting! Battle Cyber Bot Nova in real time to hone your trivia speed and level up.
+          </p>
+        </div>
+        <form action="{{ url_for('arena.create_match') }}" method="POST">
+          <input type="hidden" name="opponent_mode" value="bot">
+          <button type="submit" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-slate-950 font-mono font-black text-sm uppercase tracking-wider shadow-xl transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+            <span>Play Instant Duel &rarr;</span>
+          </button>
+        </form>
+      </div>
+
+    </div>
+
+    <!-- ACTIVE MATCHES LIST -->
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-black font-mono text-white flex items-center gap-2">
+          <span>⚔️</span> YOUR ACTIVE DUELS ({{ active_matches|length }})
+        </h3>
+        <span class="text-xs font-mono text-slate-400">Max 12 Concurrent Duels</span>
+      </div>
+
+      {% if active_matches %}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for m in active_matches %}
+        {% set is_p1 = (m.player1_session == player.session_key) %}
+        {% set opponent_name = m.player2_name if is_p1 else m.player1_name %}
+        {% set opponent_avatar = m.player2_avatar if is_p1 else m.player1_avatar %}
+        {% set my_turn = (m.current_turn == 1 and is_p1) or (m.current_turn == 2 and not is_p1) %}
+
+        <div class="p-5 rounded-2xl bg-slate-950/80 border-2 {% if my_turn %}border-emerald-500/60 bg-emerald-950/10{% else %}border-purple-500/20{% endif %} flex items-center justify-between gap-4 transition hover:border-cyan-400">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center font-mono text-xs font-bold text-white shrink-0">
+              {{ opponent_avatar|upper|truncate(4, True, '') }}
+            </div>
+            <div class="space-y-0.5">
+              <div class="font-mono font-bold text-sm text-white">vs {{ opponent_name }}</div>
+              <div class="text-xs font-mono text-slate-400">
+                Round {{ m.current_round }}/6 &bull; Score: {{ m.p1_total_score }} - {{ m.p2_total_score }}
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            {% if my_turn %}
+            <a href="{{ url_for('arena.match_lobby', match_code=m.match_code) }}" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono font-black text-xs uppercase tracking-wider animate-pulse">
+              YOUR TURN 🎮
+            </a>
+            {% else %}
+            <a href="{{ url_for('arena.match_lobby', match_code=m.match_code) }}" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-xs">
+              WAITING ⏳
+            </a>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="p-8 rounded-3xl bg-slate-950/60 border border-purple-500/20 text-center font-mono space-y-3">
+        <div class="text-4xl">🎯</div>
+        <div class="text-sm text-slate-300 font-bold">No active duels right now!</div>
+        <p class="text-xs text-slate-500">Tap "Challenge a Friend" or "Instant AI Duel" above to start your first match.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- FEATURED PACKS & CATEGORIES -->
+    <div class="space-y-4 pt-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-black font-mono text-white flex items-center gap-2">
+          <span>📚</span> ARENA PACKS &amp; CATEGORIES
+        </h3>
+        <a href="{{ url_for('arena.leagues') }}" class="text-xs font-mono text-cyan-400 hover:underline">
+          Pub Leagues &rarr;
+        </a>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+        {% for p in packs %}
+        <div class="p-4 rounded-2xl bg-slate-950/80 border border-purple-500/20 text-center font-mono hover:border-cyan-400 transition transform hover:-translate-y-1">
+          <div class="text-3xl mb-1">{{ p.icon }}</div>
+          <div class="text-xs font-bold text-white truncate">{{ p.title }}</div>
+          <div class="text-[10px] text-slate-400">{{ p.question_count }} Questions</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- AVATAR EDIT MODAL -->
+<div id="avatarModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+  <div class="bg-slate-950 border-2 border-purple-500/50 rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-6 shadow-2xl">
+    <div class="flex items-center justify-between border-b border-purple-500/20 pb-3">
+      <h3 class="text-lg font-black font-mono text-white">Customize Your Mascot</h3>
+      <button type="button" onclick="closeAvatarModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+    </div>
+
+    <form action="{{ url_for('arena.update_profile') }}" method="POST" class="space-y-4 font-mono text-xs">
+      <div>
+        <label class="block text-slate-300 font-bold mb-1">Display Name</label>
+        <input type="text" name="display_name" value="{{ player.display_name }}" maxlength="30" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-purple-500/30 text-white focus:outline-none focus:border-cyan-400">
+      </div>
+
+      <div>
+        <label class="block text-slate-300 font-bold mb-2">Choose Avatar Mascot</label>
+        <div class="grid grid-cols-2 gap-3">
+          {% for av in avatars %}
+          <label class="p-3 rounded-2xl border-2 {% if player.avatar_key == av.key %}border-cyan-400 bg-cyan-950/30{% else %}border-purple-500/20 bg-slate-900/60{% endif %} cursor-pointer flex flex-col items-center gap-1.5 transition hover:border-purple-400">
+            <input type="radio" name="avatar_key" value="{{ av.key }}" class="hidden" {% if player.avatar_key == av.key %}checked{% endif %}>
+            <span class="text-2xl">
+              {% if av.key == 'quizzy' %}⭐{% elif av.key == 'pixel' %}🤖{% elif av.key == 'nova' %}🚀{% else %}🦉{% endif %}
+            </span>
+            <span class="font-bold text-white text-xs">{{ av.name }}</span>
+            <span class="text-[10px] text-slate-400">{{ av.badge }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="pt-2 flex justify-end gap-3">
+        <button type="button" onclick="closeAvatarModal()" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 font-bold">Cancel</button>
+        <button type="submit" class="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-slate-950 font-black uppercase">Save Mascot</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/static/js/quiz-audio.js"></script>
+<script>
+// Sound Toggle logic
+function updateSoundBtn() {
+  var isMuted = localStorage.getItem('qm_audio_muted') === 'true';
+  document.getElementById('soundIcon').textContent = isMuted ? '🔇' : '🔊';
+  document.getElementById('soundLabel').textContent = isMuted ? 'MUTED' : 'AUDIO ON';
+}
+function toggleSound() {
+  if (window.quizAudio) {
+    window.quizAudio.toggleMute();
+    updateSoundBtn();
+  }
+}
+updateSoundBtn();
+
+// Modal logic
+function openAvatarModal() {
+  document.getElementById('avatarModal').classList.remove('hidden');
+}
+function closeAvatarModal() {
+  document.getElementById('avatarModal').classList.add('hidden');
+}
+
+// PWA Install prompt listener
+var deferredPrompt;
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  deferredPrompt = e;
+  var btn = document.getElementById('pwaInstallBtn');
+  if (btn) btn.classList.remove('hidden');
+});
+
+function installPwa() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(choiceResult) {
+      if (choiceResult.outcome === 'accepted') {
+        document.getElementById('pwaInstallBtn').classList.add('hidden');
+      }
+      deferredPrompt = null;
+    });
+  }
+}
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/static/sw.js').then(function(reg) {
+    console.log('Quizmondo PWA Service Worker Registered', reg.scope);
+  }).catch(function(err) {
+    console.log('SW registration note:', err);
+  });
+}
+</script>
+{% endblock %}

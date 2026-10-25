@@ -1,0 +1,270 @@
+{% extends "themes/quizhub/base.html" %}
+{% from "themes/quizhub/mascot_character.html" import render_mascot %}
+
+{% block title %}Playing Round {{ active_round.round_number }} • Quizmondo Arena{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#090317] text-slate-100 font-sans py-8 sm:py-12 relative overflow-hidden flex flex-col justify-center">
+  <!-- Dynamic Glow lights -->
+  <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-purple-600/15 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 w-full space-y-6 relative z-10">
+
+    <!-- Top Header HUD -->
+    <div class="flex items-center justify-between border-b border-purple-500/20 pb-4">
+      <div class="flex items-center gap-3">
+        <span class="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 font-mono text-xs font-bold border border-purple-500/30">
+          ROUND {{ active_round.round_number }}/6 &bull; {{ active_round.category_name }}
+        </span>
+        <span id="qCounter" class="text-xs font-mono text-cyan-400 font-bold">
+          Q 1 / {{ total_questions }}
+        </span>
+      </div>
+
+      <!-- Combo Multiplier Badge -->
+      <div class="flex items-center gap-2">
+        <div id="comboBadge" class="hidden px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-mono text-xs font-bold animate-pulse">
+          🔥 <span id="comboCount">0</span>x COMBO!
+        </div>
+        <button type="button" onclick="toggleAudio()" id="soundBtn" class="text-sm px-2 py-1 bg-slate-900 border border-purple-500/30 rounded-lg text-cyan-300 font-mono">
+          🔊
+        </button>
+      </div>
+    </div>
+
+    <!-- MAIN ARENA GAME CARD -->
+    <div class="p-6 sm:p-10 rounded-3xl bg-slate-950/95 border-2 border-purple-500/40 backdrop-blur shadow-2xl relative overflow-hidden space-y-8">
+      
+      <!-- Top Row: Mascot & Animated Circular Timer -->
+      <div class="flex items-center justify-between">
+        <!-- Interactive Reactive Mascot -->
+        <div class="flex items-center gap-3">
+          {{ render_mascot(player.avatar_key, 'idle', 'sm', '') }}
+          <div class="hidden sm:block font-mono text-xs text-slate-400">
+            <span class="text-white font-bold block">{{ player.display_name }}</span>
+            <span class="text-[10px] text-cyan-400">Level {{ player.level }} Player</span>
+          </div>
+        </div>
+
+        <!-- Animated SVG Timer Ring (15 Seconds Countdown) -->
+        <div class="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
+          <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+            <!-- Background Ring -->
+            <circle cx="50" cy="50" r="42" fill="none" stroke="#1e1045" stroke-width="8" />
+            <!-- Animated Progress Ring -->
+            <circle id="timerCircle" cx="50" cy="50" r="42" fill="none" stroke="#06b6d4" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-linear" />
+          </svg>
+          <span id="timerText" class="absolute font-mono font-black text-lg sm:text-xl text-white">15</span>
+        </div>
+      </div>
+
+      <!-- Question Title -->
+      <div class="space-y-2">
+        <h2 id="qPrompt" class="text-xl sm:text-2xl font-black font-mono text-white leading-snug min-h-[64px]">
+          Loading question...
+        </h2>
+      </div>
+
+      <!-- 4 Option Buttons -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2" id="optionsGrid">
+        <button type="button" onclick="selectAnswer('A')" id="btnA" class="opt-btn p-4 rounded-2xl border-2 border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition transform hover:-translate-y-0.5">
+          <span class="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">A</span>
+          <span class="text-sm font-mono text-slate-200" id="lblA">Option A</span>
+        </button>
+
+        <button type="button" onclick="selectAnswer('B')" id="btnB" class="opt-btn p-4 rounded-2xl border-2 border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition transform hover:-translate-y-0.5">
+          <span class="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">B</span>
+          <span class="text-sm font-mono text-slate-200" id="lblB">Option B</span>
+        </button>
+
+        <button type="button" onclick="selectAnswer('C')" id="btnC" class="opt-btn p-4 rounded-2xl border-2 border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition transform hover:-translate-y-0.5">
+          <span class="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">C</span>
+          <span class="text-sm font-mono text-slate-200" id="lblC">Option C</span>
+        </button>
+
+        <button type="button" onclick="selectAnswer('D')" id="btnD" class="opt-btn p-4 rounded-2xl border-2 border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition transform hover:-translate-y-0.5">
+          <span class="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">D</span>
+          <span class="text-sm font-mono text-slate-200" id="lblD">Option D</span>
+        </button>
+      </div>
+
+      <!-- Instant Feedback Strip (hidden during question, shown upon answer) -->
+      <div id="feedbackBox" class="hidden p-5 rounded-2xl border font-mono text-xs space-y-3 transition-all duration-300">
+        <div class="flex items-center justify-between">
+          <span id="feedbackTitle" class="font-black text-sm"></span>
+          <span id="feedbackPoints" class="px-2.5 py-0.5 rounded font-bold uppercase"></span>
+        </div>
+        <p id="feedbackExplanation" class="text-slate-300 leading-relaxed"></p>
+        <div class="pt-2 flex justify-end">
+          <button type="button" onclick="nextQuestion()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-slate-950 font-black uppercase tracking-wider text-xs shadow-md">
+            Next &rarr;
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script src="/static/js/quiz-audio.js"></script>
+<script>
+var questions = {{ questions_json|safe }};
+var matchCode = {{ match.match_code|tojson }};
+var submitUrl = "{{ url_for('arena.submit_round', match_code=match.match_code) }}";
+var lobbyUrl = "{{ url_for('arena.match_lobby', match_code=match.match_code) }}";
+
+var currentIndex = 0;
+var currentTimer = 15;
+var timerInterval = null;
+var answered = false;
+var comboStreak = 0;
+var recordedAnswers = [];
+
+var CIRCUMFERENCE = 264; // 2 * PI * 42
+
+function initQuestion() {
+  if (currentIndex >= questions.length) {
+    finishRound();
+    return;
+  }
+
+  var q = questions[currentIndex];
+  answered = false;
+  currentTimer = q.time_limit || 15;
+
+  document.getElementById('qCounter').textContent = 'Q ' + (currentIndex + 1) + ' / ' + questions.length;
+  document.getElementById('qPrompt').textContent = q.prompt;
+  document.getElementById('lblA').textContent = q.options.A || '';
+  document.getElementById('lblB').textContent = q.options.B || '';
+  document.getElementById('lblC').textContent = q.options.C || '';
+  document.getElementById('lblD').textContent = q.options.D || '';
+
+  // Reset option buttons
+  ['A', 'B', 'C', 'D'].forEach(function(opt) {
+    var btn = document.getElementById('btn' + opt);
+    btn.disabled = false;
+    btn.className = 'opt-btn p-4 rounded-2xl border-2 border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition transform hover:-translate-y-0.5';
+  });
+
+  document.getElementById('feedbackBox').classList.add('hidden');
+  updateTimerDisplay();
+
+  // Reset Mascot state
+  if (window.setMascotState) {
+    window.setMascotState('thinking', 'Think carefully!');
+  }
+
+  // Start timer
+  clearInterval(timerInterval);
+  timerInterval = setInterval(tickTimer, 1000);
+}
+
+function tickTimer() {
+  currentTimer--;
+  updateTimerDisplay();
+
+  if (window.quizAudio) {
+    if (currentTimer <= 3 && currentTimer > 0) {
+      window.quizAudio.playHeartbeat();
+    } else {
+      window.quizAudio.playTick();
+    }
+  }
+
+  if (currentTimer <= 0) {
+    clearInterval(timerInterval);
+    selectAnswer('TIMEOUT');
+  }
+}
+
+function updateTimerDisplay() {
+  var circle = document.getElementById('timerCircle');
+  var text = document.getElementById('timerText');
+  text.textContent = Math.max(0, currentTimer);
+
+  var maxTime = (questions[currentIndex] && questions[currentIndex].time_limit) || 15;
+  var ratio = Math.max(0, currentTimer) / maxTime;
+  var offset = CIRCUMFERENCE - (ratio * CIRCUMFERENCE);
+  circle.style.strokeDashoffset = offset;
+
+  if (currentTimer <= 3) {
+    circle.setAttribute('stroke', '#ef4444');
+    text.className = 'absolute font-mono font-black text-lg sm:text-xl text-rose-500 animate-ping';
+  } else if (currentTimer <= 7) {
+    circle.setAttribute('stroke', '#f59e0b');
+    text.className = 'absolute font-mono font-black text-lg sm:text-xl text-amber-400';
+  } else {
+    circle.setAttribute('stroke', '#06b6d4');
+    text.className = 'absolute font-mono font-black text-lg sm:text-xl text-white';
+  }
+}
+
+function selectAnswer(choice) {
+  if (answered) return;
+  answered = true;
+  clearInterval(timerInterval);
+
+  var q = questions[currentIndex];
+  recordedAnswers.push({
+    question_id: q.id,
+    choice: choice,
+    time_left: Math.max(0, currentTimer)
+  });
+
+  // Temporarily highlight chosen button
+  ['A', 'B', 'C', 'D'].forEach(function(opt) {
+    var btn = document.getElementById('btn' + opt);
+    btn.disabled = true;
+    if (opt === choice) {
+      btn.className = 'opt-btn p-4 rounded-2xl border-2 border-cyan-400 bg-cyan-950/60 text-left flex items-center gap-3';
+    }
+  });
+
+  // Brief thinking pause before reveal
+  setTimeout(function() {
+    nextQuestion();
+  }, 450);
+}
+
+function nextQuestion() {
+  currentIndex++;
+  initQuestion();
+}
+
+function finishRound() {
+  clearInterval(timerInterval);
+  if (window.setMascotState) {
+    window.setMascotState('celebrate', 'Round complete! Calculating score...');
+  }
+
+  fetch(submitUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ answers: recordedAnswers })
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    if (window.quizAudio) window.quizAudio.playVictory();
+    // Redirect back to lobby to view updated scoreboard and turn
+    setTimeout(function() {
+      window.location.href = lobbyUrl;
+    }, 1200);
+  })
+  .catch(function(err) {
+    console.error('Submission error:', err);
+    window.location.href = lobbyUrl;
+  });
+}
+
+function toggleAudio() {
+  if (window.quizAudio) {
+    var muted = window.quizAudio.toggleMute();
+    document.getElementById('soundBtn').textContent = muted ? '🔇' : '🔊';
+  }
+}
+
+// Start first question
+initQuestion();
+</script>
+{% endblock %}

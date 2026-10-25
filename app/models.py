@@ -218,3 +218,209 @@ class SiteSetting(db.Model):
     def get_all(cls) -> dict:
         items = cls.query.all()
         return {item.key: item.value for item in items}
+
+
+# ==============================================================================
+# QUIZMONDO ARENA GAMIFICATION & MULTIPLAYER MODELS
+# ==============================================================================
+
+class QuizQuestion(db.Model):
+    __tablename__ = 'quiz_questions'
+
+    id = db.Column(db.Integer, primary_key=True)
+    prompt = db.Column(db.Text, nullable=False)
+    question_type = db.Column(db.String(30), default='classic')  # classic, audio, image, video, shape_click, slider
+    media_url = db.Column(db.String(500), default='')
+    options_json = db.Column(db.Text, default='{}')  # {"A": "...", "B": "...", "C": "...", "D": "..."}
+    correct_option = db.Column(db.String(50), nullable=False)  # 'A', 'B', 'C', 'D'
+    explanation = db.Column(db.Text, default='')
+    category_slug = db.Column(db.String(80), index=True, default='general')
+    category_name = db.Column(db.String(100), default='General Knowledge')
+    difficulty = db.Column(db.String(20), default='medium')  # easy, medium, hard
+    points = db.Column(db.Integer, default=100)
+    time_limit = db.Column(db.Integer, default=15)
+    pack_slug = db.Column(db.String(80), index=True, default='core')
+    is_community = db.Column(db.Boolean, default=False)
+    author_name = db.Column(db.String(80), default='Quizmondo Master')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def get_options(self) -> dict:
+        try:
+            return json.loads(self.options_json or '{}')
+        except Exception:
+            return {}
+
+    def set_options(self, opts: dict):
+        self.options_json = json.dumps(opts or {})
+
+    def to_dict(self, include_answer=False) -> dict:
+        data = {
+            'id': self.id,
+            'prompt': self.prompt,
+            'question_type': self.question_type,
+            'media_url': self.media_url,
+            'options': self.get_options(),
+            'category_slug': self.category_slug,
+            'category_name': self.category_name,
+            'difficulty': self.difficulty,
+            'points': self.points,
+            'time_limit': self.time_limit,
+            'author_name': self.author_name
+        }
+        if include_answer:
+            data['correct_option'] = self.correct_option
+            data['explanation'] = self.explanation
+        return data
+
+
+class PlayerProfile(db.Model):
+    __tablename__ = 'player_profiles'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
+    session_key = db.Column(db.String(64), unique=True, index=True, nullable=False)
+    display_name = db.Column(db.String(80), nullable=False, default='Player')
+    avatar_key = db.Column(db.String(40), default='quizzy')  # quizzy, nova, pixel, sage, cyber_fox, brain_bot
+    level = db.Column(db.Integer, default=1)
+    xp = db.Column(db.Integer, default=0)
+    coins = db.Column(db.Integer, default=250)
+    streak_days = db.Column(db.Integer, default=1)
+    matches_played = db.Column(db.Integer, default=0)
+    matches_won = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_active_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def add_xp(self, amount: int):
+        self.xp = (self.xp or 0) + max(0, amount)
+        # 500 XP per level
+        self.level = 1 + (self.xp // 500)
+
+    def to_dict(self) -> dict:
+        return {
+            'id': self.id,
+            'session_key': self.session_key,
+            'display_name': self.display_name,
+            'avatar_key': self.avatar_key,
+            'level': self.level,
+            'xp': self.xp,
+            'coins': self.coins,
+            'streak_days': self.streak_days,
+            'matches_played': self.matches_played,
+            'matches_won': self.matches_won,
+            'win_rate': round((self.matches_won / self.matches_played * 100), 1) if self.matches_played > 0 else 0
+        }
+
+
+class ArenaMatch(db.Model):
+    __tablename__ = 'arena_matches'
+
+    id = db.Column(db.Integer, primary_key=True)
+    match_code = db.Column(db.String(32), unique=True, index=True, nullable=False)
+    player1_session = db.Column(db.String(64), nullable=False, index=True)
+    player1_name = db.Column(db.String(80), default='Player 1')
+    player1_avatar = db.Column(db.String(40), default='quizzy')
+    player2_session = db.Column(db.String(64), nullable=True, index=True)
+    player2_name = db.Column(db.String(80), default='Awaiting Challenger...')
+    player2_avatar = db.Column(db.String(40), default='nova')
+    status = db.Column(db.String(20), default='waiting')  # waiting, in_progress, completed, forfeited
+    current_round = db.Column(db.Integer, default=1)  # 1 to 6
+    current_turn = db.Column(db.Integer, default=1)  # 1 (player1) or 2 (player2)
+    winner = db.Column(db.Integer, default=0)  # 0: ongoing/tie, 1: player1, 2: player2
+    p1_total_score = db.Column(db.Integer, default=0)
+    p2_total_score = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    rounds = db.relationship('ArenaRound', backref='match', cascade='all, delete-orphan', lazy='dynamic', order_by='ArenaRound.round_number.asc()')
+
+    def is_player_turn(self, session_key: str) -> bool:
+        if self.status != 'in_progress' and self.status != 'waiting':
+            return False
+        if self.current_turn == 1 and self.player1_session == session_key:
+            return True
+        if self.current_turn == 2 and self.player2_session == session_key:
+            return True
+        return False
+
+    def to_dict(self) -> dict:
+        return {
+            'match_code': self.match_code,
+            'player1_name': self.player1_name,
+            'player1_avatar': self.player1_avatar,
+            'player2_name': self.player2_name,
+            'player2_avatar': self.player2_avatar,
+            'status': self.status,
+            'current_round': self.current_round,
+            'current_turn': self.current_turn,
+            'winner': self.winner,
+            'p1_total_score': self.p1_total_score,
+            'p2_total_score': self.p2_total_score,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M') if self.created_at else ''
+        }
+
+
+class ArenaRound(db.Model):
+    __tablename__ = 'arena_rounds'
+
+    id = db.Column(db.Integer, primary_key=True)
+    match_id = db.Column(db.Integer, db.ForeignKey('arena_matches.id', ondelete='CASCADE'), nullable=False, index=True)
+    round_number = db.Column(db.Integer, nullable=False)  # 1 to 6
+    category_slug = db.Column(db.String(80), default='general')
+    category_name = db.Column(db.String(100), default='General Knowledge')
+    chosen_by = db.Column(db.Integer, default=1)  # 1 or 2
+    question_ids_json = db.Column(db.Text, default='[]')
+    p1_score = db.Column(db.Integer, default=0)
+    p1_answers_json = db.Column(db.Text, default='[]')
+    p2_score = db.Column(db.Integer, default=0)
+    p2_answers_json = db.Column(db.Text, default='[]')
+    status = db.Column(db.String(20), default='pending')  # pending, p1_done, p2_done, completed
+
+    def get_question_ids(self) -> list:
+        try:
+            return json.loads(self.question_ids_json or '[]')
+        except Exception:
+            return []
+
+    def set_question_ids(self, q_ids: list):
+        self.question_ids_json = json.dumps(q_ids or [])
+
+    def get_p1_answers(self) -> list:
+        try:
+            return json.loads(self.p1_answers_json or '[]')
+        except Exception:
+            return []
+
+    def get_p2_answers(self) -> list:
+        try:
+            return json.loads(self.p2_answers_json or '[]')
+        except Exception:
+            return []
+
+
+class QuizPack(db.Model):
+    __tablename__ = 'quiz_packs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(150), nullable=False)
+    slug = db.Column(db.String(150), unique=True, index=True, nullable=False)
+    description = db.Column(db.Text, default='')
+    icon = db.Column(db.String(50), default='🎮')
+    category_slug = db.Column(db.String(80), default='general')
+    is_community = db.Column(db.Boolean, default=False)
+    author_name = db.Column(db.String(80), default='Quizmondo Team')
+    question_count = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class PubLeague(db.Model):
+    __tablename__ = 'pub_leagues'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(150), nullable=False)
+    slug = db.Column(db.String(150), unique=True, index=True, nullable=False)
+    pin_code = db.Column(db.String(10), default='1234')
+    venue_name = db.Column(db.String(150), default='Virtual Pub Quiz Arena')
+    description = db.Column(db.Text, default='')
+    schedule_day = db.Column(db.String(50), default='Every Thursday 20:00')
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

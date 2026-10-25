@@ -61,10 +61,12 @@ def create_app(test_config=None):
     from .routes.auth import auth_bp
     from .routes.admin import admin_bp
     from .routes.public import public_bp
+    from .routes.arena import arena_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(public_bp)
+    app.register_blueprint(arena_bp)
 
     import re
     @app.template_filter('youtube_id')
@@ -195,7 +197,7 @@ def _seed_defaults():
         'contact_address': 'Arena Hub, London EC2A 4NE',
         'homepage_type': 'posts',
         'posts_per_page': '10',
-        'site_logo': '/static/img/triviamatrix_logo.svg',
+        'site_logo': '/static/img/quizmondo_logo.svg',
         'header_style': 'split_nav',
         'header_bg_color': '#0f0728',
         'header_bg_opacity': '100',
@@ -206,23 +208,27 @@ def _seed_defaults():
         'header_font_style': 'bold-display',
         'header_show_topbar': '1',
         'header_cta_text': 'Join Arena',
-        'header_cta_url': '/contact',
+        'header_cta_url': '/arena',
         'footer_bg_color': '#090317',
         'footer_bg_opacity': '100',
         'footer_text_color': '#d8b4fe',
         'footer_text_opacity': '100',
         'footer_accent_color': '#06b6d4',
         'footer_accent_opacity': '100',
-        'footer_logo': '/static/img/triviamatrix_logo.svg',
+        'footer_logo': '/static/img/quizmondo_logo.svg',
         'footer_about_text': 'Quizmondo is the premier competitive brain gaming platform featuring real-time multiplayer showdowns, cash tournaments, and adaptive trivia challenges.',
-        'footer_copyright': '© 2026 Quizmondo Arena. All rights reserved.',
+        'footer_copyright': '© 2026 Quizmondo.com. All rights reserved.',
     }
     for k, v in defaults.items():
         existing = SiteSetting.query.filter_by(key=k).first()
         if not existing:
             db.session.add(SiteSetting(key=k, value=v))
-        elif k in ('active_theme', 'home_modules_json') and not existing.value:
+        elif k in ('site_logo', 'footer_logo', 'active_theme'):
             existing.value = v
+
+    # Seed Quizmondo Arena initial question packs and leagues
+    from .utils.quiz_seed import seed_quizmondo_arena_defaults
+    seed_quizmondo_arena_defaults()
 
     # Seed initial categories for Quizmondo
     cat_science = Category.query.filter_by(slug='science-cosmos').first()

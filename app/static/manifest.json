@@ -1,0 +1,20 @@
+{
+  "name": "Quizmondo.com • Live Trivia & Gaming Arena",
+  "short_name": "Quizmondo",
+  "description": "Interactive multiplayer trivia duels, brain tournaments, pub leagues, and retro gaming challenges.",
+  "start_url": "/arena",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#090317",
+  "theme_color": "#0f0728",
+  "icons": [
+    {
+      "src": "/static/img/quizmondo_icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "trivia", "entertainment"]
+}
