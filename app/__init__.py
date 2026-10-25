@@ -163,6 +163,19 @@ def _ensure_schema():
         if cols_modules and 'theme' not in cols_modules:
             db.session.execute(text("ALTER TABLE page_modules ADD COLUMN theme VARCHAR(50) DEFAULT 'hisoft'"))
             db.session.commit()
+
+        cols_leagues = [row[1] for row in db.session.execute(text("PRAGMA table_info(pub_leagues)")).fetchall()]
+        if cols_leagues and 'teams_json' not in cols_leagues:
+            db.session.execute(text("ALTER TABLE pub_leagues ADD COLUMN teams_json TEXT DEFAULT '[]'"))
+            db.session.commit()
+
+        cols_questions = [row[1] for row in db.session.execute(text("PRAGMA table_info(quiz_questions)")).fetchall()]
+        if cols_questions:
+            if 'status' not in cols_questions:
+                db.session.execute(text("ALTER TABLE quiz_questions ADD COLUMN status VARCHAR(20) DEFAULT 'approved'"))
+            if 'is_community' not in cols_questions:
+                db.session.execute(text("ALTER TABLE quiz_questions ADD COLUMN is_community BOOLEAN DEFAULT 0"))
+            db.session.commit()
     except Exception:
         db.session.rollback()
 
@@ -226,9 +239,9 @@ def _seed_defaults():
         elif k in ('site_logo', 'footer_logo', 'active_theme'):
             existing.value = v
 
-    # Seed Quizmondo Arena initial question packs and leagues
-    from .utils.quiz_seed import seed_quizmondo_arena_defaults
-    seed_quizmondo_arena_defaults()
+    # Seed Quizmondo Arena initial question packs, leagues, and homepage modules
+    from .utils.quiz_seed import seed_quizmondo_full_environment
+    seed_quizmondo_full_environment()
 
     # Seed initial categories for Quizmondo
     cat_science = Category.query.filter_by(slug='science-cosmos').first()

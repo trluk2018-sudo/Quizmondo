@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#070212] text-slate-100 font-mono antialiased overflow-hidden">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ league.venue_name }} • Big-Screen TV Scoreboard • Quizmondo</title>
+  <link rel="stylesheet" href="/static/css/tailwind.min.css">
+  <meta http-equiv="refresh" content="15">
+</head>
+<body class="h-full flex flex-col justify-between p-8 sm:p-12 relative overflow-hidden select-none">
+  <!-- Dynamic ambient lighting -->
+  <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[1000px] h-[400px] bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+  <!-- Top TV Header -->
+  <div class="flex items-center justify-between border-b-2 border-purple-500/40 pb-6 relative z-10">
+    <div class="flex items-center gap-5">
+      <img src="/static/img/quizmondo_logo.svg" alt="Quizmondo.com" class="h-16 w-auto">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 font-black text-xs uppercase tracking-widest border border-emerald-500/40">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          LIVE VENUE TOURNAMENT
+        </div>
+        <h1 class="text-3xl sm:text-5xl font-black text-white tracking-tight mt-1">
+          {{ league.venue_name }}
+        </h1>
+      </div>
+    </div>
+
+    <!-- Room PIN Badge for Audience -->
+    <div class="flex items-center gap-4 bg-slate-950/90 border-2 border-amber-400/50 p-4 rounded-3xl shadow-2xl">
+      <div class="text-right">
+        <div class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">JOIN ON YOUR PHONE</div>
+        <div class="text-xs text-cyan-300 font-bold">quizmondo.com/arena/leagues</div>
+      </div>
+      <div class="px-5 py-2.5 rounded-2xl bg-amber-400 text-slate-950 font-black text-3xl sm:text-4xl tracking-widest shadow">
+        {{ league.pin_code }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Leaderboard Showcase -->
+  <div class="my-auto py-8 relative z-10 space-y-8">
+    
+    <!-- Top 3 Podium Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {% for t in teams[:3] %}
+      <div class="p-8 rounded-3xl {% if loop.index == 1 %}bg-gradient-to-b from-amber-950/80 via-slate-950 to-slate-950 border-4 border-amber-400 shadow-2xl shadow-amber-500/20 transform sm:-translate-y-4{% elif loop.index == 2 %}bg-slate-950/90 border-2 border-slate-400/60 shadow-xl{% else %}bg-slate-950/90 border-2 border-amber-700/60 shadow-xl{% endif %} text-center space-y-3 relative overflow-hidden">
+        
+        <div class="text-4xl">
+          {% if loop.index == 1 %}👑 1ST PLACE{% elif loop.index == 2 %}🥈 2ND PLACE{% else %}🥉 3RD PLACE{% endif %}
+        </div>
+
+        <h3 class="text-2xl font-black text-white tracking-tight truncate">
+          {{ t.name }}
+        </h3>
+
+        <div class="text-4xl sm:text-5xl font-black {% if loop.index == 1 %}text-amber-400{% elif loop.index == 2 %}text-slate-200{% else %}text-amber-600{% endif %}">
+          {{ t.score }} <span class="text-base text-slate-400 font-normal">PTS</span>
+        </div>
+
+        <div class="text-xs text-slate-400 font-bold">
+          Table Squad &bull; {{ t.members or 4 }} Players
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Rest of Standings Row -->
+    {% if teams[3:] %}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
+      {% for t in teams[3:] %}
+      <div class="p-4 rounded-2xl bg-slate-950/70 border border-purple-500/30 flex items-center justify-between text-xs">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-lg bg-purple-900/60 text-purple-200 font-bold flex items-center justify-center text-[10px]">
+            #{{ loop.index + 3 }}
+          </span>
+          <span class="font-bold text-white truncate max-w-[140px]">{{ t.name }}</span>
+        </div>
+        <span class="font-black text-cyan-300">{{ t.score }} PTS</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  </div>
+
+  <!-- Bottom TV Ticker -->
+  <div class="border-t-2 border-purple-500/30 pt-4 flex items-center justify-between text-xs text-slate-400 relative z-10">
+    <div class="flex items-center gap-3">
+      <span class="px-2.5 py-1 rounded-lg bg-purple-600/40 text-purple-200 font-black uppercase text-[10px]">
+        VENUE ANNOUNCEMENT
+      </span>
+      <span class="text-slate-300">
+        {{ league.schedule_day }} &bull; Grab your drinks at the bar! Live scores auto-refresh every 15 seconds.
+      </span>
+    </div>
+    <div class="text-cyan-400 font-bold">
+      POWERED BY QUIZMONDO ARENA
+    </div>
+  </div>
+
+</body>
+</html>

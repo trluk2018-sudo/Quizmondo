@@ -442,6 +442,105 @@ def leagues():
     )
 
 
+@arena_bp.route('/leagues/join', methods=['POST'])
+def league_join():
+    """Validate venue room PIN code and redirect to venue lounge."""
+    pin = (request.form.get('pin_code') or '').strip()
+    if not pin:
+        flash('Please enter a valid 4-digit venue PIN code.', 'error')
+        return redirect(url_for('arena.leagues'))
+        
+    league = PubLeague.query.filter_by(pin_code=pin, is_active=True).first()
+    if not league:
+        flash(f'Room PIN "{pin}" not found. Please ask your venue quizmaster.', 'error')
+        return redirect(url_for('arena.leagues'))
+        
+    return redirect(url_for('arena.league_lounge', slug=league.slug))
+
+
+@arena_bp.route('/leagues/<slug>')
+def league_lounge(slug):
+    """Pub League Venue Lounge: Squad registration, schedule, and TV mode."""
+    player = get_current_player()
+    league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
+    teams = league.get_teams()
+    if not teams:
+        teams = [
+            {'name': 'The Quizly Bears', 'score': 480, 'members': 4, 'rank': 1},
+            {'name': 'Tequila Mockingbird', 'score': 420, 'members': 3, 'rank': 2},
+            {'name': 'Trivia Newton John', 'score': 390, 'members': 5, 'rank': 3},
+            {'name': 'Quiz Pro Quo', 'score': 350, 'members': 2, 'rank': 4}
+        ]
+    return render_template(
+        'themes/quizhub/arena_league_lounge.html',
+        player=player,
+        league=league,
+        teams=teams
+    )
+
+
+@arena_bp.route('/leagues/<slug>/room', methods=['GET', 'POST'])
+def league_room(slug):
+    """Live Pub Quiz Interactive Session."""
+    player = get_current_player()
+    league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
+    
+    team_name = request.args.get('team') or session.get('pub_team_name') or f"{player.display_name}'s Table"
+    session['pub_team_name'] = team_name
+    
+    # 5 questions for pub round
+    questions = QuizQuestion.query.order_by(QuizQuestion.id.asc()).limit(5).all()
+    questions_json = [q.to_dict(include_answer=True) for q in questions]
+    
+    if request.method == 'POST':
+        round_score = int(request.form.get('score', 0))
+        teams = league.get_teams()
+        updated = False
+        for t in teams:
+            if t.get('name') == team_name:
+                t['score'] = (t.get('score', 0)) + round_score
+                updated = True
+                break
+        if not updated:
+            teams.append({'name': team_name, 'score': round_score, 'members': 1, 'rank': len(teams) + 1})
+        teams.sort(key=lambda x: x.get('score', 0), reverse=True)
+        for idx, t in enumerate(teams, 1):
+            t['rank'] = idx
+        league.set_teams(teams)
+        db.session.commit()
+        player.add_xp(200)
+        flash(f'🎉 Round submitted for Team "{team_name}"! +{round_score} pts added to venue board.', 'success')
+        return redirect(url_for('arena.league_lounge', slug=league.slug))
+        
+    return render_template(
+        'themes/quizhub/arena_league_room.html',
+        player=player,
+        league=league,
+        team_name=team_name,
+        questions=questions,
+        questions_json=questions_json
+    )
+
+
+@arena_bp.route('/leagues/<slug>/tv')
+def league_tv(slug):
+    """Big-Screen TV Projector View for Pub and Bar Monitors."""
+    league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
+    teams = league.get_teams()
+    if not teams:
+        teams = [
+            {'name': 'The Quizly Bears', 'score': 480, 'members': 4, 'rank': 1},
+            {'name': 'Tequila Mockingbird', 'score': 420, 'members': 3, 'rank': 2},
+            {'name': 'Trivia Newton John', 'score': 390, 'members': 5, 'rank': 3},
+            {'name': 'Quiz Pro Quo', 'score': 350, 'members': 2, 'rank': 4}
+        ]
+    return render_template(
+        'themes/quizhub/arena_league_tv.html',
+        league=league,
+        teams=teams
+    )
+
+
 @arena_bp.route('/api/daily')
 def api_daily_questions():
     """Return database-backed daily brain sprint questions."""

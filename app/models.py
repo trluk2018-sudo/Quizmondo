@@ -109,7 +109,7 @@ class PageModule(db.Model):
     page_id = db.Column(db.Integer, db.ForeignKey('pages.id'), nullable=True, index=True)
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), nullable=True, index=True)
     is_home = db.Column(db.Boolean, default=False, index=True)
-    theme = db.Column(db.String(50), default='hisoft', index=True)
+    theme = db.Column(db.String(50), default='quizhub', index=True)
 
     module_type = db.Column(db.String(50), nullable=False)
     title = db.Column(db.String(255), default='')
@@ -428,4 +428,14 @@ class PubLeague(db.Model):
     description = db.Column(db.Text, default='')
     schedule_day = db.Column(db.String(50), default='Every Thursday 20:00')
     is_active = db.Column(db.Boolean, default=True)
+    teams_json = db.Column(db.Text, default='[]')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def get_teams(self) -> list:
+        try:
+            return json.loads(self.teams_json or '[]')
+        except Exception:
+            return []
+
+    def set_teams(self, teams: list):
+        self.teams_json = json.dumps(teams or [])

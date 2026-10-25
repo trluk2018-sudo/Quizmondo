@@ -127,5 +127,28 @@ class ArenaTestCase(unittest.TestCase):
             self.assertIsNotNone(q)
             self.assertEqual(q.status, 'pending')
 
+    def test_pub_league_pin_join_lounge_and_tv(self):
+        # 1. Join via PIN code
+        res_join = self.client.post('/arena/leagues/join', data={'pin_code': '7742'}, follow_redirects=True)
+        self.assertEqual(res_join.status_code, 200)
+        self.assertIn(b'Dog &amp; Partridge', res_join.data)
+        self.assertIn(b'TABLE ROOM PIN', res_join.data)
+
+        # 2. Big Screen TV Mode
+        res_tv = self.client.get('/arena/leagues/dog-and-partridge/tv')
+        self.assertEqual(res_tv.status_code, 200)
+        self.assertIn(b'LIVE VENUE TOURNAMENT', res_tv.data)
+        self.assertIn(b'1ST PLACE', res_tv.data)
+
+        # 3. Enter interactive room
+        res_room = self.client.get('/arena/leagues/dog-and-partridge/room?team=The+Quizly+Bears')
+        self.assertEqual(res_room.status_code, 200)
+        self.assertIn(b'PUB ROUND 1', res_room.data)
+
+        # 4. Submit round score
+        res_sub = self.client.post('/arena/leagues/dog-and-partridge/room', data={'score': '450'}, follow_redirects=True)
+        self.assertEqual(res_sub.status_code, 200)
+        self.assertIn(b'Round submitted for Team', res_sub.data)
+
 if __name__ == '__main__':
     unittest.main()

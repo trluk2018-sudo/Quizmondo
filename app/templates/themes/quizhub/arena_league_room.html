@@ -1,0 +1,198 @@
+{% extends "themes/quizhub/base.html" %}
+
+{% block title %}{{ league.name }} • Live Round Session • Quizmondo{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#090317] text-slate-100 font-sans py-8 sm:py-12 relative overflow-hidden flex flex-col justify-center">
+  <!-- Glowing nebula orb -->
+  <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-gradient-to-r from-purple-600/20 to-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 w-full space-y-6 relative z-10">
+
+    <!-- Header Bar -->
+    <div class="flex items-center justify-between border-b border-purple-500/20 pb-4">
+      <div class="flex items-center gap-3">
+        <span class="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 font-mono text-xs font-bold border border-purple-500/30">
+          🍻 {{ league.name }} &bull; PUB ROUND 1
+        </span>
+        <span id="pubCounter" class="text-xs font-mono text-cyan-400 font-bold">
+          Q 1 / {{ questions|length }}
+        </span>
+      </div>
+
+      <div class="font-mono text-xs">
+        <span class="text-slate-400">TABLE SQUAD:</span>
+        <strong class="text-amber-400 font-bold ml-1">{{ team_name }}</strong>
+      </div>
+    </div>
+
+    <!-- MAIN GAME CARD -->
+    <div class="p-6 sm:p-10 rounded-3xl bg-slate-950/95 border-2 border-purple-500/40 backdrop-blur shadow-2xl space-y-8 relative overflow-hidden">
+      
+      <!-- Top Row: Round Status & Timer -->
+      <div class="flex items-center justify-between">
+        <div class="space-y-0.5 font-mono text-xs">
+          <span class="text-cyan-400 font-bold block" id="qCategoryBadge">SCIENCE &amp; COSMOS</span>
+          <span class="text-[11px] text-slate-400">100 Pts per accurate answer</span>
+        </div>
+
+        <!-- Timer Circle -->
+        <div class="relative w-16 h-16 flex items-center justify-center font-mono font-black text-xl text-white">
+          <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="42" fill="none" stroke="#1e1045" stroke-width="8" />
+            <circle id="timerCircle" cx="50" cy="50" r="42" fill="none" stroke="#06b6d4" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-1000 ease-linear" />
+          </svg>
+          <span id="timerText" class="absolute">15</span>
+        </div>
+      </div>
+
+      <!-- Question Title -->
+      <div class="min-h-[64px]">
+        <h2 id="qPrompt" class="text-xl sm:text-2xl font-black font-mono text-white leading-snug">
+          Loading pub round question...
+        </h2>
+      </div>
+
+      <!-- 4 Option Buttons -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2" id="optionsGrid">
+        <button type="button" onclick="choosePubAnswer('A')" id="btnA" class="p-4 rounded-2xl border-2 border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition">
+          <span class="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">A</span>
+          <span class="text-sm font-mono text-slate-200" id="lblA">Option A</span>
+        </button>
+        <button type="button" onclick="choosePubAnswer('B')" id="btnB" class="p-4 rounded-2xl border-2 border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition">
+          <span class="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">B</span>
+          <span class="text-sm font-mono text-slate-200" id="lblB">Option B</span>
+        </button>
+        <button type="button" onclick="choosePubAnswer('C')" id="btnC" class="p-4 rounded-2xl border-2 border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition">
+          <span class="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">C</span>
+          <span class="text-sm font-mono text-slate-200" id="lblC">Option C</span>
+        </button>
+        <button type="button" onclick="choosePubAnswer('D')" id="btnD" class="p-4 rounded-2xl border-2 border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition">
+          <span class="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">D</span>
+          <span class="text-sm font-mono text-slate-200" id="lblD">Option D</span>
+        </button>
+      </div>
+
+      <!-- Feedback callout -->
+      <div id="feedbackBox" class="hidden p-4 rounded-2xl border font-mono text-xs">
+        <span id="feedbackText" class="font-bold block"></span>
+        <span id="feedbackExp" class="text-slate-300 text-[11px] block mt-1"></span>
+      </div>
+
+    </div>
+
+    <!-- Hidden Submit Form -->
+    <form id="pubSubmitForm" method="POST" action="{{ url_for('arena.league_room', slug=league.slug) }}" class="hidden">
+      <input type="hidden" name="score" id="finalScore" value="0">
+    </form>
+
+  </div>
+</div>
+
+<script src="/static/js/quiz-audio.js"></script>
+<script>
+var rawQuestions = {{ questions_json|tojson|safe }};
+var currentIndex = 0;
+var totalScore = 0;
+var timer = 15;
+var timerInterval = null;
+var answered = false;
+var CIRCUMFERENCE = 264;
+
+function loadQuestion() {
+  if (currentIndex >= rawQuestions.length) {
+    document.getElementById('finalScore').value = totalScore;
+    document.getElementById('pubSubmitForm').submit();
+    return;
+  }
+
+  var q = rawQuestions[currentIndex];
+  answered = false;
+  timer = 15;
+
+  document.getElementById('pubCounter').textContent = 'Q ' + (currentIndex + 1) + ' / ' + rawQuestions.length;
+  document.getElementById('qCategoryBadge').textContent = (q.category_name || 'GENERAL').toUpperCase();
+  document.getElementById('qPrompt').textContent = q.prompt;
+  document.getElementById('lblA').textContent = q.options.A || '';
+  document.getElementById('lblB').textContent = q.options.B || '';
+  document.getElementById('lblC').textContent = q.options.C || '';
+  document.getElementById('lblD').textContent = q.options.D || '';
+
+  ['A', 'B', 'C', 'D'].forEach(function(opt) {
+    var b = document.getElementById('btn' + opt);
+    b.disabled = false;
+    b.className = 'p-4 rounded-2xl border-2 border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition';
+  });
+
+  document.getElementById('feedbackBox').classList.add('hidden');
+  updateTimer();
+
+  clearInterval(timerInterval);
+  timerInterval = setInterval(tick, 1000);
+}
+
+function tick() {
+  timer--;
+  updateTimer();
+  if (window.quizAudio) window.quizAudio.playTick();
+  if (timer <= 0) {
+    clearInterval(timerInterval);
+    choosePubAnswer('TIMEOUT');
+  }
+}
+
+function updateTimer() {
+  var circle = document.getElementById('timerCircle');
+  var text = document.getElementById('timerText');
+  text.textContent = Math.max(0, timer);
+  var ratio = Math.max(0, timer) / 15;
+  circle.style.strokeDashoffset = CIRCUMFERENCE - (ratio * CIRCUMFERENCE);
+}
+
+function choosePubAnswer(choice) {
+  if (answered) return;
+  answered = true;
+  clearInterval(timerInterval);
+
+  var q = rawQuestions[currentIndex];
+  var isCorrect = (choice === q.correct_option);
+  var box = document.getElementById('feedbackBox');
+  box.classList.remove('hidden');
+
+  if (choice !== 'TIMEOUT') {
+    var chosenBtn = document.getElementById('btn' + choice);
+    if (isCorrect) {
+      chosenBtn.className = 'p-4 rounded-2xl border-2 border-emerald-400 bg-emerald-950/80 text-left flex items-center gap-3';
+      totalScore += 100 + (timer * 2); // accuracy + speed bonus
+      if (window.quizAudio) window.quizAudio.playCorrect();
+      box.className = 'p-4 rounded-2xl border border-emerald-500/50 bg-emerald-950/90 text-emerald-300 font-mono text-xs';
+      document.getElementById('feedbackText').textContent = '🎉 CORRECT! +' + (100 + timer * 2) + ' PTS';
+    } else {
+      chosenBtn.className = 'p-4 rounded-2xl border-2 border-rose-500 bg-rose-950/80 text-left flex items-center gap-3';
+      if (window.quizAudio) window.quizAudio.playWrong();
+      box.className = 'p-4 rounded-2xl border border-rose-500/50 bg-rose-950/90 text-rose-300 font-mono text-xs';
+      document.getElementById('feedbackText').textContent = '❌ INCORRECT! Correct answer was ' + q.correct_option;
+    }
+  } else {
+    if (window.quizAudio) window.quizAudio.playWrong();
+    box.className = 'p-4 rounded-2xl border border-rose-500/50 bg-rose-950/90 text-rose-300 font-mono text-xs';
+    document.getElementById('feedbackText').textContent = '⏱️ TIME EXPIRED! Correct answer was ' + q.correct_option;
+  }
+
+  // Highlight correct button
+  if (q.correct_option) {
+    var cBtn = document.getElementById('btn' + q.correct_option);
+    cBtn.classList.add('ring-2', 'ring-emerald-400');
+  }
+
+  document.getElementById('feedbackExp').textContent = q.explanation || 'Great round!';
+
+  setTimeout(function() {
+    currentIndex++;
+    loadQuestion();
+  }, 1600);
+}
+
+loadQuestion();
+</script>
+{% endblock %}

@@ -22,6 +22,8 @@
     {% endif %}
     {% if mod.module_type == 'hero' %}
       {% include "themes/quizhub/modules/hero.html" %}
+    {% elif mod.module_type == 'daily_quiz' %}
+      {% include "themes/quizhub/modules/daily_quiz.html" %}
     {% elif mod.module_type == 'features_strip' %}
       {% include "themes/quizhub/modules/features_strip.html" %}
     {% elif mod.module_type == 'about' %}

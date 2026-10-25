@@ -1,0 +1,127 @@
+{% extends "themes/quizhub/base.html" %}
+
+{% block title %}{{ league.name }} • Venue Lounge • Quizmondo{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#090317] text-slate-100 font-sans py-10 relative overflow-hidden">
+  <!-- Glowing ambient lights -->
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-gradient-to-r from-purple-600/20 via-pink-600/15 to-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 relative z-10 space-y-8">
+
+    <!-- Top Breadcrumb -->
+    <div class="flex items-center justify-between border-b border-purple-500/20 pb-4">
+      <a href="{{ url_for('arena.leagues') }}" class="text-xs font-mono text-cyan-400 hover:text-cyan-300">
+        &larr; Back to Pub Leagues Directory
+      </a>
+      <div class="flex items-center gap-3">
+        <a href="{{ url_for('arena.league_tv', slug=league.slug) }}" target="_blank" class="px-3.5 py-1.5 rounded-xl bg-slate-900 border border-cyan-500/40 text-cyan-300 font-mono text-xs font-bold hover:bg-slate-800 transition flex items-center gap-1.5">
+          <span>🖥️ Launch Big Screen TV Projector</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Venue Hero Header -->
+    <div class="p-8 sm:p-10 rounded-3xl bg-slate-950/95 border-2 border-purple-500/40 backdrop-blur shadow-2xl relative overflow-hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-purple-500/20 pb-6">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-400/40 text-purple-300 font-mono text-xs font-bold uppercase mb-2">
+            <span>🍻 {{ league.venue_name }}</span>
+          </div>
+          <h1 class="text-3xl sm:text-4xl font-black font-mono text-white tracking-tight">
+            {{ league.name }}
+          </h1>
+          <p class="text-xs font-mono text-slate-400 mt-1 max-w-xl">
+            {{ league.description or 'Official venue quiz league with synchronized team tables and big-screen projector scoreboards.' }}
+          </p>
+        </div>
+
+        <div class="flex flex-col items-center sm:items-end font-mono">
+          <div class="text-xs text-slate-400">TABLE ROOM PIN</div>
+          <div class="text-3xl font-black text-amber-400 tracking-widest bg-slate-900 px-4 py-1.5 rounded-2xl border border-amber-400/30 shadow-inner mt-1">
+            {{ league.pin_code }}
+          </div>
+          <div class="text-[10px] text-cyan-400 mt-1 font-bold">{{ league.schedule_day }}</div>
+        </div>
+      </div>
+
+      <!-- 2 Columns: Join Table Form & Live Table Leaderboard -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- Left: Enter Game Room Form (5 cols) -->
+        <div class="lg:col-span-5 bg-slate-900/80 border border-purple-500/30 rounded-2xl p-6 space-y-5">
+          <div class="space-y-1">
+            <h3 class="text-sm font-black font-mono text-white uppercase tracking-wider flex items-center gap-2">
+              <span>👥</span> Join Table / Register Squad
+            </h3>
+            <p class="text-[11px] font-mono text-slate-400">Enter your squad's pub team name to submit answers and score points on the venue leaderboard.</p>
+          </div>
+
+          <form action="{{ url_for('arena.league_room', slug=league.slug) }}" method="GET" class="space-y-4 font-mono text-xs">
+            <div class="space-y-1.5">
+              <label class="block font-bold text-slate-300 uppercase">Team / Table Name</label>
+              <input type="text" name="team" required placeholder="e.g. The Quizly Bears" value="{{ session.get('pub_team_name') or player.display_name ~ '\'s Table' }}" class="w-full bg-slate-950 border border-purple-500/30 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400">
+            </div>
+
+            <button type="submit" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition transform hover:-translate-y-0.5">
+              🎮 Enter Venue Game Room &rarr;
+            </button>
+          </form>
+
+          <!-- WhatsApp Invite Squad Link -->
+          <div class="pt-4 border-t border-purple-500/20 text-center">
+            <button type="button" onclick="shareTableInvite()" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 font-mono text-xs font-bold transition flex items-center justify-center gap-2">
+              <span>💬 Invite Table Squad on WhatsApp</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Current Venue Table Leaderboard (7 cols) -->
+        <div class="lg:col-span-7 bg-slate-900/80 border border-purple-500/30 rounded-2xl p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-purple-500/20 pb-3">
+            <h3 class="text-sm font-black font-mono text-white uppercase tracking-wider flex items-center gap-2">
+              <span>🏆</span> Live Table Standings
+            </h3>
+            <span class="text-[11px] font-mono text-cyan-400 font-bold">Venue Matchday</span>
+          </div>
+
+          <div class="space-y-2 font-mono text-xs">
+            {% for t in teams %}
+            <div class="p-3.5 rounded-xl {% if loop.index == 1 %}bg-amber-950/40 border border-amber-400/50{% elif loop.index == 2 %}bg-slate-800/80 border border-slate-600/40{% elif loop.index == 3 %}bg-amber-900/20 border border-amber-700/40{% else %}bg-slate-950/60 border border-purple-500/20{% endif %} flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="w-7 h-7 rounded-lg {% if loop.index == 1 %}bg-amber-400 text-slate-950{% elif loop.index == 2 %}bg-slate-300 text-slate-950{% elif loop.index == 3 %}bg-amber-600 text-white{% else %}bg-purple-900/60 text-purple-200{% endif %} flex items-center justify-center font-black text-xs">
+                  #{{ loop.index }}
+                </span>
+                <div>
+                  <span class="font-bold text-white block text-sm">{{ t.name }}</span>
+                  <span class="text-[10px] text-slate-400">{{ t.members or 1 }} players at table</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="font-black text-cyan-300 text-sm block">{{ t.score }} PTS</span>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function shareTableInvite() {
+  var pin = "{{ league.pin_code }}";
+  var venue = "{{ league.venue_name }}";
+  var url = window.location.href;
+  var text = "🍻 Join our pub quiz table at " + venue + "! Room PIN: " + pin + ". Click to enter: " + url;
+  if (navigator.share) {
+    navigator.share({ title: venue + ' Pub Quiz', text: text, url: url });
+  } else {
+    window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
+  }
+}
+</script>
+{% endblock %}

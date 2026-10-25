@@ -1,64 +1,77 @@
 {% extends "themes/quizhub/base.html" %}
 
-{% block title %}Pub Leagues & Virtual Tournaments • Quizmondo Arena{% endblock %}
+{% block title %}Pub Leagues &amp; Virtual Tournaments • Quizmondo Arena{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-[#090317] text-slate-100 font-sans py-8 sm:py-12 relative overflow-hidden">
+  <!-- Glowing bar lights -->
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-gradient-to-r from-purple-600/20 via-amber-600/15 to-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
   <div class="max-w-4xl mx-auto px-4 sm:px-6 space-y-8 relative z-10">
 
     <div class="flex items-center justify-between border-b border-purple-500/20 pb-4">
       <a href="{{ url_for('arena.dashboard') }}" class="text-xs font-mono text-cyan-400 hover:text-cyan-300">
         &larr; Back to Arena Hub
       </a>
-      <span class="text-xs font-mono font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-1.5">
+      <span class="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest flex items-center gap-1.5">
         🍻 PUB LEAGUES &amp; TOURNAMENTS
       </span>
     </div>
 
-    <div class="p-6 sm:p-10 rounded-3xl bg-slate-950/90 border-2 border-purple-500/30 backdrop-blur shadow-2xl space-y-6">
+    <div class="p-6 sm:p-10 rounded-3xl bg-slate-950/90 border-2 border-purple-500/30 backdrop-blur shadow-2xl space-y-8">
       <div class="space-y-2">
-        <h1 class="text-2xl sm:text-3xl font-black font-mono text-white">Pub Quiz Leagues &amp; Teams</h1>
-        <p class="text-xs font-mono text-slate-400">Join a local pub quiz room code or host weekly tournaments with synchronized big-screen leaderboards.</p>
+        <h1 class="text-2xl sm:text-3xl font-black font-mono text-white">Pub Quiz Leagues &amp; Team Rooms</h1>
+        <p class="text-xs font-mono text-slate-400">Join a local pub quiz room with your table PIN or project synchronized leaderboards onto big-screen bar TVs.</p>
       </div>
 
       <!-- Quick Join PIN Code Box -->
-      <div class="p-6 rounded-2xl bg-gradient-to-r from-purple-950/40 to-slate-900 border border-purple-500/30 font-mono space-y-3">
-        <div class="font-bold text-xs text-cyan-300 uppercase">Have a 4-Digit Room PIN?</div>
-        <form onsubmit="joinLeaguePin(event)" class="flex flex-col sm:flex-row gap-3">
-          <input type="text" id="roomPin" maxlength="6" placeholder="Enter PIN (e.g. 7742)" class="px-4 py-2.5 rounded-xl bg-slate-950 border border-purple-500/30 text-white font-mono text-sm uppercase tracking-widest focus:outline-none focus:border-cyan-400">
-          <button type="submit" class="px-6 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider">
-            Join Room &rarr;
+      <div class="p-6 rounded-2xl bg-gradient-to-r from-purple-950/50 via-slate-900 to-indigo-950/50 border border-purple-500/30 font-mono space-y-3">
+        <div class="font-bold text-xs text-cyan-300 uppercase flex items-center gap-2">
+          <span>🔑</span> Have a 4-Digit Room PIN?
+        </div>
+        <form action="{{ url_for('arena.league_join') }}" method="POST" class="flex flex-col sm:flex-row gap-3">
+          <input type="text" name="pin_code" maxlength="6" required placeholder="Enter PIN (e.g. 7742)" class="px-4 py-2.5 rounded-xl bg-slate-950 border border-purple-500/30 text-white font-mono text-sm uppercase tracking-widest focus:outline-none focus:border-cyan-400 flex-1">
+          <button type="submit" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs uppercase tracking-wider transition">
+            Join Venue Room &rarr;
           </button>
         </form>
       </div>
 
       <!-- Active Leagues List -->
-      <div class="space-y-3">
-        <h3 class="text-sm font-black font-mono text-white">Featured Active Leagues</h3>
-        {% for lg in leagues %}
-        <div class="p-5 rounded-2xl bg-slate-900/60 border border-purple-500/20 font-mono flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div class="space-y-1">
-            <div class="font-bold text-sm text-white">{{ lg.name }}</div>
-            <div class="text-xs text-slate-400">{{ lg.venue_name }} &bull; {{ lg.schedule_day }}</div>
-            <div class="text-[11px] text-purple-300">{{ lg.description }}</div>
+      <div class="space-y-4">
+        <h3 class="text-sm font-black font-mono text-white flex items-center gap-2">
+          <span>🏆</span> Featured Active Pub Leagues
+        </h3>
+        <div class="space-y-3">
+          {% for lg in leagues %}
+          <div class="p-5 rounded-2xl bg-slate-900/60 border border-purple-500/20 font-mono flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-purple-400/50 transition">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">🍺</span>
+                <span class="font-bold text-sm text-white">{{ lg.name }}</span>
+                <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[10px] font-bold">PIN: {{ lg.pin_code }}</span>
+              </div>
+              <div class="text-xs text-slate-400">{{ lg.venue_name }} &bull; {{ lg.schedule_day }}</div>
+              <div class="text-[11px] text-purple-300">{{ lg.description }}</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <a href="{{ url_for('arena.league_tv', slug=lg.slug) }}" target="_blank" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-xs uppercase border border-cyan-500/30 transition flex items-center gap-1.5" title="Open Big Screen TV Projector View">
+                <span>🖥️ TV Mode</span>
+              </a>
+              <a href="{{ url_for('arena.league_lounge', slug=lg.slug) }}" class="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs uppercase shrink-0 transition">
+                Enter Venue &rarr;
+              </a>
+            </div>
           </div>
-          <button type="button" onclick="alert('Joined {{ lg.name }}! Room PIN: {{ lg.pin_code }}')" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase shrink-0">
-            Enter PIN: {{ lg.pin_code }}
-          </button>
+          {% else %}
+          <div class="p-8 text-center text-slate-500 font-mono text-xs italic">
+            No active pub leagues found.
+          </div>
+          {% endfor %}
         </div>
-        {% endfor %}
       </div>
     </div>
 
   </div>
 </div>
-
-<script>
-function joinLeaguePin(e) {
-  e.preventDefault();
-  var pin = document.getElementById('roomPin').value.trim();
-  if (!pin) return;
-  alert("Room PIN " + pin + " validated! Entering venue tournament mode...");
-}
-</script>
 {% endblock %}

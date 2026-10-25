@@ -677,8 +677,31 @@ def layout():
 
     home_modules = PageModule.query.filter(
         PageModule.is_home == True,
-        (PageModule.theme == active_theme) | (PageModule.theme == None)
+        (PageModule.theme == active_theme) | (PageModule.theme == None) | (PageModule.theme == 'hisoft')
     ).order_by(PageModule.sort_order.asc()).all()
+
+    for m in home_modules:
+        if m.theme != active_theme:
+            m.theme = active_theme
+    if home_modules:
+        db.session.commit()
+    else:
+        home_order = ['hero', 'daily_quiz', 'features_strip', 'about', 'services', 'case_studies', 'posts', 'testimonials', 'trust_strip', 'contact_form']
+        for idx, m_type in enumerate(home_order, 1):
+            defn = MODULE_DEFINITIONS.get(m_type, {})
+            m = PageModule(
+                is_home=True,
+                theme=active_theme,
+                module_type=m_type,
+                title=defn.get('name', m_type.replace('_', ' ').title()),
+                placement='above',
+                sort_order=idx,
+                is_enabled=True
+            )
+            m.set_config(get_default_config(m_type))
+            db.session.add(m)
+        db.session.commit()
+        home_modules = PageModule.query.filter_by(is_home=True, theme=active_theme).order_by(PageModule.sort_order.asc()).all()
 
     current_preset = THEME_PRESETS.get(active_theme, {})
 

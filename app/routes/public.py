@@ -74,14 +74,14 @@ def home():
         return render_theme('posts.html', pagination=pagination)
 
     # Standard clean layout homepage with modular system for active theme
-    active_theme = SiteSetting.get('active_theme', 'hisoft')
+    active_theme = SiteSetting.get('active_theme', 'quizhub')
     home_modules = PageModule.query.filter_by(is_home=True, is_enabled=True, theme=active_theme).order_by(PageModule.sort_order.asc()).all()
     if not home_modules:
-        # Fallback to un-themed or general home modules
+        # Fallback to un-themed, general, or legacy home modules
         home_modules = PageModule.query.filter(
             PageModule.is_home == True,
             PageModule.is_enabled == True,
-            (PageModule.theme == active_theme) | (PageModule.theme == None)
+            (PageModule.theme == active_theme) | (PageModule.theme == None) | (PageModule.theme == 'hisoft')
         ).order_by(PageModule.sort_order.asc()).all()
 
     has_modular_home = bool(home_modules or PageModule.query.filter_by(is_home=True).first() is not None or SiteSetting.get('initial_modules_seeded'))

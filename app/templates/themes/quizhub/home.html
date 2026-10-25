@@ -5,9 +5,13 @@
 {% block content %}
 <div class="space-y-0 text-slate-100">
   {% if home_modules %}
+    {% set has_explicit_daily = false %}
+    {% for m in home_modules %}
+      {% if m.module_type == 'daily_quiz' %}{% set has_explicit_daily = true %}{% endif %}
+    {% endfor %}
     {% for mod in home_modules %}
       {% include "themes/quizhub/modules/render_module.html" %}
-      {% if mod.module_type == 'hero' %}
+      {% if mod.module_type == 'hero' and not has_explicit_daily %}
         {% include "themes/quizhub/modules/daily_quiz.html" %}
       {% endif %}
     {% endfor %}
