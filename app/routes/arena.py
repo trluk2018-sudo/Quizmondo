@@ -3,6 +3,7 @@ import random
 import secrets
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, flash, current_app
+from sqlalchemy.sql.expression import func
 from ..models import db, User, PlayerProfile, ArenaMatch, ArenaRound, QuizQuestion, QuizPack, PubLeague, SiteSetting
 
 arena_bp = Blueprint('arena', __name__, url_prefix='/arena')
@@ -19,6 +20,23 @@ AVATAR_PRESETS = [
     {'key': 'pixel', 'name': 'Pixel', 'badge': '8-Bit Bot', 'bg': 'from-emerald-500 to-teal-700', 'border': 'border-emerald-400'},
     {'key': 'sage', 'name': 'Sage', 'badge': 'Owl Scholar', 'bg': 'from-amber-500 to-orange-600', 'border': 'border-amber-400'},
 ]
+
+
+def get_random_questions(category_slug=None, count=3, exclude_ids=None):
+    """Fetch randomized questions for duels, pub leagues, and rounds."""
+    query = QuizQuestion.query
+    if category_slug:
+        query = query.filter_by(category_slug=category_slug)
+    if exclude_ids:
+        query = query.filter(~QuizQuestion.id.in_(exclude_ids))
+
+    questions = query.order_by(func.random()).limit(count).all()
+    if len(questions) < count:
+        needed = count - len(questions)
+        exclude_existing = [q.id for q in questions] + (exclude_ids or [])
+        fallback = QuizQuestion.query.filter(~QuizQuestion.id.in_(exclude_existing)).order_by(func.random()).limit(needed).all()
+        questions = list(questions) + list(fallback)
+    return questions
 
 
 def get_current_player():
@@ -115,10 +133,10 @@ def create_match():
         chosen = random.choice(available_cats)
         cat_slug, cat_name = chosen[0], chosen[1]
 
-    # Pick 3 questions for Round 1
-    questions = QuizQuestion.query.filter_by(category_slug=cat_slug).limit(3).all()
+    # Pick 3 randomized questions for Round 1
+    questions = get_random_questions(category_slug=cat_slug, count=3)
     if not questions:
-        questions = QuizQuestion.query.limit(3).all()
+        questions = QuizQuestion.query.order_by(func.random()).limit(3).all()
     q_ids = [q.id for q in questions]
 
     match = ArenaMatch(
@@ -170,8 +188,8 @@ def match_lobby(match_code):
     player = get_current_player()
     match = ArenaMatch.query.filter_by(match_code=match_code).first_or_404()
 
-    # If opening player is not Player 1 and Player 2 slot is open (not bot), claim Player 2!
-    if match.player1_session != player.session_key and not match.player2_session:
+    # If opening player is not Player 1 and Player 2 slot is open (not bot), AND match is still on Round 1:
+    if match.player1_session != player.session_key and (not match.player2_session or match.player2_session in ('pending_invite', '')) and match.current_round == 1:
         match.player2_session = player.session_key
         match.player2_name = player.display_name
         match.player2_avatar = player.avatar_key
@@ -185,11 +203,15 @@ def match_lobby(match_code):
     # Check if current round requires player action
     active_round = match.rounds.filter_by(round_number=match.current_round).first()
     my_turn = False
-    if match.status in ('waiting', 'in_progress'):
+    if is_participant and match.status in ('waiting', 'in_progress'):
         if is_player1 and match.current_turn == 1:
             my_turn = True
         elif is_player2 and match.current_turn == 2:
             my_turn = True
+
+    # Identify opponent for specific nudge vs new friend challenge
+    opponent_name = match.player2_name if is_player1 else match.player1_name
+    opponent_assigned = bool(match.player2_session and match.player2_session not in ('pending_invite', ''))
 
     # WhatsApp share & nudge messages point DIRECTLY into the playable round
     base_url = current_app.config.get('APP_PUBLIC_URL', request.host_url.rstrip('/'))
@@ -199,9 +221,10 @@ def match_lobby(match_code):
         f"🎮 Duel Challenge on Quizmondo! {player.display_name} challenged you to a trivia duel! "
         f"Tap here to play your questions now: {play_url}"
     )
+    target_nudgee = opponent_name if (opponent_assigned and opponent_name) else 'Challenger'
     whatsapp_nudge_text = (
-        f"🔔 Hey! It's your turn in our Quizmondo trivia duel vs {player.display_name}! "
-        f"Tap here to play your questions now: {play_url}"
+        f"🔔 Hey {target_nudgee}! It's your turn in our Quizmondo trivia duel vs {player.display_name}! "
+        f"Tap here to play Round {match.current_round} now: {play_url}"
     )
 
     all_rounds = match.rounds.all()
@@ -213,12 +236,15 @@ def match_lobby(match_code):
         is_player1=is_player1,
         is_player2=is_player2,
         is_participant=is_participant,
+        opponent_name=opponent_name,
+        opponent_assigned=opponent_assigned,
         active_round=active_round,
         my_turn=my_turn,
         all_rounds=all_rounds,
         invite_url=invite_url,
         whatsapp_text=whatsapp_text,
-        whatsapp_nudge_text=whatsapp_nudge_text
+        whatsapp_nudge_text=whatsapp_nudge_text,
+        has_account=bool(session.get('user_id'))
     )
 
 
@@ -237,8 +263,8 @@ def play_round(match_code):
     is_player1 = (match.player1_session == player.session_key)
     is_player2 = (match.player2_session == player.session_key)
     if not (is_player1 or is_player2):
-        # If Player 2 is unassigned, auto-claim Player 2 immediately for this challenger!
-        if not match.player2_session or match.player2_session in ('pending_invite', ''):
+        # Only allow auto-claim if match is in Round 1 and Player 2 slot is unassigned!
+        if match.current_round == 1 and (not match.player2_session or match.player2_session in ('pending_invite', '')):
             match.player2_session = player.session_key
             match.player2_name = player.display_name
             match.player2_avatar = player.avatar_key
@@ -246,8 +272,13 @@ def play_round(match_code):
             db.session.commit()
             is_player2 = True
         else:
-            flash("You are viewing as a spectator. Challenge a friend to start your own match!", "info")
+            flash(f"This duel is already locked between {match.player1_name} and {match.player2_name or 'another challenger'} (Round {match.current_round}). You cannot join mid-game.", "info")
             return redirect(url_for('arena.match_lobby', match_code=match_code))
+
+    # Gating requirement: Beyond Round 1, players MUST be logged in
+    if match.current_round > 1 and not session.get('user_id'):
+        flash(f"Round 1 completed! Create a free account or log in to unlock Round {match.current_round} and save your XP, streaks, and duel progress.", "info")
+        return redirect(url_for('arena.player_register', next=url_for('arena.play_round', match_code=match_code)))
 
     active_round = match.rounds.filter_by(round_number=match.current_round).first()
     if not active_round:
@@ -293,6 +324,14 @@ def submit_round(match_code):
     is_player2 = (match.player2_session == player.session_key)
     if not (is_player1 or is_player2):
         return jsonify({'error': 'Unauthorized participant'}), 403
+
+    # Gated beyond Round 1: Account required
+    if match.current_round > 1 and not session.get('user_id'):
+        return jsonify({
+            'error': 'login_required',
+            'message': 'Create a free account or log in to submit answers beyond Round 1.',
+            'redirect': url_for('arena.player_register', next=url_for('arena.play_round', match_code=match_code))
+        }), 401
 
     payload = request.get_json() or {}
     answers = payload.get('answers', [])  # list of { question_id, choice, time_left }
@@ -394,12 +433,10 @@ def submit_round(match_code):
             next_turn = 2 if match.current_turn == 1 else 1
             match.current_turn = next_turn
 
-            # Pick next round category and questions
+            # Pick next round category and randomized questions
             all_cats = db.session.query(QuizQuestion.category_slug, QuizQuestion.category_name).distinct().all()
             chosen_cat = random.choice(all_cats) if all_cats else ('general', 'General')
-            next_q = QuizQuestion.query.filter_by(category_slug=chosen_cat[0]).limit(3).all()
-            if not next_q:
-                next_q = QuizQuestion.query.limit(3).all()
+            next_q = get_random_questions(category_slug=chosen_cat[0], count=3)
 
             next_round = ArenaRound(
                 match_id=match.id,
@@ -506,11 +543,10 @@ def switch_to_bot(match_code):
             match.current_round += 1
             match.current_turn = 1 if is_player1 else 2  # Give turn back to human player!
 
+            # Pick next round category and randomized questions
             all_cats = db.session.query(QuizQuestion.category_slug, QuizQuestion.category_name).distinct().all()
             chosen_cat = random.choice(all_cats) if all_cats else ('general', 'General')
-            next_q = QuizQuestion.query.filter_by(category_slug=chosen_cat[0]).limit(3).all()
-            if not next_q:
-                next_q = QuizQuestion.query.limit(3).all()
+            next_q = get_random_questions(category_slug=chosen_cat[0], count=3)
 
             next_round = ArenaRound(
                 match_id=match.id,
@@ -624,11 +660,29 @@ def player_login():
             session['username'] = user.username
             session['user_role'] = user.role
 
+            guest_key = session.get('qm_player_key')
             profile = PlayerProfile.query.filter_by(user_id=user.id).first()
             if profile:
                 session['qm_player_key'] = profile.session_key
                 profile.last_active_at = datetime.utcnow()
+                if guest_key and guest_key != profile.session_key:
+                    ArenaMatch.query.filter_by(player1_session=guest_key).update({
+                        'player1_session': profile.session_key,
+                        'player1_name': profile.display_name,
+                        'player1_avatar': profile.avatar_key
+                    })
+                    ArenaMatch.query.filter_by(player2_session=guest_key).update({
+                        'player2_session': profile.session_key,
+                        'player2_name': profile.display_name,
+                        'player2_avatar': profile.avatar_key
+                    })
                 db.session.commit()
+            elif guest_key:
+                guest_prof = PlayerProfile.query.filter_by(session_key=guest_key).first()
+                if guest_prof:
+                    guest_prof.user_id = user.id
+                    guest_prof.display_name = user.username
+                    db.session.commit()
 
             flash(f"Welcome back, {user.username}!", "success")
             next_url = request.args.get('next')
@@ -810,12 +864,9 @@ def league_room(slug):
     team_name = request.args.get('team') or session.get('pub_team_name') or f"Table {table_num} • {player.display_name}"
     session['pub_team_name'] = team_name
 
-    # Fetch 5 unique questions matching this round's category
+    # Fetch 5 randomized questions matching this round's category
     cat_slug = round_info['cat_slug']
-    questions = QuizQuestion.query.filter_by(category_slug=cat_slug).limit(5).all()
-    if len(questions) < 5:
-        extra_q = QuizQuestion.query.filter(QuizQuestion.category_slug != cat_slug).limit(5 - len(questions)).all()
-        questions = list(questions) + list(extra_q)
+    questions = get_random_questions(category_slug=cat_slug, count=5)
 
     # For client side: in virtual mode or if answers revealed, include correct answer; in live venue quiz, mask correct answers!
     include_ans = is_virtual or state.get('answers_revealed', False)
@@ -1042,6 +1093,56 @@ def create_question():
         categories=categories,
         packs=packs
     )
+
+
+@arena_bp.route('/challenge-fresh/<target_session>', methods=['GET', 'POST'])
+def challenge_fresh(target_session):
+    """Start a brand new Round 1 duel against a specific opponent."""
+    player = get_current_player()
+    target_player = PlayerProfile.query.filter_by(session_key=target_session).first()
+
+    match_code = f"qm_{secrets.token_hex(4)}"
+    questions = get_random_questions(count=3)
+    q_ids = [q.id for q in questions]
+    cat_slug = questions[0].category_slug if questions else 'general'
+    cat_name = questions[0].category_name if questions else 'General Knowledge'
+
+    match = ArenaMatch(
+        match_code=match_code,
+        player1_session=player.session_key,
+        player1_name=player.display_name,
+        player1_avatar=player.avatar_key,
+        player2_session=target_player.session_key if target_player else None,
+        player2_name=target_player.display_name if target_player else 'Challenger',
+        player2_avatar=target_player.avatar_key if target_player else 'nova',
+        status='waiting',
+        current_round=1,
+        current_turn=1,
+        winner=0,
+        p1_total_score=0,
+        p2_total_score=0
+    )
+    db.session.add(match)
+    db.session.flush()
+
+    round_1 = ArenaRound(
+        match_id=match.id,
+        round_number=1,
+        category_slug=cat_slug,
+        category_name=cat_name,
+        chosen_by=1,
+        question_ids_json=json.dumps(q_ids),
+        p1_score=0,
+        p1_answers_json=json.dumps([]),
+        p2_score=0,
+        p2_answers_json=json.dumps([]),
+        status='pending'
+    )
+    db.session.add(round_1)
+    db.session.commit()
+
+    flash(f"New Round 1 duel created! Send the link to challenge your friend.", "success")
+    return redirect(url_for('arena.match_lobby', match_code=match_code))
 
 
 @arena_bp.route('/packs')

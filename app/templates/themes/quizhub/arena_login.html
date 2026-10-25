@@ -60,7 +60,7 @@
       <div class="pt-4 border-t border-purple-500/20 text-center space-y-2 font-mono text-xs">
         <p class="text-slate-400">
           New to Quizmondo? 
-          <a href="{{ url_for('arena.player_register') }}" class="text-cyan-400 hover:underline font-bold">Create a free account</a>
+          <a href="{{ url_for('arena.player_register', next=request.args.get('next')) }}" class="text-cyan-400 hover:underline font-bold">Create a free account</a>
         </p>
         <p>
           <a href="{{ url_for('arena.dashboard') }}" class="text-slate-500 hover:text-slate-300 text-[11px]">

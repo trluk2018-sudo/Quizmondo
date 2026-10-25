@@ -284,6 +284,10 @@ function finishRound() {
   })
   .then(function(res) { return res.json(); })
   .then(function(data) {
+    if (data.redirect) {
+      window.location.href = data.redirect;
+      return;
+    }
     if (window.quizAudio) window.quizAudio.playVictory();
     // Redirect back to lobby to view updated scoreboard and turn
     setTimeout(function() {

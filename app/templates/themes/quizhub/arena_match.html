@@ -91,25 +91,71 @@
       <!-- Action Area: Play Turn OR Nudge Opponent -->
       <div class="border-t border-purple-500/20 pt-6 space-y-4">
         {% if match.status in ('waiting', 'in_progress') %}
-          {% if my_turn %}
-          <!-- Active Turn Button: Direct 1-Click Game Launch -->
-          <div class="text-center space-y-3">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-xs font-bold border border-emerald-500/30">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              YOUR TURN TO PLAY!
+          {% if not is_participant %}
+          <!-- Spectator View: Duel already locked between two players -->
+          <div class="p-6 rounded-2xl bg-amber-950/40 border border-amber-500/40 text-center space-y-3">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-mono text-xs font-bold border border-amber-500/30">
+              <span>🔒</span> DUEL IN PROGRESS • ROUND {{ match.current_round }}
             </div>
-            <h3 class="text-xl font-black font-mono text-white">
-              Round {{ match.current_round }}: {{ active_round.category_name if active_round else 'Trivia Challenge' }}
+            <h3 class="text-lg font-black font-mono text-white">
+              Duel Locked Between {{ match.player1_name }} &amp; {{ match.player2_name }}
             </h3>
-            <p class="text-xs font-mono text-slate-300">
-              3 fast buzzer questions. Faster answers award speed bonus points!
+            <p class="text-xs font-mono text-slate-300 max-w-md mx-auto leading-relaxed">
+              This match is already underway! You cannot join or nudge mid-duel. Would you like to challenge <strong>{{ match.player1_name }}</strong> to a brand new Round 1 duel?
             </p>
-            <div class="pt-2">
-              <a href="{{ url_for('arena.play_round', match_code=match.match_code) }}" class="inline-flex w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400 hover:from-emerald-400 hover:to-cyan-300 text-slate-950 font-mono font-black text-base uppercase tracking-wider shadow-2xl transition transform hover:scale-105 items-center justify-center gap-2">
-                <span>🎮 Start Round {{ match.current_round }} Questions Now &rarr;</span>
+            <div class="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <a href="{{ url_for('arena.challenge_fresh', target_session=match.player1_session) }}" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-mono font-black text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition active:scale-95">
+                <span>⚔️ Challenge {{ match.player1_name }} (Starts Round 1) &rarr;</span>
+              </a>
+              <a href="{{ url_for('arena.dashboard') }}" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-slate-900 border border-purple-500/30 hover:border-purple-400 text-purple-300 font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95">
+                <span>🏠 Arena Duels Hub</span>
               </a>
             </div>
           </div>
+
+          {% elif my_turn %}
+            {% if match.current_round > 1 and not has_account %}
+            <!-- Gated Beyond Round 1: Registration Required -->
+            <div class="p-6 rounded-2xl bg-gradient-to-b from-purple-950/70 to-slate-950/90 border border-purple-500/50 text-center space-y-3">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-mono text-xs font-bold border border-amber-500/30">
+                <span>🔒</span> FREE ACCOUNT REQUIRED FOR ROUND {{ match.current_round }}
+              </div>
+              <h3 class="text-xl font-black font-mono text-white">
+                Great Job Finishing Round 1!
+              </h3>
+              <p class="text-xs font-mono text-slate-300 max-w-md mx-auto leading-relaxed">
+                To play <strong>Round {{ match.current_round }}</strong> and keep competing, create a free player account or sign in. This saves your duel scores, preserves your streak, awards your XP coins, and secures your rank!
+              </p>
+              <div class="pt-3 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <a href="{{ url_for('arena.player_register', next=url_for('arena.play_round', match_code=match.match_code)) }}" class="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-400 hover:to-indigo-500 text-white font-mono font-black text-xs uppercase tracking-wider shadow-xl flex items-center justify-center gap-2 transition active:scale-95">
+                  <span>🚀 Create Free Account &amp; Play Round {{ match.current_round }} &rarr;</span>
+                </a>
+                <a href="{{ url_for('arena.player_login', next=url_for('arena.play_round', match_code=match.match_code)) }}" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-slate-900 border border-cyan-400/50 hover:border-cyan-300 text-cyan-300 font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95">
+                  <span>🔑 Log In</span>
+                </a>
+              </div>
+            </div>
+            {% else %}
+            <!-- Active Turn Button: Direct 1-Click Game Launch -->
+            <div class="text-center space-y-3">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-xs font-bold border border-emerald-500/30">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                YOUR TURN TO PLAY!
+              </div>
+              <h3 class="text-xl font-black font-mono text-white">
+                Round {{ match.current_round }}: {{ active_round.category_name if active_round else 'Trivia Challenge' }}
+              </h3>
+              <p class="text-xs font-mono text-slate-300">
+                3 fast buzzer questions. Faster answers award speed bonus points!
+              </p>
+              <div class="pt-2">
+                <a href="{{ url_for('arena.play_round', match_code=match.match_code) }}" class="inline-flex w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400 hover:from-emerald-400 hover:to-cyan-300 text-slate-950 font-mono font-black text-base uppercase tracking-wider shadow-2xl transition transform hover:scale-105 items-center justify-center gap-2">
+                  <span>▶ Start Round {{ match.current_round }} Questions Now &rarr;</span>
+                </a>
+              </div>
+            </div>
+            {% endif %}
+
           {% else %}
           <!-- Opponent's turn: Helper Card & WhatsApp Nudge -->
           <div class="p-5 rounded-2xl bg-slate-900/90 border border-purple-500/30 text-center space-y-2">
@@ -117,23 +163,29 @@
               ⏳ Awaiting Opponent's Turn
             </div>
             <p class="text-xs font-mono text-slate-300 leading-relaxed max-w-md mx-auto">
-              You finished your questions for <strong>Round {{ match.current_round }}</strong>! We're waiting for {{ match.player2_name or 'your opponent' }} to answer.
+              You finished your questions for <strong>Round {{ match.current_round }}</strong>! We're waiting for {{ opponent_name or 'your opponent' }} to answer.
             </p>
           </div>
 
           <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
             <button type="button" onclick="nudgeOnWhatsApp()" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition active:scale-95">
-              <span>💬 Nudge on WhatsApp</span>
+              <span>💬 Nudge {{ opponent_name or 'Challenger' }} on WhatsApp</span>
             </button>
             <button type="button" onclick="shareMatchLink()" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-slate-900 border border-purple-500/30 hover:border-cyan-400 text-cyan-300 font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95">
-              <span>🔗 Copy / Share Direct Game Link</span>
+              <span>📋 Copy Direct Round {{ match.current_round }} Link</span>
             </button>
           </div>
 
-          <!-- Instant Bot Play Option so player is never stuck waiting -->
-          <div class="pt-2 flex justify-center">
+          <!-- Secondary Options: Challenge a Different Friend or Play with Bot Nova -->
+          <div class="pt-3 border-t border-purple-500/10 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <form action="{{ url_for('arena.create_match') }}" method="POST" class="w-full sm:w-auto">
+              <input type="hidden" name="opponent_mode" value="friend">
+              <button type="submit" class="w-full px-5 py-3 rounded-2xl bg-slate-900/90 border border-slate-700 hover:border-cyan-400 text-slate-300 hover:text-white font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95">
+                <span>⚔️ Challenge a Different Friend (Starts Round 1)</span>
+              </button>
+            </form>
             <form action="{{ url_for('arena.switch_to_bot', match_code=match.match_code) }}" method="POST" class="w-full sm:w-auto">
-              <button type="submit" class="w-full px-5 py-3 rounded-2xl bg-purple-900/30 hover:bg-purple-800/50 border border-purple-500/30 text-purple-300 hover:text-white font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition">
+              <button type="submit" class="w-full px-5 py-3 rounded-2xl bg-purple-900/30 hover:bg-purple-800/50 border border-purple-500/30 text-purple-300 hover:text-white font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95">
                 <span>🤖 Don't want to wait? Play with Bot Nova &rarr;</span>
               </button>
             </form>
