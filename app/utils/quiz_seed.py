@@ -59,6 +59,22 @@ SEED_PACKS = [
                 'explanation': 'Hubble launched on April 24, 1990, revolutionizing observational astrophysics.',
                 'difficulty': 'medium',
                 'type': 'classic'
+            },
+            {
+                'prompt': 'At what Lagrange point in space does the James Webb Space Telescope orbit the Sun?',
+                'options': {'A': 'L1', 'B': 'L2', 'C': 'L4', 'D': 'L5'},
+                'correct': 'B',
+                'explanation': 'JWST orbits the second Lagrange point (L2), approximately 1.5 million kilometers beyond Earth.',
+                'difficulty': 'medium',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'Which scientific pioneers were credited with elucidating the double-helix structure of DNA in 1953?',
+                'options': {'A': 'Watson & Crick', 'B': 'Bohr & Fermi', 'C': 'Pasteur & Koch', 'D': 'Curie & Becquerel'},
+                'correct': 'A',
+                'explanation': 'James Watson and Francis Crick, utilizing Rosalind Franklin\'s X-ray diffraction data, solved the structure.',
+                'difficulty': 'easy',
+                'type': 'classic'
             }
         ]
     },
@@ -117,6 +133,22 @@ SEED_PACKS = [
                 'difficulty': 'medium',
                 'type': 'youtube_clip',
                 'media_url': 'https://www.youtube.com/watch?v=NmCCQxVBfyM'
+            },
+            {
+                'prompt': 'In The Legend of Zelda: Ocarina of Time (1998), what musical instrument is used to warp across Hyrule?',
+                'options': {'A': 'Harp', 'B': 'Ocarina', 'C': 'Flute', 'D': 'Lute'},
+                'correct': 'B',
+                'explanation': 'Link plays the Ocarina of Time to manipulate time, open the Door of Time, and warp between temples.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'What iconic melee weapon is wielded by physicist Gordon Freeman in the Half-Life series?',
+                'options': {'A': 'Wrench', 'B': 'Crowbar', 'C': 'Pipe', 'D': 'Machete'},
+                'correct': 'B',
+                'explanation': 'The red crowbar became the hallmark symbol of Valve\'s groundbreaking 1998 sci-fi shooter.',
+                'difficulty': 'easy',
+                'type': 'classic'
             }
         ]
     },
@@ -124,7 +156,7 @@ SEED_PACKS = [
         'title': 'World Geography & Lost Civilizations',
         'slug': 'world-history',
         'description': 'Ancient world wonders, global capital cities, cartography, and archaeological puzzles.',
-        'icon': '🌍',
+        'icon': '🏛️',
         'category_slug': 'world-history',
         'questions': [
             {
@@ -164,6 +196,30 @@ SEED_PACKS = [
                 'options': {'A': '1066', 'B': '1215', 'C': '1415', 'D': '1688'},
                 'correct': 'B',
                 'explanation': 'The Great Charter established for the first time that everyone, even the king, was subject to the law.',
+                'difficulty': 'medium',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'Which American explorer brought the 15th-century Inca citadel of Machu Picchu to international attention in 1911?',
+                'options': {'A': 'Howard Carter', 'B': 'Hiram Bingham', 'C': 'Percy Fawcett', 'D': 'Roald Amundsen'},
+                'correct': 'B',
+                'explanation': 'Hiram Bingham III climbed to the ridge above the Urubamba River with local guide Melchor Arteaga in 1911.',
+                'difficulty': 'medium',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'What archaeological discovery in 1799 provided the vital key to deciphering ancient Egyptian hieroglyphics?',
+                'options': {'A': 'The Rosetta Stone', 'B': 'The Dead Sea Scrolls', 'C': 'The Elgin Marbles', 'D': 'The Code of Hammurabi'},
+                'correct': 'A',
+                'explanation': 'Featuring decrees written in Hieroglyphic, Demotic, and Ancient Greek, it allowed Jean-François Champollion to unlock hieroglyphs.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'Which Roman Emperor officially moved the capital of the Roman Empire to Byzantium (later Constantinople) in 330 AD?',
+                'options': {'A': 'Julius Caesar', 'B': 'Augustus', 'C': 'Constantine the Great', 'D': 'Nero'},
+                'correct': 'C',
+                'explanation': 'Constantine established the New Rome on the Bosphorus, launching over a millennium of Byzantine civilization.',
                 'difficulty': 'medium',
                 'type': 'classic'
             }
@@ -215,6 +271,30 @@ SEED_PACKS = [
                 'explanation': 'Sir Ian McKellen received an Academy Award nomination for portraying Gandalf in The Fellowship of the Ring.',
                 'difficulty': 'easy',
                 'type': 'classic'
+            },
+            {
+                'prompt': 'In the acclaimed TV drama "Breaking Bad", what alias does Walter White adopt in the criminal underworld?',
+                'options': {'A': 'Oppenheimer', 'B': 'Heisenberg', 'C': 'Schrödinger', 'D': 'Fermi'},
+                'correct': 'B',
+                'explanation': 'Walter White chooses the name Heisenberg in homage to theoretical physicist Werner Heisenberg.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'Which Studio Ghibli masterpiece directed by Hayao Miyazaki won the Academy Award for Best Animated Feature in 2003?',
+                'options': {'A': 'Princess Mononoke', 'B': 'My Neighbor Totoro', 'C': 'Spirited Away', 'D': 'Howl\'s Moving Castle'},
+                'correct': 'C',
+                'explanation': 'Spirited Away made history as the first non-English hand-drawn animated film to win the Oscar.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'In Christopher Nolan\'s 2010 film "Inception", what small spinning object serves as Cobb\'s personal totem?',
+                'options': {'A': 'Loaded Die', 'B': 'Spinning Top', 'C': 'Chess Pawn', 'D': 'Brass Token'},
+                'correct': 'B',
+                'explanation': 'Dom Cobb tests reality by watching whether the spinning top will eventually tumble or spin perpetually.',
+                'difficulty': 'easy',
+                'type': 'classic'
             }
         ]
     },
@@ -264,6 +344,30 @@ SEED_PACKS = [
                 'explanation': 'Written by Freddie Mercury, Bohemian Rhapsody remained at number one on the UK Singles Chart for nine weeks.',
                 'difficulty': 'easy',
                 'type': 'classic'
+            },
+            {
+                'prompt': 'Which Parisian electronic duo produced the seminal dance albums "Homework" and "Discovery"?',
+                'options': {'A': 'Justice', 'B': 'Air', 'C': 'Daft Punk', 'D': 'Cassius'},
+                'correct': 'C',
+                'explanation': 'Thomas Bangalter and Guy-Manuel de Homem-Christo performed as robot alter-egos in Daft Punk.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'What alter ego did David Bowie introduce on his 1972 concept album featuring the Spiders from Mars?',
+                'options': {'A': 'The Thin White Duke', 'B': 'Ziggy Stardust', 'C': 'Major Tom', 'D': 'Aladdin Sane'},
+                'correct': 'B',
+                'explanation': 'Ziggy Stardust presented an androgynous alien rock superstar delivering hope to Earth.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'Which British rock band famously performed their final public concert on the rooftop of Apple Corps in London in 1969?',
+                'options': {'A': 'The Rolling Stones', 'B': 'The Beatles', 'C': 'The Kinks', 'D': 'Cream'},
+                'correct': 'B',
+                'explanation': 'The Beatles performed an unannounced 42-minute set on the rooftop at 3 Savile Row on January 30, 1969.',
+                'difficulty': 'easy',
+                'type': 'classic'
             }
         ]
     },
@@ -311,6 +415,322 @@ SEED_PACKS = [
                 'options': {'A': 'Clay', 'B': 'Hard Court', 'C': 'Grass', 'D': 'Carpet'},
                 'correct': 'C',
                 'explanation': 'Wimbledon is the only Grand Slam tennis tournament still played on traditional grass courts.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'How many Grand Slam men\'s singles titles did Swiss tennis maestro Roger Federer win in his career?',
+                'options': {'A': '18', 'B': '20', 'C': '22', 'D': '24'},
+                'correct': 'B',
+                'explanation': 'Federer was the first man in tennis history to reach 20 Grand Slam singles crowns.',
+                'difficulty': 'medium',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'What color jersey is traditionally awarded to the overall general classification leader in the Tour de France?',
+                'options': {'A': 'Green', 'B': 'Yellow (Maillot Jaune)', 'C': 'Polka Dot', 'D': 'White'},
+                'correct': 'B',
+                'explanation': 'The Yellow Jersey (Maillot Jaune) was created in 1919, matching the yellow paper of L\'Auto newspaper.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'In what year did England win their sole FIFA World Cup trophy, defeating West Germany at Wembley?',
+                'options': {'A': '1958', 'B': '1966', 'C': '1970', 'D': '1974'},
+                'correct': 'B',
+                'explanation': 'Geoff Hurst scored a hat-trick as England triumphed 4-2 after extra time.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            }
+        ]
+    },
+    {
+        'title': 'World Geography & Continental Wonders',
+        'slug': 'world-geography',
+        'description': 'Capital cities, island archipelagos, extreme landforms, and international borders.',
+        'icon': '🗺️',
+        'category_slug': 'world-geography',
+        'questions': [
+            {
+                'prompt': 'Which European capital city is built across 14 islands connected by over 50 bridges?',
+                'options': {'A': 'Copenhagen', 'B': 'Stockholm', 'C': 'Amsterdam', 'D': 'Helsinki'},
+                'correct': 'B',
+                'explanation': 'Stockholm sits on the Stockholm archipelago where Lake Mälaren meets the Baltic Sea.',
+                'difficulty': 'medium',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'What is the highest uninterrupted waterfall in the world, plunging 979 meters in Venezuela?',
+                'options': {'A': 'Iguazu Falls', 'B': 'Victoria Falls', 'C': 'Angel Falls', 'D': 'Niagara Falls'},
+                'correct': 'C',
+                'explanation': 'Angel Falls (Kerepakupai Merú) drops from the Auyán-tepui mountain in Canaima National Park.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'Which South American country has two official capitals: Sucre (constitutional) and La Paz (seat of government)?',
+                'options': {'A': 'Paraguay', 'B': 'Ecuador', 'C': 'Bolivia', 'D': 'Uruguay'},
+                'correct': 'C',
+                'explanation': 'Sucre is the historical constitutional capital, while La Paz hosts the executive and legislative branches.',
+                'difficulty': 'medium',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'Which country in the world possesses the longest total coastline, measuring over 202,000 km?',
+                'options': {'A': 'Russia', 'B': 'Australia', 'C': 'Canada', 'D': 'Norway'},
+                'correct': 'C',
+                'explanation': 'Canada\'s sprawling arctic and island geography gives it by far the longest coastline on Earth.',
+                'difficulty': 'medium',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'What is the driest non-polar desert on Earth, located in South America west of the Andes?',
+                'options': {'A': 'Kalahari Desert', 'B': 'Atacama Desert', 'C': 'Gobi Desert', 'D': 'Mojave Desert'},
+                'correct': 'B',
+                'explanation': 'Parts of Chile\'s Atacama Desert have had zero recorded rainfall for decades.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'On which continent and in which country would you find Mount Kilimanjaro?',
+                'options': {'A': 'Kenya', 'B': 'Tanzania', 'C': 'Uganda', 'D': 'Ethiopia'},
+                'correct': 'B',
+                'explanation': 'Mount Kilimanjaro (5,895m) is a dormant volcano in northeastern Tanzania.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'Which historic transcontinental metropolis spans both the European and Asian continents across the Bosphorus Strait?',
+                'options': {'A': 'Cairo', 'B': 'Athens', 'C': 'Istanbul', 'D': 'Tbilisi'},
+                'correct': 'C',
+                'explanation': 'Istanbul is the only major world city situated on two continents simultaneously.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'What Siberian lake is both the world\'s deepest and oldest freshwater lake by volume?',
+                'options': {'A': 'Lake Superior', 'B': 'Lake Victoria', 'C': 'Lake Baikal', 'D': 'Caspian Sea'},
+                'correct': 'C',
+                'explanation': 'Lake Baikal reaches a maximum depth of 1,642 meters, holding 20% of the world\'s unfrozen surface freshwater.',
+                'difficulty': 'medium',
+                'type': 'classic'
+            }
+        ]
+    },
+    {
+        'title': 'Culinary Arts & Epicurean Lore',
+        'slug': 'culinary-arts',
+        'description': 'Gastronomic traditions, classic cocktails, Michelin techniques, and global spices.',
+        'icon': '🍕',
+        'category_slug': 'culinary-arts',
+        'questions': [
+            {
+                'prompt': 'What fresh aromatic herb is the primary base ingredient for traditional Genovese pesto?',
+                'options': {'A': 'Coriander', 'B': 'Basil', 'C': 'Oregano', 'D': 'Tarragon'},
+                'correct': 'B',
+                'explanation': 'Pesto alla Genovese combines fresh basil, pine nuts, garlic, olive oil, and Parmigiano/Pecorino cheese.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'What precious culinary spice is harvested by hand from the dried stigmas of the Crocus sativus flower?',
+                'options': {'A': 'Cardamom', 'B': 'Saffron', 'C': 'Vanilla', 'D': 'Star Anise'},
+                'correct': 'B',
+                'explanation': 'Saffron requires up to 75,000 blossoms to produce one single pound of dried spice.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'Which classic French mother sauce is made by whisking egg yolks with melted butter and lemon juice?',
+                'options': {'A': 'Béchamel', 'B': 'Velouté', 'C': 'Hollandaise', 'D': 'Espagnole'},
+                'correct': 'C',
+                'explanation': 'Hollandaise is an emulsion sauce perfected in classic French culinary codified doctrine.',
+                'difficulty': 'medium',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'In which country did the smoky agave spirit Mezcal originate?',
+                'options': {'A': 'Peru', 'B': 'Mexico', 'C': 'Colombia', 'D': 'Cuba'},
+                'correct': 'B',
+                'explanation': 'Mezcal is produced in Mexico, particularly Oaxaca, from roasted piñas of agave plants.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'Which famous Italian cocktail consists of equal parts Gin, Campari, and Sweet Red Vermouth, garnished with orange peel?',
+                'options': {'A': 'Aperol Spritz', 'B': 'Negroni', 'C': 'Bellini', 'D': 'Americano'},
+                'correct': 'B',
+                'explanation': 'Count Camillo Negroni asked bartender Forsco Scarselli in Florence to stiffen his Americano with gin in 1919.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'From which country does the famous blue-veined sheep milk cheese Roquefort originate?',
+                'options': {'A': 'Italy', 'B': 'France', 'C': 'Switzerland', 'D': 'Spain'},
+                'correct': 'B',
+                'explanation': 'Roquefort is aged in the natural Combalou caves of Roquefort-sur-Soulzon in southern France.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'What measurement scale is universally used to quantify the piquancy and heat of chili peppers?',
+                'options': {'A': 'Brix Scale', 'B': 'Scoville Scale', 'C': 'Mohs Scale', 'D': 'Baumé Scale'},
+                'correct': 'B',
+                'explanation': 'Wilbur Scoville devised the Scoville Organoleptic Test in 1912 to measure capsaicin concentration.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'Real authentic Japanese wasabi is traditionally grated using what specialized tool made from sharkskin?',
+                'options': {'A': 'Oroshigane', 'B': 'Mandoline', 'C': 'Suribachi', 'D': 'Chasen'},
+                'correct': 'A',
+                'explanation': 'An oroshigane sharkskin grater breaks the wasabi rhizome cells to release allylisothiocyanate aromas.',
+                'difficulty': 'hard',
+                'type': 'classic'
+            }
+        ]
+    },
+    {
+        'title': 'Silicon Pioneers & Coding Legends',
+        'slug': 'tech-computing',
+        'description': 'Computing history, programming breakthroughs, network protocols, and Silicon Valley lore.',
+        'icon': '💻',
+        'category_slug': 'tech-computing',
+        'questions': [
+            {
+                'prompt': 'Who is celebrated as the world\'s first computer programmer for writing an algorithm for Babbage\'s Analytical Engine?',
+                'options': {'A': 'Grace Hopper', 'B': 'Ada Lovelace', 'C': 'Margaret Hamilton', 'D': 'Katherine Johnson'},
+                'correct': 'B',
+                'explanation': 'Ada Lovelace translated Menabrea\'s memoir and added Note G, the first published computer algorithm.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'In what year did Finnish student Linus Torvalds announce the initial release of the Linux kernel?',
+                'options': {'A': '1987', 'B': '1991', 'C': '1995', 'D': '1998'},
+                'correct': 'B',
+                'explanation': 'Linus Torvalds posted his famous "just a hobby, won\'t be big and professional" message on August 25, 1991.',
+                'difficulty': 'medium',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'Which legendary computer scientist devised the foundational imitation game test for machine intelligence in 1950?',
+                'options': {'A': 'John von Neumann', 'B': 'Claude Shannon', 'C': 'Alan Turing', 'D': 'Marvin Minsky'},
+                'correct': 'C',
+                'explanation': 'Alan Turing introduced the Turing Test in his landmark paper "Computing Machinery and Intelligence".',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'What does the acronym HTTP stand for in computer networking?',
+                'options': {'A': 'HyperText Transfer Protocol', 'B': 'High Tactical Transfer Port', 'C': 'Hyper Terminal Tool Packet', 'D': 'Host Transmission Traffic Parser'},
+                'correct': 'A',
+                'explanation': 'HTTP is the foundational application layer protocol powering data exchange across the World Wide Web.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'In which programming language was the Unix operating system rewritten in 1972 by Dennis Ritchie at Bell Labs?',
+                'options': {'A': 'Assembly', 'B': 'Fortran', 'C': 'C', 'D': 'Pascal'},
+                'correct': 'C',
+                'explanation': 'Dennis Ritchie created C to rewrite Unix, giving it unprecedented portability across diverse computer architectures.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'What material was the casing of Douglas Engelbart\'s original 1964 prototype computer mouse made from?',
+                'options': {'A': 'Bakelite Plastic', 'B': 'Wood', 'C': 'Cast Aluminum', 'D': 'Steel'},
+                'correct': 'B',
+                'explanation': 'The first computer mouse, patented in 1970, was carved out of a block of wood with two perpendicular wheels.',
+                'difficulty': 'medium',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'Guido van Rossum created the Python programming language in 1989. What was the name inspired by?',
+                'options': {'A': 'The Burmese Python snake', 'B': 'Monty Python\'s Flying Circus', 'C': 'Greek Mythological Python', 'D': 'A code encryption cipher'},
+                'correct': 'B',
+                'explanation': 'Guido was reading published scripts from BBC comedy troupe Monty Python\'s Flying Circus during Christmas break.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'What was the name of the first graphical web browser created by Marc Andreessen and Eric Bina at NCSA in 1993?',
+                'options': {'A': 'Netscape Navigator', 'B': 'NCSA Mosaic', 'C': 'WorldWideWeb', 'D': 'Internet Explorer'},
+                'correct': 'B',
+                'explanation': 'NCSA Mosaic was the breakout browser that brought inline pictures and sound to the general public.',
+                'difficulty': 'medium',
+                'type': 'classic'
+            }
+        ]
+    },
+    {
+        'title': 'Rhyme Time & House of Games Enigmas',
+        'slug': 'words-rhymes',
+        'description': 'BBC House of Games style rhyming pairs, literary riddles, and linguistic wit.',
+        'icon': '📚',
+        'category_slug': 'words-rhymes',
+        'questions': [
+            {
+                'prompt': 'RHYME TIME: An electric kitchen appliance that browns sliced bread, and a thrilling amusement park track with loops and drops?',
+                'options': {'A': 'Toaster & Rollercoaster', 'B': 'Kettle & Metal', 'C': 'Blender & Pretender', 'D': 'Griddle & Riddle'},
+                'correct': 'A',
+                'explanation': 'Toaster and Rollercoaster form an exact phonetic rhyme pair!',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'RHYME TIME: A portable electronic gadget used for math arithmetic, and a large semi-aquatic reptile with sharp teeth?',
+                'options': {'A': 'Abacus & Platypus', 'B': 'Calculator & Alligator', 'C': 'Compass & Walrus', 'D': 'Screen & Marine'},
+                'correct': 'B',
+                'explanation': 'Calculator and Alligator rhyme perfectly in classic House of Games format.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'RHYME TIME: A small handheld flashlight torch, and a covered front entrance porch?',
+                'options': {'A': 'Lantern & Cistern', 'B': 'Torch & Porch', 'C': 'Lamp & Ramp', 'D': 'Flare & Stair'},
+                'correct': 'B',
+                'explanation': 'Torch and Porch are classic single-syllable British rhyme pairs.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'Which epic poem by Homer recounts the ten-year journey of Odysseus attempting to return home to Ithaca?',
+                'options': {'A': 'The Iliad', 'B': 'The Aeneid', 'C': 'The Odyssey', 'D': 'Metamorphoses'},
+                'correct': 'C',
+                'explanation': 'The Odyssey chronicles Odysseus\' encounters with the Cyclops Polyphemus, Circe, and the Sirens.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'Who authored the 1818 landmark Gothic sci-fi novel "Frankenstein; or, The Modern Prometheus" at age 20?',
+                'options': {'A': 'Jane Austen', 'B': 'Mary Shelley', 'C': 'Emily Brontë', 'D': 'Virginia Woolf'},
+                'correct': 'B',
+                'explanation': 'Mary Wollstonecraft Shelley conceived the novel during the "Year Without a Summer" in Switzerland in 1816.',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'In George Orwell\'s dystopian novel 1984, what totalitarian concept refers to holding two contradictory beliefs simultaneously?',
+                'options': {'A': 'Newspeak', 'B': 'Thoughtcrime', 'C': 'Doublethink', 'D': 'Crimestop'},
+                'correct': 'C',
+                'explanation': 'Doublethink is the power of holding two contradictory beliefs in one\'s mind simultaneously, and accepting both of them.',
+                'difficulty': 'medium',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'In William Shakespeare\'s Hamlet, what famous soliloquy begins with the Prince of Denmark contemplating existence?',
+                'options': {'A': 'All the world\'s a stage', 'B': 'To be, or not to be', 'C': 'Now is the winter of our discontent', 'D': 'Friends, Romans, countrymen'},
+                'correct': 'B',
+                'explanation': 'Act III, Scene 1 features Prince Hamlet\'s immortal speech: "To be, or not to be: that is the question".',
+                'difficulty': 'easy',
+                'type': 'classic'
+            },
+            {
+                'prompt': 'In F. Scott Fitzgerald\'s "The Great Gatsby", what colored light at the end of Daisy\'s dock symbolizes Gatsby\'s yearning?',
+                'options': {'A': 'Red light', 'B': 'Green light', 'C': 'Blue light', 'D': 'Gold light'},
+                'correct': 'B',
+                'explanation': 'The green light across Long Island Sound represents Gatsby\'s unattainable hopes and dreams.',
                 'difficulty': 'easy',
                 'type': 'classic'
             }
