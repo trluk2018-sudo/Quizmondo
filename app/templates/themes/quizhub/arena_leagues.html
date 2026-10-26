@@ -65,9 +65,11 @@
               <div class="text-[11px] text-purple-300">{{ lg.description }}</div>
             </div>
             <div class="flex items-center gap-2 shrink-0">
+              {% if session.get('user_role') in ('super_admin', 'admin', 'quizmaster') or session.get('admin_logged_in') %}
               <a href="{{ url_for('arena.league_manager', slug=lg.slug) }}" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-purple-300 font-bold text-xs uppercase border border-purple-500/30 transition flex items-center gap-1" title="Quizmaster Console">
                 <span>🎙️ Host</span>
               </a>
+              {% endif %}
               <a href="{{ url_for('arena.league_lounge', slug=lg.slug) }}" class="px-4 py-2 rounded-xl bg-gradient-to-r {% if is_online %}from-cyan-500 to-blue-600 text-slate-950{% else %}from-purple-600 to-indigo-600 text-white{% endif %} font-bold text-xs uppercase transition">
                 {% if is_online %}Request Entry &rarr;{% else %}Venue Check-In &rarr;{% endif %}
               </a>

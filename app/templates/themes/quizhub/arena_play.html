@@ -569,20 +569,21 @@ function showRocketAnimation(data) {
       }
       if (!data.opponent_assigned) {
         if (title) title.textContent = 'Waiting for Your Friend to Accept!';
-        if (desc) desc.textContent = 'You scored +' + (data.round_score || 0) + ' PTS (' + (data.correct_count || 0) + '/3 in ' + (data.total_time_sec || 0) + 's)! Send your challenge on WhatsApp now!';
+        if (desc) desc.textContent = 'You scored +' + (data.round_score || 0) + ' PTS (' + (data.correct_count || 0) + '/3 in ' + (data.total_time_sec || 0) + 's)! Send your initial challenge invite on WhatsApp now!';
+        if (waBtn) {
+          waBtn.classList.remove('hidden');
+          waBtn.textContent = '📲 Send Challenge Invite & Score on WhatsApp (' + data.round_score + ' pts • ' + data.correct_count + '/3 in ' + data.total_time_sec + 's)';
+        }
       } else {
-        if (title) title.textContent = 'Time to Nudge ' + data.opponent_name + '!';
-        if (desc) desc.textContent = 'You scored +' + (data.round_score || 0) + ' PTS (' + (data.correct_count || 0) + '/3 in ' + (data.total_time_sec || 0) + 's)! Nudge ' + data.opponent_name + ' on WhatsApp to play Round ' + data.current_round + '!';
+        if (title) title.textContent = 'Round ' + data.current_round + ' Complete • ' + data.opponent_name + ' Notified!';
+        if (desc) desc.textContent = 'You scored +' + (data.round_score || 0) + ' PTS (' + (data.correct_count || 0) + '/3 in ' + (data.total_time_sec || 0) + 's)! ' + data.opponent_name + ' has been notified automatically — no WhatsApp nudge needed!';
+        if (waBtn) {
+          waBtn.classList.add('hidden');
+        }
       }
 
-      if (waBtn) {
-        waBtn.classList.remove('hidden');
-        waBtn.textContent = (!data.opponent_assigned)
-          ? ('📲 Send Challenge & Score on WhatsApp (' + data.round_score + ' pts • ' + data.correct_count + '/3 in ' + data.total_time_sec + 's)')
-          : ('💬 Nudge ' + data.opponent_name + ' on WhatsApp (' + data.round_score + ' pts • ' + data.correct_count + '/3 in ' + data.total_time_sec + 's)');
-      }
       if (nextBtn) {
-        nextBtn.textContent = '📊 Go to Match Lobby & Scoreboard →';
+        nextBtn.textContent = data.opponent_assigned ? '📊 Go to Match Lobby (Auto-Sync Active) →' : '📊 Go to Match Lobby & Scoreboard →';
         nextBtn.href = lobbyUrl;
       }
     }

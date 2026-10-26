@@ -129,21 +129,51 @@
         <!-- Master Remote Buttons with High-Contrast Themed Roles -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
           
-          <!-- 1. Start Round Questions: Emerald Green -->
-          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="mgr-action-form">
-            <input type="hidden" name="action" value="start_round">
-            <button type="submit" id="btnStartRound" class="w-full py-4 px-3 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-950/40 flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer {% if state.round_status == 'waiting' and approved_teams|length > 0 %}ring-4 ring-emerald-400/50 animate-pulse{% endif %}">
-              <span>▶ Start Round {{ state.current_round }}</span>
-              <span class="text-[9px] font-bold opacity-80">Step 2: Send Questions</span>
+          <!-- 1. Primary Unified Start / Next Round Button: Automatically updates to "Start Round R+1" once all tables finish! -->
+          {% set start_ready = (approved_teams|length > 0 and (state.round_status == 'waiting' or can_advance) and state.round_status != 'finished') %}
+          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" id="formStartRound" class="mgr-action-form">
+            <input type="hidden" name="action" id="inputStartRoundAction" value="{% if can_advance and is_final_round %}finish_tournament{% else %}start_round{% endif %}">
+            <input type="hidden" name="round" id="inputStartRoundNum" value="{% if can_advance and not is_final_round %}{{ state.current_round + 1 }}{% else %}{{ state.current_round }}{% endif %}">
+            <button type="submit" id="btnStartRound" {% if not start_ready %}disabled{% endif %} class="w-full py-4 px-3 rounded-2xl {% if state.round_status == 'finished' %}bg-slate-900 border border-slate-800 text-slate-500 cursor-not-allowed{% elif can_advance and is_final_round %}bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 shadow-xl shadow-amber-500/20 ring-4 ring-amber-400/50 animate-pulse cursor-pointer{% elif start_ready %}bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 shadow-lg shadow-emerald-950/40 ring-4 ring-emerald-400/50 animate-pulse cursor-pointer{% else %}bg-slate-900 border border-amber-500/30 text-amber-300/80 cursor-not-allowed{% endif %} font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition active:scale-95">
+              <span id="btnStartRoundTitle">
+                {% if state.round_status == 'finished' %}
+                  🏆 Tournament Complete
+                {% elif approved_teams|length == 0 %}
+                  🔒 Start Round {{ state.current_round }}
+                {% elif can_advance and is_final_round %}
+                  🏆 Finalize &amp; Crown Winner
+                {% elif can_advance %}
+                  ▶ Start Round {{ state.current_round + 1 }} &rarr;
+                {% elif state.round_status == 'waiting' %}
+                  ▶ Start Round {{ state.current_round }}
+                {% else %}
+                  ⏳ Round {{ state.current_round }} Live ({{ completed_tables|length }}/{{ approved_teams|length }} In)
+                {% endif %}
+              </span>
+              <span id="btnStartRoundSub" class="text-[9px] font-bold opacity-85">
+                {% if state.round_status == 'finished' %}
+                  All rounds finished
+                {% elif approved_teams|length == 0 %}
+                  Approve a table below first
+                {% elif can_advance and is_final_round %}
+                  ✅ All Tables In! Show Final Podium
+                {% elif can_advance %}
+                  ✅ All {{ completed_tables|length }}/{{ approved_teams|length }} Tables In! Launch Round {{ state.current_round + 1 }}
+                {% elif state.round_status == 'waiting' %}
+                  Send Round {{ state.current_round }} Questions to Phones
+                {% else %}
+                  Unlocks Start Round {{ state.current_round + 1 if not is_final_round else 'Finale' }} when all in
+                {% endif %}
+              </span>
             </button>
           </form>
 
-          <!-- 2. Lock / Time's Up (THE ONLY BUTTON THAT ENDS AN ACTIVE ROUND EARLY): Crimson Rose -->
+          <!-- 2. Force Lock / Time's Up (Only needed if a table abandoned the game): Crimson Rose -->
           <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="mgr-action-form">
             <input type="hidden" name="action" value="close_round">
-            <button type="submit" id="btnCloseRound" {% if state.round_status != 'active' %}disabled{% endif %} class="w-full py-4 px-3 rounded-2xl {% if state.round_status == 'active' %}bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white shadow-lg shadow-rose-950/40 cursor-pointer{% else %}bg-slate-900 border border-slate-800 text-slate-600 cursor-not-allowed{% endif %} font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition active:scale-95">
+            <button type="submit" id="btnCloseRound" {% if state.round_status != 'active' or can_advance %}disabled{% endif %} class="w-full py-4 px-3 rounded-2xl {% if state.round_status == 'active' and not can_advance %}bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white shadow-lg shadow-rose-950/40 cursor-pointer{% else %}bg-slate-900 border border-slate-800 text-slate-600 cursor-not-allowed{% endif %} font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition active:scale-95">
               <span>⏱ Lock / Time's Up</span>
-              <span class="text-[9px] font-bold opacity-80">Ends Current Round &amp; Saves Partial</span>
+              <span class="text-[9px] font-bold opacity-80">Force End If Table Left</span>
             </button>
           </form>
 
@@ -179,12 +209,14 @@
             <span id="trackerSubtext" class="text-[11px] font-bold {% if can_advance %}text-emerald-400{% else %}text-amber-300{% endif %}">
               {% if approved_teams|length == 0 %}
                 ⏳ Waiting for tables to check in &amp; be approved
+              {% elif can_advance and is_final_round %}
+                ✅ All tables finished Round {{ state.current_round }}! Click "🏆 Finalize &amp; Crown Winner" above!
               {% elif can_advance %}
-                ✅ All tables locked in! Ready to Reveal Answers or Advance to Next Round!
+                ✅ All {{ completed_tables|length }}/{{ approved_teams|length }} tables finished Round {{ state.current_round }}! Click "▶ Start Round {{ state.current_round + 1 }}" above!
               {% elif state.round_status == 'waiting' %}
                 ⏸️ Click "▶ Start Round {{ state.current_round }}" above to begin
               {% else %}
-                ⏳ Waiting for {{ approved_teams|length - completed_tables|length }} more table(s) to finish...
+                ⏳ Waiting for {{ approved_teams|length - completed_tables|length }} more table(s) to finish Round {{ state.current_round }}...
               {% endif %}
             </span>
           </div>
@@ -201,7 +233,7 @@
               {% for team in approved_teams %}
               {% set r_score = team.get('round_' ~ state.current_round) %}
               {% set p_q = team.get('progress_q_' ~ state.current_round, 0) %}
-              {% set p_score = team.get('partial_round_' ~ state.current_round, 0) %}
+              {% set p_score = team.get('partial_round_' ~ state.current_round, team.get('partial_score_' ~ state.current_round, 0)) %}
               <div class="p-3 rounded-xl border {% if r_score is not none %}bg-emerald-950/40 border-emerald-500/50{% elif state.round_status == 'active' %}bg-amber-950/30 border-amber-500/40{% else %}bg-slate-950/70 border-purple-500/20{% endif %} flex items-center justify-between gap-2">
                 <div class="truncate">
                   <div class="text-xs font-bold text-white truncate">Table {{ team.table }} • {{ team.name }}</div>
@@ -232,44 +264,10 @@
           </div>
         </div>
 
-        <!-- ========================================================================= -->
-        <!-- STRICTLY GATED PROGRESSION BAR: HIDDEN UNTIL ALL TABLES SUBMIT OR LOCKED  -->
-        <!-- ========================================================================= -->
+        <!-- Reset & Table Cleanup Utilities -->
         <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-purple-500/20 text-xs">
-          
-          <div id="progressionGateContainer" class="w-full sm:w-auto">
-            <!-- LOCKED GUARD MESSAGE (Shown whenever can_advance is False) -->
-            <div id="advanceLockedBanner" class="{% if can_advance %}hidden{% endif %} w-full sm:w-auto px-4 py-3 rounded-xl bg-amber-950/50 border border-amber-500/50 text-amber-300 font-bold flex items-center gap-2.5 shadow-inner">
-              <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping shrink-0"></span>
-              <span id="advanceLockedText">
-                {% if approved_teams|length == 0 %}
-                  🔒 Advance Locked: Approve at least 1 table and start Round {{ state.current_round }} first.
-                {% elif state.round_status == 'waiting' %}
-                  🔒 Advance Locked: Round {{ state.current_round }} has not been played yet! Click "▶ Start Round {{ state.current_round }}" above.
-                {% else %}
-                  🔒 Round {{ state.current_round }} Live ({{ completed_tables|length }}/{{ approved_teams|length }} tables submitted). "Advance to Next Round" unlocks automatically once all tables submit or when you click "⏱ Lock / Time's Up".
-                {% endif %}
-              </span>
-            </div>
-
-            <!-- UNLOCKED ADVANCE BUTTON (Strictly hidden until all tables submit or round is locked!) -->
-            <div id="advanceUnlockedBox" class="{% if not can_advance %}hidden{% endif %} w-full sm:w-auto">
-              {% if is_final_round %}
-              <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" onsubmit="return confirm('Crown the tournament champion and finalize all scores? This completes the pub quiz.');" class="mgr-action-form w-full sm:w-auto">
-                <input type="hidden" name="action" value="advance_round">
-                <button type="submit" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black uppercase tracking-wider shadow-xl shadow-amber-500/20 flex items-center justify-center gap-2 transition active:scale-95">
-                  <span>🏆 Finalize Tournament &amp; Crown Winner</span>
-                </button>
-              </form>
-              {% else %}
-              <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="mgr-action-form w-full sm:w-auto">
-                <input type="hidden" name="action" value="advance_round">
-                <button type="submit" id="btnAdvanceRound" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-black uppercase tracking-wider shadow-xl shadow-purple-950/40 flex items-center justify-center gap-2 transition active:scale-95 ring-2 ring-purple-400/50">
-                  <span>⏩ Advance to Next Round (Round {{ state.current_round + 1 }}) &rarr;</span>
-                </button>
-              </form>
-              {% endif %}
-            </div>
+          <div class="text-[11px] text-slate-400 font-mono">
+            💡 <strong>Automatic Round Progression:</strong> As soon as all tables submit their 5 answers, the green <strong>Start Round</strong> button at the top left automatically updates to the next round!
           </div>
 
           <div class="flex items-center gap-2 w-full sm:w-auto shrink-0">
@@ -703,6 +701,8 @@ function pollManagerState() {
         data.round_status === 'break' ||
         data.round_status === 'finished'
       );
+      var isFinalRound = (data.current_round >= totalRoundsConfig);
+      var startReady = (approvedTeams.length > 0 && (data.round_status === 'waiting' || canAdvance) && data.round_status !== 'finished');
 
       // 1. Update Phase Badge
       var phaseBadge = document.getElementById('hdrPhaseBadge');
@@ -715,11 +715,59 @@ function pollManagerState() {
         else revBadge.classList.add('hidden');
       }
 
-      // 2. Enable / Disable Action Buttons based on live state
+      // 2. Dynamically Update the Unified Primary "Start Round" Button (#btnStartRound)
+      var btnStart = document.getElementById('btnStartRound');
+      var btnStartTitle = document.getElementById('btnStartRoundTitle');
+      var btnStartSub = document.getElementById('btnStartRoundSub');
+      var inpAction = document.getElementById('inputStartRoundAction');
+      var inpRound = document.getElementById('inputStartRoundNum');
+
+      if (btnStart && btnStartTitle && btnStartSub) {
+        btnStart.disabled = !startReady;
+        if (data.round_status === 'finished') {
+          btnStart.className = 'w-full py-4 px-3 rounded-2xl bg-slate-900 border border-slate-800 text-slate-500 cursor-not-allowed font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition';
+          btnStartTitle.textContent = '🏆 Tournament Complete';
+          btnStartSub.textContent = 'All rounds finished';
+        } else if (approvedTeams.length === 0) {
+          btnStart.className = 'w-full py-4 px-3 rounded-2xl bg-slate-900 border border-amber-500/30 text-amber-300/80 cursor-not-allowed font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition';
+          btnStartTitle.textContent = '🔒 Start Round ' + data.current_round;
+          btnStartSub.textContent = 'Approve a table below first';
+          if (inpAction) inpAction.value = 'start_round';
+          if (inpRound) inpRound.value = data.current_round;
+        } else if (canAdvance && isFinalRound) {
+          btnStart.className = 'w-full py-4 px-3 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 shadow-xl shadow-amber-500/20 ring-4 ring-amber-400/50 animate-pulse cursor-pointer font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition active:scale-95';
+          btnStartTitle.textContent = '🏆 Finalize & Crown Winner';
+          btnStartSub.textContent = '✅ All Tables In! Show Final Podium';
+          if (inpAction) inpAction.value = 'finish_tournament';
+          if (inpRound) inpRound.value = data.current_round;
+        } else if (canAdvance) {
+          var nextR = data.current_round + 1;
+          btnStart.className = 'w-full py-4 px-3 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 shadow-lg shadow-emerald-950/40 ring-4 ring-emerald-400/50 animate-pulse cursor-pointer font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition active:scale-95';
+          btnStartTitle.innerHTML = '▶ Start Round ' + nextR + ' &rarr;';
+          btnStartSub.textContent = '✅ All ' + completedTables.length + '/' + approvedTeams.length + ' Tables In! Launch Round ' + nextR;
+          if (inpAction) inpAction.value = 'start_round';
+          if (inpRound) inpRound.value = nextR;
+        } else if (data.round_status === 'waiting') {
+          btnStart.className = 'w-full py-4 px-3 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 shadow-lg shadow-emerald-950/40 ring-4 ring-emerald-400/50 animate-pulse cursor-pointer font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition active:scale-95';
+          btnStartTitle.textContent = '▶ Start Round ' + data.current_round;
+          btnStartSub.textContent = 'Send Round ' + data.current_round + ' Questions to Phones';
+          if (inpAction) inpAction.value = 'start_round';
+          if (inpRound) inpRound.value = data.current_round;
+        } else {
+          btnStart.className = 'w-full py-4 px-3 rounded-2xl bg-slate-900 border border-amber-500/30 text-amber-300/80 cursor-not-allowed font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition';
+          btnStartTitle.textContent = '⏳ Round ' + data.current_round + ' Live (' + completedTables.length + '/' + approvedTeams.length + ' In)';
+          btnStartSub.textContent = 'Unlocks Start Round ' + (isFinalRound ? 'Finale' : (data.current_round + 1)) + ' when all in';
+          if (inpAction) inpAction.value = 'start_round';
+          if (inpRound) inpRound.value = data.current_round;
+        }
+      }
+
+      // Enable / Disable Force Lock, Reveal Answers & Start Break Buttons
       var btnClose = document.getElementById('btnCloseRound');
       if (btnClose) {
-        btnClose.disabled = (data.round_status !== 'active');
-        btnClose.className = 'w-full py-4 px-3 rounded-2xl ' + (data.round_status === 'active'
+        var canClose = (data.round_status === 'active' && !canAdvance);
+        btnClose.disabled = !canClose;
+        btnClose.className = 'w-full py-4 px-3 rounded-2xl ' + (canClose
           ? 'bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white shadow-lg shadow-rose-950/40 cursor-pointer'
           : 'bg-slate-900 border border-slate-800 text-slate-600 cursor-not-allowed') + ' font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition active:scale-95';
       }
@@ -750,15 +798,18 @@ function pollManagerState() {
         if (approvedTeams.length === 0) {
           ts.className = 'text-[11px] font-bold text-amber-300';
           ts.textContent = '⏳ Waiting for tables to check in & be approved';
+        } else if (canAdvance && isFinalRound) {
+          ts.className = 'text-[11px] font-bold text-emerald-400';
+          ts.textContent = '✅ All tables finished Round ' + data.current_round + '! Click "🏆 Finalize & Crown Winner" above!';
         } else if (canAdvance) {
           ts.className = 'text-[11px] font-bold text-emerald-400';
-          ts.textContent = '✅ All tables locked in! Ready to Reveal Answers or Advance to Next Round!';
+          ts.textContent = '✅ All ' + completedTables.length + '/' + approvedTeams.length + ' tables finished Round ' + data.current_round + '! Click "▶ Start Round ' + (data.current_round + 1) + '" above!';
         } else if (data.round_status === 'waiting') {
           ts.className = 'text-[11px] font-bold text-amber-300';
           ts.textContent = '⏸️ Click "▶ Start Round ' + data.current_round + '" above to begin';
         } else {
           ts.className = 'text-[11px] font-bold text-amber-300';
-          ts.textContent = '⏳ Waiting for ' + (approvedTeams.length - completedTables.length) + ' more table(s) to finish...';
+          ts.textContent = '⏳ Waiting for ' + (approvedTeams.length - completedTables.length) + ' more table(s) to finish Round ' + data.current_round + '...';
         }
       }
 
@@ -777,7 +828,7 @@ function pollManagerState() {
           approvedTeams.forEach(function(team) {
             var rScore = team['round_' + data.current_round];
             var pQ = team['progress_q_' + data.current_round] || 0;
-            var pScore = team['partial_round_' + data.current_round] || 0;
+            var pScore = team['partial_round_' + data.current_round] || team['partial_score_' + data.current_round] || 0;
             var hasSub = (rScore !== undefined && rScore !== null);
             var cardCls = hasSub
               ? 'bg-emerald-950/40 border-emerald-500/50'
@@ -797,27 +848,6 @@ function pollManagerState() {
             '</div>';
           });
           subGrid.innerHTML = sHtml;
-        }
-      }
-
-      // 4. Update Strict Progression Gate (Show/Hide Advance to Next Round Button!)
-      var lockedBanner = document.getElementById('advanceLockedBanner');
-      var lockedText = document.getElementById('advanceLockedText');
-      var unlockedBox = document.getElementById('advanceUnlockedBox');
-      if (canAdvance) {
-        if (lockedBanner) lockedBanner.classList.add('hidden');
-        if (unlockedBox) unlockedBox.classList.remove('hidden');
-      } else {
-        if (lockedBanner) lockedBanner.classList.remove('hidden');
-        if (unlockedBox) unlockedBox.classList.add('hidden');
-        if (lockedText) {
-          if (approvedTeams.length === 0) {
-            lockedText.textContent = '🔒 Advance Locked: Approve at least 1 table and start Round ' + data.current_round + ' first.';
-          } else if (data.round_status === 'waiting') {
-            lockedText.textContent = '🔒 Advance Locked: Round ' + data.current_round + ' has not been played yet! Click "▶ Start Round ' + data.current_round + '" above.';
-          } else {
-            lockedText.textContent = '🔒 Round ' + data.current_round + ' Live (' + completedTables.length + '/' + approvedTeams.length + ' tables submitted). "Advance to Next Round" unlocks automatically once all tables submit or when you click "⏱ Lock / Time\'s Up".';
-          }
         }
       }
 
@@ -916,8 +946,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Start automatic 2.5-second live polling on Quizmaster console
-  setInterval(pollManagerState, 2500);
+  // Start automatic 1.5-second live polling on Quizmaster console
+  setInterval(pollManagerState, 1500);
 });
 </script>
 {% endblock %}

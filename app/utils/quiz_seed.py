@@ -127,13 +127,12 @@ SEED_PACKS = [
                 'type': 'classic'
             },
             {
-                'prompt': 'Listen to the opening theme of this legendary video game. Which 1989 Game Boy classic is this?',
-                'options': {'A': 'Super Mario Land', 'B': 'Tetris (Type A)', 'C': 'Pokemon Red', 'D': 'The Legend of Zelda'},
+                'prompt': 'Which 19th-century Russian folk song serves as the iconic "Type A" theme music in the 1989 Game Boy classic Tetris?',
+                'options': {'A': 'Kalinka', 'B': 'Korobeiniki', 'C': 'Katyusha', 'D': 'Dark Eyes (Ochi Chyornye)'},
                 'correct': 'B',
-                'explanation': 'The iconic Type A theme is based on the 19th-century Russian folk song "Korobeiniki".',
+                'explanation': 'Composer Hirokazu Tanaka arranged the 19th-century Russian folk song "Korobeiniki" (The Peddlers) into the legendary Game Boy Tetris Type A theme.',
                 'difficulty': 'medium',
-                'type': 'youtube_clip',
-                'media_url': 'https://www.youtube.com/watch?v=NmCCQxVBfyM'
+                'type': 'classic'
             },
             {
                 'prompt': 'In The Legend of Zelda: Ocarina of Time (1998), what musical instrument is used to warp across Hyrule?',
@@ -927,6 +926,20 @@ def seed_quizmondo_full_environment():
                 existing_q.options_json = json.dumps(q_item['options'])
                 existing_q.correct_option = q_item['correct']
                 existing_q.category_name = pack_data['title']
+
+    # Clean up legacy Tetris YouTube clip question that displayed the answer in the video title
+    legacy_yt = QuizQuestion.query.filter(
+        (QuizQuestion.question_type == 'youtube_clip') |
+        (QuizQuestion.prompt.like('%Listen to the opening theme of this legendary video game%'))
+    ).all()
+    for lq in legacy_yt:
+        lq.prompt = 'Which 19th-century Russian folk song serves as the iconic "Type A" theme music in the 1989 Game Boy classic Tetris?'
+        lq.question_type = 'classic'
+        lq.media_url = ''
+        lq.options_json = json.dumps({'A': 'Kalinka', 'B': 'Korobeiniki', 'C': 'Katyusha', 'D': 'Dark Eyes (Ochi Chyornye)'})
+        lq.correct_option = 'B'
+        lq.explanation = 'Composer Hirokazu Tanaka arranged the 19th-century Russian folk song "Korobeiniki" (The Peddlers) into the legendary Game Boy Tetris Type A theme.'
+    db.session.commit()
 
     # 2b. Synchronize Extra Questions
     try:

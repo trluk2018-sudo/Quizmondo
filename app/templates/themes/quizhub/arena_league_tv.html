@@ -56,7 +56,7 @@
       </div>
 
       <!-- Host Admin Portal Button -->
-      {% if not is_virtual %}
+      {% if not is_virtual and (session.get('user_role') in ('super_admin', 'admin', 'quizmaster') or session.get('admin_logged_in')) %}
       <a href="{{ url_for('arena.league_manager', slug=league.slug) }}" target="_blank" class="px-4 py-3 rounded-2xl bg-purple-900/60 hover:bg-purple-800 border border-purple-400/40 text-purple-200 hover:text-white font-bold text-xs uppercase transition flex items-center gap-2 shadow-lg">
         <span>🎙️</span>
         <span class="hidden sm:inline">Manager Portal</span>

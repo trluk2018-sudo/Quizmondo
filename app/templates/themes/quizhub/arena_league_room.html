@@ -371,13 +371,15 @@ var tableNum = "{{ table_num }}";
 var teamName = "{{ team_name }}";
 var isVirtual = {{ 'true' if is_virtual else 'false' }};
 var isApproved = {{ 'true' if is_approved else 'false' }};
-var hasSubmittedRound = {{ 'true' if has_submitted_round else 'false' }};
+var serverHasSubmittedRound = {{ 'true' if has_submitted_round else 'false' }};
+var hasSubmittedRound = serverHasSubmittedRound;
 var submittedRoundScore = {{ submitted_round_score }};
 var initialRoundStatus = "{{ state.round_status }}";
 var initialAnswersRevealed = {{ 'true' if state.answers_revealed else 'false' }};
 var timeLimitPerQuestion = {{ config.question_time_limit or 15 }};
+var resetTs = "{{ state.get('reset_ts', 'v1') }}";
 
-var storageKey = 'pub_state_' + leagueSlug + '_r' + currentRound + '_t' + tableNum;
+var storageKey = 'pub_state_' + leagueSlug + '_' + resetTs + '_r' + currentRound + '_t' + tableNum;
 
 var currentIndex = 0;
 var totalScore = 0;
@@ -397,7 +399,7 @@ try {
       if (typeof savedState.currentIndex === 'number') currentIndex = savedState.currentIndex;
       if (typeof savedState.totalScore === 'number') totalScore = savedState.totalScore;
       if (Array.isArray(savedState.recordedAnswers)) recordedAnswers = savedState.recordedAnswers;
-      if (savedState.submitted) hasSubmittedRound = true;
+      if (savedState.submitted && serverHasSubmittedRound) hasSubmittedRound = true;
     }
   }
 } catch(e) {}
@@ -666,6 +668,9 @@ function choosePubAnswer(choice) {
     progData.append('round', currentRound);
     progData.append('question_index', currentIndex + 1);
     progData.append('partial_score', totalScore);
+    if (currentIndex + 1 >= rawQuestions.length) {
+      progData.append('is_final', '1');
+    }
     fetch('/arena/leagues/' + encodeURIComponent(leagueSlug) + '/progress', {
       method: 'POST',
       body: progData
@@ -696,6 +701,9 @@ function finishRound() {
   // Submit score via fetch POST
   var formData = new FormData();
   formData.append('score', totalScore);
+  formData.append('table', tableNum);
+  formData.append('team', teamName);
+  formData.append('round', currentRound);
 
   var postUrl = '/arena/leagues/' + encodeURIComponent(leagueSlug) + '/room?round=' + currentRound + '&table=' + encodeURIComponent(tableNum) + '&team=' + encodeURIComponent(teamName);
 

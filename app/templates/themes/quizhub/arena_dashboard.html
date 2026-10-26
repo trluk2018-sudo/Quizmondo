@@ -183,6 +183,118 @@
       {% endif %}
     </div>
 
+    <!-- FRIENDS ROSTER & GROUP CHALLENGE LOBBY -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+      <!-- REGISTERED FRIENDS ROSTER (Direct 1-Tap Challenge, No WhatsApp Needed!) -->
+      <div class="p-6 rounded-3xl bg-slate-950/90 border border-emerald-500/30 shadow-xl space-y-4 font-mono">
+        <div class="flex items-center justify-between border-b border-emerald-500/20 pb-3">
+          <div>
+            <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
+              <span>👥</span> FRIENDS &amp; CHALLENGERS ROSTER
+            </h3>
+            <p class="text-[11px] text-slate-400 mt-0.5">Challenge registered friends directly with 1 tap — they get notified automatically!</p>
+          </div>
+          <a href="{{ url_for('arena.create_match', category_slug='general', opponent_mode='friend') }}" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-300 font-bold text-[11px] whitespace-nowrap transition">
+            📲 + Invite via WhatsApp
+          </a>
+        </div>
+
+        {% if friends_roster %}
+        <div class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+          {% for f in friends_roster %}
+          <div class="p-3 rounded-2xl bg-slate-900/90 border {% if f.played_before %}border-emerald-500/40{% else %}border-purple-500/25{% endif %} flex items-center justify-between gap-3 hover:border-cyan-400/50 transition">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-xl bg-purple-950 border border-purple-500/40 flex items-center justify-center text-xl shrink-0">
+                {{ f.avatar or '🦸' }}
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs sm:text-sm font-black text-white truncate">{{ f.display_name }}</span>
+                  {% if f.played_before %}
+                  <span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[9px] font-bold uppercase shrink-0">Friend</span>
+                  {% endif %}
+                </div>
+                <div class="text-[10px] text-slate-400">
+                  Level {{ f.level }} &bull; 🏆 {{ f.wins }} Wins
+                </div>
+              </div>
+            </div>
+
+            <div class="shrink-0">
+              {% if f.active_match_code %}
+                {% if f.active_my_turn %}
+                <a href="{{ url_for('arena.match_lobby', match_code=f.active_match_code) }}" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[11px] uppercase tracking-wider shadow animate-pulse inline-block">
+                  🔥 Your Turn (R{{ f.active_round }})
+                </a>
+                {% else %}
+                <a href="{{ url_for('arena.match_lobby', match_code=f.active_match_code) }}" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-purple-500/30 text-amber-300 font-bold text-[11px] inline-block">
+                  ⏳ Waiting (R{{ f.active_round }})
+                </a>
+                {% endif %}
+              {% else %}
+              <a href="{{ url_for('arena.challenge_fresh', target_session=f.session_key) }}" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-[11px] uppercase tracking-wider shadow inline-block transition transform hover:scale-105">
+                ⚔️ Challenge Now
+              </a>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-6 rounded-2xl bg-slate-900/60 border border-purple-500/20 text-center space-y-2">
+          <div class="text-2xl">📲</div>
+          <div class="text-xs text-slate-300 font-bold">Invite your first friend on WhatsApp!</div>
+          <p class="text-[11px] text-slate-400">Once a friend accepts your first WhatsApp invite, they appear right here so you can challenge each other anytime with 1 tap.</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- OPEN GROUP CHALLENGES (Waiting for Anyone to Accept!) -->
+      <div class="p-6 rounded-3xl bg-slate-950/90 border border-amber-500/30 shadow-xl space-y-4 font-mono">
+        <div class="flex items-center justify-between border-b border-amber-500/20 pb-3">
+          <div>
+            <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
+              <span>⚡</span> OPEN GROUP CHALLENGES
+            </h3>
+            <p class="text-[11px] text-slate-400 mt-0.5">Live challenges waiting for any challenger to jump in and play Round 1!</p>
+          </div>
+          <a href="{{ url_for('arena.create_match', category_slug='general', opponent_mode='random') }}" class="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 font-bold text-[11px] whitespace-nowrap transition">
+            + Post Open Duel
+          </a>
+        </div>
+
+        {% if open_group_challenges %}
+        <div class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+          {% for oc in open_group_challenges %}
+          <div class="p-3.5 rounded-2xl bg-gradient-to-r from-amber-950/30 via-slate-900 to-purple-950/40 border border-amber-500/40 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-black uppercase">Open Duel</span>
+                <span class="text-xs sm:text-sm font-black text-white truncate">{{ oc.player1_name }}</span>
+              </div>
+              <div class="text-[11px] text-cyan-300 mt-1">
+                Deck: <strong>{{ oc.category_slug|upper }}</strong> &bull; Score to Beat: <strong class="text-emerald-300">{{ oc.player1_score }} pts</strong>
+              </div>
+            </div>
+            <a href="{{ url_for('arena.match_lobby', match_code=oc.match_code) }}" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shrink-0 transition transform hover:scale-105">
+              ⚡ Accept Duel &rarr;
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-6 rounded-2xl bg-slate-900/60 border border-purple-500/20 text-center space-y-3">
+          <div class="text-2xl">🏟️</div>
+          <div class="text-xs text-slate-300 font-bold">No open group challenges waiting right now</div>
+          <p class="text-[11px] text-slate-400">Post an open challenge and complete Round 1 — any friend or online player in the lobby can accept and try to beat your score!</p>
+          <a href="{{ url_for('arena.create_match', category_slug='general', opponent_mode='random') }}" class="inline-block px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 font-bold text-xs transition">
+            ⚔️ Create Open Group Challenge &rarr;
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
     <!-- FEATURED PACKS & CATEGORIES -->
     <div class="space-y-4 pt-4">
       <div class="flex items-center justify-between">
