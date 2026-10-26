@@ -13,14 +13,40 @@ from .public import inject_global_data
 
 @arena_bp.context_processor
 def inject_arena_global_data():
-    return inject_global_data()
+    data = inject_global_data()
+    data['avatar_lookup'] = AVATAR_LOOKUP
+    return data
 
+# 24 Player Avatars (Note: 'nova' is reserved exclusively for Cyber Bot Nova!)
 AVATAR_PRESETS = [
-    {'key': 'quizzy', 'name': 'Quizzy', 'badge': 'Hyper Star', 'bg': 'from-purple-600 to-indigo-600', 'border': 'border-purple-400'},
-    {'key': 'nova', 'name': 'Nova', 'badge': 'Cyber Explorer', 'bg': 'from-cyan-500 to-blue-600', 'border': 'border-cyan-400'},
-    {'key': 'pixel', 'name': 'Pixel', 'badge': '8-Bit Bot', 'bg': 'from-emerald-500 to-teal-700', 'border': 'border-emerald-400'},
-    {'key': 'sage', 'name': 'Sage', 'badge': 'Owl Scholar', 'bg': 'from-amber-500 to-orange-600', 'border': 'border-amber-400'},
+    {'key': 'quizzy', 'name': 'Quizzy', 'badge': 'Hyper Star', 'emoji': '⭐', 'bg': 'from-purple-600 to-indigo-600', 'border': 'border-purple-400'},
+    {'key': 'pixel', 'name': 'Pixel', 'badge': '8-Bit Robot', 'emoji': '👾', 'bg': 'from-emerald-500 to-teal-700', 'border': 'border-emerald-400'},
+    {'key': 'sage', 'name': 'Sage', 'badge': 'Owl Scholar', 'emoji': '🦉', 'bg': 'from-amber-500 to-orange-600', 'border': 'border-amber-400'},
+    {'key': 'astro', 'name': 'Astro', 'badge': 'Space Ranger', 'emoji': '🧑‍🚀', 'bg': 'from-cyan-500 to-blue-600', 'border': 'border-cyan-400'},
+    {'key': 'blaze', 'name': 'Blaze', 'badge': 'Fire Phoenix', 'emoji': '🔥', 'bg': 'from-orange-500 to-rose-600', 'border': 'border-orange-400'},
+    {'key': 'volt', 'name': 'Volt', 'badge': 'Thunder Bolt', 'emoji': '⚡', 'bg': 'from-yellow-400 to-amber-600', 'border': 'border-yellow-400'},
+    {'key': 'shadow', 'name': 'Shadow', 'badge': 'Stealth Ninja', 'emoji': '🥷', 'bg': 'from-slate-700 to-purple-900', 'border': 'border-purple-400'},
+    {'key': 'rex', 'name': 'Rex', 'badge': 'Dino King', 'emoji': '🦖', 'bg': 'from-lime-500 to-emerald-700', 'border': 'border-lime-400'},
+    {'key': 'kitsune', 'name': 'Kitsune', 'badge': 'Cyber Fox', 'emoji': '🦊', 'bg': 'from-amber-500 to-red-600', 'border': 'border-amber-400'},
+    {'key': 'titan', 'name': 'Titan', 'badge': 'Mecha Knight', 'emoji': '🛡️', 'bg': 'from-blue-600 to-indigo-800', 'border': 'border-blue-400'},
+    {'key': 'vortex', 'name': 'Vortex', 'badge': 'Galaxy Dragon', 'emoji': '🐉', 'bg': 'from-emerald-600 to-cyan-700', 'border': 'border-emerald-400'},
+    {'key': 'maverick', 'name': 'Maverick', 'badge': 'Ace Falcon', 'emoji': '🦅', 'bg': 'from-sky-500 to-blue-700', 'border': 'border-sky-400'},
+    {'key': 'phantom', 'name': 'Phantom', 'badge': 'Cosmic Ghost', 'emoji': '👻', 'bg': 'from-indigo-500 to-purple-800', 'border': 'border-indigo-400'},
+    {'key': 'apex', 'name': 'Apex', 'badge': 'Golden Lion', 'emoji': '🦁', 'bg': 'from-amber-400 to-orange-600', 'border': 'border-amber-300'},
+    {'key': 'neptune', 'name': 'Neptune', 'badge': 'Ocean Shark', 'emoji': '🦈', 'bg': 'from-cyan-600 to-blue-800', 'border': 'border-cyan-400'},
+    {'key': 'cobra', 'name': 'Cobra', 'badge': 'Venom Viper', 'emoji': '🐍', 'bg': 'from-green-500 to-emerald-800', 'border': 'border-green-400'},
+    {'key': 'panda', 'name': 'Bamboozle', 'badge': 'Zen Panda', 'emoji': '🐼', 'bg': 'from-teal-500 to-slate-800', 'border': 'border-teal-400'},
+    {'key': 'unicorn', 'name': 'Stardust', 'badge': 'Mythic Unicorn', 'emoji': '🦄', 'bg': 'from-pink-500 to-purple-600', 'border': 'border-pink-400'},
+    {'key': 'viking', 'name': 'Valhalla', 'badge': 'Storm Raider', 'emoji': '⚔️', 'bg': 'from-rose-600 to-slate-800', 'border': 'border-rose-400'},
+    {'key': 'wizard', 'name': 'Merlin', 'badge': 'Arcane Mage', 'emoji': '🧙‍♂️', 'bg': 'from-violet-600 to-indigo-900', 'border': 'border-violet-400'},
+    {'key': 'pirate', 'name': 'Corsair', 'badge': 'Sky Captain', 'emoji': '🏴‍☠️', 'bg': 'from-slate-700 to-rose-900', 'border': 'border-rose-400'},
+    {'key': 'panther', 'name': 'Onyx', 'badge': 'Night Panther', 'emoji': '🐆', 'bg': 'from-fuchsia-700 to-slate-900', 'border': 'border-fuchsia-400'},
+    {'key': 'octo', 'name': 'Kraken', 'badge': 'Deep Mind', 'emoji': '🐙', 'bg': 'from-pink-600 to-rose-800', 'border': 'border-pink-400'},
+    {'key': 'crown', 'name': 'Monarch', 'badge': 'Trivia Royalty', 'emoji': '👑', 'bg': 'from-yellow-500 to-amber-700', 'border': 'border-yellow-300'},
 ]
+
+AVATAR_LOOKUP = {a['key']: a for a in AVATAR_PRESETS}
+AVATAR_LOOKUP['nova'] = {'key': 'nova', 'name': 'Cyber Bot Nova', 'badge': 'AI Challenger', 'emoji': '🤖', 'bg': 'from-cyan-500 to-purple-700', 'border': 'border-cyan-400'}
 
 
 VISUAL_PRIORITY_CATEGORIES = {
@@ -146,8 +172,14 @@ def get_current_player():
             session['is_creator'] = user.role in ('super_admin', 'admin', 'quizmaster', 'creator')
             profile = PlayerProfile.query.filter_by(user_id=user.id).first()
             if profile:
+                changed = False
                 if profile.display_name != user.username:
                     profile.display_name = user.username
+                    changed = True
+                if profile.avatar_key == 'nova':
+                    profile.avatar_key = 'astro'
+                    changed = True
+                if changed:
                     db.session.commit()
                 session['qm_player_key'] = profile.session_key
                 return profile
@@ -193,6 +225,7 @@ def _get_friends_and_group_challenges(player: PlayerProfile) -> tuple:
 
     friend_sessions = set()
     active_by_opponent = {}
+    last_completed_by_opponent = {}
     h2h_wins = {}
     h2h_Played = {}
 
@@ -203,6 +236,10 @@ def _get_friends_and_group_challenges(player: PlayerProfile) -> tuple:
             continue
         friend_sessions.add(opp_sess)
         if m.status in ('waiting', 'in_progress') and opp_sess not in active_by_opponent:
+            exp_t = m.expected_turn()
+            if m.current_turn != exp_t:
+                m.current_turn = exp_t
+                db.session.commit()
             my_turn = (m.current_turn == 1 and is_p1) or (m.current_turn == 2 and not is_p1)
             active_by_opponent[opp_sess] = {
                 'match_code': m.match_code,
@@ -212,6 +249,8 @@ def _get_friends_and_group_challenges(player: PlayerProfile) -> tuple:
                 'opp_score': m.p2_total_score if is_p1 else m.p1_total_score
             }
         elif m.status == 'completed':
+            if opp_sess not in last_completed_by_opponent:
+                last_completed_by_opponent[opp_sess] = m.match_code
             h2h_Played[opp_sess] = h2h_Played.get(opp_sess, 0) + 1
             if (is_p1 and m.winner == 1) or (not is_p1 and m.winner == 2):
                 h2h_wins[opp_sess] = h2h_wins.get(opp_sess, 0) + 1
@@ -234,16 +273,26 @@ def _get_friends_and_group_challenges(player: PlayerProfile) -> tuple:
             if not norm_name or norm_name == (player.display_name or '').strip().lower() or norm_name in seen_names:
                 continue
             seen_names.add(norm_name)
+            act = active_by_opponent.get(fp.session_key)
+            av_key = fp.avatar_key if (fp.avatar_key and fp.avatar_key != 'nova') else 'quizzy'
+            av_meta = AVATAR_LOOKUP.get(av_key, AVATAR_LOOKUP['quizzy'])
             friends_roster.append({
                 'session_key': fp.session_key,
                 'display_name': fp.display_name,
-                'avatar_key': fp.avatar_key or 'quizzy',
+                'avatar_key': av_key,
+                'avatar': av_meta['emoji'],
                 'level': fp.level or 1,
                 'xp': fp.xp or 0,
                 'is_registered': bool(fp.user_id),
+                'wins': h2h_wins.get(fp.session_key, 0) or (fp.matches_won or 0),
                 'wins_against': h2h_wins.get(fp.session_key, 0),
                 'played_against': h2h_Played.get(fp.session_key, 0),
-                'active_match': active_by_opponent.get(fp.session_key)
+                'played_before': (h2h_Played.get(fp.session_key, 0) > 0) or bool(act),
+                'active_match': act,
+                'active_match_code': act['match_code'] if act else None,
+                'active_round': act['current_round'] if act else None,
+                'active_my_turn': act['my_turn'] if act else False,
+                'last_completed_match_code': last_completed_by_opponent.get(fp.session_key)
             })
 
     # Sort: friends with an active match (especially your turn) first, then registered friends by XP
@@ -376,20 +425,62 @@ def api_notifications():
 
 @arena_bp.route('/')
 def dashboard():
-    """Arena Hub: Active duels, Friends & Group Challenges, leaderboards preview, daily sprint, and quick play."""
+    """Arena Hub: Active duels, Completed Duels ready for Rematch, Friends & Group Challenges, leaderboards preview, and quick play."""
     player = get_current_player()
     
     # Active matches where player is participant
-    active_matches = ArenaMatch.query.filter(
+    raw_active = ArenaMatch.query.filter(
         (ArenaMatch.player1_session == player.session_key) | (ArenaMatch.player2_session == player.session_key),
         ArenaMatch.status.in_(['waiting', 'in_progress'])
     ).order_by(ArenaMatch.updated_at.desc()).all()
+
+    dirty = False
+    for m in raw_active:
+        if m.current_round >= 6:
+            r6 = m.rounds.filter_by(round_number=6).first()
+            if r6 and r6.get_p1_answers() and r6.get_p2_answers():
+                m.status = 'completed'
+                if m.p1_total_score > m.p2_total_score:
+                    m.winner = 1
+                elif m.p2_total_score > m.p1_total_score:
+                    m.winner = 2
+                else:
+                    m.winner = 0
+                dirty = True
+                continue
+        exp_t = m.expected_turn()
+        if m.current_turn != exp_t:
+            m.current_turn = exp_t
+            dirty = True
+    if dirty:
+        db.session.commit()
+
+    active_matches = [m for m in raw_active if m.status in ('waiting', 'in_progress')]
 
     # Finished matches
     history_matches = ArenaMatch.query.filter(
         (ArenaMatch.player1_session == player.session_key) | (ArenaMatch.player2_session == player.session_key),
         ArenaMatch.status.in_(['completed', 'forfeited'])
     ).order_by(ArenaMatch.updated_at.desc()).limit(8).all()
+
+    # Include recent completed duels (that don't already have an active rematch) in active_matches so they show "COMPLETED • CLICK TO REMATCH"
+    active_opp_sessions = set()
+    for m in active_matches:
+        opp_s = m.player2_session if m.player1_session == player.session_key else m.player1_session
+        if opp_s:
+            active_opp_sessions.add(opp_s)
+
+    seen_completed_opps = set()
+    for hm in history_matches:
+        if hm.status != 'completed':
+            continue
+        opp_s = hm.player2_session if hm.player1_session == player.session_key else hm.player1_session
+        if opp_s and opp_s not in active_opp_sessions and opp_s not in seen_completed_opps:
+            if not hm.is_bot:
+                seen_completed_opps.add(opp_s)
+            active_matches.append(hm)
+            if len(active_matches) >= 12:
+                break
 
     # Friends Roster & Open Group Challenges
     friends_roster, open_group_challenges = _get_friends_and_group_challenges(player)
@@ -1268,7 +1359,7 @@ def update_profile():
     if new_avatar in [a['key'] for a in AVATAR_PRESETS]:
         player.avatar_key = new_avatar
 
-    # Keep active matches in sync with new mascot & display name
+    # Keep active & completed matches in sync with new mascot & display name
     ArenaMatch.query.filter_by(player1_session=player.session_key).update({
         'player1_name': player.display_name,
         'player1_avatar': player.avatar_key
@@ -1277,6 +1368,13 @@ def update_profile():
         'player2_name': player.display_name,
         'player2_avatar': player.avatar_key
     })
+    if player.display_name:
+        ArenaMatch.query.filter(func.lower(ArenaMatch.player1_name) == player.display_name.lower()).update({
+            'player1_avatar': player.avatar_key
+        }, synchronize_session=False)
+        ArenaMatch.query.filter(func.lower(ArenaMatch.player2_name) == player.display_name.lower()).update({
+            'player2_avatar': player.avatar_key
+        }, synchronize_session=False)
 
     db.session.commit()
     if request.is_json or 'application/json' in (request.headers.get('Accept') or ''):

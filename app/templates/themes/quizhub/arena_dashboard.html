@@ -1,5 +1,5 @@
 {% extends "themes/quizhub/base.html" %}
-{% from "themes/quizhub/mascot_character.html" import render_mascot %}
+{% from "themes/quizhub/mascot_character.html" import render_mascot, render_avatar_badge %}
 
 {% block title %}Arena Headquarters • Quizmondo.com{% endblock %}
 
@@ -145,23 +145,30 @@
         {% set is_p1 = (m.player1_session == player.session_key) %}
         {% set opponent_name = m.player2_name if is_p1 else m.player1_name %}
         {% set opponent_avatar = m.player2_avatar if is_p1 else m.player1_avatar %}
-        {% set my_turn = (m.current_turn == 1 and is_p1) or (m.current_turn == 2 and not is_p1) %}
+        {% set is_completed = (m.status == 'completed') %}
+        {% set my_turn = (not is_completed) and ((m.current_turn == 1 and is_p1) or (m.current_turn == 2 and not is_p1)) %}
 
-        <div data-duel-card="{{ m.match_code }}" class="p-5 rounded-2xl bg-slate-950/80 border-2 {% if my_turn %}border-emerald-500/60 bg-emerald-950/10{% else %}border-purple-500/20{% endif %} flex items-center justify-between gap-4 transition hover:border-cyan-400">
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center font-mono text-xs font-bold text-white shrink-0">
-              {{ opponent_avatar|upper|truncate(4, True, '') }}
-            </div>
-            <div class="space-y-0.5">
-              <div class="font-mono font-bold text-sm text-white">vs {{ opponent_name }}</div>
-              <div data-duel-meta="{{ m.match_code }}" class="text-xs font-mono text-slate-400">
+        <div data-duel-card="{{ m.match_code }}" class="p-5 rounded-2xl bg-slate-950/80 border-2 {% if is_completed %}border-amber-400/60 bg-amber-950/15{% elif my_turn %}border-emerald-500/60 bg-emerald-950/10{% else %}border-purple-500/20{% endif %} flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 transition hover:border-cyan-400">
+          <div class="flex items-center gap-3 min-w-0">
+            {{ render_avatar_badge(opponent_avatar, opponent_name, 'md') }}
+            <div class="space-y-0.5 min-w-0">
+              <div class="font-mono font-bold text-sm text-white truncate">vs {{ opponent_name }}</div>
+              <div data-duel-meta="{{ m.match_code }}" class="text-xs font-mono {% if is_completed %}text-amber-300 font-bold{% else %}text-slate-400{% endif %}">
+                {% if is_completed %}
+                Completed (6/6) &bull; Final: {{ m.p1_total_score }} - {{ m.p2_total_score }}
+                {% else %}
                 Round {{ m.current_round }}/6 &bull; Score: {{ m.p1_total_score }} - {{ m.p2_total_score }}
+                {% endif %}
               </div>
             </div>
           </div>
 
-          <div class="flex items-center gap-2">
-            {% if my_turn %}
+          <div class="flex items-center gap-2 shrink-0">
+            {% if is_completed %}
+            <a data-duel-btn="{{ m.match_code }}" href="{{ url_for('arena.match_lobby', match_code=m.match_code) }}" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-emerald-400 to-cyan-400 hover:from-amber-300 hover:to-cyan-300 text-slate-950 font-mono font-black text-xs uppercase tracking-wider shadow-lg transition transform hover:scale-105">
+              🏆 COMPLETED &bull; CLICK TO REMATCH
+            </a>
+            {% elif my_turn %}
             <a data-duel-btn="{{ m.match_code }}" href="{{ url_for('arena.match_lobby', match_code=m.match_code) }}" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono font-black text-xs uppercase tracking-wider animate-pulse">
               YOUR TURN 🎮
             </a>
@@ -204,9 +211,7 @@
           {% for f in friends_roster %}
           <div class="p-3 rounded-2xl bg-slate-900/90 border {% if f.played_before %}border-emerald-500/40{% else %}border-purple-500/25{% endif %} flex items-center justify-between gap-3 hover:border-cyan-400/50 transition">
             <div class="flex items-center gap-3 min-w-0">
-              <div class="w-10 h-10 rounded-xl bg-purple-950 border border-purple-500/40 flex items-center justify-center text-xl shrink-0">
-                {{ f.avatar or '🦸' }}
-              </div>
+              {{ render_avatar_badge(f.avatar_key, f.display_name, 'sm') }}
               <div class="min-w-0">
                 <div class="flex items-center gap-1.5">
                   <span class="text-xs sm:text-sm font-black text-white truncate">{{ f.display_name }}</span>
@@ -231,6 +236,10 @@
                   ⏳ Waiting (R{{ f.active_round }})
                 </a>
                 {% endif %}
+              {% elif f.last_completed_match_code %}
+              <a href="{{ url_for('arena.match_lobby', match_code=f.last_completed_match_code) }}" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-emerald-400 hover:from-amber-300 hover:to-emerald-300 text-slate-950 font-black text-[10px] uppercase tracking-wider shadow inline-block transition transform hover:scale-105">
+                🏆 Completed &bull; Rematch
+              </a>
               {% else %}
               <a href="{{ url_for('arena.challenge_fresh', target_session=f.session_key) }}" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-[11px] uppercase tracking-wider shadow inline-block transition transform hover:scale-105">
                 ⚔️ Challenge Now
@@ -335,36 +344,37 @@
   </div>
 </div>
 
-<!-- AVATAR EDIT MODAL -->
-<div id="avatarModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-  <div class="bg-slate-950 border-2 border-purple-500/50 rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-6 shadow-2xl">
-    <div class="flex items-center justify-between border-b border-purple-500/20 pb-3">
-      <h3 class="text-lg font-black font-mono text-white">Customize Your Mascot</h3>
-      <button type="button" onclick="closeAvatarModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+<!-- AVATAR EDIT MODAL (24 Player Avatars; Nova is reserved exclusively for Cyber Bot Nova) -->
+<div id="avatarModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-sm">
+  <div class="bg-slate-950 border-2 border-purple-500/50 rounded-3xl p-5 sm:p-7 max-w-2xl w-full space-y-4 shadow-2xl max-h-[92vh] flex flex-col">
+    <div class="flex items-center justify-between border-b border-purple-500/20 pb-3 shrink-0">
+      <div>
+        <h3 class="text-base sm:text-lg font-black font-mono text-white">Choose Your Arena Avatar ({{ avatars|length }} Champions)</h3>
+        <p class="text-[11px] font-mono text-slate-400">Tap any avatar to equip immediately &bull; Cyber Bot Nova is reserved exclusively for our AI Bot!</p>
+      </div>
+      <button type="button" onclick="closeAvatarModal()" class="text-slate-400 hover:text-white text-2xl px-2">&times;</button>
     </div>
 
-    <div id="avatarSavedToast" class="hidden p-3 rounded-xl bg-emerald-950/90 border border-emerald-400/60 text-emerald-300 font-mono text-xs font-bold text-center">
+    <div id="avatarSavedToast" class="hidden p-3 rounded-xl bg-emerald-950/90 border border-emerald-400/60 text-emerald-300 font-mono text-xs font-bold text-center shrink-0">
       ✅ Mascot updated!
     </div>
 
-    <form id="avatarForm" action="{{ url_for('arena.update_profile') }}" method="POST" class="space-y-4 font-mono text-xs">
+    <form id="avatarForm" action="{{ url_for('arena.update_profile') }}" method="POST" class="space-y-4 font-mono text-xs flex-1 overflow-y-auto pr-1">
       <div>
         <label class="block text-slate-300 font-bold mb-1">Display Name</label>
         <input type="text" id="avatarDisplayNameInput" name="display_name" value="{{ player.display_name }}" maxlength="30" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-purple-500/30 text-white focus:outline-none focus:border-cyan-400">
       </div>
 
       <div>
-        <label class="block text-slate-300 font-bold mb-2">Tap Any Avatar Mascot to Select &amp; Equip</label>
-        <div class="grid grid-cols-2 gap-3" id="avatarCardsGrid">
+        <label class="block text-slate-300 font-bold mb-2">Tap Any Avatar to Equip ({{ avatars|length }} Choices)</label>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5" id="avatarCardsGrid">
           {% for av in avatars %}
-          <label id="avatarCard_{{ av.key }}" onclick="selectAvatarCard('{{ av.key }}', '{{ av.name }}')" class="avatar-card-option p-3 rounded-2xl border-2 {% if player.avatar_key == av.key %}border-cyan-400 bg-cyan-950/40{% else %}border-purple-500/20 bg-slate-900/60{% endif %} cursor-pointer flex flex-col items-center gap-1.5 transition hover:border-cyan-400 relative">
+          <label id="avatarCard_{{ av.key }}" onclick="selectAvatarCard('{{ av.key }}', '{{ av.name }}')" class="avatar-card-option p-2.5 rounded-2xl border-2 {% if player.avatar_key == av.key %}border-cyan-400 bg-cyan-950/40{% else %}border-purple-500/20 bg-slate-900/60{% endif %} cursor-pointer flex flex-col items-center gap-1 transition hover:border-cyan-400 relative text-center">
             <input type="radio" id="avatarRadio_{{ av.key }}" name="avatar_key" value="{{ av.key }}" class="hidden" {% if player.avatar_key == av.key %}checked{% endif %}>
-            <span class="text-3xl">
-              {% if av.key == 'quizzy' %}⭐{% elif av.key == 'pixel' %}🤖{% elif av.key == 'nova' %}🚀{% else %}🦉{% endif %}
-            </span>
-            <span class="font-bold text-white text-xs">{{ av.name }}</span>
-            <span class="text-[10px] text-slate-400">{{ av.badge }}</span>
-            <span id="avatarBadge_{{ av.key }}" class="mt-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase {% if player.avatar_key == av.key %}bg-cyan-500 text-slate-950{% else %}bg-slate-800 text-slate-400{% endif %}">
+            {{ render_avatar_badge(av.key, av.name, 'sm') }}
+            <span class="font-bold text-white text-xs mt-0.5">{{ av.name }}</span>
+            <span class="text-[9px] text-slate-400 truncate max-w-full">{{ av.badge }}</span>
+            <span id="avatarBadge_{{ av.key }}" data-avatar-key="{{ av.key }}" class="avatar-badge-pill mt-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase {% if player.avatar_key == av.key %}bg-cyan-500 text-slate-950{% else %}bg-slate-800 text-slate-400{% endif %}">
               {% if player.avatar_key == av.key %}✓ EQUIPPED{% else %}TAP TO EQUIP{% endif %}
             </span>
           </label>
@@ -372,7 +382,7 @@
         </div>
       </div>
 
-      <div class="pt-2 flex justify-end gap-3">
+      <div class="pt-2 flex justify-end gap-3 sticky bottom-0 bg-slate-950 py-2 border-t border-purple-500/20">
         <button type="button" onclick="closeAvatarModal()" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 font-bold">Close</button>
         <button type="submit" class="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-slate-950 font-black uppercase">Save Profile</button>
       </div>
@@ -410,23 +420,21 @@ function selectAvatarCard(avatarKey, avatarName) {
 
   var allCards = document.querySelectorAll('.avatar-card-option');
   allCards.forEach(function(card) {
-    card.className = 'avatar-card-option p-3 rounded-2xl border-2 border-purple-500/20 bg-slate-900/60 cursor-pointer flex flex-col items-center gap-1.5 transition hover:border-cyan-400 relative';
+    card.className = 'avatar-card-option p-2.5 rounded-2xl border-2 border-purple-500/20 bg-slate-900/60 cursor-pointer flex flex-col items-center gap-1 transition hover:border-cyan-400 relative text-center';
   });
   var activeCard = document.getElementById('avatarCard_' + avatarKey);
   if (activeCard) {
-    activeCard.className = 'avatar-card-option p-3 rounded-2xl border-2 border-cyan-400 bg-cyan-950/40 cursor-pointer flex flex-col items-center gap-1.5 transition hover:border-cyan-400 relative';
+    activeCard.className = 'avatar-card-option p-2.5 rounded-2xl border-2 border-cyan-400 bg-cyan-950/40 cursor-pointer flex flex-col items-center gap-1 transition hover:border-cyan-400 relative text-center';
   }
 
-  ['quizzy', 'pixel', 'nova', 'hoot'].forEach(function(k) {
-    var b = document.getElementById('avatarBadge_' + k);
-    if (b) {
-      if (k === avatarKey) {
-        b.className = 'mt-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-cyan-500 text-slate-950';
-        b.textContent = '✓ EQUIPPED';
-      } else {
-        b.className = 'mt-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-slate-800 text-slate-400';
-        b.textContent = 'TAP TO EQUIP';
-      }
+  var allPills = document.querySelectorAll('.avatar-badge-pill');
+  allPills.forEach(function(b) {
+    if (b.getAttribute('data-avatar-key') === avatarKey) {
+      b.className = 'avatar-badge-pill mt-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-cyan-500 text-slate-950';
+      b.textContent = '✓ EQUIPPED';
+    } else {
+      b.className = 'avatar-badge-pill mt-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-slate-800 text-slate-400';
+      b.textContent = 'TAP TO EQUIP';
     }
   });
 

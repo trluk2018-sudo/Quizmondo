@@ -1,4 +1,5 @@
 {% extends "themes/quizhub/base.html" %}
+{% from "themes/quizhub/mascot_character.html" import render_avatar_badge %}
 
 {% block title %}Global Leaderboards • Quizmondo Arena{% endblock %}
 
@@ -29,6 +30,7 @@
             <span class="w-8 h-8 rounded-xl flex items-center justify-center font-black text-sm shrink-0 {% if loop.index == 1 %}bg-amber-500 text-slate-950{% elif loop.index == 2 %}bg-slate-300 text-slate-950{% elif loop.index == 3 %}bg-amber-700 text-white{% else %}bg-purple-500/20 text-purple-300{% endif %}">
               #{{ loop.index }}
             </span>
+            {{ render_avatar_badge(tp.avatar_key, tp.display_name, 'sm') }}
             <div>
               <div class="font-bold text-white text-sm flex items-center gap-2">
                 <span>{{ tp.display_name }}</span>
