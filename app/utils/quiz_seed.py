@@ -985,6 +985,7 @@ def seed_quizmondo_full_environment():
                 )
 
                 new_q_objects = []
+                media_updates = 0
                 for q_item in cat_info.get('questions', []):
                     if q_item['prompt'] not in existing_prompts:
                         q = QuizQuestion(
@@ -1005,9 +1006,16 @@ def seed_quizmondo_full_environment():
                         )
                         new_q_objects.append(q)
                         existing_prompts.add(q_item['prompt'])
+                    elif q_item.get('media_url'):
+                        existing_q = QuizQuestion.query.filter_by(category_slug=cat_slug, prompt=q_item['prompt']).first()
+                        if existing_q and existing_q.media_url != q_item['media_url']:
+                            existing_q.media_url = q_item['media_url']
+                            existing_q.question_type = q_item.get('type', 'image')
+                            media_updates += 1
 
                 if new_q_objects:
                     db.session.bulk_save_objects(new_q_objects)
+                if new_q_objects or media_updates:
                     db.session.commit()
             print("MEGA_CATEGORIES_SYNCHRONIZED_SUCCESSFULLY")
     except Exception as e:
