@@ -1,15 +1,16 @@
 # Quizmondo Project Status & Change Log
 
-**Project**: Quizmondo ([https://quizmondo.kangcono.com](https://quizmondo.kangcono.com))  
-**Repository**: `C:\Users\trl\Documents\Agentic Projects\Quizmondo`  
-**Latest Deployment Commit**: `e654c3f`  
+**Live Application**: [https://quizmondo.kangcono.com](https://quizmondo.kangcono.com)  
+**Local Codebase Path**: [Quizmondo](file:///c:/Users/trl/Documents/Agentic%20Projects/Quizmondo)  
+**GitHub Repository**: [https://github.com/trluk2018-sudo/Quizmondo](https://github.com/trluk2018-sudo/Quizmondo)  
+**Latest Deployment Commit**: `51f6698`  
 **Last Updated**: October 26, 2026  
 
 ---
 
 ## 📌 Executive Summary
-Quizmondo is an interactive, gamified trivia platform featuring:
-1. **Multiplayer Head-to-Head Arena Duels** (Turn-based 6-round snake turn duels via WhatsApp deep link, registered friends list, online matchmaking, or against Cyber Bot Nova).
+Quizmondo is an interactive, gamified multiplayer trivia platform designed for mobile and desktop web browsers. It provides:
+1. **Multiplayer Head-to-Head Arena Duels** (Turn-based 6-round snake turn duels via WhatsApp deep link, registered friends list, online matchmaking queue, or against Cyber Bot Nova).
 2. **Pub League / Live TV Mode** (Real-time live pub quiz manager with table check-in, strict round gating, and automated scoring).
 3. **Visual Trivia Matching Categories** (Flags, football club badges, brand logos, country shapes with over 600+ verified visual questions).
 4. **Player Ranks & Gamification** (XP, Coins, Streaks, 24 selectable champion avatars, and 3-step Superhero Name + PIN registration).
@@ -26,7 +27,8 @@ flowchart TD
         Lobby["Arena Hub (/arena/)"]
         Match["Duel Showdown (/arena/match/&lt;code&gt;)"]
         Play["Live Question Runner (/arena/match/&lt;code&gt;/play)"]
-        PubQuiz["Pub Quizmaster Console & TV Screen"]
+        PubQuiz["Pub Quizmaster Console & TV Screen (/leagues)"]
+        AdminUI["Quizmondo Control Centre (/admin/)"]
     end
     subgraph Backend ["Flask Application (app/)"]
         ArenaBP["Arena Blueprint (routes/arena.py)"]
@@ -44,6 +46,7 @@ flowchart TD
     Match --> ArenaBP
     Play --> ArenaBP
     PubQuiz --> PublicBP
+    AdminUI --> AdminBP
     ArenaBP --> Models
     AdminBP --> Models
     Models --> SQLite
@@ -51,18 +54,18 @@ flowchart TD
 
 ---
 
-## 📋 Comprehensive Change Log by Feature Area
+## 📋 Comprehensive Feature & Change Log
 
 ### 1. Multiplayer Arena & Duel Workflow
-* **Dedicated Duel Categorization on Arena Hub (`arena_dashboard.html`, `routes/arena.py`)**:
-  * Duels are organized into 3 clear sections:
-    1. **📥 Challenges For You**: Duels sent to you by other players, with origin tags (`Challenged You`), round progress, and **`YOUR TURN 🎮`** or **`WAITING ⏳`** status.
+* **Organized Duel Sections on Arena Hub ([arena_dashboard.html](file:///c:/Users/trl/Documents/Agentic%20Projects/Quizmondo/app/templates/themes/quizhub/arena_dashboard.html))**:
+  * Duels are categorized into 3 clean, dedicated sections:
+    1. **📥 Challenges For You**: Duels sent to you by other players, showing origin badges (`Challenged You`), round progress, and **`YOUR TURN 🎮`** or **`WAITING ⏳`** status.
     2. **📤 Invites & Duels You Sent**: Listed at the top with recent WhatsApp invites (`Waiting for friend to accept (Round 1)`), recipient names, and rematch shortcuts.
     3. **🤖 Bot Nova Practice Duels**: Isolated solo training section against Cyber Bot Nova.
   * Added **Friend Name Input** on the *Challenge a Friend* card so players can label invites (e.g. "Dave", "Sarah") before sending them on WhatsApp.
 * **Single WhatsApp Invite Flow**:
   * WhatsApp invite is shown **only once** in Step 1 (prior to playing Round 1).
-  * Removed confusing secondary WhatsApp buttons after Round 1 was completed; replaced with status badge: `✅ Round 1 Score Locked In • Waiting for Friend`.
+  * Removed confusing secondary WhatsApp buttons after Round 1 was completed; replaced with status badge: `Round 1 Score Locked In • Waiting for Friend`.
 * **Completed Duel State & Rematch Handling**:
   * Completed matches display **`🏆 COMPLETED • CLICK TO REMATCH`** on the Arena Hub instead of remaining in a `WAITING ⏳` state.
   * Clicking Rematch triggers a race-free workflow: the first clicker creates the rematch and starts Round 1; the opponent's screen auto-updates to `🔥 [Opponent] Started a Rematch! Join Rematch Now →`.
@@ -77,7 +80,7 @@ flowchart TD
   * Expanded preset avatars from 4 to 24 distinct choices: *Quizzy (`⭐`), Pixel (`👾`), Sage (`🦉`), Astro (`🧑‍🚀`), Blaze (`🔥`), Volt (`⚡`), Shadow (`🥷`), Rex (`🦖`), Kitsune (`🦊`), Titan (`🛡️`), Vortex (`🐉`), Maverick (`🦅`), Phantom (`👻`), Apex (`🦁`), Neptune (`🦈`), Cobra (`🐍`), Bamboozle (`🐼`), Stardust (`🦄`), Valhalla (`⚔️`), Merlin (`🧙‍♂️`), Corsair (`🏴‍☠️`), Onyx (`🐆`), Kraken (`🐙`), Monarch (`👑`)*.
 * **Nova Exclusivity**:
   * Reserved `'nova'` exclusively for **Cyber Bot Nova** (`bot_quizmondo_ai`). Existing human players with `nova` were safely migrated to `astro`.
-* **Visual Rendering (`mascot_character.html`)**:
+* **Visual Rendering ([mascot_character.html](file:///c:/Users/trl/Documents/Agentic%20Projects/Quizmondo/app/templates/themes/quizhub/mascot_character.html))**:
   * Implemented `render_avatar_badge()` macro to display SVG/graphic badges rather than truncating raw text keys (which previously showed `PIXE` or `PIXEL` instead of the 8-bit bot).
   * Included fallback to username (`display_name`) if no avatar is set.
   * Fixed an issue where the string `'mx-auto'` was being passed into speech bubble containers.
@@ -85,12 +88,12 @@ flowchart TD
 ---
 
 ### 3. Real-Time Notifications & Mobile Responsiveness
-* **Audio Alerts & Global Bell**:
+* **Audio Alerts & Global Bell ([base.html](file:///c:/Users/trl/Documents/Agentic%20Projects/Quizmondo/app/templates/themes/quizhub/base.html))**:
   * Added a Web Audio API 4-note harmonic bell chime (`A5 → D6 → E6 → A6`) in `base.html` that triggers on new turns and challenge notifications.
   * Added user interaction audio unlocking (`pointerdown`, `touchstart`) for mobile Safari/Chrome policy compliance.
 * **Fixed Mobile Dropdown Positioning**:
   * Resolved an issue where `#arenaNotifDropdown` rendered off-screen on mobile devices by changing styling from `absolute right-0 w-80` to `fixed left-3 right-3 top-16 sm:absolute sm:left-auto sm:right-0 sm:top-full`.
-* **Cross-Game Turn Alerts (`base.html`)**:
+* **Cross-Game Turn Alerts**:
   * Background polling (`/arena/api/notifications`) polls every 5 seconds.
   * Displays friendly toast notifications (`showLiveArenaToast`) with 1-tap navigation when an opponent finishes their turn while the player is in another game or browsing decks.
 
