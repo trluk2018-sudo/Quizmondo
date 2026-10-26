@@ -200,7 +200,7 @@
         </div>
 
         {% if friends_roster %}
-        <div class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+        <div class="space-y-2.5">
           {% for f in friends_roster %}
           <div class="p-3 rounded-2xl bg-slate-900/90 border {% if f.played_before %}border-emerald-500/40{% else %}border-purple-500/25{% endif %} flex items-center justify-between gap-3 hover:border-cyan-400/50 transition">
             <div class="flex items-center gap-3 min-w-0">
@@ -264,7 +264,7 @@
         </div>
 
         {% if open_group_challenges %}
-        <div class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+        <div class="space-y-2.5">
           {% for oc in open_group_challenges %}
           <div class="p-3.5 rounded-2xl bg-gradient-to-r from-amber-950/30 via-slate-900 to-purple-950/40 border border-amber-500/40 flex items-center justify-between gap-3">
             <div class="min-w-0">

@@ -7,6 +7,77 @@
   <!-- Compiled Local Tailwind CSS (No CDN) -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.min.css') }}">
   <link rel="icon" type="image/svg+xml" href="/static/img/quizmondo_icon.svg">
+  <style>
+    /* High-Contrast Admin Workspace Typography & Form Controls */
+    #adminMainWorkspace {
+      color: #0f172a;
+    }
+    #adminMainWorkspace .text-slate-400,
+    #adminMainWorkspace .text-gray-400 {
+      color: #475569 !important;
+      font-weight: 500;
+    }
+    #adminMainWorkspace .text-slate-500,
+    #adminMainWorkspace .text-gray-500 {
+      color: #334155 !important;
+      font-weight: 500;
+    }
+    #adminMainWorkspace .text-slate-600 {
+      color: #1e293b !important;
+    }
+    #adminMainWorkspace table th {
+      color: #1e293b !important;
+      font-weight: 700 !important;
+    }
+    #adminMainWorkspace table td {
+      color: #0f172a;
+    }
+    #adminMainWorkspace input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not(.bg-slate-900),
+    #adminMainWorkspace select:not(.bg-slate-900),
+    #adminMainWorkspace textarea:not(.bg-slate-900) {
+      color: #0f172a !important;
+      background-color: #ffffff;
+      border-color: #94a3b8;
+      font-weight: 600;
+    }
+    #adminMainWorkspace input::placeholder,
+    #adminMainWorkspace textarea::placeholder {
+      color: #64748b !important;
+      opacity: 1;
+      font-weight: 400;
+    }
+    /* Left Sidebar Shaded & Color-Coded Menu Blocks */
+    .nav-block-cyan {
+      background: linear-gradient(145deg, rgba(8, 51, 68, 0.78), rgba(15, 23, 42, 0.92));
+      border: 2px solid rgba(6, 182, 212, 0.45);
+      box-shadow: 0 4px 14px rgba(6, 182, 212, 0.12);
+    }
+    .nav-block-purple {
+      background: linear-gradient(145deg, rgba(59, 7, 100, 0.78), rgba(24, 10, 48, 0.92));
+      border: 2px solid rgba(168, 85, 247, 0.48);
+      box-shadow: 0 4px 14px rgba(168, 85, 247, 0.15);
+    }
+    .nav-block-emerald {
+      background: linear-gradient(145deg, rgba(6, 78, 59, 0.78), rgba(12, 35, 32, 0.92));
+      border: 2px solid rgba(16, 185, 129, 0.48);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.14);
+    }
+    .nav-block-amber {
+      background: linear-gradient(145deg, rgba(120, 53, 15, 0.72), rgba(38, 22, 10, 0.92));
+      border: 2px solid rgba(245, 158, 11, 0.48);
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.12);
+    }
+    .nav-block-blue {
+      background: linear-gradient(145deg, rgba(30, 58, 138, 0.75), rgba(15, 23, 52, 0.92));
+      border: 2px solid rgba(59, 130, 246, 0.48);
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.14);
+    }
+    .nav-block-rose {
+      background: linear-gradient(145deg, rgba(136, 19, 55, 0.72), rgba(40, 10, 24, 0.92));
+      border: 2px solid rgba(244, 63, 94, 0.48);
+      box-shadow: 0 4px 14px rgba(244, 63, 94, 0.12);
+    }
+  </style>
   {% block head_extra %}{% endblock %}
 </head>
 <body class="flex h-full flex-col bg-[#0a0418] text-slate-100">
@@ -57,79 +128,121 @@
   </header>
 
   <div class="flex flex-1 overflow-hidden">
-    <!-- Admin Sidebar Navigation -->
-    <aside class="w-56 bg-[#080214] border-r border-purple-500/20 text-slate-300 flex flex-col shrink-0 overflow-y-auto text-xs font-mono">
-      <nav class="py-4 space-y-1">
-        <a href="{{ url_for('admin.dashboard') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if request.endpoint == 'admin.dashboard' %}bg-blue-600 text-white font-medium{% endif %}">
-          Dashboard
-        </a>
-
-        <div class="pt-2 pb-1 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Content</div>
-        <a href="{{ url_for('admin.posts') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if 'posts' in request.endpoint %}bg-slate-700 text-white font-medium{% endif %}">
-          Posts
-        </a>
-        <a href="{{ url_for('admin.pages') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if 'pages' in request.endpoint %}bg-slate-700 text-white font-medium{% endif %}">
-          Pages
-        </a>
-        <a href="{{ url_for('admin.media') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if 'media' in request.endpoint %}bg-slate-700 text-white font-medium{% endif %}">
-          Media Library
-        </a>
-
-        <div class="pt-3 pb-1 px-4 text-[11px] font-semibold uppercase tracking-wider text-purple-400 flex items-center justify-between">
-          <span>Arena &amp; Gaming</span>
-          <span class="text-[9px] bg-purple-900/60 text-purple-300 px-1.5 py-0.5 rounded font-mono">LIVE</span>
+    <!-- Admin Sidebar Navigation: Separated into Distinct Shaded & Color-Coded Blocks -->
+    <aside class="w-64 bg-[#070212] border-r border-purple-500/30 text-slate-100 flex flex-col shrink-0 overflow-y-auto text-xs font-mono p-3 space-y-3">
+      
+      <!-- BLOCK 1: COMMAND & MAINTENANCE (Cyan / Blue Shaded Block) -->
+      <div class="nav-block-cyan rounded-2xl p-2.5 space-y-1">
+        <div class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-cyan-300 flex items-center justify-between border-b border-cyan-500/30 mb-1">
+          <span>⚡ Command Centre</span>
+          <span class="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-200 text-[9px]">CORE</span>
         </div>
-        <a href="{{ url_for('admin.questions') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if 'question' in request.endpoint %}bg-purple-900/50 text-white font-medium{% endif %}">
-          Questions &amp; Packs
+        <a href="{{ url_for('admin.dashboard') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if request.endpoint == 'admin.dashboard' %}bg-cyan-500 text-slate-950 font-black shadow{% else %}text-slate-100 hover:bg-cyan-500/20 hover:text-white font-semibold{% endif %}">
+          <span>📊</span> <span>Master Dashboard</span>
         </a>
-        <a href="{{ url_for('admin.duels') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if 'duel' in request.endpoint %}bg-purple-900/50 text-white font-medium{% endif %}">
-          Live Duels &amp; Stats
+        <a href="{{ url_for('admin.dashboard') }}#danger-zone" class="flex items-center gap-2 px-3 py-2 rounded-xl text-rose-300 hover:bg-rose-500/20 hover:text-white font-bold transition">
+          <span>🔐</span> <span>Clear Duels &amp; Content</span>
         </a>
-        <a href="{{ url_for('admin.players') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if 'player' in request.endpoint %}bg-purple-900/50 text-white font-medium{% endif %}">
-          Players &amp; Ban Hammer
-        </a>
-        <a href="{{ url_for('admin.leagues') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if 'league' in request.endpoint %}bg-purple-900/50 text-white font-medium{% endif %}">
-          Pub Quiz Leagues
-        </a>
+      </div>
 
-        <div class="pt-3 pb-1 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Design</div>
-        <a href="{{ url_for('admin.themes') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if request.endpoint == 'admin.themes' %}bg-slate-700 text-white font-medium{% endif %}">
-          Themes
+      <!-- BLOCK 2: ARENA & GAME OPS (Purple / Fuchsia Shaded Block) -->
+      <div class="nav-block-purple rounded-2xl p-2.5 space-y-1">
+        <div class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-purple-300 flex items-center justify-between border-b border-purple-500/30 mb-1">
+          <span>🎮 Arena &amp; Gaming</span>
+          <span class="px-1.5 py-0.5 rounded bg-purple-500/30 text-purple-200 text-[9px]">LIVE</span>
+        </div>
+        <a href="{{ url_for('admin.questions') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if 'question' in request.endpoint %}bg-purple-500 text-white font-black shadow{% else %}text-slate-100 hover:bg-purple-500/25 hover:text-white font-semibold{% endif %}">
+          <span>❓</span> <span>Questions &amp; Packs</span>
         </a>
-        <a href="{{ url_for('admin.layout') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if request.endpoint == 'admin.layout' %}bg-slate-700 text-white font-medium{% endif %}">
-          Home Page Layout and Sections
+        <a href="{{ url_for('admin.duels') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if 'duel' in request.endpoint %}bg-purple-500 text-white font-black shadow{% else %}text-slate-100 hover:bg-purple-500/25 hover:text-white font-semibold{% endif %}">
+          <span>⚔️</span> <span>Live Duels &amp; Stats</span>
         </a>
-        <a href="{{ url_for('admin.header_settings') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if request.endpoint == 'admin.header_settings' %}bg-slate-700 text-white font-medium{% endif %}">
-          Header Styles &amp; Logo
+        <a href="{{ url_for('admin.leagues') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if 'league' in request.endpoint %}bg-purple-500 text-white font-black shadow{% else %}text-slate-100 hover:bg-purple-500/25 hover:text-white font-semibold{% endif %}">
+          <span>🍻</span> <span>Pub Quiz Leagues</span>
         </a>
-        <a href="{{ url_for('admin.footer_settings') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if request.endpoint == 'admin.footer_settings' %}bg-slate-700 text-white font-medium{% endif %}">
-          Footer Customizer &amp; Widgets
-        </a>
-        <a href="{{ url_for('admin.menus') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if request.endpoint == 'admin.menus' %}bg-slate-700 text-white font-medium{% endif %}">
-          Menus
-        </a>
-        <a href="{{ url_for('admin.widgets') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if request.endpoint == 'admin.widgets' %}bg-slate-700 text-white font-medium{% endif %}">
-          Widgets &amp; Sidebars
-        </a>
+      </div>
 
-        <div class="pt-3 pb-1 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Settings</div>
-        <a href="{{ url_for('admin.settings_general') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if request.endpoint == 'admin.settings_general' %}bg-slate-700 text-white font-medium{% endif %}">
-          General
+      <!-- BLOCK 3: USERS, ROLES & PLAYERS (Emerald / Teal Shaded Block) -->
+      <div class="nav-block-emerald rounded-2xl p-2.5 space-y-1">
+        <div class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-300 flex items-center justify-between border-b border-emerald-500/30 mb-1">
+          <span>👥 User Management</span>
+          <span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-200 text-[9px]">ACCOUNTS</span>
+        </div>
+        <a href="{{ url_for('admin.players') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if 'player' in request.endpoint or 'user' in request.endpoint %}bg-emerald-500 text-slate-950 font-black shadow{% else %}text-slate-100 hover:bg-emerald-500/25 hover:text-white font-semibold{% endif %}">
+          <span>🛡️</span> <span>Users, Roles &amp; Players</span>
         </a>
-        <a href="{{ url_for('admin.settings_reading') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if request.endpoint == 'admin.settings_reading' %}bg-slate-700 text-white font-medium{% endif %}">
-          Reading
+        <a href="{{ url_for('admin.players') }}#create-user-card" class="flex items-center gap-2 px-3 py-2 rounded-xl text-emerald-200 hover:bg-emerald-500/25 hover:text-white font-semibold transition">
+          <span>➕</span> <span>Add User / Staff Account</span>
         </a>
-        <a href="{{ url_for('admin.settings_seo') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if request.endpoint == 'admin.settings_seo' %}bg-slate-700 text-white font-medium{% endif %}">
-          SEO &amp; Analytics
+      </div>
+
+      <!-- BLOCK 4: CONTENT & MEDIA PUBLISHING (Amber / Orange Shaded Block) -->
+      <div class="nav-block-amber rounded-2xl p-2.5 space-y-1">
+        <div class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-amber-300 flex items-center justify-between border-b border-amber-500/30 mb-1">
+          <span>📝 Content &amp; Media</span>
+          <span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-200 text-[9px]">CMS</span>
+        </div>
+        <a href="{{ url_for('admin.posts') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if 'posts' in request.endpoint or 'post_' in request.endpoint %}bg-amber-400 text-slate-950 font-black shadow{% else %}text-slate-100 hover:bg-amber-500/25 hover:text-white font-semibold{% endif %}">
+          <span>📰</span> <span>Posts &amp; Guides</span>
         </a>
-        <a href="{{ url_for('auth.profile') }}" class="flex items-center px-4 py-2 hover:bg-slate-700 hover:text-white {% if request.endpoint == 'auth.profile' %}bg-slate-700 text-white font-medium{% endif %}">
-          Profile &amp; Security
+        <a href="{{ url_for('admin.pages') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if 'pages' in request.endpoint or 'page_' in request.endpoint %}bg-amber-400 text-slate-950 font-black shadow{% else %}text-slate-100 hover:bg-amber-500/25 hover:text-white font-semibold{% endif %}">
+          <span>📄</span> <span>Pages</span>
         </a>
-      </nav>
+        <a href="{{ url_for('admin.media') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if 'media' in request.endpoint %}bg-amber-400 text-slate-950 font-black shadow{% else %}text-slate-100 hover:bg-amber-500/25 hover:text-white font-semibold{% endif %}">
+          <span>🖼️</span> <span>Media Library</span>
+        </a>
+      </div>
+
+      <!-- BLOCK 5: DESIGN & INTERFACE (Blue / Indigo Shaded Block) -->
+      <div class="nav-block-blue rounded-2xl p-2.5 space-y-1">
+        <div class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-cyan-300 flex items-center justify-between border-b border-cyan-500/30 mb-1">
+          <span>🎨 Design &amp; Layout</span>
+          <span class="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-200 text-[9px]">UI</span>
+        </div>
+        <a href="{{ url_for('admin.themes') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if request.endpoint == 'admin.themes' %}bg-blue-600 text-white font-black shadow{% else %}text-slate-100 hover:bg-blue-600/30 hover:text-white font-semibold{% endif %}">
+          <span>🎭</span> <span>Themes</span>
+        </a>
+        <a href="{{ url_for('admin.layout') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if request.endpoint == 'admin.layout' %}bg-blue-600 text-white font-black shadow{% else %}text-slate-100 hover:bg-blue-600/30 hover:text-white font-semibold{% endif %}">
+          <span>🧩</span> <span>Home Page Layout</span>
+        </a>
+        <a href="{{ url_for('admin.header_settings') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if request.endpoint == 'admin.header_settings' %}bg-blue-600 text-white font-black shadow{% else %}text-slate-100 hover:bg-blue-600/30 hover:text-white font-semibold{% endif %}">
+          <span>🔝</span> <span>Header &amp; Logo</span>
+        </a>
+        <a href="{{ url_for('admin.footer_settings') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if request.endpoint == 'admin.footer_settings' %}bg-blue-600 text-white font-black shadow{% else %}text-slate-100 hover:bg-blue-600/30 hover:text-white font-semibold{% endif %}">
+          <span>🔽</span> <span>Footer &amp; Widgets</span>
+        </a>
+        <a href="{{ url_for('admin.menus') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if request.endpoint == 'admin.menus' %}bg-blue-600 text-white font-black shadow{% else %}text-slate-100 hover:bg-blue-600/30 hover:text-white font-semibold{% endif %}">
+          <span>🧭</span> <span>Menus</span>
+        </a>
+        <a href="{{ url_for('admin.widgets') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if request.endpoint == 'admin.widgets' %}bg-blue-600 text-white font-black shadow{% else %}text-slate-100 hover:bg-blue-600/30 hover:text-white font-semibold{% endif %}">
+          <span>📐</span> <span>Sidebars</span>
+        </a>
+      </div>
+
+      <!-- BLOCK 6: SYSTEM SETTINGS & SECURITY (Rose / Slate Shaded Block) -->
+      <div class="nav-block-rose rounded-2xl p-2.5 space-y-1">
+        <div class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-rose-300 flex items-center justify-between border-b border-rose-500/30 mb-1">
+          <span>⚙️ System &amp; Security</span>
+          <span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-200 text-[9px]">CONFIG</span>
+        </div>
+        <a href="{{ url_for('admin.settings_general') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if request.endpoint == 'admin.settings_general' %}bg-rose-600 text-white font-black shadow{% else %}text-slate-100 hover:bg-rose-600/30 hover:text-white font-semibold{% endif %}">
+          <span>⚙️</span> <span>General Settings</span>
+        </a>
+        <a href="{{ url_for('admin.settings_reading') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if request.endpoint == 'admin.settings_reading' %}bg-rose-600 text-white font-black shadow{% else %}text-slate-100 hover:bg-rose-600/30 hover:text-white font-semibold{% endif %}">
+          <span>📖</span> <span>Reading Settings</span>
+        </a>
+        <a href="{{ url_for('admin.settings_seo') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if request.endpoint == 'admin.settings_seo' %}bg-rose-600 text-white font-black shadow{% else %}text-slate-100 hover:bg-rose-600/30 hover:text-white font-semibold{% endif %}">
+          <span>🔍</span> <span>SEO &amp; Analytics</span>
+        </a>
+        <a href="{{ url_for('auth.profile') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if request.endpoint == 'auth.profile' %}bg-rose-600 text-white font-black shadow{% else %}text-slate-100 hover:bg-rose-600/30 hover:text-white font-semibold{% endif %}">
+          <span>🔑</span> <span>Profile &amp; Password</span>
+        </a>
+      </div>
+
     </aside>
 
-    <!-- Main Admin Workspace Area -->
-    <main class="flex-1 overflow-y-auto p-8 bg-slate-50">
+    <!-- Main Admin Workspace Area (High Contrast Dark Text on Clean Slate Surface) -->
+    <main id="adminMainWorkspace" class="flex-1 overflow-y-auto p-6 sm:p-8 bg-slate-100 text-slate-900">
       <!-- Flash Notices -->
       {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}

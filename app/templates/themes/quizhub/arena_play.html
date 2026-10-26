@@ -108,6 +108,144 @@
 
     </div>
 
+    <!-- IN-PAGE PLANETARY FLIGHT ANIMATION & SCORE REVEAL (Native page layout, no modal/iframe!) -->
+    <div id="rocketModal" class="hidden w-full space-y-6 text-center font-mono">
+      
+      <!-- STAGE 1: Animated Planetary Flight -->
+      <div id="animationStage" class="relative p-6 sm:p-8 rounded-3xl bg-slate-950 border-2 border-purple-500/60 shadow-2xl overflow-hidden space-y-6">
+        <div class="absolute inset-0 qm-starfield opacity-30 pointer-events-none"></div>
+
+        <!-- Mission Badge -->
+        <div class="relative z-10 flex flex-wrap items-center justify-between gap-2 text-xs font-bold">
+          <span class="px-3 py-1 rounded-full bg-cyan-950/90 border border-cyan-400/50 text-cyan-300 uppercase tracking-widest flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+            <span id="missionBadgeText">MISSION: EARTH ➔ MOON SPRINT</span>
+          </span>
+          <span class="text-amber-400 font-mono text-[11px]">DIST: <span id="telemetryDistance" class="font-bold">384,400 KM</span></span>
+        </div>
+
+        <!-- Flight Arena Track -->
+        <div class="relative z-10 py-6 px-2 flex items-center justify-between">
+          <!-- Planet Origin -->
+          <div class="flex flex-col items-center space-y-1 shrink-0">
+            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-blue-600 via-cyan-400 to-emerald-400 qm-planet-origin flex items-center justify-center text-3xl animate-pulse">
+              <span id="planetOriginIcon">🌍</span>
+            </div>
+            <span id="planetOriginName" class="text-[11px] font-black text-cyan-300">EARTH</span>
+            <span id="planetOriginSub" class="text-[9px] text-slate-400">Round Origin</span>
+          </div>
+
+          <!-- Trajectory Track with Plasma Trail and Rocket -->
+          <div class="relative flex-1 mx-3 sm:mx-6 h-3.5 bg-purple-950 rounded-full border border-purple-500/50 overflow-visible">
+            <div id="plasmaTrail" class="absolute top-0 left-0 h-full bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-full"></div>
+            <div id="flyingRocket" class="absolute -top-5 transform -translate-x-1/2 flex items-center text-3xl sm:text-4xl">
+              <span>🚀</span>
+            </div>
+          </div>
+
+          <!-- Planet Destination -->
+          <div class="flex flex-col items-center space-y-1 shrink-0">
+            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-amber-700 via-red-500 to-orange-400 qm-planet-dest flex items-center justify-center text-3xl">
+              <span id="planetDestIcon">🌕</span>
+            </div>
+            <span id="planetDestName" class="text-[11px] font-black text-rose-400">THE MOON</span>
+            <span id="planetDestSub" class="text-[9px] text-slate-400">Lunar Colony</span>
+          </div>
+        </div>
+
+        <!-- Hurdle Runner / Bot AI Calculation Status -->
+        <div class="relative z-10 p-3.5 rounded-2xl bg-purple-950/40 border border-purple-500/30 flex items-center justify-between text-xs">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl animate-bounce">🏃‍♂️</span>
+            <div class="text-left">
+              <span class="text-white font-bold block" id="telemetryLine1">Transmitting answers across cosmic space...</span>
+              <span class="text-cyan-400 text-[11px] block" id="telemetryLine2">🤖 Simulating Cyber Bot Nova neural choices...</span>
+            </div>
+          </div>
+          <div class="text-right shrink-0">
+            <span id="tickerLabel" class="text-[10px] text-slate-400 uppercase block">Bot Nova Tally</span>
+            <span id="botScoreTicker" class="text-base sm:text-lg font-black text-pink-400">0 PTS</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAGE 2: Reveal Scores, Stage-Gated Answers & Next Action -->
+      <div id="scoreRevealStage" class="hidden p-5 sm:p-8 rounded-3xl bg-slate-950/95 border-2 border-cyan-400/50 shadow-2xl space-y-5">
+        
+        <!-- Round Outcome Announcement -->
+        <div class="space-y-1.5">
+          <div id="roundOutcomeBadge" class="inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider">
+          </div>
+          <h2 id="roundOutcomeTitle" class="text-xl sm:text-3xl font-black text-white">
+            Round Complete!
+          </h2>
+          <p id="roundOutcomeDesc" class="text-xs text-slate-300 leading-relaxed">
+            Scores synchronized.
+          </p>
+        </div>
+
+        <!-- Head-to-Head Round Scoreboard -->
+        <div class="grid grid-cols-2 gap-3 sm:gap-4">
+          <!-- Current Player -->
+          <div class="p-3.5 sm:p-4 rounded-2xl bg-cyan-950/40 border-2 border-cyan-400/50 text-center space-y-1">
+            <span class="text-[10px] uppercase text-cyan-300 font-bold block">YOU</span>
+            <span class="text-xs sm:text-sm font-bold text-white truncate block">{{ player.display_name }}</span>
+            <div class="text-2xl sm:text-4xl font-black text-cyan-400" id="revealUserScore">+0</div>
+            <span class="text-[10px] text-emerald-300 font-bold block" id="revealUserMeta">0/3 Correct • ⏱️ 0s</span>
+            <span class="text-[10px] text-slate-400 block" id="revealUserTotal">Total: 0 PTS</span>
+          </div>
+
+          <!-- Opponent (Friend or Bot Nova) -->
+          <div class="p-3.5 sm:p-4 rounded-2xl bg-pink-950/40 border-2 border-pink-500/50 text-center space-y-1">
+            <span class="text-[10px] uppercase text-pink-300 font-bold block" id="revealOppLabel">OPPONENT</span>
+            <span class="text-xs sm:text-sm font-bold text-white truncate block" id="revealOppName">Challenger</span>
+            <div class="text-2xl sm:text-4xl font-black text-pink-400" id="revealBotScore">+0</div>
+            <span class="text-[10px] text-pink-200 font-bold block" id="revealBotMeta">Waiting...</span>
+            <span class="text-[10px] text-slate-400 block" id="revealBotTotal">Total: 0 PTS</span>
+          </div>
+        </div>
+
+        <!-- STAGE-GATED QUESTION-BY-QUESTION COMPARISON (Full native layout, no inner scrollbar!) -->
+        <div id="stageComparisonContainer" class="hidden space-y-2 text-left pt-2 border-t border-purple-500/30">
+          <div class="text-[11px] font-black uppercase text-emerald-400 tracking-wider text-center">
+            🔓 Head-to-Head Answer Reveal
+          </div>
+          <div id="stageComparisonList" class="space-y-2.5">
+          </div>
+        </div>
+
+        <!-- MATCH COMPLETE: Free Account Conversion Card -->
+        <div id="conversionCard" class="hidden p-5 rounded-2xl bg-gradient-to-r from-purple-900/60 to-indigo-950/80 border-2 border-purple-400/50 text-left space-y-3">
+          <div class="flex items-center gap-2 text-amber-400 text-xs font-bold">
+            <span>⭐</span> <span>SAVE YOUR SCORES &amp; CLAIM PERMANENT PROFILE!</span>
+          </div>
+          <p class="text-xs text-slate-200">
+            Pick a cool Superhero Name &amp; 6-Digit PIN in 3 easy steps to keep your points and challenge friends on WhatsApp!
+          </p>
+          <a href="{{ url_for('arena.player_register') }}" class="block w-full py-3 px-4 rounded-xl bg-gradient-to-r from-pink-500 to-indigo-600 hover:from-pink-400 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider text-center shadow-lg transition">
+            🚀 Quick 3-Step Setup &amp; Save Progress &rarr;
+          </a>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="space-y-3 pt-2">
+          <button type="button" id="btnStageWhatsApp" onclick="triggerStageWhatsApp()" class="hidden w-full py-4 px-5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-2xl transition transform hover:scale-[1.01] active:scale-95">
+            📲 Send Score &amp; Nudge Friend on WhatsApp
+          </button>
+          <a id="btnNextBotRound" href="#" class="block w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-2xl transition transform hover:scale-[1.02] active:scale-95">
+            🚀 Continue &rarr;
+          </a>
+          <div class="flex items-center justify-center gap-4 text-xs text-slate-400">
+            <a href="{{ url_for('arena.match_lobby', match_code=match.match_code) }}" class="hover:text-cyan-300 transition">📊 Match Scoreboard</a>
+            <span>&bull;</span>
+            <a href="{{ url_for('arena.dashboard') }}" class="hover:text-purple-300 transition">🏠 Arena Hub</a>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
   </div>
 </div>
 
@@ -141,13 +279,7 @@ function renderMedia(q) {
   mediaBox.innerHTML = '';
   mediaBox.classList.add('hidden');
 
-  if (q.question_type === 'youtube_clip' || q.question_type === 'video') {
-    var ytId = extractYouTubeId(q.media_url);
-    if (ytId) {
-      mediaBox.classList.remove('hidden');
-      mediaBox.innerHTML = '<div class="relative w-full aspect-video"><iframe class="w-full h-full rounded-2xl" src="https://www.youtube.com/embed/' + ytId + '?autoplay=1&mute=1&rel=0&modestbranding=1" title="Quizmondo Video Clue" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>';
-    }
-  } else if (q.question_type === 'image' && q.media_url) {
+  if (q.question_type === 'image' && q.media_url) {
     mediaBox.classList.remove('hidden');
     mediaBox.innerHTML = '<div class="relative w-full flex flex-col items-center justify-center p-4 bg-slate-950/90 space-y-2">' +
       '<span class="px-3 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 font-mono font-bold text-[10px] uppercase tracking-wider">🎯 Visual Matching Challenge</span>' +
@@ -361,9 +493,11 @@ function showRocketAnimation(data) {
     return;
   }
 
+  var qCard = document.getElementById('quizCard');
+  if (qCard) qCard.classList.add('hidden');
+
   latestWhatsAppNudgeText = data.whatsapp_nudge_text || '';
   modal.classList.remove('hidden');
-  modal.scrollTop = 0;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
   var revealStageReset = document.getElementById('scoreRevealStage');
@@ -602,14 +736,9 @@ initQuestion();
 </script>
 
 <!-- ======================================================== -->
-<!-- ROCKET TO MARS / HURDLE SPRINT ANIMATION & SCORE REVEAL  -->
+<!-- ROCKET TO MARS / HURDLE SPRINT ANIMATION STYLES          -->
 <!-- ======================================================== -->
 <style>
-  #rocketModal {
-    background-color: rgba(6, 1, 18, 0.96);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  }
   .qm-starfield {
     background-image: radial-gradient(rgba(168, 85, 247, 0.7) 1.5px, transparent 1.5px), radial-gradient(rgba(34, 211, 238, 0.5) 1px, transparent 1px);
     background-size: 24px 24px, 36px 36px;
@@ -632,143 +761,4 @@ initQuestion();
     filter: drop-shadow(0 0 14px rgba(236, 72, 153, 0.95));
   }
 </style>
-<div id="rocketModal" class="hidden fixed inset-0 z-50 overflow-y-auto p-4 sm:p-8 flex flex-col justify-start sm:justify-center items-center">
-  <div class="max-w-2xl w-full my-auto space-y-6 text-center font-mono">
-    
-    <!-- STAGE 1: Animated Earth to Mars Flight -->
-    <div id="animationStage" class="relative p-6 sm:p-8 rounded-3xl bg-slate-950 border-2 border-purple-500/60 shadow-2xl overflow-hidden space-y-6">
-      <div class="absolute inset-0 qm-starfield opacity-30 pointer-events-none"></div>
-
-      <!-- Mission Badge -->
-      <div class="relative z-10 flex flex-wrap items-center justify-between gap-2 text-xs font-bold">
-        <span class="px-3 py-1 rounded-full bg-cyan-950/90 border border-cyan-400/50 text-cyan-300 uppercase tracking-widest flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-          <span id="missionBadgeText">MISSION: EARTH ➔ MOON SPRINT</span>
-        </span>
-        <span class="text-amber-400 font-mono text-[11px]">DIST: <span id="telemetryDistance" class="font-bold">384,400 KM</span></span>
-      </div>
-
-      <!-- Flight Arena Track -->
-      <div class="relative z-10 py-6 px-2 flex items-center justify-between">
-        <!-- Planet Origin -->
-        <div class="flex flex-col items-center space-y-1 shrink-0">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-blue-600 via-cyan-400 to-emerald-400 qm-planet-origin flex items-center justify-center text-3xl animate-pulse">
-            <span id="planetOriginIcon">🌍</span>
-          </div>
-          <span id="planetOriginName" class="text-[11px] font-black text-cyan-300">EARTH</span>
-          <span id="planetOriginSub" class="text-[9px] text-slate-400">Round Origin</span>
-        </div>
-
-        <!-- Trajectory Track with Plasma Trail and Rocket -->
-        <div class="relative flex-1 mx-3 sm:mx-6 h-3.5 bg-purple-950 rounded-full border border-purple-500/50 overflow-visible">
-          <div id="plasmaTrail" class="absolute top-0 left-0 h-full bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-full"></div>
-          <div id="flyingRocket" class="absolute -top-5 transform -translate-x-1/2 flex items-center text-3xl sm:text-4xl">
-            <span>🚀</span>
-          </div>
-        </div>
-
-        <!-- Planet Destination -->
-        <div class="flex flex-col items-center space-y-1 shrink-0">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-amber-700 via-red-500 to-orange-400 qm-planet-dest flex items-center justify-center text-3xl">
-            <span id="planetDestIcon">🌕</span>
-          </div>
-          <span id="planetDestName" class="text-[11px] font-black text-rose-400">THE MOON</span>
-          <span id="planetDestSub" class="text-[9px] text-slate-400">Lunar Colony</span>
-        </div>
-      </div>
-
-      <!-- Hurdle Runner / Bot AI Calculation Status -->
-      <div class="relative z-10 p-3.5 rounded-2xl bg-purple-950/40 border border-purple-500/30 flex items-center justify-between text-xs">
-        <div class="flex items-center gap-3">
-          <span class="text-2xl animate-bounce">🏃‍♂️</span>
-          <div class="text-left">
-            <span class="text-white font-bold block" id="telemetryLine1">Transmitting answers across cosmic space...</span>
-            <span class="text-cyan-400 text-[11px] block" id="telemetryLine2">🤖 Simulating Cyber Bot Nova neural choices...</span>
-          </div>
-        </div>
-        <div class="text-right shrink-0">
-          <span id="tickerLabel" class="text-[10px] text-slate-400 uppercase block">Bot Nova Tally</span>
-          <span id="botScoreTicker" class="text-base sm:text-lg font-black text-pink-400">0 PTS</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- STAGE 2: Reveal Scores, Stage-Gated Answers & Next Action -->
-    <div id="scoreRevealStage" class="hidden p-5 sm:p-8 rounded-3xl bg-slate-950/95 border-2 border-cyan-400/50 shadow-2xl space-y-5">
-      
-      <!-- Round Outcome Announcement -->
-      <div class="space-y-1.5">
-        <div id="roundOutcomeBadge" class="inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider">
-        </div>
-        <h2 id="roundOutcomeTitle" class="text-xl sm:text-3xl font-black text-white">
-          Round Complete!
-        </h2>
-        <p id="roundOutcomeDesc" class="text-xs text-slate-300 leading-relaxed">
-          Scores synchronized.
-        </p>
-      </div>
-
-      <!-- Head-to-Head Round Scoreboard -->
-      <div class="grid grid-cols-2 gap-3 sm:gap-4">
-        <!-- Current Player -->
-        <div class="p-3.5 sm:p-4 rounded-2xl bg-cyan-950/40 border-2 border-cyan-400/50 text-center space-y-1">
-          <span class="text-[10px] uppercase text-cyan-300 font-bold block">YOU</span>
-          <span class="text-xs sm:text-sm font-bold text-white truncate block">{{ player.display_name }}</span>
-          <div class="text-2xl sm:text-4xl font-black text-cyan-400" id="revealUserScore">+0</div>
-          <span class="text-[10px] text-emerald-300 font-bold block" id="revealUserMeta">0/3 Correct • ⏱️ 0s</span>
-          <span class="text-[10px] text-slate-400 block" id="revealUserTotal">Total: 0 PTS</span>
-        </div>
-
-        <!-- Opponent (Friend or Bot Nova) -->
-        <div class="p-3.5 sm:p-4 rounded-2xl bg-pink-950/40 border-2 border-pink-500/50 text-center space-y-1">
-          <span class="text-[10px] uppercase text-pink-300 font-bold block" id="revealOppLabel">OPPONENT</span>
-          <span class="text-xs sm:text-sm font-bold text-white truncate block" id="revealOppName">Challenger</span>
-          <div class="text-2xl sm:text-4xl font-black text-pink-400" id="revealBotScore">+0</div>
-          <span class="text-[10px] text-pink-200 font-bold block" id="revealBotMeta">Waiting...</span>
-          <span class="text-[10px] text-slate-400 block" id="revealBotTotal">Total: 0 PTS</span>
-        </div>
-      </div>
-
-      <!-- STAGE-GATED QUESTION-BY-QUESTION COMPARISON (Shown when both players complete the round!) -->
-      <div id="stageComparisonContainer" class="hidden space-y-2 text-left pt-2 border-t border-purple-500/30">
-        <div class="text-[11px] font-black uppercase text-emerald-400 tracking-wider text-center">
-          🔓 Head-to-Head Answer Reveal
-        </div>
-        <div id="stageComparisonList" class="space-y-2 max-h-60 overflow-y-auto pr-1">
-        </div>
-      </div>
-
-      <!-- MATCH COMPLETE: Free Account Conversion Card -->
-      <div id="conversionCard" class="hidden p-5 rounded-2xl bg-gradient-to-r from-purple-900/60 to-indigo-950/80 border-2 border-purple-400/50 text-left space-y-3">
-        <div class="flex items-center gap-2 text-amber-400 text-xs font-bold">
-          <span>⭐</span> <span>SAVE YOUR SCORES &amp; CLAIM PERMANENT PROFILE!</span>
-        </div>
-        <p class="text-xs text-slate-200">
-          Pick a cool Superhero Name &amp; 6-Digit PIN in 3 easy steps to keep your points and challenge friends on WhatsApp!
-        </p>
-        <a href="{{ url_for('arena.player_register') }}" class="block w-full py-3 px-4 rounded-xl bg-gradient-to-r from-pink-500 to-indigo-600 hover:from-pink-400 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider text-center shadow-lg transition">
-          🚀 Quick 3-Step Setup &amp; Save Progress &rarr;
-        </a>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="space-y-3 pt-2">
-        <button type="button" id="btnStageWhatsApp" onclick="triggerStageWhatsApp()" class="hidden w-full py-4 px-5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-2xl transition transform hover:scale-[1.01] active:scale-95">
-          📲 Send Score &amp; Nudge Friend on WhatsApp
-        </button>
-        <a id="btnNextBotRound" href="#" class="block w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-2xl transition transform hover:scale-[1.02] active:scale-95">
-          🚀 Continue &rarr;
-        </a>
-        <div class="flex items-center justify-center gap-4 text-xs text-slate-400">
-          <a href="{{ url_for('arena.match_lobby', match_code=match.match_code) }}" class="hover:text-cyan-300 transition">📊 Match Scoreboard</a>
-          <span>&bull;</span>
-          <a href="{{ url_for('arena.dashboard') }}" class="hover:text-purple-300 transition">🏠 Arena Hub</a>
-        </div>
-      </div>
-
-    </div>
-
-  </div>
-</div>
-
 {% endblock %}

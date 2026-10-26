@@ -1538,6 +1538,23 @@ def questions_export():
     )
 
 
+def _verify_admin_password(password_attempt: str) -> bool:
+    """Verify the admin's password for destructive maintenance actions (clear duels, clear content, etc.)."""
+    pw = (password_attempt or '').strip()
+    if not pw:
+        return False
+    uid = session.get('user_id')
+    if uid:
+        curr_u = db.session.get(User, uid)
+        if curr_u and curr_u.check_password(pw):
+            return True
+    admin_users = User.query.filter(User.role.in_(['super_admin', 'admin'])).all()
+    for au in admin_users:
+        if au.check_password(pw):
+            return True
+    return False
+
+
 @admin_bp.route('/duels')
 @login_required
 def duels():
@@ -1545,16 +1562,271 @@ def duels():
     return render_template('admin/duels.html', matches=matches)
 
 
+@admin_bp.route('/duels/<int:id>/delete', methods=['POST'])
+@login_required
+def duel_delete(id):
+    m = ArenaMatch.query.get_or_404(id)
+    code = m.match_code
+    ArenaRound.query.filter_by(match_id=m.id).delete()
+    db.session.delete(m)
+    db.session.commit()
+    flash(f'Arena Duel #{code} deleted.', 'success')
+    return redirect(request.referrer or url_for('admin.duels'))
+
+
+@admin_bp.route('/system/clear', methods=['POST'])
+@login_required
+def system_clear():
+    """Password-gated administrative maintenance to clear duels, test players, pub states, or content."""
+    pw = request.form.get('admin_password') or ''
+    target = (request.form.get('clear_target') or '').strip()
+
+    if not _verify_admin_password(pw):
+        flash('Action blocked: Invalid Admin Password / PIN. Please enter your valid administrator password (or set one in Profile & Password) to confirm.', 'error')
+        return redirect(request.referrer or url_for('admin.dashboard'))
+
+    if target == 'duels':
+        round_cnt = ArenaRound.query.delete()
+        match_cnt = ArenaMatch.query.delete()
+        for p in PlayerProfile.query.all():
+            p.matches_played = 0
+            p.matches_won = 0
+        db.session.commit()
+        flash(f'Cleared all {match_cnt} Arena Duels ({round_cnt} rounds) and reset win/loss counters.', 'success')
+
+    elif target == 'guest_players':
+        guests = PlayerProfile.query.filter(PlayerProfile.user_id.is_(None)).all()
+        removed = 0
+        for g in guests:
+            db.session.delete(g)
+            removed += 1
+        db.session.commit()
+        flash(f'Cleared {removed} unlinked guest player sessions (all registered user accounts preserved).', 'success')
+
+    elif target == 'community_questions':
+        removed = QuizQuestion.query.filter_by(is_community=True).delete()
+        db.session.commit()
+        flash(f'Cleared {removed} community-submitted questions (Core packs preserved).', 'success')
+
+    elif target == 'pub_leagues_state':
+        leagues_list = PubLeague.query.all()
+        for lg in leagues_list:
+            st = lg.get_state()
+            st['current_round'] = 1
+            st['round_status'] = 'waiting'
+            st['answers_revealed'] = False
+            st['teams'] = []
+            st['round_questions'] = {}
+            st['reset_ts'] = datetime.utcnow().isoformat()
+            lg.set_state(st)
+        db.session.commit()
+        flash(f'Reset all {len(leagues_list)} Pub Quiz Leagues to Round 1 waiting state and cleared active tables.', 'success')
+
+    elif target == 'cms_posts':
+        removed = Post.query.delete()
+        db.session.commit()
+        flash(f'Cleared {removed} blog posts from CMS.', 'success')
+
+    elif target == 'everything_test_data':
+        ArenaRound.query.delete()
+        match_cnt = ArenaMatch.query.delete()
+        guest_cnt = PlayerProfile.query.filter(PlayerProfile.user_id.is_(None)).delete()
+        for p in PlayerProfile.query.all():
+            p.matches_played = 0
+            p.matches_won = 0
+        for lg in PubLeague.query.all():
+            st = lg.get_state()
+            st['current_round'] = 1
+            st['round_status'] = 'waiting'
+            st['answers_revealed'] = False
+            st['teams'] = []
+            st['round_questions'] = {}
+            st['reset_ts'] = datetime.utcnow().isoformat()
+            lg.set_state(st)
+        db.session.commit()
+        flash(f'Full Arena Reset complete: Cleared {match_cnt} duels, removed {guest_cnt} guest sessions, and reset all Pub Quiz rooms.', 'success')
+
+    else:
+        flash('Please select a valid maintenance action.', 'error')
+
+    return redirect(request.referrer or url_for('admin.dashboard'))
+
+
+@admin_bp.route('/users')
 @admin_bp.route('/players')
 @login_required
 def players():
     search = request.args.get('q', '').strip()
+    role_filter = request.args.get('role', '').strip()
+
+    # Ensure every registered User has a linked PlayerProfile so admins can manage all accounts seamlessly
+    import secrets
+    all_users_objs = User.query.order_by(User.id.asc()).all()
+    profiles_by_uid = {p.user_id: p for p in PlayerProfile.query.filter(PlayerProfile.user_id.isnot(None)).all()}
+    created_any = False
+    for u in all_users_objs:
+        if u.id not in profiles_by_uid:
+            prof = PlayerProfile(
+                user_id=u.id,
+                session_key=f"usr_{u.id}_{secrets.token_hex(6)}",
+                display_name=u.username,
+                avatar_key='quizzy',
+                level=1,
+                xp=100,
+                coins=250
+            )
+            db.session.add(prof)
+            created_any = True
+    if created_any:
+        db.session.commit()
+
     query = PlayerProfile.query
     if search:
-        query = query.filter(PlayerProfile.display_name.ilike(f'%{search}%'))
-    all_players = query.order_by(PlayerProfile.xp.desc()).all()
+        matching_uids = [u.id for u in all_users_objs if search.lower() in (u.username or '').lower() or search.lower() in (u.email or '').lower()]
+        if matching_uids:
+            query = query.filter((PlayerProfile.display_name.ilike(f'%{search}%')) | (PlayerProfile.user_id.in_(matching_uids)))
+        else:
+            query = query.filter(PlayerProfile.display_name.ilike(f'%{search}%'))
+
+    all_players = query.order_by(PlayerProfile.user_id.is_(None).asc(), PlayerProfile.xp.desc()).all()
     all_users = {u.id: u for u in User.query.all()}
-    return render_template('admin/players.html', players=all_players, users_by_id=all_users, search=search)
+
+    if role_filter:
+        if role_filter == 'guest':
+            all_players = [p for p in all_players if not p.user_id]
+        else:
+            all_players = [p for p in all_players if p.user_id and all_users.get(p.user_id) and all_users[p.user_id].role == role_filter]
+
+    return render_template(
+        'admin/players.html',
+        players=all_players,
+        users_by_id=all_users,
+        search=search,
+        role_filter=role_filter
+    )
+
+
+@admin_bp.route('/users/create', methods=['POST'])
+@login_required
+def user_create():
+    """Create a new registered User (Super Admin, Admin, Quizmaster, Creator, or Player) and linked PlayerProfile."""
+    import secrets
+    username = (request.form.get('username') or '').strip()
+    email = (request.form.get('email') or '').strip().lower()
+    role = (request.form.get('role') or 'player').strip()
+    password = (request.form.get('password') or '').strip()
+    coins = int(request.form.get('coins') or 250)
+    xp = int(request.form.get('xp') or 100)
+
+    if role not in ('super_admin', 'admin', 'quizmaster', 'creator', 'player'):
+        role = 'player'
+
+    if not username or not password:
+        flash('Username and Password / PIN are required to create a user.', 'error')
+        return redirect(url_for('admin.players'))
+
+    if not email:
+        email = f"{slugify(username)}@quizmondo.local"
+
+    if User.query.filter((User.username.ilike(username)) | (User.email.ilike(email))).first():
+        flash(f'A user with username "{username}" or email "{email}" already exists.', 'error')
+        return redirect(url_for('admin.players'))
+
+    new_user = User(username=username, email=email, role=role, is_active=True)
+    new_user.set_password(password)
+    db.session.add(new_user)
+    db.session.flush()
+
+    prof = PlayerProfile(
+        user_id=new_user.id,
+        session_key=f"usr_{new_user.id}_{secrets.token_hex(6)}",
+        display_name=username,
+        avatar_key=request.form.get('avatar_key') or 'quizzy',
+        level=1 + (xp // 500),
+        xp=xp,
+        coins=coins
+    )
+    db.session.add(prof)
+    db.session.commit()
+    flash(f'User "{username}" ({role.upper()}) created successfully!', 'success')
+    return redirect(url_for('admin.players'))
+
+
+@admin_bp.route('/players/<int:id>/update', methods=['POST'])
+@login_required
+def player_update(id):
+    """Update a user/player's display name, username, email, role, XP, coins, or reset their password/PIN."""
+    p = PlayerProfile.query.get_or_404(id)
+    display_name = (request.form.get('display_name') or '').strip()
+    email = (request.form.get('email') or '').strip().lower()
+    role = (request.form.get('role') or 'player').strip()
+    new_password = (request.form.get('new_password') or '').strip()
+    xp_val = request.form.get('xp')
+    coins_val = request.form.get('coins')
+
+    if role not in ('super_admin', 'admin', 'quizmaster', 'creator', 'player'):
+        role = 'player'
+
+    if display_name:
+        p.display_name = display_name
+    if xp_val is not None and str(xp_val).strip().isdigit():
+        p.xp = int(xp_val)
+        p.level = 1 + (p.xp // 500)
+    if coins_val is not None and str(coins_val).strip().isdigit():
+        p.coins = int(coins_val)
+
+    if p.user_id:
+        u = db.session.get(User, p.user_id)
+        if u:
+            if display_name:
+                conflict = User.query.filter(User.username.ilike(display_name), User.id != u.id).first()
+                if not conflict:
+                    u.username = display_name
+            if email:
+                conflict_em = User.query.filter(User.email.ilike(email), User.id != u.id).first()
+                if not conflict_em:
+                    u.email = email
+            u.role = role
+            if new_password:
+                u.set_password(new_password)
+    else:
+        # Upgrade guest session to a registered User account if email or password or non-guest role is supplied
+        if email or new_password or role in ('super_admin', 'admin', 'quizmaster', 'creator'):
+            uname = p.display_name or f"Player_{p.id}"
+            if User.query.filter(User.username.ilike(uname)).first():
+                uname = f"{uname}_{p.id}"
+            u_email = email or f"{slugify(uname)}@quizmondo.local"
+            if User.query.filter(User.email.ilike(u_email)).first():
+                u_email = f"{slugify(uname)}_{p.id}@quizmondo.local"
+            u = User(username=uname, email=u_email, role=role, is_active=True)
+            u.set_password(new_password or '123456')
+            db.session.add(u)
+            db.session.flush()
+            p.user_id = u.id
+
+    db.session.commit()
+    flash(f'Updated account & profile for "{p.display_name}".', 'success')
+    return redirect(url_for('admin.players'))
+
+
+@admin_bp.route('/players/<int:id>/delete', methods=['POST'])
+@login_required
+def player_delete(id):
+    p = PlayerProfile.query.get_or_404(id)
+    if p.user_id and p.user_id == session.get('user_id'):
+        flash('You cannot delete your own active administrator account.', 'error')
+        return redirect(url_for('admin.players'))
+
+    name = p.display_name
+    uid = p.user_id
+    db.session.delete(p)
+    if uid:
+        u = db.session.get(User, uid)
+        if u and u.id != session.get('user_id'):
+            db.session.delete(u)
+    db.session.commit()
+    flash(f'Deleted user/player "{name}".', 'success')
+    return redirect(url_for('admin.players'))
 
 
 @admin_bp.route('/players/<int:id>/role', methods=['POST'])
@@ -1571,7 +1843,17 @@ def player_set_role(id):
             db.session.commit()
             flash(f'Role for {p.display_name} updated to {new_role}.', 'success')
     else:
-        flash('This profile is a guest session and has not registered an account yet.', 'error')
+        # Automatically create a linked User account if promoting a guest session!
+        uname = p.display_name or f"Player_{p.id}"
+        if User.query.filter(User.username.ilike(uname)).first():
+            uname = f"{uname}_{p.id}"
+        u = User(username=uname, email=f"{slugify(uname)}_{p.id}@quizmondo.local", role=new_role, is_active=True)
+        u.set_password('123456')
+        db.session.add(u)
+        db.session.flush()
+        p.user_id = u.id
+        db.session.commit()
+        flash(f'Promoted guest "{p.display_name}" to registered {new_role} (default PIN: 123456).', 'success')
     return redirect(url_for('admin.players'))
 
 

@@ -175,8 +175,8 @@ def profile():
                 flash('Current password is incorrect.', 'error')
                 return render_template('admin/profile.html', user=user, is_impersonation=is_impersonation)
 
-            if len(new_password) < 8:
-                flash('New password must be at least 8 characters long.', 'error')
+            if len(new_password) < 4:
+                flash('New password / PIN must be at least 4 characters long.', 'error')
                 return render_template('admin/profile.html', user=user, is_impersonation=is_impersonation)
 
             if new_password != confirm_password:

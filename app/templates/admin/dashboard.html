@@ -116,47 +116,47 @@
           {% for duel in recent_duels %}
           <tr class="hover:bg-slate-50/80 transition">
             <td class="py-3 px-4 font-mono font-bold text-slate-900">
-              <a href="{{ url_for('arena.match_lobby', match_code=duel.match_code) }}" target="_blank" class="text-indigo-600 hover:underline">
+              <a href="{{ url_for('arena.match_lobby', match_code=duel.match_code) }}" class="text-indigo-700 font-black hover:underline">
                 #{{ duel.match_code }}
               </a>
             </td>
-            <td class="py-3 px-4 font-medium text-slate-800">
+            <td class="py-3 px-4 font-bold text-slate-900">
               <div class="flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-                {{ duel.player1.display_name if duel.player1 else 'Player 1' }}
+                <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+                {{ duel.player1_name or 'Player 1' }}
               </div>
             </td>
-            <td class="py-3 px-4 font-medium text-slate-800">
+            <td class="py-3 px-4 font-bold text-slate-900">
               <div class="flex items-center gap-1.5">
-                {% if duel.is_bot_match %}
+                {% if duel.is_bot %}
                 <span class="text-xs">🤖</span>
-                <span class="text-amber-700 font-bold">{{ duel.player2.display_name if duel.player2 else 'Nova AI' }}</span>
-                {% elif duel.player2 %}
-                <span class="w-2 h-2 rounded-full bg-fuchsia-500"></span>
-                {{ duel.player2.display_name }}
+                <span class="text-amber-800 font-black">{{ duel.player2_name or 'Cyber Bot Nova' }}</span>
+                {% elif duel.player2_session and duel.player2_session not in ('pending_invite', 'online_matchmaking') %}
+                <span class="w-2 h-2 rounded-full bg-fuchsia-600"></span>
+                {{ duel.player2_name }}
                 {% else %}
-                <span class="text-slate-400 italic">Waiting for player...</span>
+                <span class="text-slate-600 italic">Waiting for challenger...</span>
                 {% endif %}
               </div>
             </td>
-            <td class="py-3 px-4 text-center font-mono font-bold text-slate-900">
-              {{ duel.p1_score }} - {{ duel.p2_score }}
+            <td class="py-3 px-4 text-center font-mono font-black text-slate-900">
+              {{ duel.p1_total_score }} - {{ duel.p2_total_score }}
             </td>
-            <td class="py-3 px-4 text-center font-mono text-slate-600">
+            <td class="py-3 px-4 text-center font-mono font-bold text-slate-800">
               Round {{ duel.current_round }}/6
             </td>
             <td class="py-3 px-4">
-              {% if duel.status == 'finished' %}
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Finished</span>
-              {% elif duel.status == 'active' %}
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 animate-pulse">Turn in progress</span>
+              {% if duel.status == 'completed' %}
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-900">Completed</span>
+              {% elif duel.status == 'in_progress' %}
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900">In Progress</span>
               {% else %}
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">Waiting</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-200 text-slate-800">Waiting</span>
               {% endif %}
             </td>
-            <td class="py-3 px-4 text-right">
-              <a href="{{ url_for('arena.match_lobby', match_code=duel.match_code) }}" target="_blank" class="font-bold text-indigo-600 hover:text-indigo-800 hover:underline">
-                Spectate &rarr;
+            <td class="py-3 px-4 text-right space-x-2">
+              <a href="{{ url_for('arena.match_lobby', match_code=duel.match_code) }}" class="font-bold text-indigo-700 hover:text-indigo-900 hover:underline">
+                Open &rarr;
               </a>
             </td>
           </tr>
@@ -253,13 +253,53 @@
         <li class="flex items-start gap-2">
           <span class="font-bold text-blue-600">&bull;</span>
           <div>
-            <strong class="text-slate-800">Player Directory & Anti-Abuse:</strong>
-            <p class="text-slate-500">Inspect player streaks, scores, and toggle Ban Hammer for inappropriate behavior.</p>
-            <a href="{{ url_for('admin.players') }}" class="text-blue-600 hover:underline font-medium inline-block mt-1">Inspect players &rarr;</a>
+            <strong class="text-slate-800">Users, Roles &amp; Anti-Abuse:</strong>
+            <p class="text-slate-600">Create and manage Users, Admins, Quizmasters, and Players, reset PINs, or toggle Ban Hammer.</p>
+            <a href="{{ url_for('admin.players') }}" class="text-blue-700 hover:underline font-bold inline-block mt-1">Manage Users &amp; Players &rarr;</a>
           </div>
         </li>
       </ul>
     </div>
   </div>
+
+  <!-- PASSWORD-PROTECTED SYSTEM MAINTENANCE: CLEAR DUELS & CONTENT -->
+  <div id="danger-zone" class="bg-rose-50 border-2 border-rose-400 rounded-2xl p-6 shadow-md space-y-5">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-rose-300 pb-3">
+      <div>
+        <h2 class="text-base font-black text-rose-950 uppercase tracking-wider flex items-center gap-2">
+          <span>🔐</span> <span>System Maintenance: Clear Duels, Test Data &amp; Content (Password Protected)</span>
+        </h2>
+        <p class="text-xs text-rose-900 font-medium mt-0.5">
+          Select what you want to clear and enter your <strong>Admin Password / PIN</strong> to confirm. (You can set or change your Admin password anytime under <a href="{{ url_for('auth.profile') }}" class="underline font-bold">Profile &amp; Password</a>.)
+        </p>
+      </div>
+    </div>
+
+    <form action="{{ url_for('admin.system_clear') }}" method="POST" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end text-xs" onsubmit="return confirm('Are you sure you want to execute this clear/reset action?');">
+      <div class="md:col-span-5">
+        <label class="block font-black text-rose-950 uppercase mb-1">1. Select Action to Perform *</label>
+        <select name="clear_target" required class="w-full px-3.5 py-2.5 rounded-xl border-2 border-rose-400 bg-white text-slate-900 font-bold">
+          <option value="duels">⚔️ Clear All Arena Duels &amp; Reset Win/Loss Counters</option>
+          <option value="everything_test_data">🧹 Full Arena Reset (Clear All Duels + Guest Sessions + Reset Pub Quiz Rooms)</option>
+          <option value="pub_leagues_state">🍻 Reset All Pub Quiz Leagues (Clear Active Tables &amp; Reset to Round 1)</option>
+          <option value="guest_players">👤 Clear Unlinked Guest Player Sessions (Keep All Registered Users)</option>
+          <option value="community_questions">❓ Clear Community-Submitted Questions (Keep Core Curated Packs)</option>
+          <option value="cms_posts">📰 Clear All CMS Blog Posts</option>
+        </select>
+      </div>
+
+      <div class="md:col-span-4">
+        <label class="block font-black text-rose-950 uppercase mb-1">2. Confirm Admin Password / PIN *</label>
+        <input type="password" name="admin_password" required placeholder="Enter your Admin Password / PIN..." class="w-full px-3.5 py-2.5 rounded-xl border-2 border-rose-400 bg-white text-slate-900 font-bold">
+      </div>
+
+      <div class="md:col-span-3">
+        <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black uppercase tracking-wider shadow-lg transition">
+          🗑️ Confirm &amp; Clear
+        </button>
+      </div>
+    </form>
+  </div>
+
 </div>
 {% endblock %}

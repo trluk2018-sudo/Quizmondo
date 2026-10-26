@@ -1,71 +1,96 @@
 {% extends "admin/base.html" %}
 
-{% block title %}Live Arena Duels &amp; Stats • Quizmondo{% endblock %}
+{% block title %}Live Arena Duels &amp; Stats • Quizmondo Control Centre{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
+<div class="max-w-6xl space-y-6 text-slate-900">
 
-  <div>
-    <h1 class="text-2xl font-bold text-slate-800">Live Arena Duels &amp; Match Activity</h1>
-    <p class="text-xs text-slate-500">Monitor active 6-round head-to-head matches, turn cadence, and scores across players.</p>
+  <!-- Page Header & Password-Gated Clear All Duels Bar -->
+  <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-300 pb-4">
+    <div>
+      <h1 class="text-2xl font-black text-slate-900">⚔️ Live Arena Duels &amp; Match Activity ({{ matches|length }})</h1>
+      <p class="text-xs text-slate-700 font-medium mt-1">
+        Monitor active 6-round head-to-head matches, turn cadence, and scores across players, or clear duels below.
+      </p>
+    </div>
+
+    <!-- Clear All Duels (Password Protected) -->
+    <form action="{{ url_for('admin.system_clear') }}" method="POST" class="flex flex-wrap sm:flex-nowrap items-center gap-2 bg-rose-50 border-2 border-rose-300 p-2.5 rounded-xl" onsubmit="return confirm('Permanently clear ALL Arena Duels and reset win/loss counters?');">
+      <input type="hidden" name="clear_target" value="duels">
+      <span class="text-xs font-black text-rose-900 whitespace-nowrap px-1">🔐 Clear All Duels:</span>
+      <input type="password" name="admin_password" required placeholder="Admin Password / PIN" class="px-3 py-1.5 rounded-lg border-2 border-rose-400 text-xs text-slate-900 font-bold bg-white w-44">
+      <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase whitespace-nowrap shadow">
+        🗑️ Clear All Duels
+      </button>
+    </form>
   </div>
 
-  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+  <div class="bg-white rounded-2xl border-2 border-slate-300 shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-left text-xs">
-        <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider">
+        <thead class="bg-slate-200 border-b-2 border-slate-300 text-slate-900 font-black uppercase tracking-wider">
           <tr>
-            <th class="py-3 px-4">Match Code</th>
-            <th class="py-3 px-4">Player 1</th>
-            <th class="py-3 px-4 text-center">Score</th>
-            <th class="py-3 px-4">Player 2</th>
-            <th class="py-3 px-4">Round</th>
-            <th class="py-3 px-4">Status</th>
-            <th class="py-3 px-4 text-right">Created</th>
+            <th class="py-3.5 px-4">Match Code</th>
+            <th class="py-3.5 px-4">Player 1 (Challenger)</th>
+            <th class="py-3.5 px-4 text-center">Score</th>
+            <th class="py-3.5 px-4">Player 2 (Opponent)</th>
+            <th class="py-3.5 px-4">Round</th>
+            <th class="py-3.5 px-4">Status</th>
+            <th class="py-3.5 px-4">Created</th>
+            <th class="py-3.5 px-4 text-right">Actions</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-100">
+        <tbody class="divide-y divide-slate-200">
           {% for m in matches %}
-          <tr class="hover:bg-slate-50/80 transition">
-            <td class="py-3.5 px-4 font-mono font-bold text-blue-600">
-              <a href="{{ url_for('arena.match_lobby', match_code=m.match_code) }}" target="_blank" class="hover:underline flex items-center gap-1">
-                <span>{{ m.match_code }}</span>
-                <span class="text-[10px] text-slate-400">&nearr;</span>
+          <tr class="hover:bg-slate-50 transition">
+            <td class="py-3.5 px-4 font-mono font-black text-blue-700">
+              <a href="{{ url_for('arena.match_lobby', match_code=m.match_code) }}" class="hover:underline flex items-center gap-1">
+                <span>#{{ m.match_code }}</span>
               </a>
             </td>
-            <td class="py-3.5 px-4 font-medium text-slate-800">
+            <td class="py-3.5 px-4 font-bold text-slate-900">
               <div class="flex items-center gap-2">
-                <span class="w-5 h-5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-bold flex items-center justify-center font-mono">P1</span>
+                <span class="w-6 h-6 rounded-full bg-purple-100 border border-purple-300 text-purple-900 text-[10px] font-black flex items-center justify-center font-mono">P1</span>
                 <span>{{ m.player1_name }}</span>
               </div>
             </td>
-            <td class="py-3.5 px-4 text-center font-mono font-bold text-sm">
-              <span class="text-purple-600">{{ m.p1_total_score }}</span>
-              <span class="text-slate-300 mx-1">-</span>
-              <span class="text-cyan-600">{{ m.p2_total_score }}</span>
+            <td class="py-3.5 px-4 text-center font-mono font-black text-sm">
+              <span class="text-purple-800">{{ m.p1_total_score }}</span>
+              <span class="text-slate-500 mx-1">-</span>
+              <span class="text-cyan-800">{{ m.p2_total_score }}</span>
             </td>
-            <td class="py-3.5 px-4 font-medium text-slate-800">
+            <td class="py-3.5 px-4 font-bold text-slate-900">
               <div class="flex items-center gap-2">
-                <span class="w-5 h-5 rounded-full bg-cyan-100 text-cyan-700 text-[10px] font-bold flex items-center justify-center font-mono">P2</span>
+                <span class="w-6 h-6 rounded-full bg-cyan-100 border border-cyan-300 text-cyan-900 text-[10px] font-black flex items-center justify-center font-mono">P2</span>
                 <span>{{ m.player2_name }}</span>
               </div>
             </td>
-            <td class="py-3.5 px-4 font-mono">
+            <td class="py-3.5 px-4 font-mono font-bold text-slate-900">
               Round {{ m.current_round }}/6
             </td>
             <td class="py-3.5 px-4">
-              <span class="px-2 py-0.5 rounded-full font-mono text-[10px] font-bold uppercase {% if m.status == 'completed' %}bg-slate-100 text-slate-700{% elif m.status == 'in_progress' %}bg-emerald-50 text-emerald-700{% else %}bg-amber-50 text-amber-700{% endif %}">
+              <span class="px-2.5 py-1 rounded-full font-mono text-[10px] font-black uppercase {% if m.status == 'completed' %}bg-slate-200 text-slate-900{% elif m.status == 'in_progress' %}bg-emerald-100 text-emerald-900{% else %}bg-amber-100 text-amber-900{% endif %}">
                 {{ m.status }}
               </span>
             </td>
-            <td class="py-3.5 px-4 text-right text-slate-400 font-mono">
+            <td class="py-3.5 px-4 text-slate-700 font-mono font-semibold">
               {{ m.created_at.strftime('%Y-%m-%d %H:%M') if m.created_at else '' }}
+            </td>
+            <td class="py-3.5 px-4 text-right whitespace-nowrap space-x-2">
+              <a href="{{ url_for('arena.match_lobby', match_code=m.match_code) }}" class="px-2.5 py-1 rounded bg-blue-100 hover:bg-blue-200 text-blue-900 font-bold text-[11px]">
+                Open Duel
+              </a>
+              <form action="{{ url_for('admin.duel_delete', id=m.id) }}" method="POST" class="inline" onsubmit="return confirm('Delete duel #{{ m.match_code }}?');">
+                <button type="submit" class="px-2.5 py-1 rounded bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px]">
+                  Delete
+                </button>
+              </form>
             </td>
           </tr>
           {% else %}
           <tr>
-            <td colspan="7" class="py-8 text-center text-slate-400">
-              No arena matches logged yet. Play an instant duel from the Arena Hub.
+            <td colspan="8" class="py-8 text-center text-slate-700 font-semibold">
+              No arena matches logged right now.
             </td>
           </tr>
           {% endfor %}

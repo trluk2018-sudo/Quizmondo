@@ -409,6 +409,13 @@
   </div>
 
   <script>
+    // Break out of any iframe/frame so challenges & arena pages always run in the full top window
+    try {
+      if (window.self !== window.top) {
+        window.top.location.href = window.self.location.href;
+      }
+    } catch (e) {}
+
     var globalDeferredPrompt = null;
     window.addEventListener('beforeinstallprompt', function(e) {
       e.preventDefault();
