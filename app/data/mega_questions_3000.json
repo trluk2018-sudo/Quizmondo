@@ -33280,9 +33280,10 @@
           "correct": "B",
           "explanation": "The Great Canadian Flag Debate of 1964 replaced the Canadian Red Ensign with Dr. George Stanley's iconic maple leaf design.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/canada.svg"
         },
         {
           "prompt": "Which Middle Eastern nation features a prominent green cedar tree centered on a white stripe between two red horizontal stripes?",
@@ -33325,9 +33326,10 @@
           "correct": "B",
           "explanation": "Inspired by French philosopher Auguste Comte's positivist motto: 'L'amour pour principe et l'ordre pour base; le progrès pour but.'",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/brazil.svg"
         },
         {
           "prompt": "How many white stars are featured on the blue celestial globe of the Brazilian national flag, representing its states and federal district?",
@@ -33340,9 +33342,10 @@
           "correct": "B",
           "explanation": "The stars depict the exact constellations visible over Rio de Janeiro on November 15, 1889, the day the republic was declared.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/brazil.svg"
         },
         {
           "prompt": "Which African country adopted a colorful six-color flag in 1994 with a horizontal 'Y' shape to symbolize post-apartheid national unity?",
@@ -33385,9 +33388,10 @@
           "correct": "C",
           "explanation": "Created in 1801 upon the union of Great Britain and Ireland; Wales is not represented because it was already annexed to England.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/uk.svg"
         },
         {
           "prompt": "How do the national flags of Australia and New Zealand primarily differ regarding the Southern Cross constellation?",
@@ -33400,9 +33404,10 @@
           "correct": "C",
           "explanation": "Australia also features the large seven-pointed Commonwealth Star beneath the British Union Jack in the canton.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/uk.svg"
         },
         {
           "prompt": "Which US state is the only one in the nation to feature the British Union Jack in its canton?",
@@ -33415,9 +33420,10 @@
           "correct": "C",
           "explanation": "King Kamehameha I adopted the Union Jack in 1816 as a mark of historic British friendship, remaining through statehood.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/uk.svg"
         },
         {
           "prompt": "Which Pacific island nation's flag consists of a blue field with 12 golden stars arranged in the shape of an arch above a red sun?",
@@ -33505,9 +33511,10 @@
           "correct": "A",
           "explanation": "Designed by Fredrik Meltzer in 1821, combining the red and white of Denmark with the democratic blue of France and America.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/france.svg"
         },
         {
           "prompt": "Which Nordic island nation features a fire-red cross outlined in white on a deep sky-blue field?",
@@ -33580,9 +33587,10 @@
           "correct": "B",
           "explanation": "First adopted in 1797 by the Cispadane Republic, inspired by the French tricolor with green representing Milanese civic guards.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/italy.svg"
         },
         {
           "prompt": "What are the three vertical stripes of the national flag of the Republic of Ireland?",
@@ -33610,9 +33618,10 @@
           "correct": "C",
           "explanation": "Traced to the 1813 Lützow Free Corps uniforms and the 1848 Frankfurt Parliament revolutions, representing republican democracy.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/germany.svg"
         },
         {
           "prompt": "What are the three vertical stripes of the national flag of Belgium from hoist to fly?",
@@ -33760,9 +33769,10 @@
           "correct": "D",
           "explanation": "The red circle represents the rising sun and the blood of martyrs who died in the 1971 Liberation War; green symbolizes fertile land.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/japan.svg"
         },
         {
           "prompt": "What 24-spoke navy-blue wheel is centered on the white horizontal band of the national flag of India?",
@@ -34090,9 +34100,10 @@
           "correct": "D",
           "explanation": "Fiji's light cyan field represents the Pacific Ocean, granted upon independence in 1970.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/uk.svg"
         },
         {
           "prompt": "Which island territory in free association with New Zealand features 15 white stars arranged in a complete circle on a blue field?",
@@ -34105,9 +34116,10 @@
           "correct": "D",
           "explanation": "The 15 stars represent the 15 islands of the Cook archipelago, alongside the British Union Jack in the canton.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/uk.svg"
         },
         {
           "prompt": "Which Central American nation features five blue five-pointed stars arranged in an 'X' pattern on a white stripe between two blue bands?",
@@ -34570,9 +34582,10 @@
           "correct": "B",
           "explanation": "Vatican City and Switzerland are the only two United Nations-recognized sovereign states with square (1:1) national flags.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/italy.svg"
         },
         {
           "prompt": "Which sovereign republic completely surrounded by Italy flies a horizontal bicolor of white and light blue featuring three fortified hill towers?",
@@ -34585,9 +34598,10 @@
           "correct": "D",
           "explanation": "The three towers (Guaita, Cesta, Montale) represent the three summits of Monte Titano, the highest peak in the world's oldest surviving republic.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/italy.svg"
         },
         {
           "prompt": "Which Pyrenean principality co-ruled by the French President and the Bishop of Urgell flies a blue, yellow, and red vertical tricolor?",
@@ -34600,9 +34614,10 @@
           "correct": "B",
           "explanation": "Andorra's flag combines the blue and red of France with the red and yellow of Catalonia, featuring the motto 'Virtus Unita Fortior'.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/france.svg"
         },
         {
           "prompt": "Which Mediterranean microstate flies a horizontal bicolor of red and white, differing from Indonesia's flag primarily in proportions (4:5 vs 2:3)?",
@@ -34840,9 +34855,10 @@
           "correct": "D",
           "explanation": "King Kamehameha I adopted the Union Jack in the canton in 1816; the eight horizontal white, red, and blue stripes represent the eight main Hawaiian islands.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/uk.svg"
         },
         {
           "prompt": "Which African nation features an AK-47 assault rifle with attached bayonet crossed with a hoe and open book on its flag?",
@@ -35440,9 +35456,10 @@
           "correct": "C",
           "explanation": "King Rama VI redesigned the flag in 1917, introducing blue to honor Thailand's World War I allies (Britain, France, US, Russia) and represent the monarchy.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/france.svg"
         },
         {
           "prompt": "Which Southeast Asian country flies a flag featuring a detailed white silhouette depiction of Angkor Wat centered on a horizontal red stripe?",
@@ -35755,9 +35772,10 @@
           "correct": "C",
           "explanation": "In heraldry, a pale is a vertical stripe; because the center white band is a 1:2:1 ratio (equal to the combined side bands), it is termed the 'Canadian Pale'.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/canada.svg"
         },
         {
           "prompt": "How many points are on the stylized red maple leaf centered on Canada's national flag?",
@@ -35770,9 +35788,10 @@
           "correct": "A",
           "explanation": "Designed by George Stanley and Jacques Saint-Cyr in 1965, an 11-pointed leaf was selected because it tested clearest during wind tunnel aerodynamic testing.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/canada.svg"
         },
         {
           "prompt": "How many points are on the large Commonwealth Star positioned in the lower hoist of the national flag of Australia?",
@@ -35815,9 +35834,10 @@
           "correct": "A",
           "explanation": "Based on the colonial coat of arms designed by Sir Arthur Grimble in 1937, representing the rising sun over the 33 equatorial atolls.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/japan.svg"
         },
         {
           "prompt": "Which Pacific island nation's flag features a horizontal yellow line representing the Equator, with a 12-pointed star just below it showing its exact global coordinates?",
@@ -35845,9 +35865,10 @@
           "correct": "C",
           "explanation": "Unlike the sun of Japan, Palau's golden circle represents the full moon, considered by Palauans to be the best time for harvesting, fishing, and festivals.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/japan.svg"
         },
         {
           "prompt": "Which national flag is famously known in its homeland as 'Dannebrog' ('Danish cloth'), recognized as the oldest continuously used national flag in the world?",
@@ -35905,9 +35926,10 @@
           "correct": "D",
           "explanation": "Created during the French Revolution in 1789 by combining the royal white with the municipal blue and red colors of Paris.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/france.svg"
         },
         {
           "prompt": "What is the popular Portuguese name for the national flag of Portugal, referring to the five central blue shields?",
@@ -36040,9 +36062,10 @@
           "correct": "C",
           "explanation": "The canton (or upper hoist canton) is where stars, coats of arms, or Union Jacks are typically placed.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/uk.svg"
         },
         {
           "prompt": "What is the vexillological term for the edge or half of a flag that flutters freely in the wind, furthest from the flagpole?",
@@ -36070,9 +36093,10 @@
           "correct": "C",
           "explanation": "Fimbriation separates colors according to the heraldic Rule of Tincture, which prohibits placing metal on metal (gold/silver) or colour on colour.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/uk.svg"
         },
         {
           "prompt": "Who coined the term 'vexillology' in 1957 to designate the formal study of the history, symbolism, and usage of flags?",
@@ -36220,9 +36244,10 @@
           "correct": "A",
           "explanation": "Designed in 1821 by Fredrik Meltzer, adding a blue cross inside the Danish flag to honor Norway's union with Sweden and historical ties to Denmark.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/sweden.svg"
         },
         {
           "prompt": "Which island nation flies a sky-blue flag charged with a fire-red Scandinavian cross bordered in snow-white?",
@@ -36400,9 +36425,10 @@
           "correct": "C",
           "explanation": "Tuvalu means 'Eight Standing Together' (the nine stars represent the nine atolls, eight of which were historically inhabited).",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/flags/uk.svg"
         },
         {
           "prompt": "Which Pacific island nation flies a red flag with a blue canton in the upper hoist containing the five stars of the Southern Cross?",
@@ -36498,9 +36524,10 @@
           "correct": "A",
           "explanation": "The boot heel forms Apulia (Puglia), the toe forms Calabria, and the spur is the Gargano Peninsula.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/italy.svg"
         },
         {
           "prompt": "Which South American country is famously shaped like a long, narrow ribbon stretching 4,300 km north to south with an average width of just 175 km?",
@@ -36513,9 +36540,10 @@
           "correct": "B",
           "explanation": "Chile stretches across 38 degrees of latitude between the high peaks of the Andes Mountains and the Pacific Ocean.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/chile.svg"
         },
         {
           "prompt": "Which European nation's mainland territory is commonly known in its homeland as 'L'Hexagone' ('The Hexagon') due to its roughly six-sided outline?",
@@ -36573,9 +36601,10 @@
           "correct": "A",
           "explanation": "Slovenians affectionately point out that their national borders resemble a hen running west, with Prekmurje as the head and Primorska as the feet.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/italy.svg"
         },
         {
           "prompt": "Which European nation is shaped like a crescent or horseshoe that wraps around its neighboring country Bosnia and Herzegovina?",
@@ -36798,9 +36827,10 @@
           "correct": "C",
           "explanation": "Viewed from the side, Great Britain's southwestern peninsula of Devon and Cornwall resembles the handle of a kettle or pot.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/uk.svg"
         },
         {
           "prompt": "Which Baltic country's outline resembles a dolphin or whale swimming westward toward the Baltic Sea?",
@@ -36888,9 +36918,10 @@
           "correct": "B",
           "explanation": "San Marino and Vatican City are completely surrounded by Italy; Lesotho is completely surrounded by South Africa.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/italy.svg"
         },
         {
           "prompt": "Which tiny sovereign principality on the French Riviera is bordered on three sides by France and on the fourth by the Mediterranean Sea (a semi-enclave)?",
@@ -37008,9 +37039,10 @@
           "correct": "A",
           "explanation": "Campione d'Italia uses the Swiss Franc and is physically separated from Italy by Mount Vetta and Lake Lugano.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/italy.svg"
         },
         {
           "prompt": "Which German municipality is an enclave entirely surrounded by the Swiss Canton of Schaffhausen and the Rhine River?",
@@ -37203,9 +37235,10 @@
           "correct": "D",
           "explanation": "Ceded to Great Britain under the 1713 Treaty of Utrecht, Gibraltar's border features an airport runway intersected directly by Winston Churchill Avenue.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/uk.svg"
         },
         {
           "prompt": "Which two Sovereign Base Areas on the island of Cyprus remain under British sovereignty as overseas military territories following Cypriot independence in 1960?",
@@ -37263,9 +37296,10 @@
           "correct": "D",
           "explanation": "Divided by the 1899 Tripartite Convention between the United States, the German Empire, and the United Kingdom.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/uk.svg"
         },
         {
           "prompt": "Which island in the southern Caribbean is geographically part of the ABC islands and an autonomous constituent country of the Kingdom of the Netherlands?",
@@ -37548,9 +37582,10 @@
           "correct": "A",
           "explanation": "The Alaska Panhandle was fixed by an international arbitration tribunal in 1903 between the United States and the United Kingdom.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/uk.svg"
         },
         {
           "prompt": "Which US state features an eastern panhandle jutting into Lake Michigan between Illinois and Ohio?",
@@ -37593,9 +37628,10 @@
           "correct": "B",
           "explanation": "Slovenia's coastal towns include Koper, Izola, Piran, and Portorož on the Gulf of Trieste.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/italy.svg"
         },
         {
           "prompt": "Which European nation features a panhandle extending eastward called the Prekmurje region, bordered by Austria, Hungary, and Croatia?",
@@ -37668,9 +37704,10 @@
           "correct": "B",
           "explanation": "Legend holds that prominent landowner John Hardeman Walker lobbied surveyors to include the rich agricultural bottomlands of the Bootheel in Missouri in 1821.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/italy.svg"
         },
         {
           "prompt": "Which US state features an eight-mile strip of land known as the 'Chimney' or western extension along the Ohio River?",
@@ -37728,9 +37765,10 @@
           "correct": "C",
           "explanation": "Brazil borders 10 different South American sovereign countries and French Guiana; only Chile and Ecuador do not touch Brazilian territory.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/chile.svg"
         },
         {
           "prompt": "What is the shortest international land border between two sovereign territories in the world, measuring just 85 meters (280 feet) across a sandy isthmus?",
@@ -37893,9 +37931,10 @@
           "correct": "C",
           "explanation": "Bolivia still maintains an active naval force (Armada Boliviana) that patrols Lake Titicaca and major rivers, celebrating 'Dia del Mar' annually.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/chile.svg"
         },
         {
           "prompt": "Which South American country is landlocked, divided into the Chaco and Paraneña regions by the Paraguay River, and fought the catastrophic War of the Triple Alliance?",
@@ -37953,9 +37992,10 @@
           "correct": "A",
           "explanation": "The 499-kilometer land border between the Republic of Ireland and Northern Ireland was established following the partition of Ireland in 1921.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/uk.svg"
         },
         {
           "prompt": "Which Asian country shares a land border with only ONE other nation, occupying the southern half of a peninsula south of the 38th parallel?",
@@ -38073,9 +38113,10 @@
           "correct": "D",
           "explanation": "Metropolitan France borders 8 sovereign European states; counting overseas departments, it also borders Brazil and Suriname in South America.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/italy.svg"
         },
         {
           "prompt": "Which Central European landlocked country borders EIGHT nations: Germany, Czechia, Slovakia, Hungary, Slovenia, Italy, Switzerland, and Liechtenstein?",
@@ -38088,9 +38129,10 @@
           "correct": "B",
           "explanation": "Austria's central location in Europe places it at the crossroads of Germanic, Slavic, and Romance language regions.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/italy.svg"
         },
         {
           "prompt": "Which landlocked African country borders NINE countries: Republic of the Congo, Central African Republic, South Sudan, Uganda, Rwanda, Burundi, Tanzania, Zambia, and Angola?",
@@ -38268,9 +38310,10 @@
           "correct": "B",
           "explanation": "The 1881 Boundary Treaty established the meridian 68°36'38\" W as the division across Tierra del Fuego.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/chile.svg"
         },
         {
           "prompt": "Which Baltic Sea island is divided between Germany in the west and Poland in the east, containing the seaside resort towns of Heringsdorf and Świnoujście?",
@@ -38418,9 +38461,10 @@
           "correct": "A",
           "explanation": "Sardinia is the second-largest island in the Mediterranean Sea after Sicily.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/italy.svg"
         },
         {
           "prompt": "Which mountainous Mediterranean island is a territorial collectivity of France, famous as the birthplace of Napoleon Bonaparte in Ajaccio?",
@@ -38448,9 +38492,10 @@
           "correct": "D",
           "explanation": "Sicily is home to Mount Etna, one of the most active volcanoes in the world.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/italy.svg"
         },
         {
           "prompt": "Which island group in the western Mediterranean forms an autonomous community of Spain, including Majorca, Minorca, Ibiza, and Formentera?",
@@ -38568,9 +38613,10 @@
           "correct": "D",
           "explanation": "Historically identified with the mythological sea monsters Scylla and Charybdis in Homer's Odyssey.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/italy.svg"
         },
         {
           "prompt": "Which narrow strait in the Danish straits connects the Kattegat sea area with the Baltic Sea, separating Zealand (Denmark) from Scania (Sweden)?",
@@ -38733,9 +38779,10 @@
           "correct": "B",
           "explanation": "Major ferry crossings link Holyhead in Wales with Dublin, and Cairnryan in Scotland with Larne/Belfast.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/uk.svg"
         },
         {
           "prompt": "Which strait separates the South Island of New Zealand from Stewart Island (Rakiura)?",
@@ -38793,9 +38840,10 @@
           "correct": "D",
           "explanation": "Named after English privateer Sir Francis Drake; where the Atlantic, Pacific, and Southern oceans collide.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/chile.svg"
         },
         {
           "prompt": "Which strait separates the Indonesian islands of Java and Sumatra, connecting the Java Sea to the Indian Ocean, home to the volcanic island Krakatoa?",
@@ -39228,9 +39276,10 @@
           "correct": "A",
           "explanation": "France considers the summit to be entirely French territory under an 1865 map, while Italy considers the border to pass directly across the summit ridge under an 1861 treaty.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/italy.svg"
         },
         {
           "prompt": "Which distinctive pyramid-shaped Alpine peak at 4,478 meters straddles the international border between Zermatt (Switzerland) and Breuil-Cervinia (Italy)?",
@@ -39243,9 +39292,10 @@
           "correct": "A",
           "explanation": "The Matterhorn's four steep faces face the four cardinal directions; the Swiss-Italian border runs across its summit ridge.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/italy.svg"
         },
         {
           "prompt": "Which famous flat-topped 'tepui' table mountain with 400-meter vertical cliffs forms the international tripoint of Venezuela, Brazil, and Guyana?",
@@ -39303,9 +39353,10 @@
           "correct": "D",
           "explanation": "Mount Fuji is one of Japan's 'Three Holy Mountains' (Sanreizan) along with Mount Tate and Mount Haku.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/japan.svg"
         },
         {
           "prompt": "Which mountain in the Andes at 6,961 meters is the highest mountain in both the Western and Southern Hemispheres, situated in Argentina near the Chilean border?",
@@ -39318,9 +39369,10 @@
           "correct": "A",
           "explanation": "Located in the Mendoza Province of Argentina, just 15 km east of the international border with Chile.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/chile.svg"
         },
         {
           "prompt": "Which volcano at 6,893 meters on the border of Argentina and Chile is the highest active volcano in the world?",
@@ -39333,9 +39385,10 @@
           "correct": "D",
           "explanation": "Due to its location on the edge of the hyper-arid Atacama Desert, Ojos del Salado usually has very little snow cover despite its extreme altitude.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/shapes/chile.svg"
         },
         {
           "prompt": "Which river forms a 1,250-mile section of the international border between the US state of Texas and four Mexican states?",
@@ -39806,9 +39859,10 @@
           "correct": "A",
           "explanation": "Designed by Lindon Leader in 1994, the subtle arrow symbolizes speed, precision, and moving forward.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/fedex.svg"
         },
         {
           "prompt": "What does the curved arrow beneath the Amazon wordmark represent?",
@@ -39821,9 +39875,10 @@
           "correct": "C",
           "explanation": "Designed by Turner Duckworth in 2000, the arrow emphasizes that Amazon sells everything from A to Z and brings a smile to customers' faces.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/amazon.svg"
         },
         {
           "prompt": "What creature is hidden in the silhouette of the Matterhorn mountain in the Toblerone chocolate logo?",
@@ -39911,9 +39966,10 @@
           "correct": "C",
           "explanation": "Designed by Carter Wong in 1994, the white negative space between the 'F' and the red speed trails clearly creates the numeral '1'.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/nike.svg"
         },
         {
           "prompt": "What two technological concepts do the letters in Sony's 'VAIO' logo represent?",
@@ -40016,9 +40072,10 @@
           "correct": "A",
           "explanation": "The coalition was named Auto Union in 1932, with each ring honoring one of the four founding Saxon motor vehicle marques.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/audi.svg"
         },
         {
           "prompt": "What was Gottlieb Daimler's original symbolic meaning behind the Mercedes-Benz three-pointed star?",
@@ -40031,9 +40088,10 @@
           "correct": "D",
           "explanation": "Daimler drew the star on a postcard to his wife in the 1870s, vowing that this star would shine over his factories on land, sea, and air.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/mercedes.svg"
         },
         {
           "prompt": "What astronomical constellation is depicted by the cluster of six stars on the Subaru automobile badge?",
@@ -40061,9 +40119,10 @@
           "correct": "A",
           "explanation": "Sourced from a 16th-century Norse woodcut, chosen to evoke the seafaring history of coffee and Seattle's seaport heritage.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/starbucks.svg"
         },
         {
           "prompt": "Why did graphic designer Rob Janoff put a bite mark into the right side of the iconic Apple logo in 1977?",
@@ -40076,9 +40135,10 @@
           "correct": "B",
           "explanation": "Janoff confirmed that the bite was purely for visual scale, though Steve Jobs immediately loved the unintentional pun on computer 'byte'.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/apple.svg"
         },
         {
           "prompt": "How much was graphic design student Carolyn Davidson paid in 1971 to design the world-famous Nike 'Swoosh' logo?",
@@ -40091,9 +40151,10 @@
           "correct": "D",
           "explanation": "Phil Knight told her 'I don't love it, but maybe it will grow on me.' In 1983, Knight threw her a surprise party and gave her 500 shares of Nike stock.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/nike.svg"
         },
         {
           "prompt": "What does the Nike 'Swoosh' logo originally represent in classical Greek mythology?",
@@ -40106,9 +40167,10 @@
           "correct": "C",
           "explanation": "Davidson wanted to convey motion, speed, and fluid flight, drawing inspiration from the wings of the statue Winged Victory of Samothrace.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/nike.svg"
         },
         {
           "prompt": "How did Adolf Dassler's sportswear company Adidas originally acquire its iconic three-stripe trademark?",
@@ -40496,9 +40558,10 @@
           "correct": "D",
           "explanation": "Created by agency TBWA\\Chiat\\Day under Steve Jobs, positioning Apple directly in contrast to IBM's historic corporate motto 'THINK.'",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/apple.svg"
         },
         {
           "prompt": "Which pop superstar recorded the iconic 'ba-da-ba-ba-ba' vocal hook for McDonald's 'I'm Lovin' It' campaign launched in 2003?",
@@ -40781,9 +40844,10 @@
           "correct": "D",
           "explanation": "Popularized in the United Kingdom by television advertisements featuring British actor Geoffrey Palmer.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/audi.svg"
         },
         {
           "prompt": "What is the official brand motto of Mercedes-Benz, derived from a phrase used by founder Gottlieb Daimler?",
@@ -40796,9 +40860,10 @@
           "correct": "D",
           "explanation": "Daimler wrote the motto in a personal letter to describe his uncompromising standard for automotive engineering.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/mercedes.svg"
         },
         {
           "prompt": "Which car rental company famously turned its second-place market position into a virtue with the 1962 slogan 'We're number two. We try harder'?",
@@ -41141,9 +41206,10 @@
           "correct": "D",
           "explanation": "Target opened its first store in Roseville, Minnesota, in 1962 as a discount division of the Dayton Company.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/target.svg"
         },
         {
           "prompt": "Which multinational car brand used the stark minimalist slogan 'Das Auto' ('The Car') from 2007 until 2015?",
@@ -41171,9 +41237,10 @@
           "correct": "A",
           "explanation": "The campaign helped Pepsi briefly overtake Coca-Cola in supermarket sales during the height of the 'Cola Wars.'",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/pepsi.svg"
         },
         {
           "prompt": "What was Coca-Cola's disastrous 1985 product reformulation nicknamed, which provoked national outcry until the original formula was returned as 'Coca-Cola Classic'?",
@@ -41636,9 +41703,10 @@
           "correct": "A",
           "explanation": "Created by Joanna Ferrone and Sue Rose; licensed by PepsiCo internationally for 7UP advertising.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/pepsi.svg"
         },
         {
           "prompt": "Which red circle character wearing sunglasses became the video game star mascot for 7UP in the early 1990s?",
@@ -41876,9 +41944,10 @@
           "correct": "B",
           "explanation": "Bullseye the Bull Terrier debuted in Target commercials in 1999 and attends major red-carpet and grand-opening events.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/target.svg"
         },
         {
           "prompt": "What is the name of the golden-furred canine mascot who represents Bush's Baked Beans alongside owner Jay Bush, constantly trying to sell the secret family recipe?",
@@ -42011,9 +42080,10 @@
           "correct": "D",
           "explanation": "Originally called Neue Haas Grotesk, renamed Helvetica (from the Latin name for Switzerland, Helvetia) in 1960.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/target.svg"
         },
         {
           "prompt": "Why did Parisian fashion house Hermès adopt its signature vivid orange product packaging boxes during World War II?",
@@ -42131,9 +42201,10 @@
           "correct": "A",
           "explanation": "The founders were brainstorming names in Stockholm in 2006; Lorentzon shouted a suggestion, Ek misheard it as 'Spotify', and immediately registered the domain.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/spotify.svg"
         },
         {
           "prompt": "What did the telecommunications name 'Skype' originally evolve from during development in Estonia in 2003?",
@@ -42191,9 +42262,10 @@
           "correct": "A",
           "explanation": "Starting with 'A' placed it at the top of early alphabetical website directories like Yahoo!; the Amazon River represented enormous volume.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/amazon.svg"
         },
         {
           "prompt": "What was the original vowel-less name of Twitter when Jack Dorsey and co-founders launched it in March 2006?",
@@ -42296,9 +42368,10 @@
           "correct": "B",
           "explanation": "Bradham believed his soda beverage aided healthy digestion, marketing it as an invigorating health drink.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/pepsi.svg"
         },
         {
           "prompt": "What two natural stimulant ingredients gave Coca-Cola its original name when formulated by John Stith Pemberton in 1886?",
@@ -42401,9 +42474,10 @@
           "correct": "A",
           "explanation": "Founders Gordon Bowker, Zev Siegl, and Jerry Baldwin initially considered 'Cargo House' and 'Pequod' before choosing Starbuck.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/starbucks.svg"
         },
         {
           "prompt": "What was the original restaurant name of Dunkin' Donuts when William Rosenberg opened it in Quincy, Massachusetts, in 1948?",
@@ -43106,9 +43180,10 @@
           "correct": "A",
           "explanation": "Replaced the complex woodcut pen-and-ink drawing of Sir Isaac Newton sitting beneath an apple tree drawn by Ronald Wayne.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/logos/apple.svg"
         },
         {
           "prompt": "Which computer icon designer created the original Macintosh trash can, wristwatch, smiling Mac, and lasso tool icons in 1983?",
@@ -46542,9 +46617,10 @@
           "correct": "C",
           "explanation": "The Liver Bird is the historic symbol of the city of Liverpool, depicted with a sprig of seaweed (laver) in its beak.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/badges/liverpool.svg"
         },
         {
           "prompt": "What animal stands on top of a football on the club badge of Tottenham Hotspur?",
@@ -46572,9 +46648,10 @@
           "correct": "D",
           "explanation": "Arsenal was founded by munitions workers at the Royal Arsenal armament factory in Woolwich, South London.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/badges/arsenal.svg"
         },
         {
           "prompt": "What animal appears on the club crest of Chelsea FC, clutching an abbot's staff?",
@@ -46662,9 +46739,10 @@
           "correct": "C",
           "explanation": "An 18th-century stone lock-up tower built in 1787 on Everton Brow, used to detain local drunks and miscreants overnight.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/badges/liverpool.svg"
         },
         {
           "prompt": "What animal face forms the bold, minimalist geometric badge of Wolverhampton Wanderers?",
@@ -46857,9 +46935,10 @@
           "correct": "C",
           "explanation": "Honors a battery of cannons at the mouth of the River Wear named 'The Black Cat' during the Napoleonic Wars.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/badges/arsenal.svg"
         },
         {
           "prompt": "What Welsh aquatic bird is depicted on the crest of Swansea City?",
@@ -46902,9 +46981,10 @@
           "correct": "D",
           "explanation": "Coined by Arsenal program editor Harry Homer ('Marksman') following their 1947/48 First Division championship season.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/badges/arsenal.svg"
         },
         {
           "prompt": "What Latin motto meaning 'To dare is to do' has historically adorned the crest of Tottenham Hotspur?",
@@ -47232,9 +47312,10 @@
           "correct": "A",
           "explanation": "Leeds switched to an all-white kit in 1962 under Don Revie, explicitly copying the glamorous look of Real Madrid.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/badges/real_madrid.svg"
         },
         {
           "prompt": "What color are the hoops on the historic green and white jerseys and crest of Celtic FC?",
@@ -47292,9 +47373,10 @@
           "correct": "B",
           "explanation": "King Alfonso XIII granted the club the title 'Real' (Royal) in 1920, allowing them to add the Spanish royal crown atop their interlocking 'MFC' monogram.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/badges/real_madrid.svg"
         },
         {
           "prompt": "What diagonal stripe color originally represented the historic region of Castile on the crest of Real Madrid?",
@@ -47307,9 +47389,10 @@
           "correct": "C",
           "explanation": "The purple sash of Castile was added in 1931 when the Second Spanish Republic stripped the royal crown; later standardized to navy blue.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/badges/real_madrid.svg"
         },
         {
           "prompt": "What red cross on a white background appears in the top-left quadrant of FC Barcelona's club crest?",
@@ -47322,9 +47405,10 @@
           "correct": "D",
           "explanation": "Saint George (Sant Jordi) is the patron saint of Catalonia, honored alongside the yellow and red stripes of the Catalan flag.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/badges/barcelona.svg"
         },
         {
           "prompt": "What four red and yellow stripes appear in the top-right quadrant of FC Barcelona's crest, representing Catalonia?",
@@ -47337,9 +47421,10 @@
           "correct": "D",
           "explanation": "According to legend, King Charles the Bald dipped four fingers into the wounded Count Wilfred the Hairy's blood and traced four red stripes across his golden shield in 897 AD.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/badges/barcelona.svg"
         },
         {
           "prompt": "What two iconic elements from the municipal coat of arms of Madrid appear on the crest of Atlético Madrid?",
@@ -47892,9 +47977,10 @@
           "correct": "A",
           "explanation": "Designed by 11-year-old schoolboy Peter Lovell in a Junior Gunners competition in 1993, portrayed for decades by Jerry Quy.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/badges/arsenal.svg"
         },
         {
           "prompt": "What is the name of Manchester United's grinning red devil mascot who carries a pitchfork?",
@@ -48042,9 +48128,10 @@
           "correct": "C",
           "explanation": "Popularized in Liverpool by Gerry and the Pacemakers in October 1963; Bill Shankly declared it Liverpool's official anthem.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/badges/liverpool.svg"
         },
         {
           "prompt": "Which classic American ballad written by Richard Rodgers and Lorenz Hart in 1934 is sung before every home match by Manchester City supporters?",
@@ -48087,9 +48174,10 @@
           "correct": "A",
           "explanation": "Coined by club president Narcís de Carreras in his 1968 inaugural speech, reflecting Barcelona's role as the cultural ambassador of Catalan identity and democracy.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/badges/barcelona.svg"
         },
         {
           "prompt": "What was Arsenal Football Club originally named when founded in October 1886 by Scottish munitions worker David Danskin in Woolwich?",
@@ -48102,9 +48190,10 @@
           "correct": "C",
           "explanation": "Named after the Dial Square workshop within the Royal Arsenal armament complex; renamed Royal Arsenal shortly afterward, and Woolwich Arsenal in 1893.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/badges/arsenal.svg"
         },
         {
           "prompt": "What was Manchester United originally named when formed in 1878 by the carriage and wagon department of a railway company?",
@@ -48162,9 +48251,10 @@
           "correct": "A",
           "explanation": "Houlding owned the land at Anfield; when Everton walked out, Houlding founded Liverpool FC to play in the vacant ground.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/badges/liverpool.svg"
         },
         {
           "prompt": "What English candy gave Everton FC their enduring historic nickname 'The Toffees'?",
@@ -48207,9 +48297,10 @@
           "correct": "D",
           "explanation": "Gamper also helped found FC Zürich in Switzerland; Barcelona's Blaugrana colors were inspired by Gamper's former club FC Basel.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/badges/barcelona.svg"
         },
         {
           "prompt": "Who was the English lace merchant from Nottingham who founded AC Milan on December 16, 1899, as the Milan Foot-Ball and Cricket Club?",
@@ -49122,9 +49213,10 @@
           "correct": "D",
           "explanation": "Because the previous crest had incorporated diverse civic elements from Borough of Islington arms, Arsenal couldn't copyright it; redesigning the cannon facing right enabled global copyright enforcement.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/badges/arsenal.svg"
         },
         {
           "prompt": "Which Malaysian owner sparked outrage among Cardiff City fans in 2012 by changing the club's colors from blue to red and replacing the bluebird with a red dragon?",
@@ -49377,9 +49469,10 @@
           "correct": "A",
           "explanation": "Popularized during the Franco dictatorship, when Barcelona became the primary platform for Catalan cultural expression.",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/badges/barcelona.svg"
         },
         {
           "prompt": "What rallying cry meaning 'Go Madrid!' or 'Forward Madrid!' is the legendary anthem and motto of Real Madrid?",
@@ -49392,9 +49485,10 @@
           "correct": "B",
           "explanation": "Derived from an old Spanish cry of encouragement meaning 'Go ahead' or 'Forward.'",
           "difficulty": "medium",
-          "type": "classic",
+          "type": "image",
           "points": 100,
-          "time_limit": 15
+          "time_limit": 15,
+          "media_url": "/static/img/trivia/badges/real_madrid.svg"
         },
         {
           "prompt": "What legendary Argentine club plays in red shirts and is nicknamed 'Los Diablos Rojos' ('The Red Devils') and 'El Rey de Copas'?",

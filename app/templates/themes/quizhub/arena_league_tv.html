@@ -134,9 +134,16 @@
 
       <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 font-mono text-xs">
         {% for q in questions %}
-        <div class="p-4 rounded-2xl bg-slate-900 border border-purple-500/30 space-y-2">
-          <span class="text-[10px] text-cyan-400 font-bold block">Q{{ loop.index }}</span>
-          <p class="text-white text-[11px] line-clamp-2 leading-tight font-bold">{{ q.prompt }}</p>
+        <div class="p-4 rounded-2xl bg-slate-900 border border-purple-500/30 space-y-2 flex flex-col justify-between">
+          <div>
+            <span class="text-[10px] text-cyan-400 font-bold block">Q{{ loop.index }}</span>
+            <p class="text-white text-[11px] line-clamp-2 leading-tight font-bold">{{ q.prompt }}</p>
+          </div>
+          {% if q.media_url %}
+          <div class="h-14 flex items-center justify-center p-1 bg-slate-950/80 rounded-xl border border-purple-500/30">
+            <img src="{{ q.media_url }}" alt="Clue" class="h-12 w-auto object-contain">
+          </div>
+          {% endif %}
           <div class="pt-2 border-t border-purple-500/20">
             <span class="text-[10px] text-slate-400 block uppercase">Correct:</span>
             <span class="text-emerald-400 font-black text-xs block">

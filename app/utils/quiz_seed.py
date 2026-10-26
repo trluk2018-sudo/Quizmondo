@@ -993,6 +993,7 @@ def seed_quizmondo_full_environment():
                             pack_slug=cat_slug,
                             prompt=q_item['prompt'],
                             question_type=q_item.get('type', 'classic'),
+                            media_url=q_item.get('media_url', ''),
                             options_json=json.dumps(q_item['options']),
                             correct_option=q_item['correct'],
                             explanation=q_item['explanation'],

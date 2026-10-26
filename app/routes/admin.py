@@ -1,13 +1,23 @@
 import os
 import json
 from datetime import datetime
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify, session
 from werkzeug.utils import secure_filename
 from ..models import db, User, Post, Category, Page, Media, MenuItem, SidebarWidget, SiteSetting, PageModule, slugify, QuizQuestion, QuizPack, PlayerProfile, ArenaMatch, ArenaRound, PubLeague
 from ..utils.modules import get_default_config, get_module_definition, MODULE_DEFINITIONS
 from .auth import login_required
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
+
+@admin_bp.before_request
+def require_admin_role():
+    """Strict security lockdown: the entire Quizmondo Control Centre backend is strictly for administrators only."""
+    if not session.get('user_id'):
+        return redirect(url_for('auth.login', next=request.url))
+    if session.get('user_role') != 'admin':
+        flash('Quizmondo Control Centre backend is restricted to administrators only.', 'error')
+        return redirect(url_for('public.home'))
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'pdf'}
 

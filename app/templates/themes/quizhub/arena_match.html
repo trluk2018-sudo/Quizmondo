@@ -186,9 +186,22 @@
               <p class="text-xs text-slate-300">
                 3 fast buzzer questions. Faster answers award speed bonus points!
               </p>
+
+              {% if not match.player2_session %}
+              <!-- Awaiting Challenger / Bot Fallback Awareness Notice -->
+              <div class="max-w-md mx-auto p-4 rounded-2xl bg-cyan-950/50 border border-cyan-400/50 text-left space-y-1.5 my-3 shadow-lg">
+                <div class="flex items-center gap-2 text-cyan-300 font-bold text-xs uppercase tracking-wide">
+                  <span>ℹ️</span> Awaiting Challenger / AI Auto-Match
+                </div>
+                <p class="text-[11px] text-slate-300 leading-relaxed">
+                  Share your duel link or WhatsApp invite with friends. <strong>Or start right now!</strong> If no challenger has joined when you play, <strong>Cyber Bot Nova</strong> will automatically step in as your opponent so you won't be left waiting!
+                </p>
+              </div>
+              {% endif %}
+
               <div class="pt-2">
                 <a href="{{ url_for('arena.play_round', match_code=match.match_code) }}" class="inline-flex w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400 hover:from-emerald-400 hover:to-cyan-300 text-slate-950 font-black text-base uppercase tracking-wider shadow-2xl transition transform hover:scale-105 items-center justify-center gap-2">
-                  <span>▶ Start Round {{ match.current_round }} Questions Now &rarr;</span>
+                  <span>{% if not match.player2_session %}▶ Start Round {{ match.current_round }} (vs Cyber Bot if solo) &rarr;{% else %}▶ Start Round {{ match.current_round }} Questions Now &rarr;{% endif %}</span>
                 </a>
               </div>
             </div>

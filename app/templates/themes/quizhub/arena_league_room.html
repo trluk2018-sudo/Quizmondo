@@ -37,10 +37,10 @@
         </div>
       </div>
 
-      <!-- Round Stage Indicators -->
-      <div class="grid grid-cols-{{ total_rounds }} gap-1.5 pt-1">
+      <!-- Round Stage Indicators (Responsive flex-1 pills so rounds never stack vertically) -->
+      <div class="flex gap-1.5 pt-1">
         {% for r_num in range(1, total_rounds + 1) %}
-        <div class="h-2 rounded-full transition-all duration-300 {% if r_num < current_round %}bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]{% elif r_num == current_round %}bg-cyan-400 animate-pulse shadow-[0_0_10px_rgba(6,182,212,0.8)]{% else %}bg-slate-800/80 border border-white/5{% endif %}" title="Round {{ r_num }}"></div>
+        <div class="flex-1 h-2 rounded-full transition-all duration-300 {% if r_num < current_round %}bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]{% elif r_num == current_round %}bg-cyan-400 animate-pulse shadow-[0_0_10px_rgba(6,182,212,0.8)]{% else %}bg-slate-800/80 border border-white/5{% endif %}" title="Round {{ r_num }}"></div>
         {% endfor %}
       </div>
     </div>
@@ -132,6 +132,10 @@
           </h2>
         </div>
 
+        <!-- Dynamic Visual Clue (Logos, Flags, Badges, Country Shapes) -->
+        <div id="mediaContainer" class="hidden rounded-2xl overflow-hidden border border-purple-500/30 bg-black/60 shadow-inner my-3">
+        </div>
+
         <!-- 4 Option Buttons -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2" id="optionsGrid">
           <button type="button" onclick="choosePubAnswer('A')" id="btnA" class="p-4 rounded-2xl border-2 border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 hover:bg-slate-800 text-left flex items-center gap-3 transition">
@@ -181,9 +185,9 @@
         </div>
       </div>
 
-      <!-- 4. ROUND COMPLETION / REVEAL INTERMISSION MODAL -->
-      <div id="roundIntermissionModal" class="hidden fixed inset-0 z-50 bg-[#0c0520]/98 backdrop-blur-md overflow-y-auto p-4 sm:p-8 flex flex-col items-center">
-        <div class="max-w-2xl w-full my-auto space-y-6 text-center py-6 font-mono">
+      <!-- 4. ROUND COMPLETION / REVEAL INTERMISSION SCREEN (In-page layout, no squished modals, no broken iframes) -->
+      <div id="roundIntermissionScreen" class="hidden py-4 sm:py-6 space-y-6 text-center font-mono">
+        <div class="max-w-2xl w-full mx-auto space-y-6 text-center">
           
           <!-- Header Icon & Badge -->
           <div class="space-y-3">
@@ -259,33 +263,20 @@
             </div>
           </div>
 
-          <!-- INTERMISSION ENTERTAINMENT BREAK: Video / Music & Jokes -->
+          <!-- INTERMISSION ENTERTAINMENT: Jokes & Fascinating Facts Lounge (Native responsive, no broken iframes) -->
           <div id="entertainmentSection" class="w-full bg-gradient-to-br from-purple-950/50 via-slate-950/90 to-cyan-950/40 border border-purple-500/30 rounded-2xl p-5 space-y-4 text-left shadow-xl">
             <div class="flex items-center justify-between border-b border-purple-500/20 pb-3">
               <div class="text-xs font-bold text-cyan-300 flex items-center gap-2">
-                <span>🍿</span> PUB QUIZ INTERMISSION ENTERTAINMENT
+                <span>🍿</span> PUB QUIZ INTERMISSION LOUNGE
               </div>
-              <span class="text-[10px] text-purple-400 font-mono">Intermission Lounge</span>
-            </div>
-
-            <!-- YouTube Video Lounge Embed -->
-            <div class="relative w-full rounded-xl overflow-hidden aspect-video bg-black/80 border border-purple-500/30 shadow-lg">
-              <iframe 
-                id="intermissionVideo"
-                class="w-full h-full"
-                src="https://www.youtube-nocookie.com/embed/jfKfPfyJRdk?autoplay=0&mute=0&controls=1&modestbranding=1" 
-                title="Pub Quiz Intermission Chill Music & Comedy" 
-                frameborder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowfullscreen>
-              </iframe>
+              <span class="text-[10px] text-purple-400 font-mono">Banter &amp; Brainteasers</span>
             </div>
 
             <!-- Quizmaster Joke & Banter Box -->
             <div class="p-4 rounded-xl bg-purple-950/40 border border-purple-500/30 space-y-2">
               <div class="flex items-center justify-between text-[11px] text-amber-400 font-bold">
                 <span class="flex items-center gap-1.5"><span>🎤</span> Quizmaster's Joke &amp; Banter:</span>
-                <button type="button" onclick="cycleQuizmasterJoke()" class="px-2 py-0.5 rounded bg-purple-900/60 hover:bg-purple-800 text-purple-200 text-[10px] transition active:scale-95">
+                <button type="button" onclick="cycleQuizmasterJoke()" class="px-2.5 py-1 rounded bg-purple-900/80 hover:bg-purple-800 text-purple-200 text-[10px] transition active:scale-95 border border-purple-400/30">
                   🎲 Next Joke / Fact
                 </button>
               </div>
@@ -336,11 +327,19 @@
             </div>
           </div>
 
-          <!-- Next Round / Lobby CTA -->
+          <!-- Next Round / Lobby Progression Actions -->
           <div class="w-full max-w-md mx-auto space-y-3 pt-2">
-            <a id="btnNextRound" href="#" class="block w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-slate-950 font-black text-sm uppercase tracking-wider shadow-lg shadow-cyan-500/25 transition transform hover:-translate-y-0.5 active:scale-95">
+            <!-- In-Venue Waiting for Quizmaster indicator -->
+            <div id="venueWaitingNextRound" class="hidden p-4 rounded-2xl bg-cyan-950/50 border border-cyan-500/50 text-cyan-300 text-xs font-bold flex items-center justify-center gap-2 shadow-inner">
+              <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+              <span>⏳ Break in progress: Waiting for Quizmaster to launch Round {{ current_round + 1 }}...</span>
+            </div>
+
+            <!-- Virtual Next Level Button (Hidden for in-venue where Quizmaster drives) -->
+            <a id="btnNextRound" href="#" class="{% if not is_virtual %}hidden{% endif %} block w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-slate-950 font-black text-sm uppercase tracking-wider shadow-lg shadow-cyan-500/25 transition transform hover:-translate-y-0.5 active:scale-95">
               Start Next Round &rarr;
             </a>
+
             <div class="flex items-center justify-center gap-4 text-xs text-slate-400">
               <a href="{{ url_for('arena.leagues') }}" class="hover:text-cyan-400 transition">&larr; Return to Leagues</a>
               <span>&bull;</span>
@@ -349,6 +348,7 @@
           </div>
 
         </div>
+      </div>
       </div>
 
     </div>
@@ -449,19 +449,35 @@ function pollVenueState() {
         }
       }
 
-      // 3. Host revealed answers
-      if (data.current_round === currentRound && data.answers_revealed) {
+      // 3. Round closed, interval break started, or answers revealed by Quizmaster
+      var isIntermissionOrClosed = (data.round_status === 'closed' || data.round_status === 'break' || data.answers_revealed);
+      if (data.current_round === currentRound && isIntermissionOrClosed) {
+        if (!hasSubmittedRound) {
+          // Table was mid-question when Quizmaster locked round: submit partial score!
+          clearInterval(timerInterval);
+          hasSubmittedRound = true;
+          finishRound();
+        }
+
         var lockScreen = document.getElementById('submissionsLockedScreen');
         var quizScreen = document.getElementById('activeQuizScreen');
         var waitScreen = document.getElementById('waitingForHostScreen');
         if (lockScreen) lockScreen.classList.add('hidden');
         if (quizScreen) quizScreen.classList.add('hidden');
         if (waitScreen) waitScreen.classList.add('hidden');
+
+        var myTeam = (data.teams || []).find(function(t) {
+          return String(t.table) === String(tableNum) || t.name === teamName;
+        });
+        var rScore = myTeam ? (myTeam['round_' + currentRound] || totalScore) : totalScore;
+        var tScore = myTeam ? (myTeam.score || totalScore) : totalScore;
+        var myRank = myTeam ? (myTeam.rank || 1) : 1;
+
         showIntermission({
           completed_round: currentRound,
-          round_score: totalScore,
-          total_score: totalScore,
-          rank: 1,
+          round_score: rScore,
+          total_score: tScore,
+          rank: myRank,
           total_rounds: totalRounds,
           next_round: currentRound < totalRounds ? currentRound + 1 : null,
           next_round_title: currentRound < totalRounds ? 'Next Round' : 'Tournament Complete'
@@ -493,6 +509,17 @@ function loadQuestion() {
   document.getElementById('lblB').textContent = (q.options && q.options.B) || '';
   document.getElementById('lblC').textContent = (q.options && q.options.C) || '';
   document.getElementById('lblD').textContent = (q.options && q.options.D) || '';
+
+  // Render visual graphic clue (logo, flag, badge, shape)
+  var mediaBox = document.getElementById('mediaContainer');
+  if (mediaBox) {
+    mediaBox.innerHTML = '';
+    mediaBox.classList.add('hidden');
+    if (q.question_type === 'image' && q.media_url) {
+      mediaBox.classList.remove('hidden');
+      mediaBox.innerHTML = '<div class="relative w-full max-h-56 flex items-center justify-center p-3 bg-slate-950/80"><img src="' + escapeHtml(q.media_url) + '" alt="Visual clue" class="max-h-52 rounded-xl object-contain shadow-lg border border-purple-500/20"></div>';
+    }
+  }
 
   ['A', 'B', 'C', 'D'].forEach(function(opt) {
     var b = document.getElementById('btn' + opt);
@@ -676,14 +703,23 @@ function finishRound() {
 }
 
 function showIntermission(data) {
-  var modal = document.getElementById('roundIntermissionModal');
-  modal.classList.remove('hidden');
+  var quizScreen = document.getElementById('activeQuizScreen');
+  var lockScreen = document.getElementById('submissionsLockedScreen');
+  var waitScreen = document.getElementById('waitingForHostScreen');
+  var bouncerScreen = document.getElementById('bouncerPendingScreen');
+  if (quizScreen) quizScreen.classList.add('hidden');
+  if (lockScreen) lockScreen.classList.add('hidden');
+  if (waitScreen) waitScreen.classList.add('hidden');
+  if (bouncerScreen) bouncerScreen.classList.add('hidden');
+
+  var screen = document.getElementById('roundIntermissionScreen');
+  if (screen) screen.classList.remove('hidden');
 
   document.getElementById('modalRoundScore').textContent = '+' + (data.round_score || totalScore);
   document.getElementById('modalTotalScore').textContent = data.total_score || totalScore;
   document.getElementById('modalRank').textContent = '#' + (data.rank || 1);
 
-  // 1. RENDER OFFICIAL ROUND ANSWERS REVEALED ACCORDION (Always renders all 5 questions with options and explanations)
+  // 1. RENDER OFFICIAL ROUND ANSWERS REVEALED ACCORDION (With real visual graphics if question has image)
   var answersContainer = document.getElementById('revealedAnswersList');
   if (answersContainer) {
     answersContainer.innerHTML = '';
@@ -709,11 +745,17 @@ function showIntermission(data) {
             ? '<span class="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">⏱️ TIMEOUT (0 PTS)</span>' 
             : '<span class="px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30">✗ INCORRECT (0 PTS)</span>');
 
+      var mediaHtml = '';
+      if (q.media_url) {
+        mediaHtml = '<div class="my-2 flex justify-center"><img src="' + escapeHtml(q.media_url) + '" alt="Graphic Clue" class="h-20 w-auto rounded-xl object-contain border border-purple-500/30 bg-slate-950/80 p-2 shadow"></div>';
+      }
+
       itemDiv.innerHTML =
         '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs font-bold text-white">' +
           '<span>Q' + qNum + ': ' + escapeHtml(q.prompt) + '</span>' +
           '<div class="shrink-0">' + statusBadge + '</div>' +
         '</div>' +
+        mediaHtml +
         '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono pt-1">' +
           '<div class="p-2.5 rounded-xl bg-slate-950/60 border ' + (isCorrect ? 'border-emerald-500/30 text-emerald-200' : 'border-rose-500/30 text-rose-200') + '">' +
             '<span class="text-[10px] text-slate-400 block uppercase font-bold">Your Table Locked In:</span>' +
@@ -734,9 +776,8 @@ function showIntermission(data) {
 
   // 2. Handle next round progression or tournament completion
   var btnNext = document.getElementById('btnNextRound');
-  var entSection = document.getElementById('entertainmentSection');
+  var venueWaitBox = document.getElementById('venueWaitingNextRound');
   var schedSection = document.getElementById('finalScheduleSection');
-
   var maxRounds = data.total_rounds || totalRounds;
 
   if (data.next_round && data.next_round <= maxRounds) {
@@ -744,12 +785,21 @@ function showIntermission(data) {
     document.getElementById('intermissionBadge').textContent = (isVirtual ? 'LEVEL ' : 'ROUND ') + data.completed_round + ' COMPLETED!';
     document.getElementById('intermissionTitle').textContent = 'Intermission & Next Round';
     document.getElementById('intermissionSubtitle').textContent = 'Review your answers above and enjoy the intermission break before launching next round.';
-    
-    if (entSection) entSection.classList.remove('hidden');
-    if (schedSection) schedSection.classList.remove('hidden');
 
-    btnNext.textContent = '▶ Start ' + (isVirtual ? 'Level ' : 'Round ') + data.next_round + ': ' + (data.next_round_title || '') + ' →';
-    btnNext.href = '/arena/leagues/' + encodeURIComponent(leagueSlug) + '/room?round=' + data.next_round + '&table=' + encodeURIComponent(tableNum) + '&team=' + encodeURIComponent(teamName);
+    if (isVirtual) {
+      if (btnNext) {
+        btnNext.classList.remove('hidden');
+        btnNext.textContent = '▶ Start Level ' + data.next_round + ': ' + (data.next_round_title || '') + ' →';
+        btnNext.href = '/arena/leagues/' + encodeURIComponent(leagueSlug) + '/room?round=' + data.next_round + '&table=' + encodeURIComponent(tableNum) + '&team=' + encodeURIComponent(teamName);
+      }
+      if (venueWaitBox) venueWaitBox.classList.add('hidden');
+    } else {
+      if (btnNext) btnNext.classList.add('hidden');
+      if (venueWaitBox) {
+        venueWaitBox.classList.remove('hidden');
+        venueWaitBox.innerHTML = '<span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span><span>⏳ Break in progress: Waiting for Quizmaster to launch Round ' + data.next_round + '...</span>';
+      }
+    }
   } else {
     // Tournament is completed!
     document.getElementById('intermissionIcon').textContent = '🏆';
@@ -757,16 +807,13 @@ function showIntermission(data) {
     document.getElementById('intermissionTitle').textContent = 'Final Pub Quiz Standings';
     document.getElementById('intermissionSubtitle').textContent = 'All rounds completed! Your team ranked #' + (data.rank || 1) + ' on the scoreboard.';
 
-    if (entSection) entSection.classList.remove('hidden');
     if (schedSection) schedSection.classList.remove('hidden');
-
-    if (data.next_pub_date) {
-      var dEl = document.getElementById('nextScheduledDate');
-      if (dEl) dEl.textContent = data.next_pub_date;
+    if (venueWaitBox) venueWaitBox.classList.add('hidden');
+    if (btnNext) {
+      btnNext.classList.remove('hidden');
+      btnNext.textContent = '🏆 View Big-Screen TV Leaderboard →';
+      btnNext.href = '/arena/leagues/' + encodeURIComponent(leagueSlug) + '/tv';
     }
-
-    btnNext.textContent = '🏆 View Big-Screen TV Leaderboard →';
-    btnNext.href = '/arena/leagues/' + encodeURIComponent(leagueSlug) + '/tv';
   }
 }
 
@@ -775,9 +822,8 @@ function escapeHtml(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// Initialize on page load
-if (hasSubmittedRound) {
-  // Table already answered this round! NEVER restart questions on refresh!
+// Initialize on page load: guaranteed persistent state recovery
+if (hasSubmittedRound || initialAnswersRevealed || initialRoundStatus === 'break' || initialRoundStatus === 'closed') {
   var quizScreen = document.getElementById('activeQuizScreen');
   var bouncerScreen = document.getElementById('bouncerPendingScreen');
   var waitScreen = document.getElementById('waitingForHostScreen');
@@ -785,7 +831,7 @@ if (hasSubmittedRound) {
   if (bouncerScreen) bouncerScreen.classList.add('hidden');
   if (waitScreen) waitScreen.classList.add('hidden');
 
-  if (initialAnswersRevealed) {
+  if (initialAnswersRevealed || initialRoundStatus === 'break' || initialRoundStatus === 'closed') {
     showIntermission({
       completed_round: currentRound,
       round_score: totalScore,

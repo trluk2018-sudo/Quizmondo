@@ -429,6 +429,12 @@ def submit_round(match_code):
     player.last_active_at = datetime.utcnow()
 
     # Determine turn flip or round progression
+    # If no challenger has joined when player submits round, Cyber Bot Nova steps in as opponent!
+    if not match.player2_session and is_player1:
+        match.player2_session = 'bot_quizmondo_ai'
+        match.player2_name = 'Cyber Bot Nova'
+        match.player2_avatar = 'nova'
+
     # If opponent is AI bot, simulate bot round!
     if match.player2_session == 'bot_quizmondo_ai' and is_player1:
         # Bot answers with 65% probability
@@ -926,6 +932,11 @@ def league_manager(slug):
     pending_teams = [t for t in teams if t.get('status') == 'pending']
     approved_teams = [t for t in teams if t.get('status') != 'pending']
     curr_r = state.get('current_round', 1)
+    total_rounds = int(config.get('total_rounds', 5 if not league.is_virtual_league() else 3))
+    completed_tables = [t for t in approved_teams if t.get(f'round_{curr_r}') is not None]
+    all_completed = len(approved_teams) > 0 and len(completed_tables) >= len(approved_teams)
+    can_advance = (state.get('round_status') in ('closed', 'break', 'finished')) or state.get('answers_revealed') or all_completed
+    is_final_round = curr_r >= total_rounds
     active_cfg = VIRTUAL_PUB_ROUNDS_CONFIG if league.is_virtual_league() else PUB_ROUNDS_CONFIG
     active_round_info = active_cfg.get(curr_r, {})
 
@@ -936,6 +947,11 @@ def league_manager(slug):
         config=config,
         pending_teams=pending_teams,
         approved_teams=approved_teams,
+        completed_tables=completed_tables,
+        all_completed=all_completed,
+        can_advance=can_advance,
+        is_final_round=is_final_round,
+        total_rounds=total_rounds,
         active_round_info=active_round_info
     )
 
@@ -1038,10 +1054,18 @@ def league_manager_action(slug):
         return respond(f"Round {r} launched! Questions sent to all player phones.")
 
     elif action == 'close_round':
+        curr_r = state.get('current_round', 1)
         state['round_status'] = 'closed'
+        # Record partial scores for any table that hasn't finished all questions yet
+        for t in teams:
+            if t.get(f'round_{curr_r}') is None:
+                partial = t.get(f'partial_round_{curr_r}', 0)
+                t[f'round_{curr_r}'] = partial
+                t['score'] = (t.get('score', 0)) + partial
+        state['teams'] = teams
         league.set_state(state)
         db.session.commit()
-        return respond("Round locked! Answers submitted.")
+        return respond(f"Round {curr_r} locked! All table partial scores recorded.")
 
     elif action == 'reveal_answers':
         state['answers_revealed'] = True
@@ -1066,12 +1090,16 @@ def league_manager_action(slug):
             state['current_round'] = curr + 1
             state['round_status'] = 'waiting' if not league.is_virtual_league() else 'active'
             state['answers_revealed'] = False
+            league.set_state(state)
+            db.session.commit()
+            return respond(f"Advanced to Round {state['current_round']}!")
         else:
             state['round_status'] = 'finished'
             state['answers_revealed'] = True
-        league.set_state(state)
-        db.session.commit()
-        return respond(f"Advanced to Round {state['current_round']}!")
+            state['tournament_completed'] = True
+            league.set_state(state)
+            db.session.commit()
+            return respond("Tournament successfully finalized! Champions crowned and scores locked.")
 
     elif action == 'save_config':
         cfg['total_rounds'] = int(request.form.get('total_rounds', cfg.get('total_rounds', 5)))
