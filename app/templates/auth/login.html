@@ -1,23 +1,25 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-100">
+<html lang="en" class="h-full bg-[#0a0418] text-slate-100">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Log In &mdash; SiteBuilder Express</title>
+  <title>Log In &mdash; Quizmondo Control Centre</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.min.css') }}">
+  <link rel="icon" type="image/svg+xml" href="/static/img/quizmondo_icon.svg">
 </head>
-<body class="flex min-h-full items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+<body class="flex min-h-full items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[#0a0418] text-slate-100 font-sans">
   <div class="w-full max-w-sm space-y-6">
-    <div class="text-center">
-      <h1 class="text-2xl font-bold tracking-tight text-slate-900">SiteBuilder Express</h1>
-      <p class="mt-1 text-xs text-slate-500">Sign in to manage your website</p>
+    <div class="text-center font-mono">
+      <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-tr from-cyan-500 to-purple-600 flex items-center justify-center text-xl shadow-lg shadow-purple-500/20">⚡</div>
+      <h1 class="text-xl font-black tracking-wider uppercase text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-purple-400">Quizmondo Control Centre</h1>
+      <p class="mt-1 text-xs text-purple-300/70">Master Telemetry & Operations Console</p>
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
     <div class="space-y-2">
       {% for category, msg in messages %}
-      <div class="p-3 text-xs rounded border {% if category == 'error' %}bg-red-50 text-red-700 border-red-200{% else %}bg-blue-50 text-blue-700 border-blue-200{% endif %}">
+      <div class="p-3 text-xs rounded border font-mono {% if category == 'error' %}bg-rose-950/40 text-rose-300 border-rose-500/30{% else %}bg-purple-950/40 text-cyan-300 border-purple-500/30{% endif %}">
         {{ msg }}
       </div>
       {% endfor %}
@@ -25,26 +27,26 @@
     {% endif %}
     {% endwith %}
 
-    <div class="bg-white p-6 border border-slate-200 shadow-sm rounded-lg">
-      <form class="space-y-4" method="POST">
+    <div class="bg-[#0f0728] p-6 border border-purple-500/30 shadow-2xl rounded-2xl">
+      <form class="space-y-4 font-mono text-xs" method="POST">
         <div>
-          <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide">Username or Email</label>
-          <input type="text" name="username" required autofocus class="mt-1 block w-full rounded border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-3 border">
+          <label class="block font-bold text-slate-300 uppercase tracking-wider text-[11px]">Operator Username / Email</label>
+          <input type="text" name="username" required autofocus class="mt-1 block w-full rounded-lg bg-[#080318] border border-purple-500/40 text-slate-100 text-sm focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 py-2 px-3">
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide">Password</label>
-          <input type="password" name="password" required class="mt-1 block w-full rounded border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500 py-1.5 px-3 border">
+          <label class="block font-bold text-slate-300 uppercase tracking-wider text-[11px]">Security Password</label>
+          <input type="password" name="password" required class="mt-1 block w-full rounded-lg bg-[#080318] border border-purple-500/40 text-slate-100 text-sm focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 py-2 px-3">
         </div>
 
-        <button type="submit" class="w-full py-2 px-4 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">
-          Log In
+        <button type="submit" class="w-full py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-wider text-slate-950 bg-gradient-to-r from-cyan-400 to-purple-400 hover:from-cyan-300 hover:to-purple-300 shadow-lg shadow-cyan-500/20 transition transform active:scale-95 cursor-pointer">
+          Authorize Session &rarr;
         </button>
       </form>
     </div>
 
-    <div class="text-center text-xs text-slate-400">
-      <a href="{{ url_for('public.home') }}" class="hover:text-slate-600">&larr; Back to Website</a>
+    <div class="text-center text-xs text-purple-400/60 font-mono">
+      <a href="{{ url_for('public.home') }}" class="hover:text-cyan-300">&larr; Return to Quizmondo Live Arena</a>
     </div>
   </div>
 </body>
