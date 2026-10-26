@@ -23,9 +23,9 @@ def admin_required(f):
     def decorated_function(*args, **kwargs):
         if not session.get('user_id'):
             return redirect(url_for('auth.login', next=request.url))
-        if session.get('user_role') != 'admin':
+        if session.get('user_role') not in ('admin', 'super_admin'):
             flash('Access restricted to administrators.', 'error')
-            return redirect(url_for('admin.dashboard'))
+            return redirect(url_for('public.home'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -105,14 +105,18 @@ def login():
         user = User.query.filter((User.username == username) | (User.email == username)).first()
 
         if user and user.check_password(password) and user.is_active:
+            session.permanent = True
             session['user_id'] = user.id
             session['username'] = user.username
-            session['user_role'] = user.role
+            session['user_role'] = user.role or 'player'
+            session['is_creator'] = user.role in ('super_admin', 'admin', 'quizmaster', 'creator')
             flash('Welcome back, ' + user.username, 'success')
             next_url = request.args.get('next')
             if next_url and next_url.startswith('/'):
                 return redirect(next_url)
-            return redirect(url_for('admin.dashboard'))
+            if user.role in ('admin', 'super_admin'):
+                return redirect(url_for('admin.dashboard'))
+            return redirect(url_for('arena.dashboard'))
         else:
             flash('Invalid username or password.', 'error')
 

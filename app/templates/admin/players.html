@@ -23,6 +23,7 @@
           <tr>
             <th class="py-3 px-4">Avatar</th>
             <th class="py-3 px-4">Display Name</th>
+            <th class="py-3 px-4">Account Role</th>
             <th class="py-3 px-4">Level</th>
             <th class="py-3 px-4">XP</th>
             <th class="py-3 px-4">Coins</th>
@@ -33,6 +34,7 @@
         </thead>
         <tbody class="divide-y divide-slate-100">
           {% for p in players %}
+          {% set linked_user = users_by_id.get(p.user_id) if users_by_id and p.user_id else None %}
           <tr class="hover:bg-slate-50/80 transition {% if p.is_banned %}bg-rose-50/40{% endif %}">
             <td class="py-3 px-4">
               <span class="w-8 h-8 rounded-xl bg-purple-100 border border-purple-200 flex items-center justify-center text-sm font-bold">
@@ -41,7 +43,24 @@
             </td>
             <td class="py-3.5 px-4 font-bold text-slate-800">
               <div>{{ p.display_name }}</div>
-              <div class="text-[10px] text-slate-400 font-mono">Key: {{ p.session_key[:8] }}...</div>
+              <div class="text-[10px] text-slate-400 font-mono">
+                {% if linked_user %}{{ linked_user.email }}{% else %}Guest ({{ p.session_key[:8] }}...){% endif %}
+              </div>
+            </td>
+            <td class="py-3.5 px-4">
+              {% if linked_user %}
+              <form action="{{ url_for('admin.player_set_role', id=p.id) }}" method="POST" class="inline-flex items-center gap-1.5">
+                <select name="role" onchange="this.form.submit()" class="px-2 py-1 rounded border border-purple-500/30 bg-slate-900 text-cyan-300 font-mono text-[11px] font-bold">
+                  <option value="player" {% if linked_user.role == 'player' %}selected{% endif %}>🎮 Player</option>
+                  <option value="creator" {% if linked_user.role == 'creator' %}selected{% endif %}>✍️ Quiz Creator</option>
+                  <option value="quizmaster" {% if linked_user.role == 'quizmaster' %}selected{% endif %}>🍺 Quizmaster</option>
+                  <option value="admin" {% if linked_user.role == 'admin' %}selected{% endif %}>🛡️ Admin</option>
+                  <option value="super_admin" {% if linked_user.role == 'super_admin' %}selected{% endif %}>👑 Super Admin</option>
+                </select>
+              </form>
+              {% else %}
+              <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono text-[10px]">Guest Session</span>
+              {% endif %}
             </td>
             <td class="py-3.5 px-4">
               <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold font-mono text-[10px]">

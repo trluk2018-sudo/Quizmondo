@@ -40,15 +40,67 @@ def get_random_questions(category_slug=None, count=3, exclude_ids=None):
     return questions
 
 
+SUPERHERO_PREFIXES = [
+    'Captain', 'Nova', 'Cosmic', 'Shadow', 'Turbo', 'Quantum', 'Hyper', 'Cyber',
+    'Solar', 'Thunder', 'Blaze', 'Phantom', 'Apex', 'Omega', 'Astro', 'Vortex',
+    'Neon', 'Titan', 'Crimson', 'Doctor', 'Ultra', 'Starlight', 'Velocity', 'Mighty'
+]
+SUPERHERO_NOUNS = [
+    'Quasar', 'Striker', 'Volt', 'Maverick', 'Falcon', 'Phoenix', 'Viper', 'Comet',
+    'Knight', 'Pulsar', 'Blaster', 'Guardian', 'Dynamo', 'Ranger', 'Horizon', 'Spark',
+    'Nebula', 'Panther', 'Vector', 'Sentinel', 'Hawk', 'Storm', 'Eclipse', 'Matrix'
+]
+
+
+def generate_unique_superhero_name() -> str:
+    """Generate a cool, unique superhero-sounding player name."""
+    for _ in range(30):
+        candidate = f"{random.choice(SUPERHERO_PREFIXES)}{random.choice(SUPERHERO_NOUNS)}"
+        if random.random() < 0.35:
+            candidate = f"{candidate}{random.randint(10, 99)}"
+        exists_user = User.query.filter(func.lower(User.username) == candidate.lower()).first()
+        exists_prof = PlayerProfile.query.filter(func.lower(PlayerProfile.display_name) == candidate.lower()).first()
+        if not exists_user and not exists_prof:
+            return candidate
+    return f"CaptainQuasar{random.randint(100, 999)}"
+
+
+@arena_bp.route('/api/random-hero-name')
+def api_random_hero_name():
+    """Return a unique superhero player name for the 3-step onboarding wizard."""
+    return jsonify({'success': True, 'name': generate_unique_superhero_name()})
+
+
+@arena_bp.route('/api/check-username')
+def api_check_username():
+    """Check if a player name is available during Step 1 of setup."""
+    u = (request.args.get('u') or '').strip()
+    if len(u) < 3:
+        return jsonify({'available': False, 'reason': 'too_short', 'suggestion': generate_unique_superhero_name()})
+    existing = User.query.filter(func.lower(User.username) == u.lower()).first()
+    if existing and existing.id != session.get('user_id'):
+        return jsonify({'available': False, 'reason': 'taken', 'suggestion': generate_unique_superhero_name()})
+    return jsonify({'available': True, 'name': u})
+
+
 def get_current_player():
     """Retrieve or initialize the active player profile using session cookie or user_id."""
+    session.permanent = True
     user_id = session.get('user_id')
     profile = None
     if user_id:
-        profile = PlayerProfile.query.filter_by(user_id=user_id).first()
-        if profile:
-            session['qm_player_key'] = profile.session_key
-            return profile
+        user = db.session.get(User, user_id)
+        if user and user.is_active:
+            session['username'] = user.username
+            session['user_role'] = user.role or 'player'
+            session['is_creator'] = user.role in ('super_admin', 'admin', 'quizmaster', 'creator')
+            profile = PlayerProfile.query.filter_by(user_id=user.id).first()
+            if profile:
+                if profile.display_name != user.username:
+                    profile.display_name = user.username
+                    db.session.commit()
+                session['qm_player_key'] = profile.session_key
+                return profile
 
     player_key = session.get('qm_player_key')
     if player_key:
@@ -58,7 +110,7 @@ def get_current_player():
         new_key = secrets.token_urlsafe(16)
         session['qm_player_key'] = new_key
         rand_avatar = random.choice(AVATAR_PRESETS)['key']
-        rand_name = f"Challenger_{random.randint(100, 999)}"
+        rand_name = session.get('username') or f"Challenger_{random.randint(100, 999)}"
         profile = PlayerProfile(
             user_id=user_id,
             session_key=new_key,
@@ -75,6 +127,8 @@ def get_current_player():
         db.session.commit()
     elif user_id and not profile.user_id:
         profile.user_id = user_id
+        if session.get('username'):
+            profile.display_name = session.get('username')
         db.session.commit()
 
     return profile
@@ -120,11 +174,6 @@ def create_match():
     player = get_current_player()
     opponent_mode = request.form.get('opponent_mode') or request.args.get('opponent_mode', 'friend')  # 'friend', 'bot'
     category_slug = request.form.get('category_slug') or request.args.get('category_slug')
-
-    # Challenging a real person requires creating a free account
-    if opponent_mode != 'bot' and not session.get('user_id'):
-        flash("Create a free player account to challenge friends on WhatsApp, track lifetime head-to-head records, and compete on leaderboards!", "info")
-        return redirect(url_for('arena.player_register', next=url_for('arena.dashboard')))
 
     match_code = f"qm_{secrets.token_hex(4)}"
 
@@ -185,68 +234,224 @@ def create_match():
     db.session.add(round_1)
     db.session.commit()
 
+    # If starting a Friend Challenge without a setup profile yet, launch the quick 3-step setup first
+    # and redirect straight into this match lobby so they can invite their friend & play Round 1!
+    if opponent_mode != 'bot' and not session.get('user_id'):
+        return redirect(url_for('arena.player_register', next=url_for('arena.match_lobby', match_code=match_code)))
+
     return redirect(url_for('arena.match_lobby', match_code=match_code))
+
+
+def _build_round_comparison(r: ArenaRound) -> list:
+    """Build question-by-question head-to-head comparison once BOTH players have completed a round."""
+    p1_ans_map = {a.get('question_id'): a for a in r.get_p1_answers() if isinstance(a, dict)}
+    p2_ans_map = {a.get('question_id'): a for a in r.get_p2_answers() if isinstance(a, dict)}
+    q_ids = r.get_question_ids()
+    questions = QuizQuestion.query.filter(QuizQuestion.id.in_(q_ids)).all() if q_ids else []
+    q_map = {q.id: q for q in questions}
+
+    comparison = []
+    for idx, qid in enumerate(q_ids, start=1):
+        q = q_map.get(qid)
+        if not q:
+            continue
+        opts = q.get_options()
+        a1 = p1_ans_map.get(qid, {})
+        a2 = p2_ans_map.get(qid, {})
+        c1 = a1.get('selected') or '—'
+        c2 = a2.get('selected') or '—'
+        t1 = a1.get('time_taken', round(max(0.5, (q.time_limit or 15) - float(a1.get('time_left', 10))), 1) if a1 else 0)
+        t2 = a2.get('time_taken', round(max(0.5, (q.time_limit or 15) - float(a2.get('time_left', 10))), 1) if a2 else 0)
+        comparison.append({
+            'q_num': idx,
+            'prompt': q.prompt,
+            'correct_option': q.correct_option,
+            'correct_text': opts.get(q.correct_option, q.correct_option),
+            'p1_choice': c1,
+            'p1_text': opts.get(c1, c1) if c1 in opts else ('Timed Out' if c1 == 'TIMEOUT' else c1),
+            'p1_correct': bool(a1.get('is_correct')),
+            'p1_points': a1.get('points_awarded', 0),
+            'p1_time': t1,
+            'p2_choice': c2,
+            'p2_text': opts.get(c2, c2) if c2 in opts else ('Timed Out' if c2 == 'TIMEOUT' else ('Bot Correct' if a2.get('is_correct') else 'Bot Missed')),
+            'p2_correct': bool(a2.get('is_correct')),
+            'p2_points': a2.get('points_awarded', 0),
+            'p2_time': t2,
+        })
+    return comparison
+
+
+def _build_whatsapp_messages(match: ArenaMatch, player: PlayerProfile, is_player1: bool, base_url: str) -> tuple:
+    """Generate rich WhatsApp invite and turn-nudge messages including round score, X/3 correct, and time in seconds."""
+    lobby_url = f"{base_url}/arena/match/{match.match_code}"
+    all_rounds = match.rounds.order_by(ArenaRound.round_number.asc()).all()
+    active_round = match.rounds.filter_by(round_number=match.current_round).first()
+    active_cat = active_round.category_name if active_round else "General Trivia"
+
+    # Find the latest round this player has completed
+    my_latest_round = None
+    my_latest_summary = None
+    for r in reversed(all_rounds):
+        s = r.get_p1_summary() if is_player1 else r.get_p2_summary()
+        if s.get('done'):
+            my_latest_round = r
+            my_latest_summary = s
+            break
+
+    opponent_assigned = bool(match.player2_session and match.player2_session not in ('pending_invite', '') and match.player2_session != match.player1_session)
+    raw_opp_name = match.player2_name if is_player1 else match.player1_name
+    if not opponent_assigned or not raw_opp_name or raw_opp_name.lower() in ('awaiting challenger...', player.display_name.lower()):
+        target_nudgee = 'Friend'
+    else:
+        target_nudgee = raw_opp_name
+
+    if my_latest_round and my_latest_summary:
+        r_num = my_latest_round.round_number
+        r_cat = my_latest_round.category_name
+        r_score = my_latest_summary['score']
+        r_corr = my_latest_summary['correct_count']
+        r_total_q = my_latest_summary['total_questions']
+        r_time = my_latest_summary['total_time_sec']
+
+        whatsapp_text = (
+            f"⚡ *QUIZMONDO CHALLENGE!* ⚡\n"
+            f"🦸‍♂️ *{player.display_name}* challenged you to a 6-Round Trivia Duel!\n\n"
+            f"🔥 *Round {r_num} ({r_cat}):*\n"
+            f"✅ Got *{r_corr}/{r_total_q} correct* in *⏱️ {r_time}s*\n"
+            f"🏆 Scored *{r_score} PTS* (Total: {match.p1_total_score if is_player1 else match.p2_total_score} PTS)\n\n"
+            f"Think you can beat my score and time? Answers unlock after you play!\n"
+            f"👇 *TAP TO ACCEPT CHALLENGE:* 👇\n"
+            f"{lobby_url}"
+        )
+
+        if not opponent_assigned:
+            whatsapp_nudge_text = whatsapp_text
+        else:
+            my_total = match.p1_total_score if is_player1 else match.p2_total_score
+            opp_total = match.p2_total_score if is_player1 else match.p1_total_score
+            whatsapp_nudge_text = (
+                f"🔔 *QUIZMONDO TURN NUDGE • ROUND {match.current_round}* 🔔\n"
+                f"⚔️ Hey *{target_nudgee}*! *{player.display_name}* just finished Round {r_num} ({r_cat})!\n\n"
+                f"🎯 *{player.display_name}'s Round {r_num} Stats:*\n"
+                f"• Score: *+{r_score} PTS*\n"
+                f"• Accuracy: *{r_corr}/{r_total_q} Correct*\n"
+                f"• Speed: *⏱️ {r_time}s*\n"
+                f"📊 *Match Total:* {player.display_name} ({my_total} PTS) vs {target_nudgee} ({opp_total} PTS)\n\n"
+                f"🔥 It's *YOUR TURN* to play Round {match.current_round} (and see the Round {r_num} answer comparison)!\n"
+                f"👇 *TAP TO PLAY YOUR TURN:* 👇\n"
+                f"{lobby_url}"
+            )
+    else:
+        whatsapp_text = (
+            f"⚡ *QUIZMONDO ARENA CHALLENGE!* ⚡\n"
+            f"🦸‍♂️ *{player.display_name}* has challenged you to a 6-Round Head-to-Head Trivia Duel!\n"
+            f"🔥 *Round 1 Category:* {active_cat}\n\n"
+            f"👇 *TAP BELOW TO ACCEPT THE CHALLENGE:* 👇\n"
+            f"{lobby_url}"
+        )
+        whatsapp_nudge_text = whatsapp_text
+
+    return lobby_url, whatsapp_text, whatsapp_nudge_text
 
 
 @arena_bp.route('/match/<match_code>')
 def match_lobby(match_code):
-    """Lobby and scoreboard overview for a match."""
+    """Lobby, turn sync controller, and stage-gated round answer comparison for a match."""
     player = get_current_player()
     match = ArenaMatch.query.filter_by(match_code=match_code).first_or_404()
+    has_account = bool(session.get('user_id'))
 
-    # If opening player is not Player 1 and Player 2 slot is open (not bot), AND match is still on Round 1:
-    if match.player1_session != player.session_key and (not match.player2_session or match.player2_session in ('pending_invite', '')) and match.current_round == 1:
-        match.player2_session = player.session_key
-        match.player2_name = player.display_name
-        match.player2_avatar = player.avatar_key
-        match.status = 'in_progress'
+    # 1. Self-duel protection & automatic cleanup if player1 was accidentally assigned to player2
+    if not match.is_bot and match.player2_session:
+        same_session = (match.player2_session == match.player1_session)
+        same_name = bool(match.player1_name and match.player2_name and match.player1_name.strip().lower() == match.player2_name.strip().lower())
+        if same_session or same_name:
+            match.player2_session = None
+            match.player2_name = 'Awaiting Challenger...'
+            if match.current_round == 1:
+                match.status = 'waiting'
+            db.session.commit()
+
+    # 2. Check if current visitor is Player 1 (by session_key or by logged-in username)
+    is_player1 = (match.player1_session == player.session_key) or (
+        has_account and match.player1_name and match.player1_name.strip().lower() == player.display_name.strip().lower()
+    )
+    if is_player1 and match.player1_session != player.session_key:
+        match.player1_session = player.session_key
+        match.player1_name = player.display_name
         db.session.commit()
 
-    is_player1 = (match.player1_session == player.session_key)
-    is_player2 = (match.player2_session == player.session_key)
-    is_participant = is_player1 or is_player2
+    # 3. If visitor is NOT Player 1, and Player 2 slot is open on Round 1:
+    # Only auto-bind Player 2 once they have completed the quick 3-step account setup (so their Superhero Name & PIN are saved!)
+    if not is_player1 and not match.is_bot and (not match.player2_session or match.player2_session in ('pending_invite', '')) and match.current_round == 1:
+        if has_account:
+            match.player2_session = player.session_key
+            match.player2_name = player.display_name
+            match.player2_avatar = player.avatar_key
+            match.status = 'in_progress'
+            db.session.commit()
 
-    # Check if current round requires player action
+    is_player2 = (match.player2_session == player.session_key) or (
+        not is_player1 and has_account and match.player2_name and match.player2_name.strip().lower() == player.display_name.strip().lower()
+    )
+    if is_player2 and match.player2_session != player.session_key:
+        match.player2_session = player.session_key
+        match.player2_name = player.display_name
+        db.session.commit()
+
+    # A guest challenger viewing an open Round 1 invite is an invited challenger ready to accept!
+    is_invited_challenger = (not is_player1 and not is_player2 and not match.is_bot and not match.player2_session and match.current_round == 1)
+    is_participant = is_player1 or is_player2 or is_invited_challenger
+
+    # 4. Synchronize match.current_turn with deterministic Snake Turn Order
+    if match.status in ('waiting', 'in_progress'):
+        exp_turn = match.expected_turn()
+        if match.current_turn != exp_turn:
+            match.current_turn = exp_turn
+            db.session.commit()
+
     active_round = match.rounds.filter_by(round_number=match.current_round).first()
     my_turn = False
-    if is_participant and match.status in ('waiting', 'in_progress'):
-        if is_player1 and match.current_turn == 1:
+    if match.status in ('waiting', 'in_progress'):
+        if match.is_bot and is_player1:
             my_turn = True
-        elif is_player2 and match.current_turn == 2:
+        elif is_player1 and match.current_turn == 1:
+            my_turn = True
+        elif (is_player2 or is_invited_challenger) and match.current_turn == 2:
             my_turn = True
 
-    # Identify opponent for specific nudge vs new friend challenge
-    opponent_name = match.player2_name if is_player1 else match.player1_name
     opponent_assigned = bool(match.player2_session and match.player2_session not in ('pending_invite', ''))
+    if is_player1:
+        opponent_name = match.player2_name if opponent_assigned else 'Your Friend'
+    else:
+        opponent_name = match.player1_name
 
-    # WhatsApp share & nudge messages point DIRECTLY into the playable round
     base_url = current_app.config.get('APP_PUBLIC_URL', request.host_url.rstrip('/'))
-    play_url = f"{base_url}/arena/match/{match.match_code}/play"
-    invite_url = play_url
-    active_cat = active_round.category_name if active_round else "General Trivia"
-    target_nudgee = opponent_name if (opponent_assigned and opponent_name) else 'Challenger'
-    whatsapp_text = (
-        f"┏━━━━━━━━━━━━━━━━━━━━━┓\n"
-        f"⚡ *QUIZMONDO ARENA DUEL* ⚡\n"
-        f"┗━━━━━━━━━━━━━━━━━━━━━┛\n"
-        f"🎯 *{player.display_name}* has challenged you to a live trivia duel!\n"
-        f"🔥 *Round {match.current_round}:* {active_cat}\n"
-        f"🏆 *Target Score:* {match.p1_total_score} PTS\n\n"
-        f"👇 *TAP LINK BELOW TO CLASH NOW:* 👇\n"
-        f"{play_url}"
-    )
-    whatsapp_nudge_text = (
-        f"┏━━━━━━━━━━━━━━━━━━━━━┓\n"
-        f"🔔 *ROUND {match.current_round} ARENA NUDGE* 🔔\n"
-        f"┗━━━━━━━━━━━━━━━━━━━━━┛\n"
-        f"⚔️ Hey *{target_nudgee}*! *{player.display_name}* just finished Round {match.current_round}!\n"
-        f"📊 *Scoreboard:* {player.display_name} ({match.p1_total_score} pts) vs {opponent_name} ({match.p2_total_score} pts)\n"
-        f"⚡ It's *YOUR TURN* to buzz in and take the lead!\n\n"
-        f"👇 *TAP LINK BELOW TO PLAY ROUND {match.current_round}:* 👇\n"
-        f"{play_url}"
-    )
+    invite_url, whatsapp_text, whatsapp_nudge_text = _build_whatsapp_messages(match, player, is_player1, base_url)
 
-    all_rounds = match.rounds.all()
+    # 5. Build Stage-Gated Round Details (Exact answers ONLY included when both players have finished the round!)
+    all_rounds = match.rounds.order_by(ArenaRound.round_number.asc()).all()
+    rounds_detail = []
+    opponent_active_summary = None
+    my_active_summary = None
+
+    for r in all_rounds:
+        p1_sum = r.get_p1_summary()
+        p2_sum = r.get_p2_summary()
+        both_done = bool(p1_sum['done'] and p2_sum['done'])
+        comparison = _build_round_comparison(r) if both_done else []
+        rounds_detail.append({
+            'round': r,
+            'round_number': r.round_number,
+            'category_name': r.category_name,
+            'p1_summary': p1_sum,
+            'p2_summary': p2_sum,
+            'both_done': both_done,
+            'comparison': comparison
+        })
+        if r.round_number == match.current_round:
+            my_active_summary = p1_sum if is_player1 else p2_sum
+            opponent_active_summary = p2_sum if is_player1 else p1_sum
 
     return render_template(
         'themes/quizhub/arena_match.html',
@@ -254,16 +459,20 @@ def match_lobby(match_code):
         player=player,
         is_player1=is_player1,
         is_player2=is_player2,
+        is_invited_challenger=is_invited_challenger,
         is_participant=is_participant,
         opponent_name=opponent_name,
         opponent_assigned=opponent_assigned,
         active_round=active_round,
         my_turn=my_turn,
         all_rounds=all_rounds,
+        rounds_detail=rounds_detail,
+        my_active_summary=my_active_summary,
+        opponent_active_summary=opponent_active_summary,
         invite_url=invite_url,
         whatsapp_text=whatsapp_text,
         whatsapp_nudge_text=whatsapp_nudge_text,
-        has_account=bool(session.get('user_id'))
+        has_account=has_account
     )
 
 
@@ -298,12 +507,29 @@ def play_round(match_code):
     """Live interactive round play screen with timer and mascot reaction."""
     player = get_current_player()
     match = ArenaMatch.query.filter_by(match_code=match_code).first_or_404()
+    has_account = bool(session.get('user_id'))
 
-    is_player1 = (match.player1_session == player.session_key)
-    is_player2 = (match.player2_session == player.session_key)
+    is_player1 = (match.player1_session == player.session_key) or (
+        has_account and match.player1_name and match.player1_name.strip().lower() == player.display_name.strip().lower()
+    )
+    if is_player1 and match.player1_session != player.session_key:
+        match.player1_session = player.session_key
+        match.player1_name = player.display_name
+        db.session.commit()
+
+    is_player2 = (match.player2_session == player.session_key) or (
+        not is_player1 and has_account and match.player2_name and match.player2_name.strip().lower() == player.display_name.strip().lower()
+    )
+    if is_player2 and match.player2_session != player.session_key:
+        match.player2_session = player.session_key
+        match.player2_name = player.display_name
+        db.session.commit()
+
     if not (is_player1 or is_player2):
-        # Only allow auto-claim if match is in Round 1 and Player 2 slot is unassigned!
-        if match.current_round == 1 and (not match.player2_session or match.player2_session in ('pending_invite', '')):
+        # Challenger accepting Round 1 invite: require quick 3-step setup first so their Superhero Name & PIN are saved!
+        if not match.is_bot and match.current_round == 1 and (not match.player2_session or match.player2_session in ('pending_invite', '')):
+            if not has_account:
+                return redirect(url_for('arena.player_register', next=url_for('arena.play_round', match_code=match_code)))
             match.player2_session = player.session_key
             match.player2_name = player.display_name
             match.player2_avatar = player.avatar_key
@@ -311,23 +537,31 @@ def play_round(match_code):
             db.session.commit()
             is_player2 = True
         else:
-            flash(f"This duel is already locked between {match.player1_name} and {match.player2_name or 'another challenger'} (Round {match.current_round}). You cannot join mid-game.", "info")
+            flash(f"This duel is already locked between {match.player1_name} and {match.player2_name or 'another challenger'} (Round {match.current_round}).", "info")
             return redirect(url_for('arena.match_lobby', match_code=match_code))
 
-    # Gating requirement: Beyond Round 1 in friend duels, players MUST be logged in
-    if not match.is_bot and match.current_round > 1 and not session.get('user_id'):
-        flash(f"Round 1 completed! Create a free account or log in to unlock Round {match.current_round} and save your XP, streaks, and duel progress.", "info")
+    # Gating requirement: in human friend duels, players must have their 3-step account set up
+    if not match.is_bot and not has_account and match.current_round > 1:
         return redirect(url_for('arena.player_register', next=url_for('arena.play_round', match_code=match_code)))
 
+    # Synchronize & verify turn order
+    exp_turn = match.expected_turn()
+    if match.current_turn != exp_turn:
+        match.current_turn = exp_turn
+        db.session.commit()
+
+    if not match.is_bot:
+        if (is_player1 and match.current_turn != 1) or (is_player2 and match.current_turn != 2):
+            flash("You have completed your turn for this round! Waiting for your opponent.", "info")
+            return redirect(url_for('arena.match_lobby', match_code=match_code))
+
     active_round = match.rounds.filter_by(round_number=match.current_round).first()
-    if not active_round:
-        flash("Round is not yet ready or match has ended.", "warning")
+    if not active_round or match.status not in ('waiting', 'in_progress'):
         return redirect(url_for('arena.match_lobby', match_code=match_code))
 
     # Fetch questions for this round
     q_ids = active_round.get_question_ids()
     questions = QuizQuestion.query.filter(QuizQuestion.id.in_(q_ids)).all()
-    # Preserve ordering
     q_dict = {q.id: q for q in questions}
     ordered_questions = [q_dict[qid] for qid in q_ids if qid in q_dict]
 
@@ -338,6 +572,7 @@ def play_round(match_code):
             'id': q.id,
             'prompt': q.prompt,
             'question_type': q.question_type,
+            'media_url': q.media_url,
             'options': q.get_options(),
             'category_name': q.category_name,
             'time_limit': q.time_limit or 15
@@ -355,22 +590,19 @@ def play_round(match_code):
 
 @arena_bp.route('/match/<match_code>/submit', methods=['POST'])
 def submit_round(match_code):
-    """Receive player round responses, compute score, and transition turn."""
+    """Receive player round responses, compute score & time, enforce Snake Turn Sync, and return stage payload."""
     player = get_current_player()
     match = ArenaMatch.query.filter_by(match_code=match_code).first_or_404()
+    has_account = bool(session.get('user_id'))
 
-    is_player1 = (match.player1_session == player.session_key)
-    is_player2 = (match.player2_session == player.session_key)
+    is_player1 = (match.player1_session == player.session_key) or (
+        has_account and match.player1_name and match.player1_name.strip().lower() == player.display_name.strip().lower()
+    )
+    is_player2 = (match.player2_session == player.session_key) or (
+        not is_player1 and has_account and match.player2_name and match.player2_name.strip().lower() == player.display_name.strip().lower()
+    )
     if not (is_player1 or is_player2):
         return jsonify({'error': 'Unauthorized participant'}), 403
-
-    # Gated beyond Round 1 in human duels: Account required
-    if not match.is_bot and match.current_round > 1 and not session.get('user_id'):
-        return jsonify({
-            'error': 'login_required',
-            'message': 'Create a free account or log in to submit answers beyond Round 1.',
-            'redirect': url_for('arena.player_register', next=url_for('arena.play_round', match_code=match_code))
-        }), 401
 
     payload = request.get_json() or {}
     answers = payload.get('answers', [])  # list of { question_id, choice, time_left }
@@ -379,11 +611,21 @@ def submit_round(match_code):
     if not active_round:
         return jsonify({'error': 'Active round not found'}), 404
 
+    completed_round_num = active_round.round_number
+    completed_round_cat = active_round.category_name
+
+    # Prevent duplicate submission of the same round by the same player
+    already_done = bool(active_round.get_p1_answers()) if is_player1 else bool(active_round.get_p2_answers())
+    if already_done:
+        return jsonify({'redirect': url_for('arena.match_lobby', match_code=match_code)})
+
     q_ids = active_round.get_question_ids()
     questions = QuizQuestion.query.filter(QuizQuestion.id.in_(q_ids)).all()
     q_map = {q.id: q for q in questions}
 
     round_score = 0
+    correct_count = 0
+    total_time_sec = 0.0
     detailed_results = []
 
     for ans in answers:
@@ -395,10 +637,14 @@ def submit_round(match_code):
         if not q:
             continue
 
+        q_limit = q.time_limit or 15
+        time_taken = round(max(0.5, float(q_limit - time_left)), 1)
+        total_time_sec = round(total_time_sec + time_taken, 1)
+
         is_correct = (choice == q.correct_option)
         points_awarded = 0
         if is_correct:
-            # Base 100 points + speed bonus (e.g. 10 points per leftover second)
+            correct_count += 1
             speed_bonus = time_left * 5
             points_awarded = q.points + speed_bonus
             round_score += points_awarded
@@ -409,6 +655,8 @@ def submit_round(match_code):
             'selected': choice,
             'correct_option': q.correct_option,
             'is_correct': is_correct,
+            'time_left': time_left,
+            'time_taken': time_taken,
             'explanation': q.explanation,
             'points_awarded': points_awarded
         })
@@ -428,25 +676,21 @@ def submit_round(match_code):
     player.coins = (player.coins or 0) + (round_score // 10)
     player.last_active_at = datetime.utcnow()
 
-    # Determine turn flip or round progression
-    # If no challenger has joined when player submits round, Cyber Bot Nova steps in as opponent!
-    if not match.player2_session and is_player1:
-        match.player2_session = 'bot_quizmondo_ai'
-        match.player2_name = 'Cyber Bot Nova'
-        match.player2_avatar = 'nova'
-
-    # If opponent is AI bot, simulate bot round!
-    if match.player2_session == 'bot_quizmondo_ai' and is_player1:
-        # Bot answers with 65% probability
+    # ONLY simulate bot round if this match was explicitly created as a Bot Match (never overwrite a Friend Duel!)
+    if match.is_bot and is_player1:
         bot_score = 0
         bot_detailed = []
         for q in questions:
             bot_correct = (random.random() < 0.65)
-            bot_pts = q.points + random.randint(20, 50) if bot_correct else 0
+            bot_tl = random.randint(4, 12) if bot_correct else random.randint(1, 8)
+            bot_pts = q.points + (bot_tl * 5) if bot_correct else 0
             bot_score += bot_pts
             bot_detailed.append({
                 'question_id': q.id,
+                'selected': q.correct_option if bot_correct else 'B',
                 'is_correct': bot_correct,
+                'time_left': bot_tl,
+                'time_taken': round(15.0 - bot_tl, 1),
                 'points_awarded': bot_pts
             })
         active_round.p2_score = bot_score
@@ -457,31 +701,41 @@ def submit_round(match_code):
     # Check if both have completed this round
     has_p1_done = bool(active_round.p1_answers_json and active_round.p1_answers_json != '[]')
     has_p2_done = bool(active_round.p2_answers_json and active_round.p2_answers_json != '[]')
+    both_completed_round = bool(has_p1_done and has_p2_done)
 
-    if has_p1_done and has_p2_done:
+    opp_round_summary = active_round.get_p2_summary() if is_player1 else active_round.get_p1_summary()
+    round_comparison = _build_round_comparison(active_round) if both_completed_round else []
+
+    chosen_cat = None
+    continue_next_round = False
+
+    if both_completed_round:
         active_round.status = 'completed'
         if match.current_round >= 6:
-            # Match is finished!
             match.status = 'completed'
             if match.p1_total_score > match.p2_total_score:
                 match.winner = 1
-                player.matches_won = (player.matches_won or 0) + 1
+                if is_player1:
+                    player.matches_won = (player.matches_won or 0) + 1
             elif match.p2_total_score > match.p1_total_score:
                 match.winner = 2
+                if is_player2:
+                    player.matches_won = (player.matches_won or 0) + 1
             else:
-                match.winner = 0  # Tie
+                match.winner = 0
             player.matches_played = (player.matches_played or 0) + 1
         else:
             # Advance to next round!
             match.current_round += 1
+            # SNAKE TURN SYNC:
+            # The player who just caught up to complete Round R immediately leads off Round R + 1!
             if match.is_bot:
                 next_turn = 1
-                match.current_turn = 1
             else:
-                next_turn = 2 if match.current_turn == 1 else 1
-                match.current_turn = next_turn
+                next_turn = 1 if is_player1 else 2
+            match.current_turn = next_turn
+            continue_next_round = True
 
-            # Pick next round category and randomized questions (excluding questions already in this match)
             all_cats = db.session.query(QuizQuestion.category_slug, QuizQuestion.category_name).distinct().all()
             chosen_cat = random.choice(all_cats) if all_cats else ('general', 'General')
             existing_match_qids = [qid for r in match.rounds for qid in r.get_question_ids()]
@@ -500,29 +754,52 @@ def submit_round(match_code):
             )
             db.session.add(next_round)
     else:
-        # Flip turn to player 2
+        # Only one player has finished this round -> flip turn to the opponent!
+        active_round.status = 'p1_done' if has_p1_done else 'p2_done'
         match.current_turn = 2 if is_player1 else 1
-        match.status = 'in_progress'
+        if match.player2_session:
+            match.status = 'in_progress'
 
     db.session.commit()
 
+    base_url = current_app.config.get('APP_PUBLIC_URL', request.host_url.rstrip('/'))
+    invite_url, whatsapp_text, whatsapp_nudge_text = _build_whatsapp_messages(match, player, is_player1, base_url)
+    opponent_assigned = bool(match.player2_session and match.player2_session not in ('pending_invite', ''))
+    opp_display_name = (match.player2_name if opponent_assigned else 'Your Friend') if is_player1 else match.player1_name
+
     return jsonify({
         'success': True,
+        'is_player1': is_player1,
         'round_score': round_score,
-        'bot_score': active_round.p2_score if match.is_bot else 0,
-        'detailed_results': detailed_results,
+        'correct_count': correct_count,
+        'total_questions': len(questions) or 3,
+        'total_time_sec': total_time_sec,
+        'bot_score': active_round.p2_score if match.is_bot else opp_round_summary.get('score', 0),
+        'opponent_round_score': opp_round_summary.get('score', 0),
+        'opponent_correct_count': opp_round_summary.get('correct_count', 0),
+        'opponent_time_sec': opp_round_summary.get('total_time_sec', 0.0),
+        'both_completed_round': both_completed_round,
+        'continue_next_round': continue_next_round,
+        'round_comparison': round_comparison,
+        'detailed_results': detailed_results if both_completed_round else [],
         'player_level': player.level,
         'player_xp': player.xp,
+        'my_total_score': match.p1_total_score if is_player1 else match.p2_total_score,
+        'opponent_total_score': match.p2_total_score if is_player1 else match.p1_total_score,
         'p1_total_score': match.p1_total_score,
         'p2_total_score': match.p2_total_score,
         'match_status': match.status,
         'is_bot': match.is_bot,
-        'opponent_name': match.player2_name,
-        'current_round': active_round.round_number,
+        'opponent_assigned': opponent_assigned,
+        'opponent_name': opp_display_name,
+        'current_round': completed_round_num,
+        'completed_round_cat': completed_round_cat,
         'next_round': match.current_round if match.status != 'completed' else None,
-        'next_category_name': chosen_cat[1] if (match.status != 'completed' and 'chosen_cat' in locals()) else '',
+        'next_category_name': chosen_cat[1] if chosen_cat else '',
         'winner': match.winner,
-        'has_account': bool(session.get('user_id'))
+        'has_account': has_account,
+        'invite_url': invite_url,
+        'whatsapp_nudge_text': whatsapp_nudge_text
     })
 
 
@@ -642,20 +919,23 @@ def update_profile():
 
 @arena_bp.route('/register', methods=['GET', 'POST'])
 def player_register():
-    """Create a permanent player account to save streaks, XP, coins, and duels."""
+    """Quick 3-Step Player Challenge Setup (Unique/Superhero Name + Email + 6-Digit PIN)."""
     player = get_current_player()
+    next_url = request.args.get('next') or request.form.get('next')
     if session.get('user_id'):
-        flash(f"You are already signed in as {session.get('username')}.", "info")
+        if next_url and next_url.startswith('/'):
+            return redirect(next_url)
         return redirect(url_for('arena.dashboard'))
 
     if request.method == 'POST':
         username = (request.form.get('username') or '').strip()
         email = (request.form.get('email') or '').strip().lower()
-        password = request.form.get('password') or ''
-        confirm_password = request.form.get('confirm_password') or ''
+        pin = (request.form.get('pin') or '').strip()
+        password = pin or (request.form.get('password') or '')
+        confirm_password = pin or (request.form.get('confirm_password') or password)
 
         if not username or len(username) < 3:
-            flash("Username must be at least 3 characters long.", "error")
+            flash("Player name must be at least 3 characters long.", "error")
             return render_template('themes/quizhub/arena_register.html', player=player)
 
         if not email or '@' not in email:
@@ -663,23 +943,23 @@ def player_register():
             return render_template('themes/quizhub/arena_register.html', player=player)
 
         if len(password) < 6:
-            flash("Password must be at least 6 characters long.", "error")
+            flash("Please enter a 6-digit PIN (at least 6 characters).", "error")
             return render_template('themes/quizhub/arena_register.html', player=player)
 
         if password != confirm_password:
-            flash("Passwords do not match.", "error")
+            flash("PIN / Passwords do not match.", "error")
             return render_template('themes/quizhub/arena_register.html', player=player)
 
-        if User.query.filter_by(username=username).first():
-            flash("That username is already taken. Please choose another.", "error")
+        if User.query.filter(func.lower(User.username) == username.lower()).first():
+            flash("That player name is already taken. Try picking a Superhero Name!", "error")
             return render_template('themes/quizhub/arena_register.html', player=player)
 
-        if User.query.filter_by(email=email).first():
-            flash("An account with that email already exists. Try logging in instead.", "error")
-            return render_template('themes/quizhub/arena_register.html', player=player)
+        if User.query.filter(func.lower(User.email) == email.lower()).first():
+            flash("An account with that email already exists. Sign in with your 6-digit PIN instead!", "error")
+            return render_template('themes/quizhub/arena_login.html', player=player)
 
-        is_creator = bool(request.form.get('is_creator'))
-        assigned_role = 'creator' if is_creator else 'player'
+        # Default role hierarchy: all newly registered users are strictly 'player'
+        assigned_role = 'player'
         user = User(username=username, email=email, role=assigned_role)
         user.set_password(password)
         db.session.add(user)
@@ -687,19 +967,22 @@ def player_register():
 
         player.user_id = user.id
         player.display_name = username
-        # Update past match player names to permanently replace guest tag with real username
+        # Update past match player names to permanently replace guest tag with real username (preventing self-duels)
         ArenaMatch.query.filter_by(player1_session=player.session_key).update({'player1_name': username})
-        ArenaMatch.query.filter_by(player2_session=player.session_key).update({'player2_name': username})
+        ArenaMatch.query.filter(
+            ArenaMatch.player2_session == player.session_key,
+            ArenaMatch.player1_session != player.session_key
+        ).update({'player2_name': username})
         db.session.commit()
 
+        session.permanent = True
         session['user_id'] = user.id
         session['username'] = user.username
         session['user_role'] = user.role
-        session['is_creator'] = is_creator
+        session['is_creator'] = False
         session['qm_player_key'] = player.session_key
 
-        flash(f"Welcome to Quizmondo, {username}! Your stats, coins, and duels are now permanently saved.", "success")
-        next_url = request.args.get('next')
+        flash(f"🎉 Welcome to Quizmondo, {username}! Your challenge profile and 6-digit PIN are set up!", "success")
         if next_url and next_url.startswith('/'):
             return redirect(next_url)
         return redirect(url_for('arena.dashboard'))
@@ -709,24 +992,32 @@ def player_register():
 
 @arena_bp.route('/login', methods=['GET', 'POST'])
 def player_login():
-    """Sign in to access saved player profile, streaks, and tournament ranks."""
+    """Sign in with Player Name/Email + 6-Digit PIN (or Password)."""
+    next_url = request.args.get('next') or request.form.get('next')
     if session.get('user_id'):
+        if next_url and next_url.startswith('/'):
+            return redirect(next_url)
         return redirect(url_for('arena.dashboard'))
 
     if request.method == 'POST':
         login_id = (request.form.get('username') or '').strip()
-        password = request.form.get('password') or ''
+        password = (request.form.get('password') or '').strip()
 
-        user = User.query.filter((User.username == login_id) | (User.email == login_id.lower())).first()
+        user = User.query.filter(
+            (func.lower(User.username) == login_id.lower()) | (func.lower(User.email) == login_id.lower())
+        ).first()
         if user and user.check_password(password) and user.is_active:
+            session.permanent = True
             session['user_id'] = user.id
             session['username'] = user.username
-            session['user_role'] = user.role
+            session['user_role'] = user.role or 'player'
+            session['is_creator'] = user.role in ('super_admin', 'admin', 'quizmaster', 'creator')
 
             guest_key = session.get('qm_player_key')
             profile = PlayerProfile.query.filter_by(user_id=user.id).first()
             if profile:
                 session['qm_player_key'] = profile.session_key
+                profile.display_name = user.username
                 profile.last_active_at = datetime.utcnow()
                 if guest_key and guest_key != profile.session_key:
                     ArenaMatch.query.filter_by(player1_session=guest_key).update({
@@ -734,7 +1025,10 @@ def player_login():
                         'player1_name': profile.display_name,
                         'player1_avatar': profile.avatar_key
                     })
-                    ArenaMatch.query.filter_by(player2_session=guest_key).update({
+                    ArenaMatch.query.filter(
+                        ArenaMatch.player2_session == guest_key,
+                        ArenaMatch.player1_session != profile.session_key
+                    ).update({
                         'player2_session': profile.session_key,
                         'player2_name': profile.display_name,
                         'player2_avatar': profile.avatar_key
@@ -748,12 +1042,11 @@ def player_login():
                     db.session.commit()
 
             flash(f"Welcome back, {user.username}!", "success")
-            next_url = request.args.get('next')
             if next_url and next_url.startswith('/'):
                 return redirect(next_url)
             return redirect(url_for('arena.dashboard'))
         else:
-            flash("Invalid username or password.", "error")
+            flash("Invalid player name/email or 6-digit PIN.", "error")
 
     player = get_current_player()
     return render_template('themes/quizhub/arena_login.html', player=player)
@@ -1407,14 +1700,17 @@ def passes_safety_filter(text: str) -> bool:
 
 @arena_bp.route('/create', methods=['GET', 'POST'])
 def create_question():
-    """Community Quiz and Trivia Pack Studio - restricted to quiz creators."""
+    """Community Quiz and Trivia Pack Studio - strictly restricted to Super Admins, Admins, Quizmasters, and Creators."""
     user_id = session.get('user_id')
     user_role = session.get('user_role')
-    is_creator = user_role in ('creator', 'author', 'editor', 'admin') or session.get('is_creator')
+    is_creator = user_role in ('super_admin', 'admin', 'quizmaster', 'creator')
 
-    if not user_id or not is_creator:
-        flash("Quiz Creator Studio is reserved for verified quiz creators. Please log in or register a Creator profile.", "info")
+    if not user_id:
+        flash("Quiz Creator Studio is reserved for Admins and Verified Quiz Creators. Please sign in.", "info")
         return redirect(url_for('arena.player_login', next=url_for('arena.create_question')))
+    if not is_creator:
+        flash("Quiz Creator Studio is restricted to Admins and Verified Quiz Creators.", "error")
+        return redirect(url_for('arena.dashboard'))
 
     player = get_current_player()
     

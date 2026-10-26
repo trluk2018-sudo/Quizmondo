@@ -342,20 +342,35 @@ class ArenaMatch(db.Model):
     def is_bot(self) -> bool:
         return self.player2_session == 'bot_quizmondo_ai' or bool(self.player2_name and 'bot' in self.player2_name.lower())
 
+    def expected_turn(self) -> int:
+        """Deterministic Snake Turn Order:
+        - Odd rounds (1, 3, 5): Player 1 leads, then Player 2 catches up.
+        - Even rounds (2, 4, 6): Player 2 leads, then Player 1 catches up.
+        """
+        if self.is_bot:
+            return 1
+        active_round = self.rounds.filter_by(round_number=self.current_round).first()
+        if not active_round:
+            return 1
+        p1_done = bool(active_round.p1_answers_json and active_round.p1_answers_json != '[]')
+        p2_done = bool(active_round.p2_answers_json and active_round.p2_answers_json != '[]')
+        if p1_done and not p2_done:
+            return 2
+        if p2_done and not p1_done:
+            return 1
+        return 1 if (self.current_round % 2 == 1) else 2
+
     def is_player_turn(self, session_key: str) -> bool:
         if self.status != 'in_progress' and self.status != 'waiting':
             return False
         # If playing against an AI bot, it is ALWAYS the human player's turn to play
         if self.is_bot:
             return self.player1_session == session_key
-        # For human vs human: check if player has already submitted answers for the active round
-        active_round = self.rounds.filter_by(round_number=self.current_round).first()
-        if not active_round:
-            return False
+        exp_turn = self.expected_turn()
         if self.player1_session == session_key:
-            return not bool(active_round.p1_answers_json and active_round.p1_answers_json != '[]')
+            return exp_turn == 1
         if self.player2_session == session_key:
-            return not bool(active_round.p2_answers_json and active_round.p2_answers_json != '[]')
+            return exp_turn == 2
         return False
 
     def to_dict(self) -> dict:
@@ -411,6 +426,32 @@ class ArenaRound(db.Model):
             return json.loads(self.p2_answers_json or '[]')
         except Exception:
             return []
+
+    def get_p1_summary(self) -> dict:
+        ans = self.get_p1_answers()
+        done = bool(ans)
+        correct_count = sum(1 for a in ans if a.get('is_correct'))
+        total_time = round(sum(float(a.get('time_taken', max(0, 15 - float(a.get('time_left', 10))))) for a in ans), 1) if done else 0.0
+        return {
+            'done': done,
+            'score': self.p1_score or 0,
+            'correct_count': correct_count,
+            'total_questions': len(ans) or 3,
+            'total_time_sec': total_time
+        }
+
+    def get_p2_summary(self) -> dict:
+        ans = self.get_p2_answers()
+        done = bool(ans)
+        correct_count = sum(1 for a in ans if a.get('is_correct'))
+        total_time = round(sum(float(a.get('time_taken', max(0, 15 - float(a.get('time_left', 10))))) for a in ans), 1) if done else 0.0
+        return {
+            'done': done,
+            'score': self.p2_score or 0,
+            'correct_count': correct_count,
+            'total_questions': len(ans) or 3,
+            'total_time_sec': total_time
+        }
 
 
 class QuizPack(db.Model):

@@ -1,12 +1,12 @@
 {% extends "themes/quizhub/base.html" %}
 {% from "themes/quizhub/mascot_character.html" import render_mascot %}
 
-{% block title %}Match vs {{ match.player2_name or 'Challenger' }} • Quizmondo Arena{% endblock %}
+{% block title %}Match vs {{ opponent_name or 'Friend' }} • Quizmondo Arena{% endblock %}
 
 {% block head_extra %}
 <meta property="og:type" content="game">
-<meta property="og:title" content="⚔️ QUIZMONDO ARENA DUEL • {{ player.display_name }} vs {{ opponent_name or 'Challenger' }}">
-<meta property="og:description" content="🔥 Round {{ match.current_round }} is Live! Tap to enter the arena and clash now!">
+<meta property="og:title" content="⚔️ QUIZMONDO ARENA DUEL • {{ match.player1_name }} vs {{ match.player2_name if opponent_assigned else 'You!' }}">
+<meta property="og:description" content="🔥 Round {{ match.current_round }} Trivia Challenge! Tap to see the score and play your turn!">
 <meta property="og:image" content="{{ request.url_root.rstrip('/') }}/arena/match/{{ match.match_code }}/card.png">
 <meta property="og:image:secure_url" content="{{ request.url_root.rstrip('/') }}/arena/match/{{ match.match_code }}/card.png">
 <meta property="og:image:type" content="image/png">
@@ -17,59 +17,69 @@
 {% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-[#0a0418] text-slate-100 font-sans py-8 sm:py-12 relative overflow-hidden flex flex-col justify-center">
+<div class="min-h-screen bg-[#0a0418] text-slate-100 font-sans py-6 sm:py-10 relative overflow-hidden">
   <!-- Glowing nebula ambient backdrop -->
   <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[850px] h-[350px] bg-gradient-to-r from-purple-600/20 via-pink-600/15 to-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
 
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 w-full space-y-8 relative z-10">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 w-full space-y-6 relative z-10">
 
     <!-- Top Navigation -->
-    <div class="flex items-center justify-between border-b border-purple-500/20 pb-4">
+    <div class="flex items-center justify-between border-b border-purple-500/20 pb-3">
       <a href="{{ url_for('arena.dashboard') }}" class="text-xs font-mono text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5 transition">
-        <span>&larr;</span> <span>Back to Arena Duels Lobby</span>
+        <span>&larr;</span> <span>Arena Duels Hub</span>
       </a>
       <span class="text-xs font-mono font-bold text-slate-400">
-        MATCH ID: <span class="text-white">{{ match.match_code }}</span>
+        DUEL ID: <span class="text-white">{{ match.match_code }}</span>
       </span>
     </div>
 
     <!-- MAIN DUEL SHOWDOWN CARD -->
-    <div class="bg-slate-950/95 border-2 border-purple-500/40 rounded-3xl p-6 sm:p-10 backdrop-blur shadow-2xl relative overflow-hidden space-y-8">
-      
-      <!-- Status Badge on Top -->
+    <div class="bg-slate-950/95 border-2 border-purple-500/40 rounded-3xl p-5 sm:p-8 backdrop-blur shadow-2xl relative overflow-hidden space-y-6">
+
+      <!-- Dynamic Status Badge on Top -->
       <div class="flex items-center justify-center">
-        {% if match.status == 'waiting' %}
-          <span class="px-4 py-1.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-            WAITING FOR OPPONENT
+        {% if match.status == 'completed' %}
+          <span class="px-4 py-1.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-xs font-bold uppercase tracking-wider">
+            🏆 6-ROUND DUEL COMPLETED
           </span>
-        {% elif match.status == 'in_progress' %}
+        {% elif is_player1 and match.current_round == 1 and my_turn and not opponent_assigned %}
+          <span class="px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            ⚡ INVITE A FRIEND &amp; PLAY ROUND 1
+          </span>
+        {% elif my_turn %}
           <span class="px-4 py-1.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-            ROUND {{ match.current_round }} IN PROGRESS
+            🔥 ROUND {{ match.current_round }} OF 6 • YOUR TURN!
+          </span>
+        {% elif not opponent_assigned %}
+          <span class="px-4 py-1.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            ⏳ WAITING FOR INVITED FRIEND TO ACCEPT CHALLENGE
           </span>
         {% else %}
-          <span class="px-4 py-1.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 font-mono text-xs font-bold uppercase tracking-wider">
-            DUEL COMPLETED
+          <span class="px-4 py-1.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            ⏳ WAITING FOR {{ opponent_name }} (ROUND {{ match.current_round }})
           </span>
         {% endif %}
       </div>
 
-      <!-- Player 1 vs Player 2 Card (Centered, full width) -->
-      <div class="grid grid-cols-11 items-center gap-2 sm:gap-4 py-2">
+      <!-- Player 1 vs Player 2 Scoreboard Header -->
+      <div class="grid grid-cols-11 items-center gap-2 sm:gap-4 py-1">
         <!-- Player 1 -->
-        <div class="col-span-5 flex flex-col items-center text-center space-y-2">
+        <div class="col-span-5 flex flex-col items-center text-center space-y-1.5">
           <div class="relative">
             {{ render_mascot(match.player1_avatar, 'happy' if match.p1_total_score >= match.p2_total_score else 'idle', 'md', 'mx-auto') }}
             {% if is_player1 %}
             <span class="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-cyan-400 text-slate-950 font-mono font-black text-[9px] uppercase tracking-wider">YOU</span>
             {% endif %}
           </div>
-          <div class="font-mono font-bold text-sm sm:text-base text-white truncate max-w-[140px] sm:max-w-none">
+          <div class="font-mono font-bold text-xs sm:text-base text-white truncate max-w-[130px] sm:max-w-none pt-1">
             {{ match.player1_name }}
           </div>
           <div class="text-2xl sm:text-4xl font-black font-mono text-cyan-400">
-            {{ match.p1_total_score }} <span class="text-xs text-slate-400 font-normal">PTS</span>
+            {{ match.p1_total_score }} <span class="text-[10px] sm:text-xs text-slate-400 font-normal">PTS</span>
           </div>
         </div>
 
@@ -79,48 +89,51 @@
         </div>
 
         <!-- Player 2 -->
-        <div class="col-span-5 flex flex-col items-center text-center space-y-2">
+        <div class="col-span-5 flex flex-col items-center text-center space-y-1.5">
           <div class="relative">
-            {% if match.player2_session %}
+            {% if opponent_assigned %}
               {{ render_mascot(match.player2_avatar, 'happy' if match.p2_total_score >= match.p1_total_score else 'idle', 'md', 'mx-auto') }}
               {% if is_player2 %}
               <span class="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-cyan-400 text-slate-950 font-mono font-black text-[9px] uppercase tracking-wider">YOU</span>
               {% endif %}
             {% else %}
-              <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-slate-900 border-2 border-dashed border-purple-500/40 flex items-center justify-center text-3xl mx-auto text-purple-300">
-                👤
+              <div class="w-16 h-16 sm:w-24 sm:h-24 rounded-3xl bg-slate-900 border-2 border-dashed border-emerald-500/40 flex items-center justify-center text-2xl sm:text-3xl mx-auto text-emerald-300">
+                📲
               </div>
             {% endif %}
           </div>
-          <div class="font-mono font-bold text-sm sm:text-base text-white truncate max-w-[140px] sm:max-w-none">
-            {{ match.player2_name or 'Open Slot' }}
+          <div class="font-mono font-bold text-xs sm:text-base text-white truncate max-w-[130px] sm:max-w-none pt-1">
+            {% if opponent_assigned %}{{ match.player2_name }}{% elif is_invited_challenger %}You (Challenger){% else %}Invited Friend{% endif %}
           </div>
           <div class="text-2xl sm:text-4xl font-black font-mono text-pink-400">
-            {{ match.p2_total_score }} <span class="text-xs text-slate-400 font-normal">PTS</span>
+            {{ match.p2_total_score }} <span class="text-[10px] sm:text-xs text-slate-400 font-normal">PTS</span>
           </div>
         </div>
       </div>
 
-      <!-- Action Area: Play Turn OR Nudge Opponent -->
-      <div class="border-t border-purple-500/20 pt-6 space-y-4">
+      <!-- ============================================================== -->
+      <!-- ACTION AREA: INVITE FRIEND, PLAY TURN, OR NUDGE ON WHATSAPP    -->
+      <!-- ============================================================== -->
+      <div class="border-t border-purple-500/20 pt-6 space-y-5 font-mono">
         {% if match.status in ('waiting', 'in_progress') %}
+
           {% if not is_participant %}
-          <!-- Spectator View: Duel already locked between two players -->
+          <!-- Spectator View: Duel already locked between two other players -->
           <div class="p-6 rounded-2xl bg-amber-950/40 border border-amber-500/40 text-center space-y-3">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-mono text-xs font-bold border border-amber-500/30">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/30">
               <span>🔒</span> DUEL IN PROGRESS • ROUND {{ match.current_round }}
             </div>
-            <h3 class="text-lg font-black font-mono text-white">
+            <h3 class="text-lg font-black text-white">
               Duel Locked Between {{ match.player1_name }} &amp; {{ match.player2_name }}
             </h3>
-            <p class="text-xs font-mono text-slate-300 max-w-md mx-auto leading-relaxed">
-              This match is already underway! You cannot join or nudge mid-duel. Would you like to challenge <strong>{{ match.player1_name }}</strong> to a brand new Round 1 duel?
+            <p class="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
+              This match is already underway! Want to challenge <strong>{{ match.player1_name }}</strong> to a fresh Round 1 duel?
             </p>
             <div class="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <a href="{{ url_for('arena.challenge_fresh', target_session=match.player1_session) }}" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-mono font-black text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition active:scale-95">
-                <span>⚔️ Challenge {{ match.player1_name }} (Starts Round 1) &rarr;</span>
+              <a href="{{ url_for('arena.challenge_fresh', target_session=match.player1_session) }}" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition active:scale-95">
+                <span>⚔️ Challenge {{ match.player1_name }} &rarr;</span>
               </a>
-              <a href="{{ url_for('arena.dashboard') }}" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-slate-900 border border-purple-500/30 hover:border-purple-400 text-purple-300 font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95">
+              <a href="{{ url_for('arena.dashboard') }}" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-slate-900 border border-purple-500/30 text-purple-300 text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition">
                 <span>🏠 Arena Duels Hub</span>
               </a>
             </div>
@@ -128,18 +141,18 @@
 
           {% elif match.is_bot %}
           <!-- ============================================== -->
-          <!-- BOT MATCH: Direct Play to Next Round! (NO NUDGE) -->
+          <!-- BOT MATCH: Direct Play to Next Round           -->
           <!-- ============================================== -->
-          <div class="text-center space-y-4 py-3 font-mono">
+          <div class="text-center space-y-4 py-2">
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              ROUND {{ match.current_round }} READY VS CYBER BOT NOVA!
+              ROUND {{ match.current_round }} OF 6 READY VS CYBER BOT NOVA!
             </div>
             <h3 class="text-xl sm:text-2xl font-black text-white">
               Round {{ match.current_round }}: {{ active_round.category_name if active_round else 'Trivia Challenge' }}
             </h3>
             <p class="text-xs text-slate-300 max-w-md mx-auto">
-              3 fast buzzer questions. Answer quickly to earn speed bonus points and defeat the AI bot!
+              3 fast buzzer questions. Answer quickly to earn speed bonus points!
             </p>
             <div class="pt-2">
               <a href="{{ url_for('arena.play_round', match_code=match.match_code) }}" class="inline-flex w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400 hover:from-emerald-400 hover:to-cyan-300 text-slate-950 font-black text-base uppercase tracking-wider shadow-2xl transition transform hover:scale-105 items-center justify-center gap-2">
@@ -148,167 +161,298 @@
             </div>
           </div>
 
-          {% elif my_turn %}
-          <!-- ============================================== -->
-          <!-- HUMAN DUEL: YOUR TURN                          -->
-          <!-- ============================================== -->
-            {% if match.current_round > 1 and not has_account %}
-            <!-- Gated Beyond Round 1: Registration Required -->
-            <div class="p-6 rounded-2xl bg-gradient-to-b from-purple-950/70 to-slate-950/90 border border-purple-500/50 text-center space-y-3 font-mono">
-              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/30">
-                <span>🔒</span> FREE ACCOUNT REQUIRED FOR ROUND {{ match.current_round }}
+          {% elif is_invited_challenger or (not has_account and not is_player1) %}
+          <!-- ============================================================== -->
+          <!-- FRIEND WHO CLICKED WHATSAPP INVITE LINK (PLAYER 2 ONBOARDING)  -->
+          <!-- ============================================================== -->
+          <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-purple-950/80 via-slate-950 to-indigo-950/80 border-2 border-cyan-400/50 text-center space-y-4">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-bold border border-cyan-400/40">
+              <span>⚔️</span> YOU'VE BEEN CHALLENGED BY {{ match.player1_name|upper }}!
+            </div>
+            <h3 class="text-xl sm:text-2xl font-black text-white">
+              Accept {{ match.player1_name }}'s Challenge!
+            </h3>
+
+            {% if opponent_active_summary and opponent_active_summary.done %}
+            <!-- Show how Player 1 did on Round 1 (without revealing exact answers!) -->
+            <div class="max-w-md mx-auto p-4 rounded-2xl bg-slate-900/90 border border-purple-500/40 space-y-2">
+              <div class="text-[11px] text-purple-300 uppercase font-bold">
+                🔥 How {{ match.player1_name }} did in Round 1 ({{ active_round.category_name }}):
               </div>
-              <h3 class="text-xl font-black text-white">
-                Great Job Finishing Round 1!
-              </h3>
-              <p class="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
-                To play <strong>Round {{ match.current_round }}</strong> and keep competing in friend duels, create a free player account or sign in. This saves your duel scores, preserves your streak, and secures your rank!
-              </p>
-              <div class="pt-3 flex flex-col sm:flex-row items-center justify-center gap-3">
-                <a href="{{ url_for('arena.player_register', next=url_for('arena.play_round', match_code=match.match_code)) }}" class="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-400 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-xl flex items-center justify-center gap-2 transition active:scale-95">
-                  <span>🚀 Create Free Account &amp; Play Round {{ match.current_round }} &rarr;</span>
-                </a>
-                <a href="{{ url_for('arena.player_login', next=url_for('arena.play_round', match_code=match.match_code)) }}" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-slate-900 border border-cyan-400/50 hover:border-cyan-300 text-cyan-300 text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95">
-                  <span>🔑 Log In</span>
-                </a>
+              <div class="grid grid-cols-3 gap-2 pt-1">
+                <div class="p-2.5 rounded-xl bg-cyan-950/50 border border-cyan-500/30">
+                  <div class="text-lg font-black text-cyan-300">{{ opponent_active_summary.score }}</div>
+                  <div class="text-[10px] text-slate-400">POINTS</div>
+                </div>
+                <div class="p-2.5 rounded-xl bg-emerald-950/50 border border-emerald-500/30">
+                  <div class="text-lg font-black text-emerald-300">{{ opponent_active_summary.correct_count }}/{{ opponent_active_summary.total_questions }}</div>
+                  <div class="text-[10px] text-slate-400">CORRECT</div>
+                </div>
+                <div class="p-2.5 rounded-xl bg-amber-950/50 border border-amber-500/30">
+                  <div class="text-lg font-black text-amber-300">⏱️ {{ opponent_active_summary.total_time_sec }}s</div>
+                  <div class="text-[10px] text-slate-400">TIME TAKEN</div>
+                </div>
+              </div>
+              <div class="text-[10px] text-slate-400 pt-1">
+                🔒 Exact answers are revealed right after you finish Round 1!
               </div>
             </div>
-            {% else %}
-            <!-- Active Turn Button: Direct 1-Click Game Launch -->
-            <div class="text-center space-y-3 font-mono">
-              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                YOUR TURN TO PLAY!
-              </div>
-              <h3 class="text-xl font-black text-white">
-                Round {{ match.current_round }}: {{ active_round.category_name if active_round else 'Trivia Challenge' }}
-              </h3>
-              <p class="text-xs text-slate-300">
-                3 fast buzzer questions. Faster answers award speed bonus points!
-              </p>
+            {% endif %}
 
-              {% if not match.player2_session %}
-              <!-- Awaiting Challenger / Bot Fallback Awareness Notice -->
-              <div class="max-w-md mx-auto p-4 rounded-2xl bg-cyan-950/50 border border-cyan-400/50 text-left space-y-1.5 my-3 shadow-lg">
-                <div class="flex items-center gap-2 text-cyan-300 font-bold text-xs uppercase tracking-wide">
-                  <span>ℹ️</span> Awaiting Challenger / AI Auto-Match
+            <p class="text-xs text-slate-200 max-w-md mx-auto leading-relaxed">
+              {% if not has_account %}
+                Pick your unique <strong>Superhero Player Name</strong> &amp; <strong>6-Digit PIN</strong> in 3 easy steps, then play Round 1 &amp; Round 2!
+              {% else %}
+                You're signed in as <strong class="text-cyan-300">{{ player.display_name }}</strong>! Tap below to play Round 1 &amp; Round 2!
+              {% endif %}
+            </p>
+
+            <div class="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              {% if not has_account %}
+              <a href="{{ url_for('arena.player_register', next=url_for('arena.play_round', match_code=match.match_code)) }}" class="w-full sm:w-auto px-7 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 hover:from-emerald-400 hover:to-cyan-300 text-slate-950 font-black text-sm uppercase tracking-wider shadow-2xl flex items-center justify-center gap-2 transition active:scale-95">
+                <span>🚀 Quick 3-Step Setup &amp; Play Round 1 &rarr;</span>
+              </a>
+              <a href="{{ url_for('arena.player_login', next=url_for('arena.play_round', match_code=match.match_code)) }}" class="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-slate-900 border border-cyan-400/50 text-cyan-300 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition">
+                <span>🔑 Sign In with PIN</span>
+              </a>
+              {% else %}
+              <a href="{{ url_for('arena.play_round', match_code=match.match_code) }}" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 text-slate-950 font-black text-sm uppercase tracking-wider shadow-2xl flex items-center justify-center gap-2 transition active:scale-95">
+                <span>🚀 Accept Challenge &amp; Play Round 1 &rarr;</span>
+              </a>
+              {% endif %}
+            </div>
+          </div>
+
+          {% elif my_turn %}
+          <!-- ============================================================== -->
+          <!-- HUMAN DUEL: YOUR TURN TO PLAY!                                 -->
+          <!-- ============================================================== -->
+            {% if is_player1 and match.current_round == 1 and not opponent_assigned %}
+            <!-- STEP 1: INVITE FRIEND ON WHATSAPP -> STEP 2: PLAY ROUND 1 -->
+            <div class="space-y-5">
+              <div class="p-5 rounded-2xl bg-emerald-950/40 border-2 border-emerald-500/40 space-y-3 text-center">
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-black uppercase">
+                  <span>📲 STEP 1 OF 2</span> &bull; INVITE YOUR FRIEND ON WHATSAPP
                 </div>
-                <p class="text-[11px] text-slate-300 leading-relaxed">
-                  Share your duel link or WhatsApp invite with friends. <strong>Or start right now!</strong> If no challenger has joined when you play, <strong>Cyber Bot Nova</strong> will automatically step in as your opponent so you won't be left waiting!
+                <h3 class="text-lg sm:text-xl font-black text-white">
+                  Send This Challenge to a Friend!
+                </h3>
+                <p class="text-xs text-slate-300 max-w-md mx-auto">
+                  Tap below to send your challenge invite on WhatsApp, then play your <strong>Round 1</strong> questions right below!
                 </p>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
+                  <button type="button" onclick="inviteFriendFirst()" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition active:scale-95">
+                    <span>💬 Invite Friend on WhatsApp</span>
+                  </button>
+                  <button type="button" onclick="shareMatchLink()" class="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-slate-900 border border-purple-500/40 hover:border-cyan-400 text-cyan-300 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95">
+                    <span>📋 Copy Challenge Link</span>
+                  </button>
+                </div>
+                <div id="inviteSentConfirmation" class="hidden text-xs text-emerald-300 font-bold pt-1 animate-pulse">
+                  ✅ WhatsApp invite opened! Now play Round 1 below so your score is ready when your friend joins!
+                </div>
+              </div>
+
+              <div class="p-5 rounded-2xl bg-cyan-950/40 border-2 border-cyan-400/50 space-y-3 text-center">
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-[11px] font-black uppercase">
+                  <span>🎮 STEP 2 OF 2</span> &bull; PLAY YOUR ROUND 1 QUESTIONS
+                </div>
+                <h3 class="text-lg sm:text-xl font-black text-white">
+                  Round 1: {{ active_round.category_name if active_round else 'Trivia Challenge' }}
+                </h3>
+                <p class="text-xs text-slate-300 max-w-md mx-auto">
+                  Play Round 1 now (3 questions). Once you finish, your score &amp; time will be waiting for your friend to accept the challenge!
+                </p>
+                <div class="pt-1">
+                  <a href="{{ url_for('arena.play_round', match_code=match.match_code) }}" class="inline-flex w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black text-sm sm:text-base uppercase tracking-wider shadow-2xl items-center justify-center gap-2 transition transform hover:scale-105 active:scale-95">
+                    <span>🚀 Play Round 1 Now &rarr;</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {% else %}
+            <!-- STANDARD ACTIVE TURN (Catching Up on Opponent's Round OR Leading Next Round!) -->
+            <div class="text-center space-y-4">
+              {% if opponent_active_summary and opponent_active_summary.done %}
+              <!-- Opponent already played this round -> Show how they did (score, X/3, time)! -->
+              <div class="max-w-md mx-auto p-4 rounded-2xl bg-purple-950/60 border border-purple-400/50 space-y-2">
+                <div class="text-[11px] text-amber-300 font-bold uppercase">
+                  🎯 Target to Beat in Round {{ match.current_round }} ({{ active_round.category_name }}):
+                </div>
+                <div class="text-xs text-white font-bold">
+                  {{ opponent_name }} finished Round {{ match.current_round }}!
+                </div>
+                <div class="grid grid-cols-3 gap-2 pt-1">
+                  <div class="p-2 rounded-xl bg-slate-900/90 border border-cyan-500/30">
+                    <div class="text-base font-black text-cyan-300">+{{ opponent_active_summary.score }}</div>
+                    <div class="text-[9px] text-slate-400">POINTS</div>
+                  </div>
+                  <div class="p-2 rounded-xl bg-slate-900/90 border border-emerald-500/30">
+                    <div class="text-base font-black text-emerald-300">{{ opponent_active_summary.correct_count }}/{{ opponent_active_summary.total_questions }}</div>
+                    <div class="text-[9px] text-slate-400">CORRECT</div>
+                  </div>
+                  <div class="p-2 rounded-xl bg-slate-900/90 border border-amber-500/30">
+                    <div class="text-base font-black text-amber-300">⏱️ {{ opponent_active_summary.total_time_sec }}s</div>
+                    <div class="text-[9px] text-slate-400">TIME</div>
+                  </div>
+                </div>
+                <div class="text-[10px] text-slate-300 pt-1">
+                  🔒 {{ opponent_name }}'s answers unlock as soon as you finish Round {{ match.current_round }}!
+                  {% if match.current_round < 6 %}
+                  Then you'll immediately lead off <strong>Round {{ match.current_round + 1 }}</strong>!
+                  {% endif %}
+                </div>
+              </div>
+              {% else %}
+              <!-- You caught up on the previous round and now you're leading off this round! -->
+              <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                {% if match.current_round > 1 %}
+                🔥 YOU'RE BOTH CAUGHT UP! YOUR TURN TO LEAD ROUND {{ match.current_round }}!
+                {% else %}
+                YOUR TURN TO PLAY ROUND {{ match.current_round }}!
+                {% endif %}
               </div>
               {% endif %}
 
+              <h3 class="text-xl sm:text-2xl font-black text-white">
+                Round {{ match.current_round }} of 6: {{ active_round.category_name if active_round else 'Trivia Challenge' }}
+              </h3>
+              <p class="text-xs text-slate-300 max-w-md mx-auto">
+                {% if opponent_active_summary and opponent_active_summary.done and match.current_round < 6 %}
+                  Play Round {{ match.current_round }} now so you're both up to date — then play Round {{ match.current_round + 1 }} and nudge {{ opponent_name }}!
+                {% elif match.current_round > 1 %}
+                  Play Round {{ match.current_round }} now, then nudge {{ opponent_name }} on WhatsApp with your score &amp; time!
+                {% else %}
+                  3 fast buzzer questions. Faster answers earn higher speed bonus points!
+                {% endif %}
+              </p>
+
               <div class="pt-2">
-                <a href="{{ url_for('arena.play_round', match_code=match.match_code) }}" class="inline-flex w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400 hover:from-emerald-400 hover:to-cyan-300 text-slate-950 font-black text-base uppercase tracking-wider shadow-2xl transition transform hover:scale-105 items-center justify-center gap-2">
-                  <span>{% if not match.player2_session %}▶ Start Round {{ match.current_round }} (vs Cyber Bot if solo) &rarr;{% else %}▶ Start Round {{ match.current_round }} Questions Now &rarr;{% endif %}</span>
+                <a href="{{ url_for('arena.play_round', match_code=match.match_code) }}" class="inline-flex w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 hover:from-emerald-400 hover:to-cyan-300 text-slate-950 font-black text-base uppercase tracking-wider shadow-2xl transition transform hover:scale-105 items-center justify-center gap-2">
+                  <span>🚀 Play Round {{ match.current_round }} Now &rarr;</span>
                 </a>
               </div>
             </div>
             {% endif %}
 
           {% else %}
-          <!-- ============================================== -->
-          <!-- HUMAN DUEL: AWAITING OPPONENT TURN             -->
-          <!-- ============================================== -->
-          <!-- Visual Duel Share Card Preview -->
-          <div class="max-w-md mx-auto space-y-2 text-center font-mono">
-            <div class="relative group">
-              <img src="/arena/match/{{ match.match_code }}/card.png" alt="Quizmondo Duel Card" class="w-full rounded-2xl border-2 border-purple-500/40 shadow-2xl transition transform group-hover:scale-[1.01]">
-              <div class="absolute bottom-2 right-2 px-2.5 py-1 rounded-lg bg-slate-950/80 border border-purple-500/40 text-[10px] text-cyan-300 font-bold backdrop-blur">
-                ⚡ WhatsApp Share Card
+          <!-- ============================================================== -->
+          <!-- HUMAN DUEL: WAITING FOR INVITED FRIEND OR OPPONENT TURN        -->
+          <!-- ============================================================== -->
+          <div class="max-w-lg mx-auto space-y-4 text-center">
+            {% if my_active_summary and my_active_summary.done %}
+            <!-- Your Completed Round Summary Pill -->
+            <div class="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 space-y-2">
+              <div class="text-xs font-black text-emerald-300 uppercase">
+                ✅ You Completed Round {{ match.current_round }} ({{ active_round.category_name }})!
+              </div>
+              <div class="grid grid-cols-3 gap-2">
+                <div class="p-2 rounded-xl bg-slate-900/90 border border-cyan-500/30">
+                  <div class="text-base font-black text-cyan-300">+{{ my_active_summary.score }}</div>
+                  <div class="text-[9px] text-slate-400">YOUR SCORE</div>
+                </div>
+                <div class="p-2 rounded-xl bg-slate-900/90 border border-emerald-500/30">
+                  <div class="text-base font-black text-emerald-300">{{ my_active_summary.correct_count }}/{{ my_active_summary.total_questions }}</div>
+                  <div class="text-[9px] text-slate-400">CORRECT</div>
+                </div>
+                <div class="p-2 rounded-xl bg-slate-900/90 border border-amber-500/30">
+                  <div class="text-base font-black text-amber-300">⏱️ {{ my_active_summary.total_time_sec }}s</div>
+                  <div class="text-[9px] text-slate-400">YOUR TIME</div>
+                </div>
               </div>
             </div>
-            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/40">
-              <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-              ⏳ Awaiting Opponent's Turn
+            {% endif %}
+
+            {% if not opponent_assigned %}
+            <div class="p-5 rounded-2xl bg-amber-950/30 border border-amber-500/40 space-y-2">
+              <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                ⏳ Waiting for the person you invited to accept the challenge!
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                Send your challenge link on WhatsApp below! Once your friend accepts, they'll play <strong>Round 1</strong> &amp; <strong>Round 2</strong> and nudge you back so you stay in sync!
+              </p>
             </div>
-            <p class="text-xs text-slate-300 leading-relaxed max-w-md mx-auto">
-              You finished your questions for <strong>Round {{ match.current_round }}</strong>! We're waiting for {{ opponent_name or 'your opponent' }} to answer before Round {{ match.current_round + 1 }} unlocks.
-            </p>
-          </div>
+            {% else %}
+            <div class="p-5 rounded-2xl bg-amber-950/30 border border-amber-500/40 space-y-2">
+              <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                ⏳ Waiting for {{ opponent_name }} to play Round {{ match.current_round }}!
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                Nudge <strong>{{ opponent_name }}</strong> on WhatsApp with your Round {{ match.current_round }} score, accuracy, and time!
+                {% if match.current_round < 6 %}
+                They'll catch up on Round {{ match.current_round }}, play Round {{ match.current_round + 1 }}, and nudge you back!
+                {% endif %}
+              </p>
+            </div>
+            {% endif %}
 
-          <div class="flex flex-col sm:flex-row items-center justify-center gap-3 font-mono">
-            <button type="button" onclick="nudgeOnWhatsApp()" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition active:scale-95">
-              <span>💬 Nudge {{ opponent_name or 'Challenger' }} on WhatsApp</span>
-            </button>
-            <button type="button" onclick="shareMatchLink()" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-slate-900 border border-purple-500/30 hover:border-cyan-400 text-cyan-300 text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95">
-              <span>📋 Copy Graphical Card &amp; Link</span>
-            </button>
-          </div>
+            <!-- Primary WhatsApp Invite / Nudge Buttons -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
+              <button type="button" onclick="nudgeOnWhatsApp()" class="w-full sm:w-auto px-6 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl flex items-center justify-center gap-2 transition active:scale-95">
+                {% if not opponent_assigned %}
+                <span>📲 Send Challenge &amp; Score on WhatsApp</span>
+                {% else %}
+                <span>💬 Nudge {{ opponent_name }} on WhatsApp (With Score &amp; Time)</span>
+                {% endif %}
+              </button>
+              <button type="button" onclick="shareMatchLink()" class="w-full sm:w-auto px-5 py-4 rounded-2xl bg-slate-900 border border-purple-500/40 hover:border-cyan-400 text-cyan-300 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95">
+                <span>📋 Copy Link &amp; Stats</span>
+              </button>
+            </div>
 
-          <!-- Secondary Options: Challenge a Different Friend or Play with Bot Nova -->
-          <div class="pt-3 border-t border-purple-500/10 flex flex-col sm:flex-row items-center justify-center gap-3 font-mono">
-            <form action="{{ url_for('arena.create_match') }}" method="POST" class="w-full sm:w-auto">
-              <input type="hidden" name="opponent_mode" value="friend">
-              <button type="submit" class="w-full px-5 py-3 rounded-2xl bg-slate-900/90 border border-slate-700 hover:border-cyan-400 text-slate-300 hover:text-white text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95">
-                <span>⚔️ Challenge a Different Friend (Starts Round 1)</span>
-              </button>
-            </form>
-            <form action="{{ url_for('arena.switch_to_bot', match_code=match.match_code) }}" method="POST" class="w-full sm:w-auto">
-              <button type="submit" class="w-full px-5 py-3 rounded-2xl bg-purple-900/30 hover:bg-purple-800/50 border border-purple-500/30 text-purple-300 hover:text-white text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95">
-                <span>🤖 Don't want to wait? Play with Bot Nova &rarr;</span>
-              </button>
-            </form>
+            <!-- Visual Duel Share Card Preview -->
+            <div class="pt-2 max-w-sm mx-auto">
+              <img src="/arena/match/{{ match.match_code }}/card.png" alt="Quizmondo Duel Card" class="w-full rounded-2xl border border-purple-500/30 shadow-lg">
+            </div>
           </div>
           {% endif %}
+
         {% else %}
           <!-- ============================================== -->
-          <!-- MATCH COMPLETED: WINNER & FREE ACCOUNT CONVERSION -->
+          <!-- MATCH COMPLETED: WINNER & REMATCH              -->
           <!-- ============================================== -->
-          <div class="text-center space-y-6 font-mono">
+          <div class="text-center space-y-5">
             <div class="text-2xl sm:text-3xl font-black text-amber-400">
               {% if match.winner == 1 %}
-                👑 {{ match.player1_name }} WINS!
+                👑 {{ match.player1_name }} WINS THE DUEL!
               {% elif match.winner == 2 %}
-                👑 {{ match.player2_name }} WINS!
+                👑 {{ match.player2_name }} WINS THE DUEL!
               {% else %}
-                🤝 IT'S A TIED DRAW!
+                🤝 EPIC TIED DRAW!
               {% endif %}
             </div>
 
-            <!-- Free Account Conversion Card (If playing as guest) -->
             {% if not has_account %}
             <div class="max-w-md mx-auto p-6 rounded-3xl bg-gradient-to-b from-purple-950/90 via-slate-950 to-indigo-950/90 border-2 border-purple-400/50 shadow-2xl text-left space-y-4">
               <div class="flex items-center gap-3 border-b border-purple-500/30 pb-3">
-                <span class="text-2xl">⭐</span>
+                <span class="text-2xl">🦸‍♂️</span>
                 <div>
-                  <h4 class="text-sm font-black text-white uppercase">Claim Your Rank &amp; High Scores!</h4>
-                  <p class="text-[11px] text-purple-300">Convert your guest tag into a permanent username.</p>
+                  <h4 class="text-sm font-black text-white uppercase">Save Your Rank &amp; High Scores!</h4>
+                  <p class="text-[11px] text-purple-300">Quick 3-step Superhero Name &amp; 6-Digit PIN setup.</p>
                 </div>
               </div>
-
-              <div class="space-y-2 text-xs text-slate-300">
-                <div class="flex items-center justify-between bg-slate-900/80 p-2.5 rounded-xl border border-purple-500/20">
-                  <span class="text-slate-400">Your Final Match Score:</span>
-                  <strong class="text-cyan-400 font-black">{{ match.p1_total_score }} PTS</strong>
-                </div>
-                <div class="flex items-center justify-between bg-slate-900/80 p-2.5 rounded-xl border border-purple-500/20">
-                  <span class="text-slate-400">XP Earned:</span>
-                  <strong class="text-amber-400 font-black">+{{ player.xp }} XP</strong>
-                </div>
-                <div class="flex items-center justify-between bg-slate-900/80 p-2.5 rounded-xl border border-purple-500/20">
-                  <span class="text-slate-400">Current Guest Name:</span>
-                  <strong class="text-pink-400 font-black">{{ player.display_name }}</strong>
-                </div>
-              </div>
-
-              <p class="text-[11px] text-slate-400 leading-relaxed">
-                Creating a free account saves your XP coins, leaderboard trophies, and unlocks head-to-head friend challenges!
-              </p>
-
-              <a href="{{ url_for('arena.player_register') }}" class="block w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-400 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider text-center shadow-lg transition transform hover:-translate-y-0.5">
-                🚀 Create Free Account &amp; Save Progress &rarr;
+              <a href="{{ url_for('arena.player_register') }}" class="block w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider text-center shadow-lg transition">
+                🚀 Quick 3-Step Player Setup &rarr;
               </a>
             </div>
             {% endif %}
 
             <div class="pt-2 flex flex-wrap items-center justify-center gap-3">
-              <a href="{{ url_for('arena.create_match', opponent_mode='bot') }}" class="px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase shadow-lg transition">
-                Play Another Bot Duel &rarr;
+              <form action="{{ url_for('arena.create_match') }}" method="POST">
+                <input type="hidden" name="opponent_mode" value="friend">
+                <button type="submit" class="px-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase shadow-lg transition">
+                  📲 Challenge Friend Again &rarr;
+                </button>
+              </form>
+              <a href="{{ url_for('arena.create_match', opponent_mode='bot') }}" class="px-6 py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase shadow-lg transition">
+                🤖 Play AI Bot Duel &rarr;
               </a>
-              <a href="{{ url_for('arena.dashboard') }}" class="px-6 py-3 rounded-xl bg-slate-900 border border-purple-500/30 text-slate-300 hover:text-white text-xs uppercase transition">
-                Arena Duels Hub
+              <a href="{{ url_for('arena.dashboard') }}" class="px-6 py-3.5 rounded-2xl bg-slate-900 border border-purple-500/30 text-slate-300 hover:text-white text-xs uppercase transition">
+                🏠 Arena Hub
               </a>
             </div>
           </div>
@@ -317,24 +461,85 @@
 
     </div>
 
-    <!-- 6-ROUND SCOREBOARD TRACKER -->
-    <div class="space-y-4">
-      <h3 class="text-base font-black font-mono text-white flex items-center gap-2">
-        <span>📊</span> 6-ROUND MATCH PROGRESS
-      </h3>
+    <!-- ==================================================================== -->
+    <!-- 6-ROUND SCOREBOARD & STAGE-GATED HEAD-TO-HEAD ANSWER COMPARISONS      -->
+    <!-- ==================================================================== -->
+    <div class="space-y-4 font-mono">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-black text-white flex items-center gap-2">
+          <span>📊</span> 6-ROUND SYNC &amp; ANSWER REVEAL
+        </h3>
+        <span class="text-[11px] text-slate-400">Answers unlock after both players finish a round</span>
+      </div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {% for r in all_rounds %}
-        <div class="p-3.5 rounded-2xl bg-slate-950/80 border {% if r.round_number == match.current_round %}border-cyan-400 bg-cyan-950/20 shadow-lg{% else %}border-purple-500/20{% endif %} font-mono text-xs space-y-2">
-          <div class="flex items-center justify-between text-[11px] text-slate-400">
-            <span class="font-bold">R{{ r.round_number }}</span>
-            <span class="truncate max-w-[80px]" title="{{ r.category_name }}">{{ r.category_name }}</span>
+      <div class="space-y-4">
+        {% for rd in rounds_detail %}
+        <div class="p-4 sm:p-5 rounded-2xl bg-slate-950/90 border {% if rd.round_number == match.current_round and match.status != 'completed' %}border-cyan-400/60 shadow-lg{% elif rd.both_done %}border-emerald-500/30{% else %}border-purple-500/20{% endif %} space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-1 rounded-lg {% if rd.both_done %}bg-emerald-500/20 text-emerald-300{% elif rd.round_number == match.current_round %}bg-cyan-500/20 text-cyan-300{% else %}bg-slate-900 text-slate-400{% endif %} font-black text-xs">
+                ROUND {{ rd.round_number }}
+              </span>
+              <span class="text-xs sm:text-sm font-bold text-white">{{ rd.category_name }}</span>
+            </div>
+
+            <div class="flex items-center gap-3 text-xs">
+              <span class="text-cyan-300 font-bold">
+                {{ match.player1_name }}:
+                {% if rd.p1_summary.done %}
+                  {{ rd.p1_summary.score }} pts ({{ rd.p1_summary.correct_count }}/3 &bull; {{ rd.p1_summary.total_time_sec }}s)
+                {% else %}
+                  <span class="text-slate-500">Pending</span>
+                {% endif %}
+              </span>
+              <span class="text-slate-600">vs</span>
+              <span class="text-pink-300 font-bold">
+                {{ match.player2_name if opponent_assigned else 'Friend' }}:
+                {% if rd.p2_summary.done %}
+                  {{ rd.p2_summary.score }} pts ({{ rd.p2_summary.correct_count }}/3 &bull; {{ rd.p2_summary.total_time_sec }}s)
+                {% else %}
+                  <span class="text-slate-500">Pending</span>
+                {% endif %}
+              </span>
+            </div>
           </div>
-          <div class="flex items-center justify-between pt-1 border-t border-purple-500/20 text-xs">
-            <span class="text-cyan-300 font-bold">{{ r.p1_score or 0 }}</span>
-            <span class="text-slate-600">|</span>
-            <span class="text-pink-300 font-bold">{{ r.p2_score or 0 }}</span>
+
+          {% if rd.both_done and rd.comparison %}
+          <!-- BOTH PLAYERS COMPLETED THIS ROUND: REVEAL EXACT ANSWERS HEAD-TO-HEAD! -->
+          <div class="pt-2 border-t border-purple-500/20 space-y-2">
+            <div class="text-[10px] font-bold uppercase text-emerald-400 tracking-wider">
+              🔓 Stage Complete • Head-to-Head Answer Comparison:
+            </div>
+            <div class="grid grid-cols-1 gap-2">
+              {% for q in rd.comparison %}
+              <div class="p-3 rounded-xl bg-slate-900/90 border border-purple-500/20 text-xs space-y-1.5">
+                <div class="font-bold text-slate-100">
+                  Q{{ q.q_num }}: {{ q.prompt }}
+                </div>
+                <div class="text-[11px] text-emerald-300 font-bold">
+                  ✓ Correct Answer: {{ q.correct_option }} — {{ q.correct_text }}
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-[11px]">
+                  <div class="p-2 rounded-lg {% if q.p1_correct %}bg-emerald-950/40 border border-emerald-500/30 text-emerald-200{% else %}bg-rose-950/40 border border-rose-500/30 text-rose-200{% endif %} flex items-center justify-between">
+                    <span class="truncate"><strong>{{ match.player1_name }}:</strong> {{ q.p1_text }}</span>
+                    <span class="shrink-0 ml-2 font-bold">{% if q.p1_correct %}✓ +{{ q.p1_points }}{% else %}✗ 0{% endif %} ({{ q.p1_time }}s)</span>
+                  </div>
+                  <div class="p-2 rounded-lg {% if q.p2_correct %}bg-emerald-950/40 border border-emerald-500/30 text-emerald-200{% else %}bg-rose-950/40 border border-rose-500/30 text-rose-200{% endif %} flex items-center justify-between">
+                    <span class="truncate"><strong>{{ match.player2_name if opponent_assigned else 'Opponent' }}:</strong> {{ q.p2_text }}</span>
+                    <span class="shrink-0 ml-2 font-bold">{% if q.p2_correct %}✓ +{{ q.p2_points }}{% else %}✗ 0{% endif %} ({{ q.p2_time }}s)</span>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
           </div>
+          {% elif rd.p1_summary.done or rd.p2_summary.done %}
+          <!-- ONLY ONE PLAYER HAS ANSWERED: KEEP ANSWERS LOCKED UNTIL BOTH ANSWER! -->
+          <div class="pt-2 border-t border-purple-500/20 text-[11px] text-amber-300 flex items-center gap-2">
+            <span>🔒</span>
+            <span>Exact question answers for Round {{ rd.round_number }} are locked until both players complete this round!</span>
+          </div>
+          {% endif %}
         </div>
         {% endfor %}
       </div>
@@ -349,21 +554,18 @@ var matchInviteUrl = {{ invite_url|tojson }};
 var whatsappInviteText = {{ whatsapp_text|tojson }};
 var whatsappNudgeText = {{ (whatsapp_nudge_text or whatsapp_text)|tojson }};
 
+function inviteFriendFirst() {
+  var conf = document.getElementById('inviteSentConfirmation');
+  if (conf) conf.classList.remove('hidden');
+  var text = encodeURIComponent(whatsappInviteText);
+  var waUrl = "https://api.whatsapp.com/send?text=" + text;
+  window.open(waUrl, '_blank');
+}
+
 function nudgeOnWhatsApp() {
   var text = encodeURIComponent(whatsappNudgeText);
   var waUrl = "https://api.whatsapp.com/send?text=" + text;
-  
-  if (navigator.share) {
-    navigator.share({
-      title: 'Quizmondo Duel Match',
-      text: whatsappNudgeText,
-      url: matchInviteUrl
-    }).catch(function() {
-      window.open(waUrl, '_blank');
-    });
-  } else {
-    window.open(waUrl, '_blank');
-  }
+  window.open(waUrl, '_blank');
 }
 
 function shareMatchLink() {
@@ -371,9 +573,8 @@ function shareMatchLink() {
   if (navigator.share) {
     navigator.share({
       title: 'Quizmondo Arena Duel',
-      text: shareText,
-      url: matchInviteUrl
-    }).catch(function(err) {
+      text: shareText
+    }).catch(function() {
       copyToClipboard(shareText);
     });
   } else {
@@ -384,12 +585,12 @@ function shareMatchLink() {
 function copyToClipboard(text) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(function() {
-      alert("Direct game link copied to clipboard!\n" + text);
+      alert("Challenge message & link copied to clipboard!\n\n" + text);
     }).catch(function() {
-      prompt("Copy this direct duel link to send to your friend:", text);
+      prompt("Copy this challenge message to send to your friend:", text);
     });
   } else {
-    prompt("Copy this direct duel link to send to your friend:", text);
+    prompt("Copy this challenge message to send to your friend:", text);
   }
 }
 </script>

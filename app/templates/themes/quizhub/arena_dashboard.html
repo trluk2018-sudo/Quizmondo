@@ -190,10 +190,12 @@
           <span>📚</span> ARENA PACKS &amp; COMMUNITY QUIZZES
         </h3>
         <div class="flex items-center gap-3">
+          {% if session.get('user_role') in ('super_admin', 'admin', 'quizmaster', 'creator') %}
           <a href="{{ url_for('arena.create_question') }}" class="text-xs font-mono font-bold text-amber-400 hover:text-amber-300 hover:underline">
             + Author Trivia (+150 XP)
           </a>
           <span class="text-slate-600">&bull;</span>
+          {% endif %}
           <a href="{{ url_for('arena.packs_directory') }}" class="text-xs font-mono text-cyan-400 hover:underline">
             All Packs &rarr;
           </a>

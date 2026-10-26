@@ -15,7 +15,7 @@ def require_admin_role():
     """Strict security lockdown: the entire Quizmondo Control Centre backend is strictly for administrators only."""
     if not session.get('user_id'):
         return redirect(url_for('auth.login', next=request.url))
-    if session.get('user_role') != 'admin':
+    if session.get('user_role') not in ('admin', 'super_admin'):
         flash('Quizmondo Control Centre backend is restricted to administrators only.', 'error')
         return redirect(url_for('public.home'))
 
@@ -1553,7 +1553,26 @@ def players():
     if search:
         query = query.filter(PlayerProfile.display_name.ilike(f'%{search}%'))
     all_players = query.order_by(PlayerProfile.xp.desc()).all()
-    return render_template('admin/players.html', players=all_players, search=search)
+    all_users = {u.id: u for u in User.query.all()}
+    return render_template('admin/players.html', players=all_players, users_by_id=all_users, search=search)
+
+
+@admin_bp.route('/players/<int:id>/role', methods=['POST'])
+@login_required
+def player_set_role(id):
+    p = PlayerProfile.query.get_or_404(id)
+    new_role = (request.form.get('role') or 'player').strip()
+    if new_role not in ('super_admin', 'admin', 'quizmaster', 'creator', 'player'):
+        new_role = 'player'
+    if p.user_id:
+        u = db.session.get(User, p.user_id)
+        if u:
+            u.role = new_role
+            db.session.commit()
+            flash(f'Role for {p.display_name} updated to {new_role}.', 'success')
+    else:
+        flash('This profile is a guest session and has not registered an account yet.', 'error')
+    return redirect(url_for('admin.players'))
 
 
 @admin_bp.route('/players/<int:id>/toggle-ban', methods=['POST'])

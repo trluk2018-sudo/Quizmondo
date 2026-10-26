@@ -1,6 +1,7 @@
 import os
-from flask import Flask, send_from_directory, redirect, url_for
-from .models import db, User, SiteSetting, Category, Page, Post, MenuItem, SidebarWidget, PageModule
+from datetime import timedelta
+from flask import Flask, send_from_directory, redirect, url_for, session, request
+from .models import db, User, SiteSetting, Category, Page, Post, MenuItem, SidebarWidget, PageModule, PlayerProfile
 
 
 def create_app(test_config=None):
@@ -24,7 +25,10 @@ def create_app(test_config=None):
         MAX_CONTENT_LENGTH=16 * 1024 * 1024,  # 16MB file upload limit
         APP_PUBLIC_URL=os.environ.get('APP_PUBLIC_URL', 'http://localhost:8000'),
         APP_SSO_SECRET=os.environ.get('APP_SSO_SECRET') or os.environ.get('SSO_SECRET', ''),
-        UPLOAD_FOLDER=upload_dir
+        UPLOAD_FOLDER=upload_dir,
+        PERMANENT_SESSION_LIFETIME=timedelta(days=30),
+        SESSION_COOKIE_SAMESITE='Lax',
+        SESSION_COOKIE_PATH='/'
     )
 
     if test_config:
@@ -32,6 +36,31 @@ def create_app(test_config=None):
 
     # Init database
     db.init_app(app)
+
+    @app.before_request
+    def ensure_persistent_login_state():
+        """Keep player and admin login state rock-solid across all pages, tabs, and duels."""
+        if request.endpoint and request.endpoint.startswith('static'):
+            return
+        session.permanent = True
+        uid = session.get('user_id')
+        if uid:
+            user = db.session.get(User, uid)
+            if user and user.is_active:
+                session['username'] = user.username
+                session['user_role'] = user.role or 'player'
+                session['is_creator'] = user.role in ('super_admin', 'admin', 'quizmaster', 'creator')
+                prof = PlayerProfile.query.filter_by(user_id=user.id).first()
+                if prof:
+                    if prof.display_name != user.username:
+                        prof.display_name = user.username
+                        db.session.commit()
+                    session['qm_player_key'] = prof.session_key
+            else:
+                session.pop('user_id', None)
+                session.pop('username', None)
+                session.pop('user_role', None)
+                session.pop('is_creator', None)
 
     # Persistent upload handlers
     @app.route('/uploads/<path:filename>')
@@ -518,5 +547,16 @@ def _seed_defaults():
         seed_quizmondo_full_environment()
     except Exception as e:
         app.logger.warning(f"Could not synchronize quizmondo seed environment: {e}")
+
+    # Enforce default role hierarchy: trevorl is a standard player, primary admin is super_admin/admin
+    try:
+        trevor_user = User.query.filter(db.func.lower(User.username) == 'trevorl').first()
+        if trevor_user and trevor_user.role != 'player':
+            trevor_user.role = 'player'
+        for u in User.query.all():
+            if not u.role:
+                u.role = 'player'
+    except Exception:
+        pass
 
     db.session.commit()

@@ -115,6 +115,7 @@
 <script>
 var questions = {{ questions_json|safe }};
 var matchCode = {{ match.match_code|tojson }};
+var currentRound = {{ active_round.round_number }};
 var submitUrl = "{{ url_for('arena.submit_round', match_code=match.match_code) }}";
 var lobbyUrl = "{{ url_for('arena.match_lobby', match_code=match.match_code) }}";
 
@@ -342,6 +343,14 @@ var PLANETARY_JOURNEYS = {
   }
 };
 
+var latestWhatsAppNudgeText = '';
+
+function triggerStageWhatsApp() {
+  if (!latestWhatsAppNudgeText) return;
+  var waUrl = "https://api.whatsapp.com/send?text=" + encodeURIComponent(latestWhatsAppNudgeText);
+  window.open(waUrl, '_blank');
+}
+
 function showRocketAnimation(data) {
   var modal = document.getElementById('rocketModal');
   if (!modal) {
@@ -349,6 +358,7 @@ function showRocketAnimation(data) {
     return;
   }
 
+  latestWhatsAppNudgeText = data.whatsapp_nudge_text || '';
   modal.classList.remove('hidden');
 
   if (window.quizAudio) {
@@ -376,10 +386,10 @@ function showRocketAnimation(data) {
   if (pDestSub) pDestSub.textContent = journey.destSub;
   if (distEl) distEl.textContent = journey.distance;
 
-  // Trigger rocket transit across interplanetary path
   var trail = document.getElementById('plasmaTrail');
   var rocket = document.getElementById('flyingRocket');
   var ticker = document.getElementById('botScoreTicker');
+  var tickerLabel = document.getElementById('tickerLabel');
   var status1 = document.getElementById('telemetryLine1');
   var status2 = document.getElementById('telemetryLine2');
 
@@ -388,82 +398,172 @@ function showRocketAnimation(data) {
     if (rocket) rocket.style.left = '95%';
   }, 100);
 
-  // Bot score rapid ticker count-up
-  var targetBotScore = data.bot_score || 0;
-  var currentBotTally = 0;
-  var countInterval = setInterval(function() {
-    currentBotTally += Math.ceil((targetBotScore + 1) / 25);
-    if (currentBotTally >= targetBotScore) {
-      currentBotTally = targetBotScore;
-      clearInterval(countInterval);
+  if (data.is_bot) {
+    if (tickerLabel) tickerLabel.textContent = 'Bot Nova Tally';
+    if (status2) status2.textContent = '🤖 Simulating Cyber Bot Nova neural choices...';
+    var targetBotScore = data.bot_score || 0;
+    var currentBotTally = 0;
+    var countInterval = setInterval(function() {
+      currentBotTally += Math.ceil((targetBotScore + 1) / 25);
+      if (currentBotTally >= targetBotScore) {
+        currentBotTally = targetBotScore;
+        clearInterval(countInterval);
+      }
+      if (ticker) ticker.textContent = '+' + currentBotTally + ' PTS';
+    }, 60);
+  } else {
+    if (tickerLabel) tickerLabel.textContent = 'Your Round Score';
+    if (ticker) ticker.textContent = '+' + (data.round_score || 0) + ' PTS';
+    if (status2) {
+      status2.textContent = '✅ ' + (data.correct_count || 0) + '/' + (data.total_questions || 3) + ' Correct in ⏱️ ' + (data.total_time_sec || 0) + 's';
     }
-    if (ticker) ticker.textContent = '+' + currentBotTally + ' PTS';
-  }, 60);
+  }
 
   setTimeout(function() {
     if (status1) status1.textContent = journey.arrivalMsg;
-    if (status2) status2.textContent = "🤖 Cyber Bot Nova locked in: +" + targetBotScore + " PTS";
+    if (data.is_bot && status2) {
+      status2.textContent = "🤖 Cyber Bot Nova locked in: +" + (data.bot_score || 0) + " PTS";
+    }
     if (window.quizAudio) window.quizAudio.playVictory();
-  }, 1800);
+  }, 1700);
 
-  // Reveal score breakdown stage at 2200ms
+  // Reveal score breakdown stage at 2100ms
   setTimeout(function() {
     var revealStage = document.getElementById('scoreRevealStage');
     if (revealStage) revealStage.classList.remove('hidden');
 
     var uScore = document.getElementById('revealUserScore');
-    var bScore = document.getElementById('revealBotScore');
+    var uMeta = document.getElementById('revealUserMeta');
     var uTotal = document.getElementById('revealUserTotal');
+    var bScore = document.getElementById('revealBotScore');
+    var bMeta = document.getElementById('revealBotMeta');
     var bTotal = document.getElementById('revealBotTotal');
+    var oppLabel = document.getElementById('revealOppLabel');
+    var oppNameEl = document.getElementById('revealOppName');
+
     if (uScore) uScore.textContent = '+' + (data.round_score || 0);
-    if (bScore) bScore.textContent = '+' + (data.bot_score || 0);
-    if (uTotal) uTotal.textContent = 'Total: ' + (data.p1_total_score || 0) + ' PTS';
-    if (bTotal) bTotal.textContent = 'Total: ' + (data.p2_total_score || 0) + ' PTS';
+    if (uMeta) uMeta.textContent = (data.correct_count || 0) + '/' + (data.total_questions || 3) + ' Correct • ⏱️ ' + (data.total_time_sec || 0) + 's';
+    if (uTotal) uTotal.textContent = 'Match Total: ' + (data.my_total_score !== undefined ? data.my_total_score : (data.p1_total_score || 0)) + ' PTS';
+
+    if (oppLabel) oppLabel.textContent = data.is_bot ? 'AI OPPONENT' : 'CHALLENGER';
+    if (oppNameEl) oppNameEl.textContent = data.opponent_name || (data.is_bot ? 'Cyber Bot Nova' : 'Your Friend');
 
     var badge = document.getElementById('roundOutcomeBadge');
     var title = document.getElementById('roundOutcomeTitle');
     var desc = document.getElementById('roundOutcomeDesc');
-
-    var diff = (data.round_score || 0) - (data.bot_score || 0);
-    if (diff > 0) {
-      if (badge) {
-        badge.className = 'inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
-        badge.innerHTML = '🏆 ROUND ' + data.current_round + ' VICTORY!';
-      }
-      if (title) title.textContent = 'You Defeated Cyber Bot Nova!';
-      if (desc) desc.textContent = 'You took Round ' + data.current_round + ' with a +' + diff + ' point lead!';
-    } else if (diff < 0) {
-      if (badge) {
-        badge.className = 'inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-pink-500/20 text-pink-300 border border-pink-500/40';
-        badge.innerHTML = '⚡ BOT NOVA EDGED AHEAD';
-      }
-      if (title) title.textContent = 'Cyber Bot Nova Won Round ' + data.current_round;
-      if (desc) desc.textContent = 'Bot Nova finished faster this round. Catch up in the next round!';
-    } else {
-      if (badge) {
-        badge.className = 'inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/40';
-        badge.innerHTML = '🤝 TIED ROUND!';
-      }
-      if (title) title.textContent = 'Dead Heat!';
-      if (desc) desc.textContent = 'Equal points scored this round!';
-    }
-
+    var compBox = document.getElementById('stageComparisonContainer');
+    var compList = document.getElementById('stageComparisonList');
+    var waBtn = document.getElementById('btnStageWhatsApp');
     var nextBtn = document.getElementById('btnNextBotRound');
-    if (nextBtn) {
-      if (data.next_round && data.next_round <= 6) {
-        nextBtn.textContent = '🚀 Blast Off to Round ' + data.next_round + (data.next_category_name ? ': ' + data.next_category_name : '') + ' →';
-        nextBtn.href = '/arena/match/' + encodeURIComponent(matchCode) + '/play';
+
+    if (data.both_completed_round) {
+      var oppScore = data.is_bot ? (data.bot_score || 0) : (data.opponent_round_score || 0);
+      if (bScore) bScore.textContent = '+' + oppScore;
+      if (bMeta) {
+        bMeta.textContent = data.is_bot ? 'AI Speed Run' : ((data.opponent_correct_count || 0) + '/3 Correct • ⏱️ ' + (data.opponent_time_sec || 0) + 's');
+      }
+      if (bTotal) bTotal.textContent = 'Match Total: ' + (data.opponent_total_score !== undefined ? data.opponent_total_score : (data.p2_total_score || 0)) + ' PTS';
+
+      var diff = (data.round_score || 0) - oppScore;
+      var oppTitleName = data.opponent_name || (data.is_bot ? 'Cyber Bot Nova' : 'Opponent');
+      if (diff > 0) {
+        if (badge) {
+          badge.className = 'inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+          badge.innerHTML = '🏆 ROUND ' + data.current_round + ' VICTORY!';
+        }
+        if (title) title.textContent = 'You Won Round ' + data.current_round + '!';
+        if (desc) desc.textContent = 'You beat ' + oppTitleName + ' by +' + diff + ' points this round!';
+      } else if (diff < 0) {
+        if (badge) {
+          badge.className = 'inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-pink-500/20 text-pink-300 border border-pink-500/40';
+          badge.innerHTML = '⚡ ' + oppTitleName.toUpperCase() + ' EDGED AHEAD';
+        }
+        if (title) title.textContent = oppTitleName + ' Took Round ' + data.current_round;
+        if (desc) desc.textContent = oppTitleName + ' scored +' + Math.abs(diff) + ' more points this round!';
       } else {
-        // Tournament is complete!
-        nextBtn.textContent = '🏆 View Final Match Results →';
-        nextBtn.href = lobbyUrl;
-        var card = document.getElementById('conversionCard');
-        if (card && !data.has_account) {
-          card.classList.remove('hidden');
+        if (badge) {
+          badge.className = 'inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/40';
+          badge.innerHTML = '🤝 TIED ROUND!';
+        }
+        if (title) title.textContent = 'Dead Heat in Round ' + data.current_round + '!';
+        if (desc) desc.textContent = 'Equal points scored this round!';
+      }
+
+      // Render Stage-Gated Answer Comparison now that BOTH players have answered!
+      if (compBox && compList && data.round_comparison && data.round_comparison.length > 0) {
+        compBox.classList.remove('hidden');
+        var html = '';
+        data.round_comparison.forEach(function(q) {
+          var myText = data.is_player1 ? q.p1_text : q.p2_text;
+          var myCorr = data.is_player1 ? q.p1_correct : q.p2_correct;
+          var myTime = data.is_player1 ? q.p1_time : q.p2_time;
+          var oppText = data.is_player1 ? q.p2_text : q.p1_text;
+          var oppCorr = data.is_player1 ? q.p2_correct : q.p1_correct;
+          var oppTime = data.is_player1 ? q.p2_time : q.p1_time;
+          html += '<div class="p-2.5 rounded-xl bg-slate-900/90 border border-purple-500/30 text-left text-[11px] space-y-1">' +
+            '<div class="font-bold text-white">Q' + q.q_num + ': ' + q.prompt + '</div>' +
+            '<div class="text-emerald-300 font-bold">✓ Correct: ' + q.correct_option + ' — ' + q.correct_text + '</div>' +
+            '<div class="grid grid-cols-2 gap-2 pt-1">' +
+              '<div class="p-1.5 rounded ' + (myCorr ? 'bg-emerald-950/50 text-emerald-200 border border-emerald-500/30' : 'bg-rose-950/50 text-rose-200 border border-rose-500/30') + '">' +
+                '<strong>You:</strong> ' + myText + ' (' + myTime + 's)' +
+              '</div>' +
+              '<div class="p-1.5 rounded ' + (oppCorr ? 'bg-emerald-950/50 text-emerald-200 border border-emerald-500/30' : 'bg-rose-950/50 text-rose-200 border border-rose-500/30') + '">' +
+                '<strong>' + oppTitleName + ':</strong> ' + oppText + ' (' + oppTime + 's)' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        });
+        compList.innerHTML = html;
+      }
+
+      if (waBtn) waBtn.classList.add('hidden');
+      if (nextBtn) {
+        if (data.next_round && data.next_round <= 6) {
+          if (data.is_bot) {
+            nextBtn.textContent = '🚀 Blast Off to Round ' + data.next_round + (data.next_category_name ? ': ' + data.next_category_name : '') + ' →';
+          } else {
+            nextBtn.textContent = '🔥 Both Caught Up! Play Round ' + data.next_round + ' Now (Your Lead Turn!) →';
+          }
+          nextBtn.href = '/arena/match/' + encodeURIComponent(matchCode) + '/play';
+        } else {
+          nextBtn.textContent = '🏆 View Final Match Results & Trophy →';
+          nextBtn.href = lobbyUrl;
+          var card = document.getElementById('conversionCard');
+          if (card && !data.has_account) {
+            card.classList.remove('hidden');
+          }
         }
       }
+    } else {
+      // Human Duel: You led off Round R! Now waiting for friend to play Round R!
+      if (bScore) bScore.textContent = '⏳';
+      if (bMeta) bMeta.textContent = 'Waiting for turn...';
+      if (bTotal) bTotal.textContent = 'Match Total: ' + (data.opponent_total_score || 0) + ' PTS';
+
+      if (badge) {
+        badge.className = 'inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40';
+        badge.innerHTML = '✅ ROUND ' + data.current_round + ' TARGET SET!';
+      }
+      if (!data.opponent_assigned) {
+        if (title) title.textContent = 'Waiting for Your Friend to Accept!';
+        if (desc) desc.textContent = 'You scored +' + (data.round_score || 0) + ' PTS (' + (data.correct_count || 0) + '/3 in ' + (data.total_time_sec || 0) + 's)! Send your challenge on WhatsApp now!';
+      } else {
+        if (title) title.textContent = 'Time to Nudge ' + data.opponent_name + '!';
+        if (desc) desc.textContent = 'You scored +' + (data.round_score || 0) + ' PTS (' + (data.correct_count || 0) + '/3 in ' + (data.total_time_sec || 0) + 's)! Nudge ' + data.opponent_name + ' on WhatsApp to play Round ' + data.current_round + '!';
+      }
+
+      if (waBtn) {
+        waBtn.classList.remove('hidden');
+        waBtn.textContent = (!data.opponent_assigned)
+          ? ('📲 Send Challenge & Score on WhatsApp (' + data.round_score + ' pts • ' + data.correct_count + '/3 in ' + data.total_time_sec + 's)')
+          : ('💬 Nudge ' + data.opponent_name + ' on WhatsApp (' + data.round_score + ' pts • ' + data.correct_count + '/3 in ' + data.total_time_sec + 's)');
+      }
+      if (nextBtn) {
+        nextBtn.textContent = '📊 Go to Match Lobby & Scoreboard →';
+        nextBtn.href = lobbyUrl;
+      }
     }
-  }, 2200);
+  }, 2100);
 }
 
 function toggleAudio() {
@@ -535,43 +635,54 @@ initQuestion();
           </div>
         </div>
         <div class="text-right shrink-0">
-          <span class="text-[10px] text-slate-400 uppercase block">Bot Nova Tally</span>
+          <span id="tickerLabel" class="text-[10px] text-slate-400 uppercase block">Bot Nova Tally</span>
           <span id="botScoreTicker" class="text-base sm:text-lg font-black text-pink-400">0 PTS</span>
         </div>
       </div>
     </div>
 
-    <!-- STAGE 2: Reveal Scores & Round Victory Banner -->
-    <div id="scoreRevealStage" class="hidden p-6 sm:p-8 rounded-3xl bg-slate-950/95 border-2 border-cyan-400/50 shadow-2xl space-y-6">
+    <!-- STAGE 2: Reveal Scores, Stage-Gated Answers & Next Action -->
+    <div id="scoreRevealStage" class="hidden p-5 sm:p-8 rounded-3xl bg-slate-950/95 border-2 border-cyan-400/50 shadow-2xl space-y-5">
       
       <!-- Round Outcome Announcement -->
-      <div class="space-y-1">
+      <div class="space-y-1.5">
         <div id="roundOutcomeBadge" class="inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider">
         </div>
-        <h2 id="roundOutcomeTitle" class="text-2xl sm:text-3xl font-black text-white">
-          Round Victory!
+        <h2 id="roundOutcomeTitle" class="text-xl sm:text-3xl font-black text-white">
+          Round Complete!
         </h2>
-        <p id="roundOutcomeDesc" class="text-xs text-slate-300">
-          Scores synchronized with Cyber Bot Nova.
+        <p id="roundOutcomeDesc" class="text-xs text-slate-300 leading-relaxed">
+          Scores synchronized.
         </p>
       </div>
 
       <!-- Head-to-Head Round Scoreboard -->
       <div class="grid grid-cols-2 gap-3 sm:gap-4">
-        <!-- Player 1 -->
-        <div class="p-4 rounded-2xl bg-cyan-950/40 border-2 border-cyan-400/50 text-center space-y-1">
+        <!-- Current Player -->
+        <div class="p-3.5 sm:p-4 rounded-2xl bg-cyan-950/40 border-2 border-cyan-400/50 text-center space-y-1">
           <span class="text-[10px] uppercase text-cyan-300 font-bold block">YOU</span>
           <span class="text-xs sm:text-sm font-bold text-white truncate block">{{ player.display_name }}</span>
           <div class="text-2xl sm:text-4xl font-black text-cyan-400" id="revealUserScore">+0</div>
+          <span class="text-[10px] text-emerald-300 font-bold block" id="revealUserMeta">0/3 Correct • ⏱️ 0s</span>
           <span class="text-[10px] text-slate-400 block" id="revealUserTotal">Total: 0 PTS</span>
         </div>
 
-        <!-- Bot Nova -->
-        <div class="p-4 rounded-2xl bg-pink-950/40 border-2 border-pink-500/50 text-center space-y-1">
-          <span class="text-[10px] uppercase text-pink-300 font-bold block">AI OPPONENT</span>
-          <span class="text-xs sm:text-sm font-bold text-white truncate block">Cyber Bot Nova</span>
+        <!-- Opponent (Friend or Bot Nova) -->
+        <div class="p-3.5 sm:p-4 rounded-2xl bg-pink-950/40 border-2 border-pink-500/50 text-center space-y-1">
+          <span class="text-[10px] uppercase text-pink-300 font-bold block" id="revealOppLabel">OPPONENT</span>
+          <span class="text-xs sm:text-sm font-bold text-white truncate block" id="revealOppName">Challenger</span>
           <div class="text-2xl sm:text-4xl font-black text-pink-400" id="revealBotScore">+0</div>
+          <span class="text-[10px] text-pink-200 font-bold block" id="revealBotMeta">Waiting...</span>
           <span class="text-[10px] text-slate-400 block" id="revealBotTotal">Total: 0 PTS</span>
+        </div>
+      </div>
+
+      <!-- STAGE-GATED QUESTION-BY-QUESTION COMPARISON (Shown when both players complete the round!) -->
+      <div id="stageComparisonContainer" class="hidden space-y-2 text-left pt-2 border-t border-purple-500/30">
+        <div class="text-[11px] font-black uppercase text-emerald-400 tracking-wider text-center">
+          🔓 Head-to-Head Answer Reveal
+        </div>
+        <div id="stageComparisonList" class="space-y-2 max-h-60 overflow-y-auto pr-1">
         </div>
       </div>
 
@@ -581,17 +692,20 @@ initQuestion();
           <span>⭐</span> <span>SAVE YOUR SCORES &amp; CLAIM PERMANENT PROFILE!</span>
         </div>
         <p class="text-xs text-slate-200">
-          Convert your guest tag (<strong class="text-pink-300">{{ player.display_name }}</strong>) into a permanent account. Keep your points, level up, and unlock head-to-head challenges against real friends on WhatsApp!
+          Pick a cool Superhero Name &amp; 6-Digit PIN in 3 easy steps to keep your points and challenge friends on WhatsApp!
         </p>
         <a href="{{ url_for('arena.player_register') }}" class="block w-full py-3 px-4 rounded-xl bg-gradient-to-r from-pink-500 to-indigo-600 hover:from-pink-400 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider text-center shadow-lg transition">
-          🚀 Create Free Account &amp; Save Progress &rarr;
+          🚀 Quick 3-Step Setup &amp; Save Progress &rarr;
         </a>
       </div>
 
       <!-- Action Buttons -->
       <div class="space-y-3 pt-2">
-        <a id="btnNextBotRound" href="#" class="block w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400 hover:from-emerald-400 hover:to-cyan-300 text-slate-950 font-black text-sm uppercase tracking-wider shadow-2xl transition transform hover:scale-[1.02] active:scale-95">
-          🚀 Blast Off to Round 2 &rarr;
+        <button type="button" id="btnStageWhatsApp" onclick="triggerStageWhatsApp()" class="hidden w-full py-4 px-5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-2xl transition transform hover:scale-[1.01] active:scale-95">
+          📲 Send Score &amp; Nudge Friend on WhatsApp
+        </button>
+        <a id="btnNextBotRound" href="#" class="block w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-2xl transition transform hover:scale-[1.02] active:scale-95">
+          🚀 Continue &rarr;
         </a>
         <div class="flex items-center justify-center gap-4 text-xs text-slate-400">
           <a href="{{ url_for('arena.match_lobby', match_code=match.match_code) }}" class="hover:text-cyan-300 transition">📊 Match Scoreboard</a>

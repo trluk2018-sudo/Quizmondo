@@ -1,6 +1,6 @@
 import json
-from flask import Blueprint, render_template, request, abort, Response, current_app, flash, redirect, url_for
-from ..models import db, Post, Page, Category, Media, MenuItem, SidebarWidget, SiteSetting, PageModule
+from flask import Blueprint, render_template, request, abort, Response, current_app, flash, redirect, url_for, session
+from ..models import db, Post, Page, Category, Media, MenuItem, SidebarWidget, SiteSetting, PageModule, PlayerProfile, ArenaMatch
 
 public_bp = Blueprint('public', __name__)
 
@@ -16,9 +16,9 @@ def render_theme(template_name, **context):
         return render_template(f"themes/quizhub/{template_name}", active_theme='quizhub', **context)
 
 
-@public_bp.context_processor
+@public_bp.app_context_processor
 def inject_global_data():
-    """Inject settings, navigation, and sidebar widgets into all public templates."""
+    """Inject settings, navigation, player state, and sidebar widgets into all public & arena templates."""
     settings = SiteSetting.get_all()
     header_nav = MenuItem.query.filter_by(location='header', parent_id=None).order_by(MenuItem.sort_order.asc()).all()
     footer_nav = MenuItem.query.filter_by(location='footer', parent_id=None).order_by(MenuItem.sort_order.asc()).all()
@@ -36,6 +36,24 @@ def inject_global_data():
     recent_posts = Post.query.filter_by(status='publish').order_by(Post.created_at.desc()).limit(5).all()
     categories = Category.query.order_by(Category.name.asc()).all()
 
+    current_player = None
+    active_duel_turns_count = 0
+    try:
+        uid = session.get('user_id')
+        pkey = session.get('qm_player_key')
+        if uid:
+            current_player = PlayerProfile.query.filter_by(user_id=uid).first()
+        if not current_player and pkey:
+            current_player = PlayerProfile.query.filter_by(session_key=pkey).first()
+        if current_player:
+            my_matches = ArenaMatch.query.filter(
+                (ArenaMatch.player1_session == current_player.session_key) |
+                (ArenaMatch.player2_session == current_player.session_key)
+            ).filter(ArenaMatch.status.in_(['waiting', 'in_progress'])).all()
+            active_duel_turns_count = sum(1 for m in my_matches if m.is_player_turn(current_player.session_key))
+    except Exception:
+        pass
+
     return {
         'settings': settings,
         'header_nav': header_nav,
@@ -51,7 +69,9 @@ def inject_global_data():
         'recent_posts': recent_posts,
         'categories': categories,
         'site_title': settings.get('site_title', 'SiteBuilder Express'),
-        'site_tagline': settings.get('site_tagline', '')
+        'site_tagline': settings.get('site_tagline', ''),
+        'current_player': current_player,
+        'active_duel_turns_count': active_duel_turns_count
     }
 
 
