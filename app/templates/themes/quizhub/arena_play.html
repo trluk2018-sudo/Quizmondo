@@ -288,16 +288,116 @@ function finishRound() {
       window.location.href = data.redirect;
       return;
     }
-    if (window.quizAudio) window.quizAudio.playVictory();
-    // Redirect back to lobby to view updated scoreboard and turn
-    setTimeout(function() {
-      window.location.href = lobbyUrl;
-    }, 1200);
+    // Launch Earth to Mars Rocket Animation and Bot Score Reveal!
+    showRocketAnimation(data);
   })
   .catch(function(err) {
     console.error('Submission error:', err);
     window.location.href = lobbyUrl;
   });
+}
+
+function showRocketAnimation(data) {
+  var modal = document.getElementById('rocketModal');
+  if (!modal) {
+    window.location.href = lobbyUrl;
+    return;
+  }
+
+  modal.classList.remove('hidden');
+
+  if (window.quizAudio) {
+    window.quizAudio.playTick();
+  }
+
+  // Trigger rocket transit from Earth to Mars
+  var trail = document.getElementById('plasmaTrail');
+  var rocket = document.getElementById('flyingRocket');
+  var ticker = document.getElementById('botScoreTicker');
+  var status1 = document.getElementById('telemetryLine1');
+  var status2 = document.getElementById('telemetryLine2');
+
+  setTimeout(function() {
+    if (trail) trail.style.width = '100%';
+    if (rocket) rocket.style.left = '95%';
+  }, 100);
+
+  // Bot score rapid ticker count-up
+  var targetBotScore = data.bot_score || 0;
+  var currentBotTally = 0;
+  var countInterval = setInterval(function() {
+    currentBotTally += Math.ceil((targetBotScore + 1) / 25);
+    if (currentBotTally >= targetBotScore) {
+      currentBotTally = targetBotScore;
+      clearInterval(countInterval);
+    }
+    if (ticker) ticker.textContent = '+' + currentBotTally + ' PTS';
+  }, 60);
+
+  setTimeout(function() {
+    if (status1) status1.textContent = "🪐 Mars Orbit Achieved! Telemetry Synchronized.";
+    if (status2) status2.textContent = "🤖 Cyber Bot Nova locked in: +" + targetBotScore + " PTS";
+    if (window.quizAudio) window.quizAudio.playVictory();
+  }, 1800);
+
+  // Reveal score breakdown stage at 2200ms
+  setTimeout(function() {
+    var revealStage = document.getElementById('scoreRevealStage');
+    if (revealStage) revealStage.classList.remove('hidden');
+
+    var uScore = document.getElementById('revealUserScore');
+    var bScore = document.getElementById('revealBotScore');
+    var uTotal = document.getElementById('revealUserTotal');
+    var bTotal = document.getElementById('revealBotTotal');
+    if (uScore) uScore.textContent = '+' + (data.round_score || 0);
+    if (bScore) bScore.textContent = '+' + (data.bot_score || 0);
+    if (uTotal) uTotal.textContent = 'Total: ' + (data.p1_total_score || 0) + ' PTS';
+    if (bTotal) bTotal.textContent = 'Total: ' + (data.p2_total_score || 0) + ' PTS';
+
+    var badge = document.getElementById('roundOutcomeBadge');
+    var title = document.getElementById('roundOutcomeTitle');
+    var desc = document.getElementById('roundOutcomeDesc');
+
+    var diff = (data.round_score || 0) - (data.bot_score || 0);
+    if (diff > 0) {
+      if (badge) {
+        badge.className = 'inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+        badge.innerHTML = '🏆 ROUND ' + data.current_round + ' VICTORY!';
+      }
+      if (title) title.textContent = 'You Defeated Cyber Bot Nova!';
+      if (desc) desc.textContent = 'You took Round ' + data.current_round + ' with a +' + diff + ' point lead!';
+    } else if (diff < 0) {
+      if (badge) {
+        badge.className = 'inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-pink-500/20 text-pink-300 border border-pink-500/40';
+        badge.innerHTML = '⚡ BOT NOVA EDGED AHEAD';
+      }
+      if (title) title.textContent = 'Cyber Bot Nova Won Round ' + data.current_round;
+      if (desc) desc.textContent = 'Bot Nova finished faster this round. Catch up in the next round!';
+    } else {
+      if (badge) {
+        badge.className = 'inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/40';
+        badge.innerHTML = '🤝 TIED ROUND!';
+      }
+      if (title) title.textContent = 'Dead Heat!';
+      if (desc) desc.textContent = 'Equal points scored this round!';
+    }
+
+    var nextBtn = document.getElementById('btnNextBotRound');
+    if (nextBtn) {
+      if (data.next_round && data.next_round <= 6) {
+        nextBtn.textContent = '🚀 Blast Off to Round ' + data.next_round + (data.next_category_name ? ': ' + data.next_category_name : '') + ' →';
+        nextBtn.href = '/arena/match/' + encodeURIComponent(matchCode) + '/play';
+      } else {
+        // Tournament is complete!
+        nextBtn.textContent = '🏆 View Final Match Results →';
+        nextBtn.href = lobbyUrl;
+        var card = document.getElementById('conversionCard');
+        if (card && !data.has_account) {
+          card.classList.remove('hidden');
+        }
+      }
+    }
+  }, 2200);
 }
 
 function toggleAudio() {
@@ -310,4 +410,133 @@ function toggleAudio() {
 // Start first question
 initQuestion();
 </script>
+
+<!-- ======================================================== -->
+<!-- ROCKET TO MARS / HURDLE SPRINT ANIMATION & SCORE REVEAL  -->
+<!-- ======================================================== -->
+<div id="rocketModal" class="hidden fixed inset-0 z-50 bg-[#060112]/98 backdrop-blur-md overflow-y-auto p-4 sm:p-8 flex flex-col justify-center items-center">
+  <div class="max-w-2xl w-full my-auto space-y-6 text-center font-mono">
+    
+    <!-- STAGE 1: Animated Earth to Mars Flight -->
+    <div id="animationStage" class="relative p-6 sm:p-8 rounded-3xl bg-slate-950/90 border-2 border-purple-500/50 shadow-2xl overflow-hidden space-y-6">
+      <div class="absolute inset-0 bg-[radial-gradient(#a855f7_1px,transparent_1px)] [background-size:16px_16px] opacity-25"></div>
+
+      <!-- Mission Badge -->
+      <div class="relative z-10 flex items-center justify-between text-xs font-bold">
+        <span class="px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-400/50 text-cyan-300 uppercase tracking-widest flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+          <span>MISSION: EARTH ➔ MARS SPRINT</span>
+        </span>
+        <span id="telemetryStatus" class="text-amber-400">TELEMETRY LOCKED</span>
+      </div>
+
+      <!-- Flight Arena Track -->
+      <div class="relative z-10 py-6 px-2 flex items-center justify-between">
+        <!-- Earth -->
+        <div class="flex flex-col items-center space-y-1 shrink-0">
+          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-blue-600 via-cyan-400 to-emerald-400 shadow-[0_0_20px_rgba(6,182,212,0.6)] flex items-center justify-center text-3xl animate-pulse">
+            🌍
+          </div>
+          <span class="text-[11px] font-black text-cyan-300">EARTH</span>
+          <span class="text-[9px] text-slate-400">Round Origin</span>
+        </div>
+
+        <!-- Trajectory Track with Plasma Trail and Rocket -->
+        <div class="relative flex-1 mx-3 sm:mx-6 h-3 bg-purple-950/80 rounded-full border border-purple-500/40 overflow-visible">
+          <div id="plasmaTrail" class="absolute top-0 left-0 h-full bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-full transition-all duration-[2000ms] ease-out w-0"></div>
+          <div id="flyingRocket" class="absolute -top-5 left-0 transition-all duration-[2000ms] ease-out transform -translate-x-1/2 flex items-center text-3xl sm:text-4xl drop-shadow-[0_0_15px_rgba(236,72,153,0.9)]">
+            <span>🚀</span>
+          </div>
+        </div>
+
+        <!-- Mars -->
+        <div class="flex flex-col items-center space-y-1 shrink-0">
+          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-amber-700 via-red-500 to-orange-400 shadow-[0_0_20px_rgba(239,68,68,0.6)] flex items-center justify-center text-3xl">
+            🪐
+          </div>
+          <span class="text-[11px] font-black text-rose-400">MARS</span>
+          <span class="text-[9px] text-slate-400">Colony Goal</span>
+        </div>
+      </div>
+
+      <!-- Hurdle Runner / Bot AI Calculation Status -->
+      <div class="relative z-10 p-3.5 rounded-2xl bg-purple-950/40 border border-purple-500/30 flex items-center justify-between text-xs">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl animate-bounce">🏃‍♂️</span>
+          <div class="text-left">
+            <span class="text-white font-bold block" id="telemetryLine1">Transmitting answers across cosmic space...</span>
+            <span class="text-cyan-400 text-[11px] block" id="telemetryLine2">🤖 Simulating Cyber Bot Nova neural choices...</span>
+          </div>
+        </div>
+        <div class="text-right shrink-0">
+          <span class="text-[10px] text-slate-400 uppercase block">Bot Nova Tally</span>
+          <span id="botScoreTicker" class="text-base sm:text-lg font-black text-pink-400">0 PTS</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STAGE 2: Reveal Scores & Round Victory Banner -->
+    <div id="scoreRevealStage" class="hidden p-6 sm:p-8 rounded-3xl bg-slate-950/95 border-2 border-cyan-400/50 shadow-2xl space-y-6">
+      
+      <!-- Round Outcome Announcement -->
+      <div class="space-y-1">
+        <div id="roundOutcomeBadge" class="inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider">
+        </div>
+        <h2 id="roundOutcomeTitle" class="text-2xl sm:text-3xl font-black text-white">
+          Round Victory!
+        </h2>
+        <p id="roundOutcomeDesc" class="text-xs text-slate-300">
+          Scores synchronized with Cyber Bot Nova.
+        </p>
+      </div>
+
+      <!-- Head-to-Head Round Scoreboard -->
+      <div class="grid grid-cols-2 gap-3 sm:gap-4">
+        <!-- Player 1 -->
+        <div class="p-4 rounded-2xl bg-cyan-950/40 border-2 border-cyan-400/50 text-center space-y-1">
+          <span class="text-[10px] uppercase text-cyan-300 font-bold block">YOU</span>
+          <span class="text-xs sm:text-sm font-bold text-white truncate block">{{ player.display_name }}</span>
+          <div class="text-2xl sm:text-4xl font-black text-cyan-400" id="revealUserScore">+0</div>
+          <span class="text-[10px] text-slate-400 block" id="revealUserTotal">Total: 0 PTS</span>
+        </div>
+
+        <!-- Bot Nova -->
+        <div class="p-4 rounded-2xl bg-pink-950/40 border-2 border-pink-500/50 text-center space-y-1">
+          <span class="text-[10px] uppercase text-pink-300 font-bold block">AI OPPONENT</span>
+          <span class="text-xs sm:text-sm font-bold text-white truncate block">Cyber Bot Nova</span>
+          <div class="text-2xl sm:text-4xl font-black text-pink-400" id="revealBotScore">+0</div>
+          <span class="text-[10px] text-slate-400 block" id="revealBotTotal">Total: 0 PTS</span>
+        </div>
+      </div>
+
+      <!-- MATCH COMPLETE: Free Account Conversion Card -->
+      <div id="conversionCard" class="hidden p-5 rounded-2xl bg-gradient-to-r from-purple-900/60 to-indigo-950/80 border-2 border-purple-400/50 text-left space-y-3">
+        <div class="flex items-center gap-2 text-amber-400 text-xs font-bold">
+          <span>⭐</span> <span>SAVE YOUR SCORES &amp; CLAIM PERMANENT PROFILE!</span>
+        </div>
+        <p class="text-xs text-slate-200">
+          Convert your guest tag (<strong class="text-pink-300">{{ player.display_name }}</strong>) into a permanent account. Keep your points, level up, and unlock head-to-head challenges against real friends on WhatsApp!
+        </p>
+        <a href="{{ url_for('arena.player_register') }}" class="block w-full py-3 px-4 rounded-xl bg-gradient-to-r from-pink-500 to-indigo-600 hover:from-pink-400 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider text-center shadow-lg transition">
+          🚀 Create Free Account &amp; Save Progress &rarr;
+        </a>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="space-y-3 pt-2">
+        <a id="btnNextBotRound" href="#" class="block w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400 hover:from-emerald-400 hover:to-cyan-300 text-slate-950 font-black text-sm uppercase tracking-wider shadow-2xl transition transform hover:scale-[1.02] active:scale-95">
+          🚀 Blast Off to Round 2 &rarr;
+        </a>
+        <div class="flex items-center justify-center gap-4 text-xs text-slate-400">
+          <a href="{{ url_for('arena.match_lobby', match_code=match.match_code) }}" class="hover:text-cyan-300 transition">📊 Match Scoreboard</a>
+          <span>&bull;</span>
+          <a href="{{ url_for('arena.dashboard') }}" class="hover:text-purple-300 transition">🏠 Arena Hub</a>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
 {% endblock %}

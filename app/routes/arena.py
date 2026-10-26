@@ -120,6 +120,11 @@ def create_match():
     opponent_mode = request.form.get('opponent_mode') or request.args.get('opponent_mode', 'friend')  # 'friend', 'bot'
     category_slug = request.form.get('category_slug') or request.args.get('category_slug')
 
+    # Challenging a real person requires creating a free account
+    if opponent_mode != 'bot' and not session.get('user_id'):
+        flash("Create a free player account to challenge friends on WhatsApp, track lifetime head-to-head records, and compete on leaderboards!", "info")
+        return redirect(url_for('arena.player_register', next=url_for('arena.dashboard')))
+
     match_code = f"qm_{secrets.token_hex(4)}"
 
     # Pick 3 available categories
@@ -275,8 +280,8 @@ def play_round(match_code):
             flash(f"This duel is already locked between {match.player1_name} and {match.player2_name or 'another challenger'} (Round {match.current_round}). You cannot join mid-game.", "info")
             return redirect(url_for('arena.match_lobby', match_code=match_code))
 
-    # Gating requirement: Beyond Round 1, players MUST be logged in
-    if match.current_round > 1 and not session.get('user_id'):
+    # Gating requirement: Beyond Round 1 in friend duels, players MUST be logged in
+    if not match.is_bot and match.current_round > 1 and not session.get('user_id'):
         flash(f"Round 1 completed! Create a free account or log in to unlock Round {match.current_round} and save your XP, streaks, and duel progress.", "info")
         return redirect(url_for('arena.player_register', next=url_for('arena.play_round', match_code=match_code)))
 
@@ -325,8 +330,8 @@ def submit_round(match_code):
     if not (is_player1 or is_player2):
         return jsonify({'error': 'Unauthorized participant'}), 403
 
-    # Gated beyond Round 1: Account required
-    if match.current_round > 1 and not session.get('user_id'):
+    # Gated beyond Round 1 in human duels: Account required
+    if not match.is_bot and match.current_round > 1 and not session.get('user_id'):
         return jsonify({
             'error': 'login_required',
             'message': 'Create a free account or log in to submit answers beyond Round 1.',
@@ -429,9 +434,12 @@ def submit_round(match_code):
         else:
             # Advance to next round!
             match.current_round += 1
-            # Alternate chooser: Round 2 chosen by player 2, Round 3 by player 1, etc.
-            next_turn = 2 if match.current_turn == 1 else 1
-            match.current_turn = next_turn
+            if match.is_bot:
+                next_turn = 1
+                match.current_turn = 1
+            else:
+                next_turn = 2 if match.current_turn == 1 else 1
+                match.current_turn = next_turn
 
             # Pick next round category and randomized questions (excluding questions already in this match)
             all_cats = db.session.query(QuizQuestion.category_slug, QuizQuestion.category_name).distinct().all()
@@ -461,13 +469,20 @@ def submit_round(match_code):
     return jsonify({
         'success': True,
         'round_score': round_score,
+        'bot_score': active_round.p2_score if match.is_bot else 0,
         'detailed_results': detailed_results,
         'player_level': player.level,
         'player_xp': player.xp,
         'p1_total_score': match.p1_total_score,
         'p2_total_score': match.p2_total_score,
         'match_status': match.status,
-        'next_round': match.current_round
+        'is_bot': match.is_bot,
+        'opponent_name': match.player2_name,
+        'current_round': active_round.round_number,
+        'next_round': match.current_round if match.status != 'completed' else None,
+        'next_category_name': chosen_cat[1] if (match.status != 'completed' and 'chosen_cat' in locals()) else '',
+        'winner': match.winner,
+        'has_account': bool(session.get('user_id'))
     })
 
 
@@ -630,6 +645,9 @@ def player_register():
 
         player.user_id = user.id
         player.display_name = username
+        # Update past match player names to permanently replace guest tag with real username
+        ArenaMatch.query.filter_by(player1_session=player.session_key).update({'player1_name': username})
+        ArenaMatch.query.filter_by(player2_session=player.session_key).update({'player2_name': username})
         db.session.commit()
 
         session['user_id'] = user.id

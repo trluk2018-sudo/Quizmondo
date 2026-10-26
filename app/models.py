@@ -338,13 +338,24 @@ class ArenaMatch(db.Model):
 
     rounds = db.relationship('ArenaRound', backref='match', cascade='all, delete-orphan', lazy='dynamic', order_by='ArenaRound.round_number.asc()')
 
+    @property
+    def is_bot(self) -> bool:
+        return self.player2_session == 'bot_quizmondo_ai' or bool(self.player2_name and 'bot' in self.player2_name.lower())
+
     def is_player_turn(self, session_key: str) -> bool:
         if self.status != 'in_progress' and self.status != 'waiting':
             return False
-        if self.current_turn == 1 and self.player1_session == session_key:
-            return True
-        if self.current_turn == 2 and self.player2_session == session_key:
-            return True
+        # If playing against an AI bot, it is ALWAYS the human player's turn to play
+        if self.is_bot:
+            return self.player1_session == session_key
+        # For human vs human: check if player has already submitted answers for the active round
+        active_round = self.rounds.filter_by(round_number=self.current_round).first()
+        if not active_round:
+            return False
+        if self.player1_session == session_key:
+            return not bool(active_round.p1_answers_json and active_round.p1_answers_json != '[]')
+        if self.player2_session == session_key:
+            return not bool(active_round.p2_answers_json and active_round.p2_answers_json != '[]')
         return False
 
     def to_dict(self) -> dict:
