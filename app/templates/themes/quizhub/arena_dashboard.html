@@ -147,14 +147,14 @@
         {% set opponent_avatar = m.player2_avatar if is_p1 else m.player1_avatar %}
         {% set my_turn = (m.current_turn == 1 and is_p1) or (m.current_turn == 2 and not is_p1) %}
 
-        <div class="p-5 rounded-2xl bg-slate-950/80 border-2 {% if my_turn %}border-emerald-500/60 bg-emerald-950/10{% else %}border-purple-500/20{% endif %} flex items-center justify-between gap-4 transition hover:border-cyan-400">
+        <div data-duel-card="{{ m.match_code }}" class="p-5 rounded-2xl bg-slate-950/80 border-2 {% if my_turn %}border-emerald-500/60 bg-emerald-950/10{% else %}border-purple-500/20{% endif %} flex items-center justify-between gap-4 transition hover:border-cyan-400">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center font-mono text-xs font-bold text-white shrink-0">
               {{ opponent_avatar|upper|truncate(4, True, '') }}
             </div>
             <div class="space-y-0.5">
               <div class="font-mono font-bold text-sm text-white">vs {{ opponent_name }}</div>
-              <div class="text-xs font-mono text-slate-400">
+              <div data-duel-meta="{{ m.match_code }}" class="text-xs font-mono text-slate-400">
                 Round {{ m.current_round }}/6 &bull; Score: {{ m.p1_total_score }} - {{ m.p2_total_score }}
               </div>
             </div>
@@ -162,11 +162,11 @@
 
           <div class="flex items-center gap-2">
             {% if my_turn %}
-            <a href="{{ url_for('arena.match_lobby', match_code=m.match_code) }}" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono font-black text-xs uppercase tracking-wider animate-pulse">
+            <a data-duel-btn="{{ m.match_code }}" href="{{ url_for('arena.match_lobby', match_code=m.match_code) }}" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono font-black text-xs uppercase tracking-wider animate-pulse">
               YOUR TURN 🎮
             </a>
             {% else %}
-            <a href="{{ url_for('arena.match_lobby', match_code=m.match_code) }}" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-xs">
+            <a data-duel-btn="{{ m.match_code }}" href="{{ url_for('arena.match_lobby', match_code=m.match_code) }}" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-xs">
               WAITING ⏳
             </a>
             {% endif %}

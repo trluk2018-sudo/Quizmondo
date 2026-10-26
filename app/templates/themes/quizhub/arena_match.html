@@ -439,29 +439,38 @@
               </div>
             </div>
             {% elif not opponent_assigned %}
-            <!-- FIRST INVITE ONLY: WhatsApp Invite shown strictly before Friend joins Round 1 -->
-            <div class="p-5 rounded-2xl bg-amber-950/30 border border-amber-500/40 space-y-2">
-              <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold">
-                <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-                ⏳ Waiting for the person you invited to accept the challenge!
+            <!-- ROUND 1 COMPLETED: Invite was ALREADY sent in Step 1! No confusing 2nd big WhatsApp button! -->
+            <div class="p-5 rounded-2xl bg-cyan-950/35 border border-cyan-500/40 space-y-3">
+              <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                ✅ Round 1 Score Locked In • Waiting for Invited Friend to Accept!
               </div>
               <p class="text-xs text-slate-300 leading-relaxed">
-                Send your initial challenge link on WhatsApp below! Once your friend accepts, future rounds sync automatically in-app without needing WhatsApp nudges!
+                Your Round 1 score is locked in! As soon as the friend you invited opens your link and finishes Round 1, <strong class="text-cyan-300">this screen will update automatically</strong> — or we&rsquo;ll send you a friendly turn alert if you play another game while waiting!
               </p>
-            </div>
 
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
-              <button type="button" onclick="nudgeOnWhatsApp()" class="w-full sm:w-auto px-6 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl flex items-center justify-center gap-2 transition active:scale-95">
-                <span>📲 Send Challenge &amp; Score on WhatsApp</span>
-              </button>
-              <button type="button" onclick="shareMatchLink()" class="w-full sm:w-auto px-5 py-4 rounded-2xl bg-slate-900 border border-purple-500/40 hover:border-cyan-400 text-cyan-300 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95">
-                <span>📋 Copy Challenge Link</span>
-              </button>
-              <form action="{{ url_for('arena.switch_to_bot', match_code=match.match_code) }}" method="POST" class="w-full sm:w-auto">
-                <button type="submit" class="w-full px-5 py-4 rounded-2xl bg-purple-900/60 hover:bg-purple-800 border border-purple-400/40 text-purple-200 hover:text-white font-bold text-xs uppercase tracking-wider transition">
-                  <span>🤖 Play vs Bot Nova</span>
+              <div class="pt-1 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button type="button" onclick="checkOpponentNow(this)" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition active:scale-95">
+                  <span>🔄 Check If Friend Has Accepted &amp; Answered</span>
                 </button>
-              </form>
+                <a href="{{ url_for('arena.dashboard') }}" class="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-slate-900 border border-purple-500/40 hover:border-cyan-400 text-slate-200 hover:text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition">
+                  <span>🎮 Play Another Game While Waiting</span>
+                </a>
+                <form action="{{ url_for('arena.switch_to_bot', match_code=match.match_code) }}" method="POST" class="w-full sm:w-auto">
+                  <button type="submit" class="w-full px-4 py-3.5 rounded-2xl bg-purple-900/50 hover:bg-purple-800 border border-purple-400/30 text-purple-200 hover:text-white font-bold text-xs uppercase tracking-wider transition">
+                    <span>🤖 Switch to Bot Nova</span>
+                  </button>
+                </form>
+              </div>
+
+              <div id="manualCheckFeedback" class="hidden text-[11px] font-bold text-amber-300 pt-1"></div>
+
+              <div class="pt-2 border-t border-purple-500/20 text-[11px] text-slate-400 flex flex-wrap items-center justify-center gap-2">
+                <span>Didn&rsquo;t finish sending the invite in Step 1?</span>
+                <button type="button" onclick="shareMatchLink()" class="text-cyan-300 hover:text-cyan-200 underline font-bold">📋 Copy Challenge Link</button>
+                <span>&bull;</span>
+                <button type="button" onclick="nudgeOnWhatsApp()" class="text-slate-300 hover:text-white underline">Resend Link</button>
+              </div>
             </div>
             {% else %}
             <!-- OPPONENT ALREADY JOINED: Automatic Sync + Instant Check Button (NO WhatsApp Nudge!) -->
@@ -533,8 +542,12 @@
               </form>
               {% else %}
               {% set opp_session = match.player2_session if is_player1 else match.player1_session %}
-              {% if opp_session and opp_session not in ('pending_invite', 'online_matchmaking', 'bot_quizmondo_ai') %}
-              <a href="{{ url_for('arena.challenge_fresh', target_session=opp_session) }}" class="px-7 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 hover:from-emerald-400 hover:to-cyan-300 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl transition transform hover:scale-105">
+              {% if active_rematch %}
+              <a id="rematchActionBtn" href="{{ url_for('arena.match_lobby', match_code=active_rematch.match_code) }}" class="px-7 py-4 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl transition transform hover:scale-105 animate-pulse">
+                🔥 {{ opponent_name }} Started a Rematch! Join Rematch Now &rarr;
+              </a>
+              {% elif opp_session and opp_session not in ('pending_invite', 'online_matchmaking', 'bot_quizmondo_ai') %}
+              <a id="rematchActionBtn" href="{{ url_for('arena.challenge_fresh', target_session=opp_session) }}" class="px-7 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 hover:from-emerald-400 hover:to-cyan-300 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl transition transform hover:scale-105">
                 ⚔️ Rematch {{ opponent_name }} Directly &rarr;
               </a>
               {% endif %}
@@ -552,6 +565,11 @@
                 🏠 Arena Hub
               </a>
             </div>
+            {% if not match.is_bot and opp_session and opp_session not in ('pending_invite', 'online_matchmaking', 'bot_quizmondo_ai') %}
+            <p id="rematchRuleHint" class="text-[11px] text-slate-400 max-w-lg mx-auto">
+              💡 <strong class="text-cyan-300">How Rematch Works:</strong> Whoever clicks <strong>Rematch</strong> first kicks off Round 1 of the new duel — and if both of you click Rematch at the same time, you are both automatically joined into the exact same duel!
+            </p>
+            {% endif %}
 
             {% if friends_roster %}
             <!-- Quick Direct Friend Challenge Bar right on Completed Screen -->
@@ -713,11 +731,12 @@ function copyToClipboard(text) {
   }
 }
 
-// Auto-poll match state when waiting for an online challenger or opponent turn
+// Auto-poll match state when waiting for an online challenger, opponent turn, or rematch
 var initialOpponentAssigned = {{ 'true' if opponent_assigned else 'false' }};
 var initialRound = {{ match.current_round }};
 var initialTurn = {{ match.current_turn }};
 var initialStatus = {{ match.status|tojson }};
+var initialRematchCode = {{ (active_rematch.match_code if active_rematch else '')|tojson }};
 
 function checkOpponentNow(btn) {
   var origHtml = btn ? btn.innerHTML : '';
@@ -748,7 +767,7 @@ function checkOpponentNow(btn) {
         }
         if (fb) {
           var nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-          fb.textContent = "✓ Checked at " + nowStr + " — still waiting for opponent to complete Round " + data.current_round + " (Auto-syncing in background).";
+          fb.textContent = "✓ Checked at " + nowStr + " — still waiting for opponent to complete Round " + data.current_round + " (Auto-syncing live every 2.5s).";
           fb.classList.remove('hidden');
         }
       }
@@ -761,12 +780,12 @@ function checkOpponentNow(btn) {
     });
 }
 
-if (initialStatus !== 'completed') {
-  setInterval(function() {
-    if (document.hidden) return;
-    fetch("/arena/match/{{ match.match_code }}/status?t=" + Date.now(), { headers: { 'Accept': 'application/json' } })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
+setInterval(function() {
+  if (document.hidden) return;
+  fetch("/arena/match/{{ match.match_code }}/status?t=" + Date.now(), { headers: { 'Accept': 'application/json' } })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (initialStatus !== 'completed') {
         if (
           data.opponent_assigned !== initialOpponentAssigned ||
           data.current_round !== initialRound ||
@@ -775,9 +794,20 @@ if (initialStatus !== 'completed') {
         ) {
           window.location.href = "/arena/match/{{ match.match_code }}";
         }
-      })
-      .catch(function() {});
-  }, 5000);
-}
+      } else if (data.rematch_code && data.rematch_code !== initialRematchCode) {
+        // Opponent clicked Rematch! Update the Rematch button live on screen!
+        initialRematchCode = data.rematch_code;
+        var rBtn = document.getElementById('rematchActionBtn');
+        if (rBtn) {
+          rBtn.href = "/arena/match/" + data.rematch_code;
+          rBtn.innerHTML = "🔥 " + (data.player2_name || "Opponent") + " Started a Rematch! Join Rematch Now &rarr;";
+          rBtn.classList.add('animate-pulse');
+        } else {
+          window.location.reload();
+        }
+      }
+    })
+    .catch(function() {});
+}, 2500);
 </script>
 {% endblock %}

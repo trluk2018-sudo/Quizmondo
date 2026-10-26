@@ -696,32 +696,75 @@ function showRocketAnimation(data) {
       if (bScore) bScore.textContent = '⏳';
       if (bMeta) bMeta.textContent = 'Waiting for turn...';
       if (bTotal) bTotal.textContent = 'Match Total: ' + (data.opponent_total_score || 0) + ' PTS';
+      if (waBtn) waBtn.classList.add('hidden');
 
       if (badge) {
         badge.className = 'inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40';
-        badge.innerHTML = '✅ ROUND ' + data.current_round + ' TARGET SET!';
+        badge.innerHTML = '✅ ROUND ' + data.current_round + ' SCORE LOCKED IN!';
       }
       if (!data.opponent_assigned) {
-        if (title) title.textContent = 'Waiting for Your Friend to Accept!';
-        if (desc) desc.textContent = 'You scored +' + (data.round_score || 0) + ' PTS (' + (data.correct_count || 0) + '/3 in ' + (data.total_time_sec || 0) + 's)! Send your initial challenge invite on WhatsApp now!';
-        if (waBtn) {
-          waBtn.classList.remove('hidden');
-          waBtn.textContent = '📲 Send Challenge Invite & Score on WhatsApp (' + data.round_score + ' pts • ' + data.correct_count + '/3 in ' + data.total_time_sec + 's)';
-        }
+        if (title) title.textContent = 'Waiting for Your Invited Friend to Accept!';
+        if (desc) desc.textContent = 'You scored +' + (data.round_score || 0) + ' PTS (' + (data.correct_count || 0) + '/3 in ' + (data.total_time_sec || 0) + 's)! This screen updates automatically if your friend finishes now — or play another game and we will alert you when it is your turn!';
       } else {
         if (title) title.textContent = 'Round ' + data.current_round + ' Complete • ' + data.opponent_name + ' Notified!';
-        if (desc) desc.textContent = 'You scored +' + (data.round_score || 0) + ' PTS (' + (data.correct_count || 0) + '/3 in ' + (data.total_time_sec || 0) + 's)! ' + data.opponent_name + ' has been notified automatically — no WhatsApp nudge needed!';
-        if (waBtn) {
-          waBtn.classList.add('hidden');
-        }
+        if (desc) desc.textContent = 'You scored +' + (data.round_score || 0) + ' PTS (' + (data.correct_count || 0) + '/3 in ' + (data.total_time_sec || 0) + 's)! If ' + data.opponent_name + ' finishes right now, this screen updates automatically — or play another game and we will alert you!';
       }
 
       if (nextBtn) {
-        nextBtn.textContent = data.opponent_assigned ? '📊 Go to Match Lobby (Auto-Sync Active) →' : '📊 Go to Match Lobby & Scoreboard →';
+        nextBtn.textContent = '📊 View Match Scoreboard (Or Play Another Game) →';
         nextBtn.href = lobbyUrl;
       }
+
+      // Live-poll every 2.5s while on this completion screen in case opponent finishes before player leaves!
+      startPlayScreenLiveSync(data.current_round);
     }
   }, 2100);
+}
+
+var playScreenPollTimer = null;
+function startPlayScreenLiveSync(completedRound) {
+  if (playScreenPollTimer) clearInterval(playScreenPollTimer);
+  playScreenPollTimer = setInterval(function() {
+    if (document.hidden) return;
+    fetch('/arena/match/' + encodeURIComponent(matchCode) + '/status?t=' + Date.now(), { headers: { 'Accept': 'application/json' } })
+      .then(function(r) { return r.json(); })
+      .then(function(st) {
+        if (st.my_turn || st.status === 'completed' || st.current_round > completedRound) {
+          clearInterval(playScreenPollTimer);
+          if (window.quizAudio) window.quizAudio.playVictory();
+          var oppLabel = st.opponent_assigned ? (st.player2_name || 'Your Opponent') : 'Your Opponent';
+          var badge = document.getElementById('roundOutcomeBadge');
+          var title = document.getElementById('roundOutcomeTitle');
+          var desc = document.getElementById('roundOutcomeDesc');
+          var bScore = document.getElementById('revealBotScore');
+          var bMeta = document.getElementById('revealBotMeta');
+          var nextBtn = document.getElementById('btnNextBotRound');
+
+          if (bScore) bScore.textContent = '✓';
+          if (bMeta) bMeta.textContent = 'Turn Completed!';
+          if (badge) {
+            badge.className = 'inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-bounce';
+            badge.innerHTML = '🎉 OPPONENT JUST FINISHED THEIR TURN!';
+          }
+          if (st.status === 'completed') {
+            if (title) title.textContent = '🏆 Duel Complete! Final Results Ready!';
+            if (desc) desc.textContent = 'Both players have finished Round 6! Tap below to view the winner & head-to-head breakdown!';
+            if (nextBtn) {
+              nextBtn.textContent = '🏆 View Final Match Results & Rematch →';
+              nextBtn.href = lobbyUrl;
+            }
+          } else {
+            if (title) title.textContent = '🔥 Round ' + st.current_round + ' Ready — It Is Your Turn!';
+            if (desc) desc.textContent = 'Your opponent just completed Round ' + completedRound + '! Jump straight into Round ' + st.current_round + ' right now!';
+            if (nextBtn) {
+              nextBtn.textContent = '🚀 Play Round ' + st.current_round + (st.active_category ? ' (' + st.active_category.toUpperCase() + ')' : '') + ' Now →';
+              nextBtn.href = '/arena/match/' + encodeURIComponent(matchCode) + '/play';
+            }
+          }
+        }
+      })
+      .catch(function() {});
+  }, 2500);
 }
 
 function toggleAudio() {

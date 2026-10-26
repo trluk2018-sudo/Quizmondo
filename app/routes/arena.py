@@ -287,7 +287,7 @@ def _get_friends_and_group_challenges(player: PlayerProfile) -> tuple:
 
 @arena_bp.route('/api/notifications')
 def api_notifications():
-    """Lightweight live notification endpoint for mobile & desktop: alerts when it's your turn or a friend challenged you."""
+    """Lightweight live notification endpoint for mobile & desktop: alerts when it's your turn, a friend challenged you, or a duel completed."""
     player = get_current_player()
     active_matches = ArenaMatch.query.filter(
         (ArenaMatch.player1_session == player.session_key) | (ArenaMatch.player2_session == player.session_key),
@@ -295,14 +295,27 @@ def api_notifications():
     ).order_by(ArenaMatch.updated_at.desc()).limit(20).all()
 
     alerts = []
+    active_match_states = {}
     for m in active_matches:
-        if m.is_bot:
-            continue
+        exp_t = m.expected_turn()
+        if m.current_turn != exp_t:
+            m.current_turn = exp_t
+            db.session.commit()
+
         is_p1 = (m.player1_session == player.session_key)
         opp_assigned = bool(m.player2_session and m.player2_session not in ('pending_invite', 'online_matchmaking', ''))
-        if not opp_assigned:
-            continue
         my_turn = (m.current_turn == 1 and is_p1) or (m.current_turn == 2 and not is_p1)
+        active_match_states[m.match_code] = {
+            'my_turn': bool(my_turn),
+            'current_round': m.current_round,
+            'p1_total_score': m.p1_total_score,
+            'p2_total_score': m.p2_total_score,
+            'status': m.status
+        }
+
+        if m.is_bot or not opp_assigned:
+            continue
+
         if my_turn:
             opp_name = m.player2_name if is_p1 else m.player1_name
             active_r = m.rounds.filter_by(round_number=m.current_round).first()
@@ -314,16 +327,50 @@ def api_notifications():
                 'opponent_name': opp_name,
                 'round_number': m.current_round,
                 'category_name': cat_name,
+                'is_your_turn': True,
                 'is_new_challenge': is_new_challenge,
-                'title': f"⚔️ New Challenge from {opp_name}!" if is_new_challenge else f"🔥 Your Turn vs {opp_name}!",
-                'message': f"{opp_name} challenged you to Round 1 ({cat_name})!" if is_new_challenge else f"{opp_name} finished their round! Play Round {m.current_round} ({cat_name}) now.",
+                'title': f"⚔️ New Challenge from {opp_name}!" if is_new_challenge else f"🎉 {opp_name} finished their turn!",
+                'message': f"{opp_name} challenged you to Round 1 ({cat_name})! Tap to play." if is_new_challenge else f"It's now YOUR TURN vs {opp_name} in Round {m.current_round} ({cat_name})!",
                 'url': url_for('arena.match_lobby', match_code=m.match_code)
             })
 
+    # Also check recently completed human duels so if an opponent finishes Round 6 while you're in another game, you get notified!
+    recent_completed = ArenaMatch.query.filter(
+        (ArenaMatch.player1_session == player.session_key) | (ArenaMatch.player2_session == player.session_key),
+        ArenaMatch.status == 'completed'
+    ).order_by(ArenaMatch.updated_at.desc()).limit(3).all()
+    for cm in recent_completed:
+        if cm.is_bot:
+            continue
+        is_p1 = (cm.player1_session == player.session_key)
+        opp_name = cm.player2_name if is_p1 else cm.player1_name
+        active_match_states[cm.match_code] = {
+            'my_turn': False,
+            'current_round': 6,
+            'p1_total_score': cm.p1_total_score,
+            'p2_total_score': cm.p2_total_score,
+            'status': 'completed'
+        }
+        alerts.append({
+            'event_key': f"{cm.match_code}_completed",
+            'match_code': cm.match_code,
+            'opponent_name': opp_name,
+            'round_number': 6,
+            'category_name': 'Final Results',
+            'is_your_turn': False,
+            'is_completed_event': True,
+            'title': f"🏆 Duel Completed vs {opp_name}!",
+            'message': f"{opp_name} finished Round 6! Final score: {cm.p1_total_score} - {cm.p2_total_score}. Tap to view results or Rematch!",
+            'url': url_for('arena.match_lobby', match_code=cm.match_code)
+        })
+
+    your_turn_only_count = sum(1 for a in alerts if a.get('is_your_turn'))
+
     return jsonify({
         'success': True,
-        'your_turn_count': len(alerts),
-        'alerts': alerts
+        'your_turn_count': your_turn_only_count,
+        'alerts': alerts,
+        'active_match_states': active_match_states
     })
 
 
@@ -686,6 +733,16 @@ def match_lobby(match_code):
 
     friends_roster, open_group_challenges = _get_friends_and_group_challenges(player)
 
+    # Check if this match is completed and one of the two players already clicked "Rematch" to start a new active duel!
+    active_rematch = None
+    if match.status == 'completed' and not match.is_bot and opponent_assigned:
+        active_rematch = ArenaMatch.query.filter(
+            ArenaMatch.id != match.id,
+            ((ArenaMatch.player1_session == match.player1_session) & (ArenaMatch.player2_session == match.player2_session)) |
+            ((ArenaMatch.player1_session == match.player2_session) & (ArenaMatch.player2_session == match.player1_session)),
+            ArenaMatch.status.in_(['waiting', 'in_progress'])
+        ).order_by(ArenaMatch.created_at.desc()).first()
+
     return render_template(
         'themes/quizhub/arena_match.html',
         match=match,
@@ -708,7 +765,8 @@ def match_lobby(match_code):
         whatsapp_nudge_text=whatsapp_nudge_text,
         has_account=has_account,
         friends_roster=friends_roster,
-        open_group_challenges=open_group_challenges
+        open_group_challenges=open_group_challenges,
+        active_rematch=active_rematch
     )
 
 
@@ -727,17 +785,49 @@ def convert_to_whatsapp(match_code):
 
 @arena_bp.route('/match/<match_code>/status')
 def match_status_poll(match_code):
-    """Lightweight JSON status endpoint so waiting players auto-refresh when an opponent joins or completes a round."""
+    """Lightweight JSON status endpoint so waiting players auto-refresh when an opponent joins, completes a round, or starts a rematch."""
+    player = get_current_player()
     match = ArenaMatch.query.filter_by(match_code=match_code).first_or_404()
+    if match.status in ('waiting', 'in_progress'):
+        exp_t = match.expected_turn()
+        if match.current_turn != exp_t:
+            match.current_turn = exp_t
+            db.session.commit()
+
     opponent_assigned = bool(match.player2_session and match.player2_session not in ('pending_invite', 'online_matchmaking', ''))
+    is_p1 = (match.player1_session == player.session_key)
+    my_turn = False
+    if match.status in ('waiting', 'in_progress'):
+        if match.is_bot and is_p1:
+            my_turn = True
+        elif is_p1 and match.current_turn == 1:
+            my_turn = True
+        elif not is_p1 and match.current_turn == 2:
+            my_turn = True
+
+    active_r = match.rounds.filter_by(round_number=match.current_round).first()
+    rematch_code = None
+    if match.status == 'completed' and not match.is_bot and opponent_assigned:
+        rm = ArenaMatch.query.filter(
+            ArenaMatch.id != match.id,
+            ((ArenaMatch.player1_session == match.player1_session) & (ArenaMatch.player2_session == match.player2_session)) |
+            ((ArenaMatch.player1_session == match.player2_session) & (ArenaMatch.player2_session == match.player1_session)),
+            ArenaMatch.status.in_(['waiting', 'in_progress'])
+        ).order_by(ArenaMatch.created_at.desc()).first()
+        if rm:
+            rematch_code = rm.match_code
+
     return jsonify({
         'status': match.status,
         'current_round': match.current_round,
         'current_turn': match.current_turn,
+        'my_turn': my_turn,
+        'active_category': active_r.category_name if active_r else 'Trivia',
         'opponent_assigned': opponent_assigned,
         'player2_name': match.player2_name,
         'p1_total_score': match.p1_total_score,
-        'p2_total_score': match.p2_total_score
+        'p2_total_score': match.p2_total_score,
+        'rematch_code': rematch_code
     })
 
 
