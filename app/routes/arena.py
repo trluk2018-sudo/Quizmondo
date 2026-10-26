@@ -867,14 +867,17 @@ def league_manager(slug):
     )
 
 
-@arena_bp.route('/leagues/<slug>/manager/action', methods=['POST'])
 @arena_bp.route('/leagues/<slug>/admin/control', methods=['POST'])
+@arena_bp.route('/leagues/<slug>/manager/action', methods=['POST'])
 def league_manager_action(slug):
     """Execute host commands: approve/reject bouncer tables, control rounds, and configure promos."""
     league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
     is_authorized = session.get(f'pub_mgr_{slug}') or session.get('user_role') == 'admin'
     pin = (request.form.get('pin') or '').strip()
     if not is_authorized and pin != league.pin_code:
+        if 'text/html' in (request.headers.get('Accept') or ''):
+            flash("Unauthorized Quizmaster access. Please log in with venue PIN.", "error")
+            return redirect(url_for('arena.league_manager', slug=slug))
         return jsonify({'success': False, 'error': 'Unauthorized Quizmaster'}), 403
 
     action = request.form.get('action')
@@ -882,7 +885,14 @@ def league_manager_action(slug):
     teams = state.get('teams', [])
     cfg = state.get('config', {})
 
-    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json or request.path.endswith('/admin/control')
+    accept_hdr = request.headers.get('Accept') or ''
+    # Browser standard form navigations always accept text/html
+    is_browser_nav = 'text/html' in accept_hdr
+    is_ajax = not is_browser_nav and (
+        request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        or request.is_json
+        or 'application/json' in accept_hdr
+    )
 
     def respond(msg, extra=None):
         if is_ajax:

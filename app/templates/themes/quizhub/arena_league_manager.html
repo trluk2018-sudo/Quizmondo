@@ -484,7 +484,23 @@
   </div>
 </div>
 
+<!-- Toast Notification Container -->
+<div id="toastBox" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
 <script>
+function showToast(msg, isError) {
+  var box = document.getElementById('toastBox');
+  if (!box) return;
+  var el = document.createElement('div');
+  el.className = 'px-4 py-3 rounded-2xl shadow-2xl font-mono text-xs font-bold border transition-all duration-300 ' + (isError ? 'bg-rose-950/95 border-rose-500/80 text-rose-200' : 'bg-emerald-950/95 border-emerald-500/80 text-emerald-200');
+  el.innerHTML = (isError ? '⚠️ ' : '✅ ') + msg;
+  box.appendChild(el);
+  setTimeout(function() {
+    el.style.opacity = '0';
+    setTimeout(function() { el.remove(); }, 300);
+  }, 3000);
+}
+
 function switchManagerTab(tabKey, btn) {
   document.querySelectorAll('.tab-btn').forEach(function(b) {
     b.className = 'tab-btn px-4 py-2.5 rounded-xl bg-slate-900 text-slate-300 hover:text-white border border-purple-500/30 transition';
@@ -499,5 +515,45 @@ function switchManagerTab(tabKey, btn) {
   if (tabKey === 'config') document.getElementById('tabConfig').classList.remove('hidden');
   if (tabKey === 'promos') document.getElementById('tabPromos').classList.remove('hidden');
 }
+
+// Intercept manager form actions for instant async response & toasts
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('form[action*="/manager/action"]').forEach(function(form) {
+    form.addEventListener('submit', function(e) {
+      var actionVal = (form.querySelector('input[name="action"]') || {}).value;
+      if (actionVal === 'manager_logout') return;
+
+      e.preventDefault();
+      var fd = new FormData(form);
+      var btn = form.querySelector('button[type="submit"]');
+      if (btn) btn.disabled = true;
+
+      fetch(form.action, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        },
+        body: fd
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data && data.success) {
+          showToast(data.message || 'Action executed successfully!');
+          setTimeout(function() {
+            window.location.reload();
+          }, 400);
+        } else {
+          showToast((data && data.error) || 'Command failed', true);
+          if (btn) btn.disabled = false;
+        }
+      })
+      .catch(function(err) {
+        // Fallback to native form submit on error
+        form.submit();
+      });
+    });
+  });
+});
 </script>
 {% endblock %}
