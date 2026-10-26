@@ -807,62 +807,232 @@ def league_state(slug):
     league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
     state = league.get_state()
     current_round = state.get('current_round', 1)
+    cfg = state.get('config', {})
+    teams = state.get('teams', [])
+    approved_teams = [t for t in teams if t.get('status') != 'pending']
+    pending_teams = [t for t in teams if t.get('status') == 'pending']
+    active_cfg = VIRTUAL_PUB_ROUNDS_CONFIG if league.is_virtual_league() else PUB_ROUNDS_CONFIG
+
     return jsonify({
         'success': True,
         'is_virtual': league.is_virtual_league(),
         'current_round': current_round,
         'round_status': state.get('round_status', 'active' if league.is_virtual_league() else 'waiting'),
         'answers_revealed': state.get('answers_revealed', False),
-        'round_title': PUB_ROUNDS_CONFIG.get(current_round, {}).get('name', 'Round ' + str(current_round))
+        'round_title': active_cfg.get(current_round, {}).get('name', 'Round ' + str(current_round)),
+        'config': cfg,
+        'break_ends_at': state.get('break_ends_at'),
+        'approved_teams_count': len(approved_teams),
+        'pending_teams_count': len(pending_teams),
+        'teams': approved_teams
     })
 
 
-@arena_bp.route('/leagues/<slug>/admin/control', methods=['POST'])
-def league_admin_control(slug):
-    """Host / Quizmaster admin controls to start rounds, lock answers, and reveal scores."""
+@arena_bp.route('/leagues/<slug>/manager', methods=['GET', 'POST'])
+def league_manager(slug):
+    """Host / Quizmaster Manager Console for table bouncer approvals, live game control, and bar promos."""
     league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
+    is_mgr = session.get(f'pub_mgr_{slug}') or session.get('user_role') == 'admin'
+
+    if request.method == 'POST' and request.form.get('action') == 'manager_login':
+        pin = (request.form.get('pin') or '').strip()
+        if pin == league.pin_code or session.get('user_role') == 'admin':
+            session[f'pub_mgr_{slug}'] = True
+            is_mgr = True
+            flash("Quizmaster Console Unlocked! Welcome to the live manager deck.", "success")
+        else:
+            flash("Invalid Manager Host PIN. Please check the venue PIN and try again.", "error")
+            return render_template('themes/quizhub/arena_league_manager_login.html', league=league)
+
+    if not is_mgr:
+        return render_template('themes/quizhub/arena_league_manager_login.html', league=league)
+
+    state = league.get_state()
+    config = state.get('config', {})
+    teams = state.get('teams', [])
+    pending_teams = [t for t in teams if t.get('status') == 'pending']
+    approved_teams = [t for t in teams if t.get('status') != 'pending']
+    curr_r = state.get('current_round', 1)
+    active_cfg = VIRTUAL_PUB_ROUNDS_CONFIG if league.is_virtual_league() else PUB_ROUNDS_CONFIG
+    active_round_info = active_cfg.get(curr_r, {})
+
+    return render_template(
+        'themes/quizhub/arena_league_manager.html',
+        league=league,
+        state=state,
+        config=config,
+        pending_teams=pending_teams,
+        approved_teams=approved_teams,
+        active_round_info=active_round_info
+    )
+
+
+@arena_bp.route('/leagues/<slug>/manager/action', methods=['POST'])
+@arena_bp.route('/leagues/<slug>/admin/control', methods=['POST'])
+def league_manager_action(slug):
+    """Execute host commands: approve/reject bouncer tables, control rounds, and configure promos."""
+    league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
+    is_authorized = session.get(f'pub_mgr_{slug}') or session.get('user_role') == 'admin'
     pin = (request.form.get('pin') or '').strip()
-    if pin != league.pin_code:
-        return jsonify({'success': False, 'error': 'Invalid Host PIN'}), 403
+    if not is_authorized and pin != league.pin_code:
+        return jsonify({'success': False, 'error': 'Unauthorized Quizmaster'}), 403
 
     action = request.form.get('action')
     state = league.get_state()
+    teams = state.get('teams', [])
+    cfg = state.get('config', {})
 
-    if action == 'start_round':
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json or request.path.endswith('/admin/control')
+
+    def respond(msg, extra=None):
+        if is_ajax:
+            payload = {'success': True, 'message': msg, 'state': league.get_state()}
+            if extra:
+                payload.update(extra)
+            return jsonify(payload)
+        if msg:
+            flash(msg, "success")
+        return redirect(url_for('arena.league_manager', slug=slug))
+
+    if action == 'manager_logout':
+        session.pop(f'pub_mgr_{slug}', None)
+        flash("Quizmaster signed out.", "info")
+        return redirect(url_for('arena.league_lounge', slug=slug))
+
+    elif action == 'approve_team':
+        tbl = str(request.form.get('table') or '').strip()
+        tname = (request.form.get('team_name') or '').strip()
+        for t in teams:
+            if (tbl and str(t.get('table')) == tbl) or (tname and t.get('name') == tname):
+                t['status'] = 'approved'
+        state['teams'] = teams
+        league.set_state(state)
+        db.session.commit()
+        return respond(f"Table {tbl} approved!")
+
+    elif action == 'approve_all':
+        for t in teams:
+            t['status'] = 'approved'
+        state['teams'] = teams
+        league.set_state(state)
+        db.session.commit()
+        return respond("All pending tables approved!")
+
+    elif action == 'reject_team':
+        tbl = str(request.form.get('table') or '').strip()
+        tname = (request.form.get('team_name') or '').strip()
+        teams = [t for t in teams if not ((tbl and str(t.get('table')) == tbl) or (tname and t.get('name') == tname))]
+        state['teams'] = teams
+        league.set_state(state)
+        db.session.commit()
+        return respond(f"Table {tbl} rejected.")
+
+    elif action == 'add_manual_team':
+        tbl = str(request.form.get('table') or '').strip()
+        tname = (request.form.get('team_name') or '').strip()
+        if tbl and tname:
+            teams.append({
+                'name': tname,
+                'table': tbl,
+                'members': 4,
+                'score': 0,
+                'rank': len(teams) + 1,
+                'status': 'approved'
+            })
+            state['teams'] = teams
+            league.set_state(state)
+            db.session.commit()
+            return respond(f"Table {tbl} ({tname}) added as verified!")
+        return respond("Table number and team name required.")
+
+    elif action == 'start_round':
         r = int(request.form.get('round') or state.get('current_round', 1))
         state['current_round'] = r
         state['round_status'] = 'active'
         state['answers_revealed'] = False
+        league.set_state(state)
+        db.session.commit()
+        return respond(f"Round {r} launched! Questions sent to all player phones.")
+
     elif action == 'close_round':
         state['round_status'] = 'closed'
+        league.set_state(state)
+        db.session.commit()
+        return respond("Round locked! Answers submitted.")
+
     elif action == 'reveal_answers':
         state['answers_revealed'] = True
+        league.set_state(state)
+        db.session.commit()
+        return respond("Official answers revealed on big screen and player screens!")
+
+    elif action == 'start_break':
+        state['round_status'] = 'break'
+        state['answers_revealed'] = True
+        duration_mins = int(cfg.get('interval_duration_mins', 8))
+        break_ends = (datetime.utcnow() + timedelta(minutes=duration_mins)).isoformat()
+        state['break_ends_at'] = break_ends
+        league.set_state(state)
+        db.session.commit()
+        return respond(f"Bar break started ({duration_mins} mins)! Bar promo specials activated.")
+
     elif action == 'advance_round':
         curr = state.get('current_round', 1)
-        if curr < 5:
+        max_r = int(cfg.get('total_rounds', 5 if not league.is_virtual_league() else 3))
+        if curr < max_r:
             state['current_round'] = curr + 1
             state['round_status'] = 'waiting' if not league.is_virtual_league() else 'active'
             state['answers_revealed'] = False
         else:
             state['round_status'] = 'finished'
             state['answers_revealed'] = True
-    elif action == 'reset':
+        league.set_state(state)
+        db.session.commit()
+        return respond(f"Advanced to Round {state['current_round']}!")
+
+    elif action == 'save_config':
+        cfg['total_rounds'] = int(request.form.get('total_rounds', cfg.get('total_rounds', 5)))
+        cfg['max_tables'] = int(request.form.get('max_tables', cfg.get('max_tables', 20)))
+        cfg['question_time_limit'] = int(request.form.get('question_time_limit', cfg.get('question_time_limit', 15)))
+        cfg['interval_duration_mins'] = int(request.form.get('interval_duration_mins', cfg.get('interval_duration_mins', 8)))
+        cfg['bar_promo_enabled'] = bool(request.form.get('bar_promo_enabled'))
+        if request.form.get('promo_title'): cfg['promo_title'] = request.form.get('promo_title').strip()
+        if request.form.get('promo_desc'): cfg['promo_desc'] = request.form.get('promo_desc').strip()
+        if request.form.get('promo_code'): cfg['promo_code'] = request.form.get('promo_code').strip()
+        if request.form.get('first_prize'): cfg['first_prize'] = request.form.get('first_prize').strip()
+        if request.form.get('second_prize'): cfg['second_prize'] = request.form.get('second_prize').strip()
+        state['config'] = cfg
+        league.set_state(state)
+        db.session.commit()
+        return respond("Tournament parameters & bar promos saved!")
+
+    elif action in ('reset', 'reset_quiz'):
         state['current_round'] = 1
         state['round_status'] = 'waiting' if not league.is_virtual_league() else 'active'
         state['answers_revealed'] = False
+        for t in teams:
+            t['score'] = 0
+            for k in list(t.keys()):
+                if k.startswith('round_'):
+                    del t[k]
+        state['teams'] = teams
+        league.set_state(state)
+        db.session.commit()
+        return respond("Tournament reset! Ready for a fresh match.")
 
     league.set_state(state)
     db.session.commit()
-    return jsonify({'success': True, 'state': state})
+    return respond("Action completed.")
 
 
 @arena_bp.route('/leagues/<slug>/room', methods=['GET', 'POST'])
 def league_room(slug):
-    """Live Pub Quiz Interactive Session with 3 Levels for Virtual or 5 Rounds for Venue."""
+    """Live Pub Quiz Interactive Session with table bouncer gating, 3-6 rounds, and bar promos."""
     player = get_current_player()
     league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
     is_virtual = league.is_virtual_league()
     state = league.get_state()
+    cfg = state.get('config', {})
 
     # Verify PIN if this is a physical in-venue pub quiz
     pin_attempt = (request.args.get('pin') or request.form.get('pin') or session.get(f'pub_pin_{slug}') or '').strip()
@@ -872,7 +1042,7 @@ def league_room(slug):
     if pin_attempt == league.pin_code:
         session[f'pub_pin_{slug}'] = pin_attempt
 
-    # In virtual mode: 3 distinct levels; in venue mode: 5 rounds controlled by host
+    # In virtual mode: 3 distinct levels; in venue mode: configured rounds (default 5)
     if is_virtual:
         total_rounds = 3
         current_round = int(request.args.get('round', 1))
@@ -880,15 +1050,44 @@ def league_room(slug):
             current_round = 1
         round_info = VIRTUAL_PUB_ROUNDS_CONFIG.get(current_round, VIRTUAL_PUB_ROUNDS_CONFIG[1])
     else:
-        total_rounds = 5
+        total_rounds = int(cfg.get('total_rounds', 5))
         current_round = state.get('current_round', 1)
-        round_info = PUB_ROUNDS_CONFIG.get(current_round, PUB_ROUNDS_CONFIG[1])
+        round_info = PUB_ROUNDS_CONFIG.get(current_round, PUB_ROUNDS_CONFIG.get(1, {'number': 1, 'name': f'Round {current_round}', 'cat_slug': 'world-history', 'icon': '🌍'}))
 
     table_num = request.args.get('table') or session.get('pub_table_num') or '1'
-    session['pub_table_num'] = table_num
+    session['pub_table_num'] = str(table_num)
 
     team_name = request.args.get('team') or session.get('pub_team_name') or f"Table {table_num} • {player.display_name}"
     session['pub_team_name'] = team_name
+
+    # Check table capacity & in-venue bouncer approval
+    teams = state.get('teams', [])
+    max_tables = int(cfg.get('max_tables', 20))
+    team_entry = next((t for t in teams if str(t.get('table')) == str(table_num) or t.get('name') == team_name), None)
+
+    if not is_virtual:
+        if not team_entry:
+            approved_count = len([t for t in teams if t.get('status') != 'pending'])
+            if approved_count >= max_tables:
+                flash(f"This pub venue has reached its maximum table capacity of {max_tables} tables. Please check with the Quizmaster.", "error")
+                return redirect(url_for('arena.league_lounge', slug=slug))
+            team_entry = {
+                'name': team_name,
+                'table': str(table_num),
+                'members': 4,
+                'score': 0,
+                'rank': len(teams) + 1,
+                'status': 'pending'  # Held in bouncer queue until Quizmaster approves
+            }
+            teams.append(team_entry)
+            state['teams'] = teams
+            league.set_state(state)
+            db.session.commit()
+            is_approved = False
+        else:
+            is_approved = (team_entry.get('status') != 'pending')
+    else:
+        is_approved = True
 
     # Exclude questions already seen in this session to strictly prevent repeats
     seen_qids = session.get('pub_seen_qids', [])
@@ -905,15 +1104,14 @@ def league_room(slug):
 
     if request.method == 'POST':
         round_score = int(request.form.get('score', 0))
-        # 1.5x Wipeout Multiplier on finale round (Round 3 for Virtual, Round 5 for Venue)
-        if (is_virtual and current_round == 3) or (not is_virtual and current_round == 5):
+        # 1.5x Wipeout Multiplier on finale round
+        if (is_virtual and current_round == 3) or (not is_virtual and current_round == total_rounds):
             round_score = int(round_score * 1.5)
 
         teams = league.get_teams()
         updated = False
-        team_entry = None
         for t in teams:
-            if t.get('name') == team_name:
+            if str(t.get('table')) == str(table_num) or t.get('name') == team_name:
                 t['score'] = (t.get('score', 0)) + round_score
                 t[f'round_{current_round}'] = round_score
                 team_entry = t
@@ -925,8 +1123,9 @@ def league_room(slug):
                 'name': team_name,
                 'score': round_score,
                 'members': 4,
-                'table': table_num,
+                'table': str(table_num),
                 'rank': len(teams) + 1,
+                'status': 'approved',
                 f'round_{current_round}': round_score
             }
             teams.append(team_entry)
@@ -966,6 +1165,8 @@ def league_room(slug):
         questions=questions,
         questions_json=questions_json,
         is_virtual=is_virtual,
+        is_approved=is_approved,
+        config=cfg,
         next_pub_date=get_next_weekly_pub_date(),
         state=state
     )

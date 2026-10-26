@@ -438,6 +438,18 @@ class PubLeague(db.Model):
         return 'online' in s or 'cyber' in s or 'virtual' in n or 'virtual' in v
 
     def get_state(self) -> dict:
+        default_config = {
+            'total_rounds': 3 if self.is_virtual_league() else 5,
+            'max_tables': 20,
+            'question_time_limit': 15,
+            'interval_duration_mins': 8,
+            'bar_promo_enabled': True,
+            'promo_title': 'Half-Time Bar Special: 10% Off All Drinks!',
+            'promo_desc': 'Show this screen at the main bar during the interval for 10% off all draught pints, wine & bar snacks.',
+            'promo_code': 'ROUND2SPECIAL',
+            'first_prize': '£20 Bar Tab Voucher + Golden Trophy',
+            'second_prize': 'Free Bottle of House Wine for the Table'
+        }
         try:
             data = json.loads(self.teams_json or '{}')
             if isinstance(data, dict):
@@ -445,13 +457,18 @@ class PubLeague(db.Model):
                 data.setdefault('current_round', 1)
                 data.setdefault('round_status', 'active' if self.is_virtual_league() else 'waiting')
                 data.setdefault('answers_revealed', False)
+                data.setdefault('config', default_config)
+                # Ensure all subkeys in config exist
+                for k, v in default_config.items():
+                    data['config'].setdefault(k, v)
                 return data
             elif isinstance(data, list):
                 return {
                     'teams': data,
                     'current_round': 1,
                     'round_status': 'active' if self.is_virtual_league() else 'waiting',
-                    'answers_revealed': False
+                    'answers_revealed': False,
+                    'config': default_config
                 }
         except Exception:
             pass
@@ -459,7 +476,8 @@ class PubLeague(db.Model):
             'teams': [],
             'current_round': 1,
             'round_status': 'active' if self.is_virtual_league() else 'waiting',
-            'answers_revealed': False
+            'answers_revealed': False,
+            'config': default_config
         }
 
     def set_state(self, state: dict):

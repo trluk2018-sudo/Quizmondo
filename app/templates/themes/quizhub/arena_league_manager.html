@@ -1,0 +1,503 @@
+{% extends "themes/quizhub/base.html" %}
+
+{% block title %}Quizmaster Console • {{ league.name }} • Quizmondo{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#080214] text-slate-100 font-sans py-8 sm:py-10 relative overflow-hidden">
+  <!-- Glowing ambient nebula -->
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[350px] bg-gradient-to-r from-purple-600/20 via-pink-600/15 to-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 relative z-10 space-y-8">
+
+    <!-- Top Manager Header Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-purple-500/20 pb-5">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-purple-400 bg-purple-950/80 border border-purple-800/60 px-3 py-1 rounded-full">
+            🎙️ Live Host Console
+          </span>
+          <span class="text-[10px] font-mono text-slate-400">
+            PIN: <strong class="text-cyan-300">{{ league.pin_code }}</strong>
+          </span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-black text-white font-mono mt-1">
+          {{ league.name }}
+        </h1>
+        <p class="text-xs text-slate-400 font-mono">
+          {{ league.venue_name }} • Manage teams, bouncer approvals, timed questions, and bar promos.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2.5 font-mono text-xs">
+        <a href="{{ url_for('arena.league_tv', slug=league.slug) }}" target="_blank" class="px-4 py-2.5 rounded-xl bg-slate-900 border border-cyan-400/50 hover:bg-slate-800 text-cyan-300 font-bold transition flex items-center gap-1.5 shadow" title="Open TV Projector View in New Tab">
+          <span>📺 Launch TV Display</span>
+        </a>
+        <a href="{{ url_for('arena.league_room', slug=league.slug) }}" target="_blank" class="px-3.5 py-2.5 rounded-xl bg-slate-900 border border-purple-500/30 hover:border-purple-400 text-slate-300 transition">
+          <span>📱 Player Buzzer View</span>
+        </a>
+        <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="inline">
+          <input type="hidden" name="action" value="manager_logout">
+          <button type="submit" class="px-3 py-2.5 rounded-xl bg-slate-900 border border-rose-500/30 hover:border-rose-400 text-rose-300 transition" title="Sign Out of Host Session">
+            🚪 Logout
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Alert Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="p-3.5 rounded-xl text-xs font-mono font-bold {% if category == 'error' %}bg-rose-950/70 text-rose-300 border border-rose-500/50{% else %}bg-emerald-950/70 text-emerald-300 border border-emerald-500/50{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Navigation Tabs -->
+    <div class="flex items-center gap-2 border-b border-purple-500/20 pb-1 font-mono text-xs">
+      <button type="button" onclick="switchManagerTab('remote', this)" id="tabBtnRemote" class="tab-btn px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold border border-purple-400 shadow transition">
+        🎮 Live Remote &amp; Bouncer
+      </button>
+      <button type="button" onclick="switchManagerTab('config', this)" id="tabBtnConfig" class="tab-btn px-4 py-2.5 rounded-xl bg-slate-900 text-slate-300 hover:text-white border border-purple-500/30 transition">
+        ⚙️ Tournament Rules &amp; Rounds
+      </button>
+      <button type="button" onclick="switchManagerTab('promos', this)" id="tabBtnPromos" class="tab-btn px-4 py-2.5 rounded-xl bg-slate-900 text-slate-300 hover:text-white border border-purple-500/30 transition">
+        🍺 Bar Promos &amp; Prizes
+      </button>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- TAB 1: LIVE HOST REMOTE & BOUNCER APPROVAL                          -->
+    <!-- =================================================================== -->
+    <div id="tabRemote" class="space-y-6">
+
+      <!-- MASTER GAME STATE STATUS BANNER -->
+      <div class="p-5 sm:p-6 rounded-3xl bg-slate-950/90 border-2 border-purple-500/40 shadow-2xl space-y-4 font-mono">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-purple-500/20 pb-4">
+          <div>
+            <span class="text-[10px] text-slate-400 uppercase tracking-widest block">Active Tournament Phase</span>
+            <div class="text-xl sm:text-2xl font-black text-white flex items-center gap-2 mt-0.5">
+              <span>ROUND {{ state.current_round }} / {{ config.total_rounds }}</span>
+              <span class="text-sm font-normal text-purple-300">• {{ active_round_info.name if active_round_info else 'Round ' ~ state.current_round }}</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border {% if state.round_status == 'active' %}bg-emerald-500/20 text-emerald-300 border-emerald-500/40 animate-pulse{% elif state.round_status == 'break' %}bg-amber-500/20 text-amber-300 border-amber-500/40{% elif state.round_status == 'finished' %}bg-purple-500/20 text-purple-300 border-purple-500/40{% else %}bg-slate-800 text-slate-300 border-slate-700{% endif %}">
+              ● Phase: {{ state.round_status|upper }}
+            </span>
+            {% if state.answers_revealed %}
+            <span class="px-3 py-1.5 rounded-full text-xs font-bold uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+              ✓ Answers Revealed
+            </span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Master Remote Buttons -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+          
+          <!-- Start Round Questions -->
+          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST">
+            <input type="hidden" name="action" value="start_round">
+            <button type="submit" class="w-full py-3.5 px-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer" style="touch-action: manipulation;">
+              <span>▶ Start Round {{ state.current_round }}</span>
+            </button>
+          </form>
+
+          <!-- Close Round / Time's Up -->
+          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST">
+            <input type="hidden" name="action" value="close_round">
+            <button type="submit" class="w-full py-3.5 px-3 rounded-2xl bg-rose-900/40 hover:bg-rose-800/60 border border-rose-500/40 text-rose-200 hover:text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer" style="touch-action: manipulation;">
+              <span>⏱ Lock / Time's Up</span>
+            </button>
+          </form>
+
+          <!-- Reveal Answers -->
+          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST">
+            <input type="hidden" name="action" value="reveal_answers">
+            <button type="submit" class="w-full py-3.5 px-3 rounded-2xl bg-cyan-900/40 hover:bg-cyan-800/60 border border-cyan-400/40 text-cyan-200 hover:text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer" style="touch-action: manipulation;">
+              <span>📋 Reveal Answers</span>
+            </button>
+          </form>
+
+          <!-- Start Bar Break & Interval Special -->
+          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST">
+            <input type="hidden" name="action" value="start_break">
+            <button type="submit" class="w-full py-3.5 px-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer" style="touch-action: manipulation;" title="Starts Interval Countdown & Promotes Bar Specials">
+              <span>🍺 Start Bar Break</span>
+            </button>
+          </form>
+
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-purple-500/20 text-xs">
+          <!-- Advance Round -->
+          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="w-full sm:w-auto">
+            <input type="hidden" name="action" value="advance_round">
+            <button type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-purple-900/50 hover:bg-purple-800 border border-purple-400/50 text-purple-200 font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition active:scale-95">
+              <span>⏩ Advance to Next Round (Round {{ state.current_round + 1 }}) &rarr;</span>
+            </button>
+          </form>
+
+          <!-- Reset Tournament -->
+          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" onsubmit="return confirm('Reset all scores and start a fresh tournament?');" class="w-full sm:w-auto">
+            <input type="hidden" name="action" value="reset_quiz">
+            <button type="submit" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 hover:border-rose-500 text-slate-400 hover:text-rose-300 font-bold uppercase transition">
+              <span>🔄 Reset Tournament</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- BOUNCER: PENDING TABLE APPROVALS (ANTI-CHEATING GATED QUEUE) -->
+      <div class="p-5 sm:p-6 rounded-3xl bg-slate-950/90 border border-amber-500/40 shadow-xl space-y-4 font-mono">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-500/20 pb-3">
+          <div>
+            <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold uppercase border border-amber-500/30">
+              <span>🛡️</span> Digital Bouncer Queue
+            </div>
+            <h2 class="text-lg font-black text-white mt-1">
+              Table Registration Approvals ({{ pending_teams|length }} Pending)
+            </h2>
+            <p class="text-xs text-slate-400">
+              Only approved tables receive questions and appear on the big screen scoreboard. Blocks online intruders.
+            </p>
+          </div>
+
+          {% if pending_teams %}
+          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST">
+            <input type="hidden" name="action" value="approve_all">
+            <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider shadow transition active:scale-95 flex items-center gap-1.5">
+              <span>✅ Approve All Pending</span>
+            </button>
+          </form>
+          {% endif %}
+        </div>
+
+        {% if pending_teams %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {% for team in pending_teams %}
+          <div class="p-4 rounded-2xl bg-amber-950/30 border border-amber-500/40 flex items-center justify-between gap-3">
+            <div>
+              <div class="text-xs font-bold text-amber-300">
+                Table {{ team.table }} • {{ team.name }}
+              </div>
+              <div class="text-[10px] text-slate-400 mt-0.5">
+                {{ team.members or 4 }} Players • Awaiting verification
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST">
+                <input type="hidden" name="action" value="approve_team">
+                <input type="hidden" name="table" value="{{ team.table }}">
+                <input type="hidden" name="team_name" value="{{ team.name }}">
+                <button type="submit" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider transition active:scale-95" title="Verify this table is in the pub">
+                  Approve
+                </button>
+              </form>
+              <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST">
+                <input type="hidden" name="action" value="reject_team">
+                <input type="hidden" name="table" value="{{ team.table }}">
+                <input type="hidden" name="team_name" value="{{ team.name }}">
+                <button type="submit" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-rose-500/40 text-rose-300 hover:bg-rose-950 text-xs font-bold uppercase transition active:scale-95" title="Reject intruder">
+                  Reject
+                </button>
+              </form>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="py-6 text-center text-xs text-slate-500 italic">
+          No pending table requests. All registered tables are approved.
+        </div>
+        {% endif %}
+
+        <!-- Manual Table / Paper Slip Entry -->
+        <div class="pt-4 border-t border-purple-500/20">
+          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="flex flex-col sm:flex-row items-center gap-3">
+            <input type="hidden" name="action" value="add_manual_team">
+            <span class="text-xs text-slate-300 font-bold whitespace-nowrap">
+              + Add Manual Table / Paper Slip:
+            </span>
+            <input 
+              type="text" 
+              name="table" 
+              required 
+              placeholder="Table #" 
+              class="w-full sm:w-28 px-3 py-2 rounded-xl bg-slate-900 border border-purple-500/30 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-cyan-400"
+            >
+            <input 
+              type="text" 
+              name="team_name" 
+              required 
+              placeholder="Team Name" 
+              class="w-full sm:w-64 px-3 py-2 rounded-xl bg-slate-900 border border-purple-500/30 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-cyan-400"
+            >
+            <button type="submit" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-purple-900/60 hover:bg-purple-800 border border-purple-400/50 text-purple-200 text-xs font-bold uppercase tracking-wider transition whitespace-nowrap">
+              Add Verified Team
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- APPROVED IN-VENUE TEAMS ROSTER -->
+      <div class="p-5 sm:p-6 rounded-3xl bg-slate-950/90 border border-purple-500/30 shadow-xl space-y-4 font-mono">
+        <div class="flex items-center justify-between border-b border-purple-500/20 pb-3">
+          <div class="text-base font-black text-white flex items-center gap-2">
+            <span>📋</span> APPROVED IN-VENUE TEAMS ({{ approved_teams|length }} / {{ config.max_tables }} Tables Max)
+          </div>
+          <span class="text-xs text-slate-400">Score Tracker</span>
+        </div>
+
+        {% if approved_teams %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          {% for team in approved_teams %}
+          <div class="p-3.5 rounded-2xl bg-slate-900/80 border border-purple-500/20 flex items-center justify-between">
+            <div>
+              <div class="text-xs font-bold text-white">
+                Table {{ team.table }} • {{ team.name }}
+              </div>
+              <div class="text-[10px] text-cyan-400 mt-0.5">
+                {{ team.score or 0 }} Points (Rank #{{ team.rank or loop.index }})
+              </div>
+            </div>
+            
+            <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" onsubmit="return confirm('Remove table from match?');">
+              <input type="hidden" name="action" value="reject_team">
+              <input type="hidden" name="table" value="{{ team.table }}">
+              <input type="hidden" name="team_name" value="{{ team.name }}">
+              <button type="submit" class="text-slate-500 hover:text-rose-400 text-xs transition" title="Kick table">
+                ✕
+              </button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="py-6 text-center text-xs text-slate-500 italic">
+          No approved teams yet. Waiting for pub tables to register or submit paper slips.
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- TAB 2: TOURNAMENT RULES & CONFIGURATION                             -->
+    <!-- =================================================================== -->
+    <div id="tabConfig" class="hidden space-y-6">
+      <div class="p-6 rounded-3xl bg-slate-950/90 border-2 border-purple-500/30 shadow-2xl space-y-6 font-mono">
+        <div class="border-b border-purple-500/20 pb-3">
+          <h2 class="text-lg font-black text-white">
+            ⚙️ Tournament Parameters &amp; Capacity
+          </h2>
+          <p class="text-xs text-slate-400">
+            Set round quantities, question timers, interval durations, and table capacity for this venue.
+          </p>
+        </div>
+
+        <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="space-y-5 text-xs">
+          <input type="hidden" name="action" value="save_config">
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            <!-- Total Rounds -->
+            <div class="space-y-1.5">
+              <label class="block font-bold text-slate-300 uppercase">
+                Number of Themed Rounds
+              </label>
+              <select name="total_rounds" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-purple-500/30 text-white focus:outline-none focus:border-cyan-400">
+                <option value="3" {% if config.total_rounds == 3 %}selected{% endif %}>3 Rounds (Express / Virtual Standard)</option>
+                <option value="4" {% if config.total_rounds == 4 %}selected{% endif %}>4 Rounds (Mid-Length)</option>
+                <option value="5" {% if config.total_rounds == 5 %}selected{% endif %}>5 Rounds (Traditional Pub Quiz Standard)</option>
+                <option value="6" {% if config.total_rounds == 6 %}selected{% endif %}>6 Rounds (Extended Championship)</option>
+              </select>
+            </div>
+
+            <!-- Max Tables Limit -->
+            <div class="space-y-1.5">
+              <label class="block font-bold text-slate-300 uppercase">
+                Max Table / Team Capacity Limit
+              </label>
+              <input 
+                type="number" 
+                name="max_tables" 
+                value="{{ config.max_tables or 20 }}" 
+                min="2" 
+                max="50" 
+                class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-purple-500/30 text-white focus:outline-none focus:border-cyan-400"
+              >
+              <span class="text-[10px] text-slate-500">Prevents registrations once venue capacity is reached</span>
+            </div>
+
+            <!-- Question Time Limit -->
+            <div class="space-y-1.5">
+              <label class="block font-bold text-slate-300 uppercase">
+                Time Per Question (Seconds)
+              </label>
+              <select name="question_time_limit" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-purple-500/30 text-white focus:outline-none focus:border-cyan-400">
+                <option value="15" {% if config.question_time_limit == 15 %}selected{% endif %}>15 Seconds (Fast Buzzer)</option>
+                <option value="20" {% if config.question_time_limit == 20 %}selected{% endif %}>20 Seconds (Standard Paced)</option>
+                <option value="30" {% if config.question_time_limit == 30 %}selected{% endif %}>30 Seconds (Relaxed Discussion)</option>
+              </select>
+            </div>
+
+            <!-- Interval Duration -->
+            <div class="space-y-1.5">
+              <label class="block font-bold text-slate-300 uppercase">
+                Intermission / Bar Break Duration (Minutes)
+              </label>
+              <select name="interval_duration_mins" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-purple-500/30 text-white focus:outline-none focus:border-cyan-400">
+                <option value="5" {% if config.interval_duration_mins == 5 %}selected{% endif %}>5 Minutes (Quick Drink Refill)</option>
+                <option value="8" {% if config.interval_duration_mins == 8 %}selected{% endif %}>8 Minutes (Standard Half-Time)</option>
+                <option value="10" {% if config.interval_duration_mins == 10 %}selected{% endif %}>10 Minutes (Full Food &amp; Drink Break)</option>
+                <option value="15" {% if config.interval_duration_mins == 15 %}selected{% endif %}>15 Minutes (Extended Half-Time)</option>
+              </select>
+            </div>
+
+          </div>
+
+          <div class="pt-3 border-t border-purple-500/20 flex justify-end">
+            <button type="submit" class="px-6 py-3.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black uppercase tracking-wider transition active:scale-95 shadow-lg">
+              💾 Save Tournament Parameters
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- TAB 3: BAR PROMOS & SPONSOR PRIZES                                  -->
+    <!-- =================================================================== -->
+    <div id="tabPromos" class="hidden space-y-6">
+      <div class="p-6 rounded-3xl bg-slate-950/90 border-2 border-amber-500/30 shadow-2xl space-y-6 font-mono">
+        <div class="border-b border-amber-500/20 pb-3">
+          <div class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">
+            Commercial &amp; Bar Revenue Booster
+          </div>
+          <h2 class="text-lg font-black text-white mt-0.5">
+            🍺 Bar Special Promos, Vouchers &amp; Winner Prizes
+          </h2>
+          <p class="text-xs text-slate-400">
+            Promote bar sales during breaks and reward winning tables with drink vouchers and sponsor prizes.
+          </p>
+        </div>
+
+        <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="space-y-5 text-xs">
+          <input type="hidden" name="action" value="save_config">
+          <input type="hidden" name="total_rounds" value="{{ config.total_rounds or 5 }}">
+          <input type="hidden" name="max_tables" value="{{ config.max_tables or 20 }}">
+          <input type="hidden" name="question_time_limit" value="{{ config.question_time_limit or 15 }}">
+          <input type="hidden" name="interval_duration_mins" value="{{ config.interval_duration_mins or 8 }}">
+
+          <!-- Half-time Break Promo Toggle -->
+          <div class="p-4 rounded-2xl bg-amber-950/20 border border-amber-500/30 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="font-bold text-amber-300 block">Enable Intermission Bar Special Banner</span>
+                <span class="text-[10px] text-slate-400">Displays on all team phones and the big screen TV during breaks</span>
+              </div>
+              <input 
+                type="checkbox" 
+                name="bar_promo_enabled" 
+                value="true" 
+                {% if config.bar_promo_enabled %}checked{% endif %}
+                class="w-5 h-5 rounded accent-amber-500 cursor-pointer"
+              >
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-amber-500/20">
+              <div class="space-y-1">
+                <label class="block font-bold text-slate-300 uppercase">Promo Headline</label>
+                <input 
+                  type="text" 
+                  name="promo_title" 
+                  value="{{ config.promo_title or 'Half-Time Bar Special: 10% Off Drinks!' }}" 
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-purple-500/30 text-white focus:outline-none focus:border-cyan-400"
+                >
+              </div>
+
+              <div class="space-y-1">
+                <label class="block font-bold text-slate-300 uppercase">Voucher / Code at Bar</label>
+                <input 
+                  type="text" 
+                  name="promo_code" 
+                  value="{{ config.promo_code or 'ROUND2SPECIAL' }}" 
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-purple-500/30 text-white focus:outline-none focus:border-cyan-400 font-bold text-amber-400 tracking-wider"
+                >
+              </div>
+
+              <div class="col-span-full space-y-1">
+                <label class="block font-bold text-slate-300 uppercase">Promo Instructions for Players</label>
+                <textarea 
+                  name="promo_desc" 
+                  rows="2" 
+                  class="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-purple-500/30 text-white focus:outline-none focus:border-cyan-400 leading-relaxed"
+                >{{ config.promo_desc or 'Show this screen at the main bar during the interval for 10% off all draught pints, house wine & bar snacks!' }}</textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tournament Prizes -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            <div class="space-y-1.5 p-4 rounded-2xl bg-purple-950/20 border border-purple-500/30">
+              <label class="block font-bold text-amber-300 uppercase flex items-center gap-1.5">
+                <span>🥇</span> 1st Place Grand Prize (Winning Table)
+              </label>
+              <input 
+                type="text" 
+                name="first_prize" 
+                value="{{ config.first_prize or '£20 Bar Tab Voucher + Golden Trophy' }}" 
+                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-purple-500/30 text-white focus:outline-none focus:border-cyan-400"
+              >
+            </div>
+
+            <div class="space-y-1.5 p-4 rounded-2xl bg-purple-950/20 border border-purple-500/30">
+              <label class="block font-bold text-slate-300 uppercase flex items-center gap-1.5">
+                <span>🥈</span> 2nd Place Prize (Runners Up)
+              </label>
+              <input 
+                type="text" 
+                name="second_prize" 
+                value="{{ config.second_prize or 'Free Bottle of House Wine for the Table' }}" 
+                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-purple-500/30 text-white focus:outline-none focus:border-cyan-400"
+              >
+            </div>
+
+          </div>
+
+          <div class="pt-3 border-t border-purple-500/20 flex justify-end">
+            <button type="submit" class="px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black uppercase tracking-wider transition active:scale-95 shadow-lg">
+              🍺 Save Bar Promos &amp; Prizes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function switchManagerTab(tabKey, btn) {
+  document.querySelectorAll('.tab-btn').forEach(function(b) {
+    b.className = 'tab-btn px-4 py-2.5 rounded-xl bg-slate-900 text-slate-300 hover:text-white border border-purple-500/30 transition';
+  });
+  btn.className = 'tab-btn px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold border border-purple-400 shadow transition';
+
+  document.getElementById('tabRemote').classList.add('hidden');
+  document.getElementById('tabConfig').classList.add('hidden');
+  document.getElementById('tabPromos').classList.add('hidden');
+
+  if (tabKey === 'remote') document.getElementById('tabRemote').classList.remove('hidden');
+  if (tabKey === 'config') document.getElementById('tabConfig').classList.remove('hidden');
+  if (tabKey === 'promos') document.getElementById('tabPromos').classList.remove('hidden');
+}
+</script>
+{% endblock %}

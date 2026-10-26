@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ league.venue_name }} • Big-Screen TV Scoreboard • Quizmondo</title>
   <link rel="stylesheet" href="/static/css/tailwind.min.css">
-  <meta http-equiv="refresh" content="10">
+  <meta http-equiv="refresh" content="6">
 </head>
 <body class="h-full flex flex-col justify-between p-6 sm:p-10 relative overflow-hidden select-none">
   <!-- Dynamic ambient lighting -->
@@ -16,9 +16,11 @@
     <div class="flex items-center gap-5">
       <img src="/static/img/quizmondo_logo.svg" alt="Quizmondo.com" class="h-14 sm:h-16 w-auto">
       <div>
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full {% if state.round_status == 'active' %}bg-emerald-500/20 text-emerald-400 border border-emerald-500/40{% elif state.answers_revealed %}bg-cyan-500/20 text-cyan-300 border border-cyan-500/40{% else %}bg-purple-500/20 text-purple-300 border border-purple-500/40{% endif %} font-black text-xs uppercase tracking-widest">
-          <span class="w-2 h-2 rounded-full {% if state.round_status == 'active' %}bg-emerald-400 animate-pulse{% elif state.answers_revealed %}bg-cyan-400{% else %}bg-purple-400{% endif %}"></span>
-          {% if state.answers_revealed %}
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full {% if state.round_status == 'active' %}bg-emerald-500/20 text-emerald-400 border border-emerald-500/40{% elif state.round_status == 'break' %}bg-amber-500/20 text-amber-300 border border-amber-500/40{% elif state.answers_revealed %}bg-cyan-500/20 text-cyan-300 border border-cyan-500/40{% else %}bg-purple-500/20 text-purple-300 border border-purple-500/40{% endif %} font-black text-xs uppercase tracking-widest">
+          <span class="w-2 h-2 rounded-full {% if state.round_status == 'active' %}bg-emerald-400 animate-pulse{% elif state.round_status == 'break' %}bg-amber-400 animate-ping{% elif state.answers_revealed %}bg-cyan-400{% else %}bg-purple-400{% endif %}"></span>
+          {% if state.round_status == 'break' %}
+            HALF-TIME INTERMISSION BREAK
+          {% elif state.answers_revealed %}
             ROUND {{ current_round }} RESULTS REVEALED
           {% elif state.round_status == 'active' %}
             ROUND {{ current_round }} LIVE IN PLAY
@@ -32,7 +34,16 @@
       </div>
     </div>
 
-    <!-- Right: Room PIN & Quizmaster Control Toggle Button -->
+    <!-- Center: Tables Capacity Badge -->
+    <div class="hidden md:flex flex-col items-center">
+      <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">TABLE CAPACITY</div>
+      <div class="text-lg font-black text-white flex items-center gap-2">
+        <span class="text-cyan-400">{{ teams|length }}</span> / <span>{{ config.max_tables or 20 }} Tables</span>
+      </div>
+      <div class="text-[10px] text-emerald-400 font-bold">● Live Digital Bouncer Active</div>
+    </div>
+
+    <!-- Right: Room PIN & Quizmaster Portal Link -->
     <div class="flex items-center gap-4">
       <div class="flex items-center gap-4 bg-slate-950/90 border-2 border-amber-400/50 p-3 sm:p-4 rounded-3xl shadow-2xl">
         <div class="text-right">
@@ -44,75 +55,61 @@
         </div>
       </div>
 
-      <!-- Host Admin Toggle Button -->
+      <!-- Host Admin Portal Button -->
       {% if not is_virtual %}
-      <button type="button" onclick="toggleHostPanel()" class="px-4 py-3 rounded-2xl bg-purple-900/60 hover:bg-purple-800 border border-purple-400/40 text-purple-200 hover:text-white font-bold text-xs uppercase transition flex items-center gap-2 shadow-lg">
-        <span>👑</span>
-        <span class="hidden sm:inline">Quizmaster</span>
-      </button>
+      <a href="{{ url_for('arena.league_manager', slug=league.slug) }}" target="_blank" class="px-4 py-3 rounded-2xl bg-purple-900/60 hover:bg-purple-800 border border-purple-400/40 text-purple-200 hover:text-white font-bold text-xs uppercase transition flex items-center gap-2 shadow-lg">
+        <span>🎙️</span>
+        <span class="hidden sm:inline">Manager Portal</span>
+      </a>
       {% endif %}
     </div>
   </div>
 
-  <!-- QUIZMASTER HOST CONTROL PANEL (Collapsible) -->
-  {% if not is_virtual %}
-  <div id="hostPanel" class="hidden relative z-20 p-4 rounded-2xl bg-slate-950/95 border-2 border-purple-500/60 shadow-2xl font-mono text-xs space-y-3">
-    <div class="flex items-center justify-between border-b border-purple-500/30 pb-2">
-      <div class="flex items-center gap-2">
-        <span class="text-amber-400 font-bold">👑 QUIZMASTER CONTROL CONSOLE</span>
-        <span class="text-slate-400 text-[11px]">(Stage: Round {{ current_round }} &bull; {{ state.round_status|upper }})</span>
+  <!-- BAR PROMO BANNER (During intermission or enabled by Quizmaster) -->
+  {% if config.bar_promo_enabled or state.round_status == 'break' %}
+  <div class="py-3 px-6 rounded-2xl bg-gradient-to-r from-amber-950 via-slate-950 to-amber-950 border-2 border-amber-400 shadow-2xl flex items-center justify-between text-xs text-slate-100 relative z-10 animate-pulse">
+    <div class="flex items-center gap-4 font-mono">
+      <span class="text-2xl">🍺</span>
+      <div>
+        <div class="text-amber-400 font-black text-sm uppercase tracking-wider">
+          {{ config.promo_title or 'HALF-TIME BAR SPECIAL' }}
+        </div>
+        <div class="text-slate-300 text-[11px]">
+          {{ config.promo_desc or 'Show this code at the bar for drink discounts during the break!' }}
+        </div>
       </div>
-      <button type="button" onclick="toggleHostPanel()" class="text-slate-400 hover:text-white text-sm font-bold">✕ Close</button>
     </div>
-
-    <div class="flex flex-wrap items-center gap-3">
-      <div class="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-purple-500/30">
-        <span class="text-slate-400 text-[10px]">PIN:</span>
-        <input type="password" id="adminPin" value="{{ league.pin_code }}" placeholder="Host PIN" class="bg-transparent text-amber-300 font-bold w-16 text-center focus:outline-none">
-      </div>
-
-      <!-- Admin Action Buttons -->
-      <button type="button" onclick="sendAdminAction('start_round')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase transition flex items-center gap-1.5">
-        <span>▶️</span> Start Round {{ current_round }}
-      </button>
-
-      <button type="button" onclick="sendAdminAction('close_round')" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold uppercase transition flex items-center gap-1.5">
-        <span>🔒</span> Lock Submissions
-      </button>
-
-      <button type="button" onclick="sendAdminAction('reveal_answers')" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold uppercase transition flex items-center gap-1.5">
-        <span>💡</span> Reveal Answers &amp; Scores
-      </button>
-
-      <button type="button" onclick="sendAdminAction('advance_round')" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold uppercase transition flex items-center gap-1.5">
-        <span>➡️</span> Open Next Round
-      </button>
-
-      <button type="button" onclick="sendAdminAction('reset')" class="px-3 py-2 rounded-xl bg-slate-900 border border-rose-500/40 text-rose-300 hover:bg-rose-950/60 font-bold text-[10px] uppercase transition ml-auto">
-        🔄 Reset Tournament
-      </button>
+    {% if config.promo_code %}
+    <div class="flex items-center gap-3">
+      <span class="text-[10px] text-slate-400 uppercase tracking-widest">PROMO CODE:</span>
+      <span class="px-4 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-black text-sm tracking-widest shadow">
+        {{ config.promo_code }}
+      </span>
     </div>
+    {% endif %}
   </div>
-  {% endif %}
-
+  {% else %}
   <!-- How to Play Banner for Bar Patrons -->
   <div class="py-2.5 px-6 rounded-2xl bg-gradient-to-r from-purple-950/70 via-slate-950 to-indigo-950/70 border border-purple-500/30 flex items-center justify-between text-xs text-slate-300 relative z-10">
     <div class="flex items-center gap-6 font-mono">
-      <span class="text-amber-400 font-bold uppercase tracking-wider">📱 HOW TO PLAY:</span>
-      <span><strong>1.</strong> Open quizmondo.com on phone</span>
-      <span><strong>2.</strong> Enter Room PIN <span class="text-amber-300 font-bold">{{ league.pin_code }}</span> &amp; Table #</span>
-      <span><strong>3.</strong> Lock in answers for each round!</span>
+      <span class="text-amber-400 font-bold uppercase tracking-wider">📱 HOW TO JOIN:</span>
+      <span><strong>1.</strong> Scan / open quizmondo.com</span>
+      <span><strong>2.</strong> PIN <span class="text-amber-300 font-bold">{{ league.pin_code }}</span> + Table #</span>
+      <span><strong>3.</strong> Host approves table &bull; answers sync live!</span>
     </div>
     <div class="text-[11px] text-cyan-400 font-bold">
       {% if state.answers_revealed %}
       Scores Updated on Big Screen
       {% elif state.round_status == 'active' %}
       Round Active • Phones Buzzing In
+      {% elif state.round_status == 'break' %}
+      Intermission Break
       {% else %}
       Waiting for Quizmaster to Start
       {% endif %}
     </div>
   </div>
+  {% endif %}
 
   <!-- MAIN SHOWCASE AREA: Answers Key (if revealed) OR Leaderboard Podium -->
   <div class="my-auto py-3 relative z-10 space-y-6">
@@ -131,7 +128,7 @@
           </div>
         </div>
         <span class="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-bold border border-cyan-500/30">
-          5 / 5 QUESTIONS REVEALED
+          {{ questions|length }} / {{ questions|length }} QUESTIONS REVEALED
         </span>
       </div>
 
@@ -152,7 +149,7 @@
     </div>
     {% endif %}
 
-    <!-- Top 3 Podium Cards -->
+    <!-- Top 3 Podium Cards with Bar Tab & Bottle of Wine Prizes -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       {% for t in teams[:3] %}
       <div class="p-6 sm:p-8 rounded-3xl {% if loop.index == 1 %}bg-gradient-to-b from-amber-950/80 via-slate-950 to-slate-950 border-4 border-amber-400 shadow-2xl shadow-amber-500/20 transform sm:-translate-y-3{% elif loop.index == 2 %}bg-slate-950/90 border-2 border-slate-400/60 shadow-xl{% else %}bg-slate-950/90 border-2 border-amber-700/60 shadow-xl{% endif %} text-center space-y-3 relative overflow-hidden">
@@ -172,6 +169,21 @@
         <div class="text-xs text-slate-400 font-bold">
           Table {{ t.table or loop.index }} &bull; {{ t.members or 4 }} Players
         </div>
+
+        <!-- Venue Prize Badge -->
+        {% if loop.index == 1 and config.first_prize %}
+        <div class="pt-2 border-t border-amber-400/30">
+          <span class="px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 text-[11px] font-black border border-amber-400/40 inline-flex items-center gap-1.5">
+            <span>🎁</span> PRIZE: {{ config.first_prize }}
+          </span>
+        </div>
+        {% elif loop.index == 2 and config.second_prize %}
+        <div class="pt-2 border-t border-slate-400/30">
+          <span class="px-3 py-1 rounded-full bg-slate-400/20 text-slate-200 text-[11px] font-black border border-slate-400/40 inline-flex items-center gap-1.5">
+            <span>🍾</span> PRIZE: {{ config.second_prize }}
+          </span>
+        </div>
+        {% endif %}
       </div>
       {% endfor %}
     </div>
@@ -195,14 +207,14 @@
 
   </div>
 
-  <!-- Bottom TV Ticker with 5-Round Status -->
+  <!-- Bottom TV Ticker with Tournament Status -->
   <div class="border-t-2 border-purple-500/30 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 relative z-10">
     <div class="flex items-center gap-4">
       <span class="px-2.5 py-1 rounded-lg bg-purple-600/40 text-purple-200 font-black uppercase text-[10px]">
-        SCHEDULE
+        TOURNAMENT ROUNDS
       </span>
       <span class="text-slate-300 text-[11px]">
-        R1: General Knowledge &bull; R2: Music &bull; R3: Cinema &bull; R4: Geography &bull; R5: Wipeout Sprint!
+        R1: General Knowledge &bull; R2: Music &bull; R3: Cinema &bull; R4: Geography &bull; R5: Wipeout Finale!
       </span>
     </div>
     <div class="text-cyan-400 font-bold text-[11px]">
@@ -210,34 +222,5 @@
     </div>
   </div>
 
-  <script>
-  function toggleHostPanel() {
-    var p = document.getElementById('hostPanel');
-    p.classList.toggle('hidden');
-  }
-
-  function sendAdminAction(action) {
-    var pin = document.getElementById('adminPin').value;
-    var fd = new FormData();
-    fd.append('pin', pin);
-    fd.append('action', action);
-
-    fetch('/arena/leagues/{{ league.slug }}/admin/control', {
-      method: 'POST',
-      body: fd
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.success) {
-        window.location.reload();
-      } else {
-        alert("Quizmaster Error: " + (data.error || 'Failed to execute command'));
-      }
-    })
-    .catch(function(err) {
-      alert("Network Error: " + err);
-    });
-  }
-  </script>
 </body>
 </html>
