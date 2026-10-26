@@ -482,6 +482,22 @@ def dashboard():
             if len(active_matches) >= 12:
                 break
 
+    # Categorize matches into clear dedicated sections
+    # 1. Duels Sent TO You (where you were challenged by a friend or online player)
+    incoming_challenges = []
+    # 2. Invites & Challenges YOU Sent (recent WhatsApp invites, direct friend challenges, online challenges)
+    outgoing_invites = []
+    # 3. Solo / Bot Nova training matches
+    bot_matches = []
+
+    for m in active_matches:
+        if m.is_bot:
+            bot_matches.append(m)
+        elif m.player1_session == player.session_key:
+            outgoing_invites.append(m)
+        else:
+            incoming_challenges.append(m)
+
     # Friends Roster & Open Group Challenges
     friends_roster, open_group_challenges = _get_friends_and_group_challenges(player)
 
@@ -495,6 +511,9 @@ def dashboard():
         'themes/quizhub/arena_dashboard.html',
         player=player,
         active_matches=active_matches,
+        incoming_challenges=incoming_challenges,
+        outgoing_invites=outgoing_invites,
+        bot_matches=bot_matches,
         history_matches=history_matches,
         friends_roster=friends_roster,
         open_group_challenges=open_group_challenges,
@@ -510,6 +529,7 @@ def create_match():
     player = get_current_player()
     opponent_mode = request.form.get('opponent_mode') or request.args.get('opponent_mode', 'friend')  # 'friend', 'bot', 'online'
     category_slug = request.form.get('category_slug') or request.args.get('category_slug')
+    friend_invite_name = (request.form.get('friend_name') or request.args.get('friend_name') or '').strip()
 
     # If opponent_mode is 'online', check if another player already has an open online_matchmaking duel waiting in Round 1!
     if opponent_mode == 'online':
@@ -563,6 +583,7 @@ def create_match():
         player1_session=player.session_key,
         player1_name=player.display_name,
         player1_avatar=player.avatar_key,
+        player2_name=friend_invite_name if friend_invite_name else ('Searching Online Player...' if opponent_mode == 'online' else 'Invited Friend'),
         status='waiting',
         current_round=1,
         current_turn=1,

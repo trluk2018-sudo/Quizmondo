@@ -208,7 +208,7 @@
         <!-- STAGE-GATED QUESTION-BY-QUESTION COMPARISON (Full native layout, no inner scrollbar!) -->
         <div id="stageComparisonContainer" class="hidden space-y-2 text-left pt-2 border-t border-purple-500/30">
           <div class="text-[11px] font-black uppercase text-emerald-400 tracking-wider text-center">
-            🔓 Head-to-Head Answer Reveal
+            Head-to-Head Answers
           </div>
           <div id="stageComparisonList" class="space-y-2.5">
           </div>
@@ -703,15 +703,15 @@ function showRocketAnimation(data) {
         badge.innerHTML = '✅ ROUND ' + data.current_round + ' SCORE LOCKED IN!';
       }
       if (!data.opponent_assigned) {
-        if (title) title.textContent = 'Waiting for Your Invited Friend to Accept!';
-        if (desc) desc.textContent = 'You scored +' + (data.round_score || 0) + ' PTS (' + (data.correct_count || 0) + '/3 in ' + (data.total_time_sec || 0) + 's)! This screen updates automatically if your friend finishes now — or play another game and we will alert you when it is your turn!';
+        if (title) title.textContent = 'Waiting for Your Friend to Join!';
+        if (desc) desc.textContent = 'You scored +' + (data.round_score || 0) + ' PTS (' + (data.correct_count || 0) + '/3 in ' + (data.total_time_sec || 0) + 's)! Your score is locked in and ready.';
       } else {
-        if (title) title.textContent = 'Round ' + data.current_round + ' Complete • ' + data.opponent_name + ' Notified!';
-        if (desc) desc.textContent = 'You scored +' + (data.round_score || 0) + ' PTS (' + (data.correct_count || 0) + '/3 in ' + (data.total_time_sec || 0) + 's)! If ' + data.opponent_name + ' finishes right now, this screen updates automatically — or play another game and we will alert you!';
+        if (title) title.textContent = 'Round ' + data.current_round + ' Complete!';
+        if (desc) desc.textContent = 'You scored +' + (data.round_score || 0) + ' PTS (' + (data.correct_count || 0) + '/3 in ' + (data.total_time_sec || 0) + 's)! Waiting for ' + data.opponent_name + ' to take their turn.';
       }
 
       if (nextBtn) {
-        nextBtn.textContent = '📊 View Match Scoreboard (Or Play Another Game) →';
+        nextBtn.textContent = '📊 View Match Scoreboard →';
         nextBtn.href = lobbyUrl;
       }
 
