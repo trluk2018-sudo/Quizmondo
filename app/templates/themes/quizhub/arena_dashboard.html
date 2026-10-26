@@ -24,9 +24,9 @@
           <span id="soundLabel">AUDIO ON</span>
         </button>
 
-        <!-- PWA Install Button (auto-shown if installable) -->
-        <button type="button" id="pwaInstallBtn" onclick="installPwa()" class="hidden px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 font-black text-xs font-mono uppercase tracking-wider shadow-lg transition transform hover:scale-105">
-          📲 Add App to Phone
+        <!-- PWA Install Button (Always visible on mobile & desktop for 1-tap shortcut!) -->
+        <button type="button" id="pwaInstallBtn" onclick="installPwa()" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 font-black text-xs font-mono uppercase tracking-wider shadow-lg transition transform hover:scale-105 flex items-center gap-1.5">
+          <span>📲</span> <span>Add App to Phone</span>
         </button>
       </div>
     </div>
@@ -231,31 +231,38 @@
       <button type="button" onclick="closeAvatarModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
     </div>
 
-    <form action="{{ url_for('arena.update_profile') }}" method="POST" class="space-y-4 font-mono text-xs">
+    <div id="avatarSavedToast" class="hidden p-3 rounded-xl bg-emerald-950/90 border border-emerald-400/60 text-emerald-300 font-mono text-xs font-bold text-center">
+      ✅ Mascot updated!
+    </div>
+
+    <form id="avatarForm" action="{{ url_for('arena.update_profile') }}" method="POST" class="space-y-4 font-mono text-xs">
       <div>
         <label class="block text-slate-300 font-bold mb-1">Display Name</label>
-        <input type="text" name="display_name" value="{{ player.display_name }}" maxlength="30" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-purple-500/30 text-white focus:outline-none focus:border-cyan-400">
+        <input type="text" id="avatarDisplayNameInput" name="display_name" value="{{ player.display_name }}" maxlength="30" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-purple-500/30 text-white focus:outline-none focus:border-cyan-400">
       </div>
 
       <div>
-        <label class="block text-slate-300 font-bold mb-2">Choose Avatar Mascot</label>
-        <div class="grid grid-cols-2 gap-3">
+        <label class="block text-slate-300 font-bold mb-2">Tap Any Avatar Mascot to Select &amp; Equip</label>
+        <div class="grid grid-cols-2 gap-3" id="avatarCardsGrid">
           {% for av in avatars %}
-          <label class="p-3 rounded-2xl border-2 {% if player.avatar_key == av.key %}border-cyan-400 bg-cyan-950/30{% else %}border-purple-500/20 bg-slate-900/60{% endif %} cursor-pointer flex flex-col items-center gap-1.5 transition hover:border-purple-400">
-            <input type="radio" name="avatar_key" value="{{ av.key }}" class="hidden" {% if player.avatar_key == av.key %}checked{% endif %}>
-            <span class="text-2xl">
+          <label id="avatarCard_{{ av.key }}" onclick="selectAvatarCard('{{ av.key }}', '{{ av.name }}')" class="avatar-card-option p-3 rounded-2xl border-2 {% if player.avatar_key == av.key %}border-cyan-400 bg-cyan-950/40{% else %}border-purple-500/20 bg-slate-900/60{% endif %} cursor-pointer flex flex-col items-center gap-1.5 transition hover:border-cyan-400 relative">
+            <input type="radio" id="avatarRadio_{{ av.key }}" name="avatar_key" value="{{ av.key }}" class="hidden" {% if player.avatar_key == av.key %}checked{% endif %}>
+            <span class="text-3xl">
               {% if av.key == 'quizzy' %}⭐{% elif av.key == 'pixel' %}🤖{% elif av.key == 'nova' %}🚀{% else %}🦉{% endif %}
             </span>
             <span class="font-bold text-white text-xs">{{ av.name }}</span>
             <span class="text-[10px] text-slate-400">{{ av.badge }}</span>
+            <span id="avatarBadge_{{ av.key }}" class="mt-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase {% if player.avatar_key == av.key %}bg-cyan-500 text-slate-950{% else %}bg-slate-800 text-slate-400{% endif %}">
+              {% if player.avatar_key == av.key %}✓ EQUIPPED{% else %}TAP TO EQUIP{% endif %}
+            </span>
           </label>
           {% endfor %}
         </div>
       </div>
 
       <div class="pt-2 flex justify-end gap-3">
-        <button type="button" onclick="closeAvatarModal()" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 font-bold">Cancel</button>
-        <button type="submit" class="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-slate-950 font-black uppercase">Save Mascot</button>
+        <button type="button" onclick="closeAvatarModal()" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 font-bold">Close</button>
+        <button type="submit" class="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-slate-950 font-black uppercase">Save Profile</button>
       </div>
     </form>
   </div>
@@ -285,25 +292,62 @@ function closeAvatarModal() {
   document.getElementById('avatarModal').classList.add('hidden');
 }
 
-// PWA Install prompt listener
-var deferredPrompt;
-window.addEventListener('beforeinstallprompt', function(e) {
-  e.preventDefault();
-  deferredPrompt = e;
-  var btn = document.getElementById('pwaInstallBtn');
-  if (btn) btn.classList.remove('hidden');
-});
+function selectAvatarCard(avatarKey, avatarName) {
+  var radio = document.getElementById('avatarRadio_' + avatarKey);
+  if (radio) radio.checked = true;
 
-function installPwa() {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(function(choiceResult) {
-      if (choiceResult.outcome === 'accepted') {
-        document.getElementById('pwaInstallBtn').classList.add('hidden');
-      }
-      deferredPrompt = null;
-    });
+  var allCards = document.querySelectorAll('.avatar-card-option');
+  allCards.forEach(function(card) {
+    card.className = 'avatar-card-option p-3 rounded-2xl border-2 border-purple-500/20 bg-slate-900/60 cursor-pointer flex flex-col items-center gap-1.5 transition hover:border-cyan-400 relative';
+  });
+  var activeCard = document.getElementById('avatarCard_' + avatarKey);
+  if (activeCard) {
+    activeCard.className = 'avatar-card-option p-3 rounded-2xl border-2 border-cyan-400 bg-cyan-950/40 cursor-pointer flex flex-col items-center gap-1.5 transition hover:border-cyan-400 relative';
   }
+
+  ['quizzy', 'pixel', 'nova', 'hoot'].forEach(function(k) {
+    var b = document.getElementById('avatarBadge_' + k);
+    if (b) {
+      if (k === avatarKey) {
+        b.className = 'mt-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-cyan-500 text-slate-950';
+        b.textContent = '✓ EQUIPPED';
+      } else {
+        b.className = 'mt-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-slate-800 text-slate-400';
+        b.textContent = 'TAP TO EQUIP';
+      }
+    }
+  });
+
+  var displayNameInput = document.getElementById('avatarDisplayNameInput');
+  var dispName = displayNameInput ? displayNameInput.value : '';
+  var formData = new FormData();
+  formData.append('avatar_key', avatarKey);
+  if (dispName) formData.append('display_name', dispName);
+
+  var toast = document.getElementById('avatarSavedToast');
+  if (toast) {
+    toast.textContent = '✨ Equipping ' + avatarName + '...';
+    toast.classList.remove('hidden');
+  }
+
+  fetch("{{ url_for('arena.update_profile') }}", {
+    method: 'POST',
+    headers: { 'Accept': 'application/json' },
+    body: formData
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (toast) {
+      toast.textContent = '✅ ' + avatarName + ' Equipped! Refreshing mascot...';
+    }
+    setTimeout(function() {
+      window.location.reload();
+    }, 450);
+  })
+  .catch(function() {
+    var form = document.getElementById('avatarForm');
+    if (form) form.submit();
+  });
 }
 
 // Register Service Worker

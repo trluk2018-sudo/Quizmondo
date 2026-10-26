@@ -7,24 +7,25 @@
   <!-- Glowing ambient nebula -->
   <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[350px] bg-gradient-to-r from-purple-600/20 via-pink-600/15 to-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
 
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 relative z-10 space-y-8">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 relative z-10 space-y-6">
 
     <!-- Top Manager Header Bar -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-purple-500/20 pb-5">
       <div>
-        <div class="flex items-center gap-2">
-          <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-purple-400 bg-purple-950/80 border border-purple-800/60 px-3 py-1 rounded-full">
-            🎙️ Live Host Console
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-purple-300 bg-purple-950/90 border border-purple-500/50 px-3 py-1 rounded-full flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            <span>🎙️ Live Quizmaster Console (Auto-Sync Active)</span>
           </span>
-          <span class="text-[10px] font-mono text-slate-400">
-            PIN: <strong class="text-cyan-300">{{ league.pin_code }}</strong>
+          <span class="text-xs font-mono bg-amber-950/80 border border-amber-400/60 text-amber-300 px-3 py-1 rounded-full font-bold shadow">
+            🔑 Venue / Host Room PIN: <strong class="text-white tracking-widest">{{ league.pin_code }}</strong>
           </span>
         </div>
-        <h1 class="text-2xl sm:text-3xl font-black text-white font-mono mt-1">
+        <h1 class="text-2xl sm:text-3xl font-black text-white font-mono mt-2">
           {{ league.name }}
         </h1>
         <p class="text-xs text-slate-400 font-mono">
-          {{ league.venue_name }} • Manage teams, bouncer approvals, timed questions, and bar promos.
+          {{ league.venue_name }} • Give PIN <strong class="text-amber-300">{{ league.pin_code }}</strong> to tables at the venue (or approve their check-in slips below).
         </p>
       </div>
 
@@ -32,8 +33,8 @@
         <a href="{{ url_for('arena.league_tv', slug=league.slug) }}" target="_blank" class="px-4 py-2.5 rounded-xl bg-slate-900 border border-cyan-400/50 hover:bg-slate-800 text-cyan-300 font-bold transition flex items-center gap-1.5 shadow" title="Open TV Projector View in New Tab">
           <span>📺 Launch TV Display</span>
         </a>
-        <a href="{{ url_for('arena.league_room', slug=league.slug) }}" target="_blank" class="px-3.5 py-2.5 rounded-xl bg-slate-900 border border-purple-500/30 hover:border-purple-400 text-slate-300 transition">
-          <span>📱 Player Buzzer View</span>
+        <a href="{{ url_for('arena.league_lounge', slug=league.slug) }}" target="_blank" class="px-3.5 py-2.5 rounded-xl bg-slate-900 border border-purple-500/30 hover:border-purple-400 text-slate-300 transition">
+          <span>📱 Player Check-In Page</span>
         </a>
         <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="inline">
           <input type="hidden" name="action" value="manager_logout">
@@ -56,9 +57,9 @@
     {% endwith %}
 
     <!-- Navigation Tabs -->
-    <div class="flex items-center gap-2 border-b border-purple-500/20 pb-1 font-mono text-xs">
+    <div class="flex flex-wrap items-center gap-2 border-b border-purple-500/20 pb-1 font-mono text-xs">
       <button type="button" onclick="switchManagerTab('remote', this)" id="tabBtnRemote" class="tab-btn px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold border border-purple-400 shadow transition">
-        🎮 Live Remote &amp; Bouncer
+        🎮 Live Remote, Bouncer &amp; Progress
       </button>
       <button type="button" onclick="switchManagerTab('config', this)" id="tabBtnConfig" class="tab-btn px-4 py-2.5 rounded-xl bg-slate-900 text-slate-300 hover:text-white border border-purple-500/30 transition">
         ⚙️ Tournament Rules &amp; Rounds
@@ -69,102 +70,211 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- TAB 1: LIVE HOST REMOTE & BOUNCER APPROVAL                          -->
+    <!-- TAB 1: LIVE HOST REMOTE, GUIDED WORKFLOW & TABLE TRACKER            -->
     <!-- =================================================================== -->
     <div id="tabRemote" class="space-y-6">
 
+      <!-- QUIZMASTER STEP-BY-STEP GUIDE BAR -->
+      <div class="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-purple-950/70 via-slate-950 to-indigo-950/70 border border-purple-500/40 font-mono space-y-3 shadow-xl">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-black uppercase tracking-wider text-cyan-300 flex items-center gap-2">
+            <span>🧭</span> QUIZMASTER STEP-BY-STEP PLAYBOOK
+          </span>
+          <span class="text-[10px] text-emerald-400 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Live Auto-Refresh Every 2.5s
+          </span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-2.5 text-xs">
+          <div id="stepCard1" class="p-3 rounded-2xl border {% if approved_teams|length == 0 or pending_teams|length > 0 %}bg-amber-950/50 border-amber-400 text-white shadow-lg{% else %}bg-slate-900/70 border-purple-500/20 text-slate-400{% endif %}">
+            <div class="font-black text-[11px] text-amber-400">STEP 1 • CHECK IN TABLES</div>
+            <div class="text-[11px] mt-0.5">Approve tables in the Bouncer Queue below (or add paper slips).</div>
+          </div>
+          <div id="stepCard2" class="p-3 rounded-2xl border {% if approved_teams|length > 0 and state.round_status == 'waiting' %}bg-emerald-950/50 border-emerald-400 text-white shadow-lg{% else %}bg-slate-900/70 border-purple-500/20 text-slate-400{% endif %}">
+            <div class="font-black text-[11px] text-emerald-400">STEP 2 • START ROUND</div>
+            <div class="text-[11px] mt-0.5">Click <strong>▶ Start Round</strong> to send questions to all approved phones.</div>
+          </div>
+          <div id="stepCard3" class="p-3 rounded-2xl border {% if state.round_status == 'active' and not can_advance %}bg-cyan-950/50 border-cyan-400 text-white shadow-lg{% else %}bg-slate-900/70 border-purple-500/20 text-slate-400{% endif %}">
+            <div class="font-black text-[11px] text-cyan-400">STEP 3 • ANSWERS &amp; LOCK</div>
+            <div class="text-[11px] mt-0.5">Watch tables submit below, or click <strong>⏱ Lock / Time's Up</strong> to end round.</div>
+          </div>
+          <div id="stepCard4" class="p-3 rounded-2xl border {% if can_advance %}bg-purple-950/60 border-purple-400 text-white shadow-lg{% else %}bg-slate-900/70 border-purple-500/20 text-slate-400{% endif %}">
+            <div class="font-black text-[11px] text-purple-300">STEP 4 • REVEAL &amp; NEXT</div>
+            <div class="text-[11px] mt-0.5">Click <strong>📋 Reveal Answers</strong> / <strong>🍺 Bar Break</strong>, then <strong>⏩ Advance Round</strong>.</div>
+          </div>
+        </div>
+      </div>
+
       <!-- MASTER GAME STATE STATUS BANNER -->
-      <div class="p-5 sm:p-6 rounded-3xl bg-slate-950/90 border-2 border-purple-500/40 shadow-2xl space-y-4 font-mono">
+      <div class="p-5 sm:p-6 rounded-3xl bg-slate-950/90 border-2 border-purple-500/40 shadow-2xl space-y-5 font-mono">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-purple-500/20 pb-4">
           <div>
             <span class="text-[10px] text-slate-400 uppercase tracking-widest block">Active Tournament Phase</span>
             <div class="text-xl sm:text-2xl font-black text-white flex items-center gap-2 mt-0.5">
-              <span>ROUND {{ state.current_round }} / {{ config.total_rounds }}</span>
-              <span class="text-sm font-normal text-purple-300">• {{ active_round_info.name if active_round_info else 'Round ' ~ state.current_round }}</span>
+              <span id="hdrRoundText">ROUND {{ state.current_round }} / {{ config.total_rounds }}</span>
+              <span class="text-sm font-normal text-purple-300" id="hdrRoundName">• {{ active_round_info.name if active_round_info else 'Round ' ~ state.current_round }}</span>
             </div>
           </div>
 
           <div class="flex items-center gap-2">
-            <span class="px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border {% if state.round_status == 'active' %}bg-emerald-500/20 text-emerald-300 border-emerald-500/40 animate-pulse{% elif state.round_status == 'break' %}bg-amber-500/20 text-amber-300 border-amber-500/40{% elif state.round_status == 'finished' %}bg-purple-500/20 text-purple-300 border-purple-500/40{% else %}bg-slate-800 text-slate-300 border-slate-700{% endif %}">
+            <span id="hdrPhaseBadge" class="px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border {% if state.round_status == 'active' %}bg-emerald-500/20 text-emerald-300 border-emerald-500/40 animate-pulse{% elif state.round_status == 'break' %}bg-amber-500/20 text-amber-300 border-amber-500/40{% elif state.round_status == 'closed' %}bg-cyan-500/20 text-cyan-300 border-cyan-500/40{% elif state.round_status == 'finished' %}bg-purple-500/20 text-purple-300 border-purple-500/40{% else %}bg-slate-800 text-slate-300 border-slate-700{% endif %}">
               ● Phase: {{ state.round_status|upper }}
             </span>
-            {% if state.answers_revealed %}
-            <span class="px-3 py-1.5 rounded-full text-xs font-bold uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+            <span id="hdrRevealedBadge" class="{% if not state.answers_revealed %}hidden{% endif %} px-3 py-1.5 rounded-full text-xs font-bold uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
               ✓ Answers Revealed
             </span>
-            {% endif %}
           </div>
         </div>
 
         <!-- Master Remote Buttons with High-Contrast Themed Roles -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
           
-          <!-- Start Round Questions: Emerald Green -->
-          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST">
+          <!-- 1. Start Round Questions: Emerald Green -->
+          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="mgr-action-form">
             <input type="hidden" name="action" value="start_round">
-            <button type="submit" class="w-full py-4 px-3 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-950/40 flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer" style="touch-action: manipulation;" title="Broadcasts questions to all connected table phones">
+            <button type="submit" id="btnStartRound" class="w-full py-4 px-3 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-950/40 flex flex-col items-center justify-center gap-1 transition active:scale-95 cursor-pointer {% if state.round_status == 'waiting' and approved_teams|length > 0 %}ring-4 ring-emerald-400/50 animate-pulse{% endif %}">
               <span>▶ Start Round {{ state.current_round }}</span>
+              <span class="text-[9px] font-bold opacity-80">Step 2: Send Questions</span>
             </button>
           </form>
 
-          <!-- Close Round / Time's Up: Crimson Rose -->
-          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST">
+          <!-- 2. Lock / Time's Up (THE ONLY BUTTON THAT ENDS AN ACTIVE ROUND EARLY): Crimson Rose -->
+          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="mgr-action-form">
             <input type="hidden" name="action" value="close_round">
-            <button type="submit" class="w-full py-4 px-3 rounded-2xl bg-gradient-to-r from-rose-700 via-red-600 to-rose-700 hover:from-rose-600 hover:to-red-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-rose-950/40 flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer" style="touch-action: manipulation;" title="Locks this round and freezes partial scores">
+            <button type="submit" id="btnCloseRound" {% if state.round_status != 'active' %}disabled{% endif %} class="w-full py-4 px-3 rounded-2xl {% if state.round_status == 'active' %}bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white shadow-lg shadow-rose-950/40 cursor-pointer{% else %}bg-slate-900 border border-slate-800 text-slate-600 cursor-not-allowed{% endif %} font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition active:scale-95">
               <span>⏱ Lock / Time's Up</span>
+              <span class="text-[9px] font-bold opacity-80">Ends Current Round &amp; Saves Partial</span>
             </button>
           </form>
 
-          <!-- Reveal Answers: Cyan Aqua -->
-          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST">
+          <!-- 3. Reveal Answers: Cyan Aqua -->
+          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="mgr-action-form">
             <input type="hidden" name="action" value="reveal_answers">
-            <button type="submit" class="w-full py-4 px-3 rounded-2xl bg-gradient-to-r from-cyan-500 via-sky-500 to-teal-400 hover:from-cyan-400 hover:to-sky-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-cyan-950/40 flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer" style="touch-action: manipulation;" title="Reveals answer keys on phone screens and TV projector">
+            <button type="submit" id="btnRevealAnswers" {% if not can_advance %}disabled{% endif %} class="w-full py-4 px-3 rounded-2xl {% if can_advance %}bg-gradient-to-r from-cyan-500 via-sky-500 to-teal-400 hover:from-cyan-400 hover:to-sky-400 text-slate-950 shadow-lg shadow-cyan-950/40 cursor-pointer{% else %}bg-slate-900 border border-slate-800 text-slate-600 cursor-not-allowed{% endif %} font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition active:scale-95">
               <span>📋 Reveal Answers</span>
+              <span class="text-[9px] font-bold opacity-80">Show Keys on Phones &amp; TV</span>
             </button>
           </form>
 
-          <!-- Start Bar Break & Interval Special: Warm Amber / Orange -->
-          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST">
+          <!-- 4. Start Bar Break & Interval Special: Warm Amber / Orange -->
+          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="mgr-action-form">
             <input type="hidden" name="action" value="start_break">
-            <button type="submit" class="w-full py-4 px-3 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-950/40 flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer" style="touch-action: manipulation;" title="Starts Interval Countdown & Promotes Bar Specials">
+            <button type="submit" id="btnStartBreak" {% if not can_advance %}disabled{% endif %} class="w-full py-4 px-3 rounded-2xl {% if can_advance %}bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-slate-950 shadow-lg shadow-amber-950/40 cursor-pointer{% else %}bg-slate-900 border border-slate-800 text-slate-600 cursor-not-allowed{% endif %} font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition active:scale-95">
               <span>🍺 Start Bar Break</span>
+              <span class="text-[9px] font-bold opacity-80">Interval Promo &amp; Scores</span>
             </button>
           </form>
 
         </div>
 
-        <!-- Safe Progression Bar: Gated Against Accidental Mid-Round Clicks -->
+        <!-- ========================================================================= -->
+        <!-- LIVE TABLE SUBMISSION PROGRESS BOX (Real-time AJAX Tracker)               -->
+        <!-- ========================================================================= -->
+        <div class="p-4 sm:p-5 rounded-2xl bg-slate-900/90 border border-purple-500/30 space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div class="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+              <span>📊</span>
+              <span id="trackerHeadline">ROUND {{ state.current_round }} LIVE TABLE SUBMISSIONS ({{ completed_tables|length }} / {{ approved_teams|length }} TABLES IN)</span>
+            </div>
+            <span id="trackerSubtext" class="text-[11px] font-bold {% if can_advance %}text-emerald-400{% else %}text-amber-300{% endif %}">
+              {% if approved_teams|length == 0 %}
+                ⏳ Waiting for tables to check in &amp; be approved
+              {% elif can_advance %}
+                ✅ All tables locked in! Ready to Reveal Answers or Advance to Next Round!
+              {% elif state.round_status == 'waiting' %}
+                ⏸️ Click "▶ Start Round {{ state.current_round }}" above to begin
+              {% else %}
+                ⏳ Waiting for {{ approved_teams|length - completed_tables|length }} more table(s) to finish...
+              {% endif %}
+            </span>
+          </div>
+
+          <!-- Progress Bar -->
+          {% set pct = ((completed_tables|length / (approved_teams|length if approved_teams|length > 0 else 1)) * 100)|round|int %}
+          <div class="w-full h-3 rounded-full bg-slate-950 border border-purple-500/30 overflow-hidden">
+            <div id="submissionProgressBar" class="h-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-teal-500 transition-all duration-500" style="width: {{ pct if approved_teams|length > 0 else 0 }}%;"></div>
+          </div>
+
+          <!-- Live Per-Table Submission Status Pills -->
+          <div id="liveSubmissionGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pt-1">
+            {% if approved_teams %}
+              {% for team in approved_teams %}
+              {% set r_score = team.get('round_' ~ state.current_round) %}
+              {% set p_q = team.get('progress_q_' ~ state.current_round, 0) %}
+              {% set p_score = team.get('partial_round_' ~ state.current_round, 0) %}
+              <div class="p-3 rounded-xl border {% if r_score is not none %}bg-emerald-950/40 border-emerald-500/50{% elif state.round_status == 'active' %}bg-amber-950/30 border-amber-500/40{% else %}bg-slate-950/70 border-purple-500/20{% endif %} flex items-center justify-between gap-2">
+                <div class="truncate">
+                  <div class="text-xs font-bold text-white truncate">Table {{ team.table }} • {{ team.name }}</div>
+                  <div class="text-[10px] text-slate-400">Total: {{ team.score or 0 }} PTS</div>
+                </div>
+                <div class="shrink-0 text-right">
+                  {% if r_score is not none %}
+                  <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-black block">
+                    ✅ SUBMITTED (+{{ r_score }})
+                  </span>
+                  {% elif state.round_status == 'active' %}
+                  <span class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold block animate-pulse">
+                    ⏳ {% if p_q > 0 %}Q {{ p_q }}/5 ({{ p_score }} pts){% else %}Answering...{% endif %}
+                  </span>
+                  {% else %}
+                  <span class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 text-[10px] font-bold block">
+                    🕒 Ready
+                  </span>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="col-span-full py-3 text-center text-xs text-slate-500 italic">
+                No approved tables yet. Approve tables in the Digital Bouncer Queue below!
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- STRICTLY GATED PROGRESSION BAR: HIDDEN UNTIL ALL TABLES SUBMIT OR LOCKED  -->
+        <!-- ========================================================================= -->
         <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-purple-500/20 text-xs">
           
-          {% if state.round_status == 'active' and not can_advance %}
-          <!-- Round Active Guard: Button is hidden to prevent accidental premature skips -->
-          <div class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-950/50 border border-amber-500/50 text-amber-300 font-bold flex items-center gap-2 shadow-inner">
-            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
-            <span>🔒 Round {{ state.current_round }} Live: {{ completed_tables|length }}/{{ approved_teams|length }} tables finished. Click "Lock / Time's Up" before advancing.</span>
-          </div>
-          {% else %}
-            {% if is_final_round %}
-            <!-- Final Round: Explicit Tournament Crown & Finish Confirmation -->
-            <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" onsubmit="return confirm('Crown the tournament champion and finalize all scores? This completes the pub quiz.');" class="w-full sm:w-auto">
-              <input type="hidden" name="action" value="advance_round">
-              <button type="submit" class="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black uppercase tracking-wider shadow-xl shadow-amber-500/20 flex items-center justify-center gap-2 transition active:scale-95">
-                <span>🏆 Finalize Tournament &amp; Crown Winner</span>
-              </button>
-            </form>
-            {% else %}
-            <!-- Normal Next Round Advance (Distinct Royal Violet / Indigo) -->
-            <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="w-full sm:w-auto">
-              <input type="hidden" name="action" value="advance_round">
-              <button type="submit" class="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-black uppercase tracking-wider shadow-xl shadow-purple-950/40 flex items-center justify-center gap-2 transition active:scale-95">
-                <span>⏩ Advance to Next Round (Round {{ state.current_round + 1 }}) &rarr;</span>
-              </button>
-            </form>
-            {% endif %}
-          {% endif %}
+          <div id="progressionGateContainer" class="w-full sm:w-auto">
+            <!-- LOCKED GUARD MESSAGE (Shown whenever can_advance is False) -->
+            <div id="advanceLockedBanner" class="{% if can_advance %}hidden{% endif %} w-full sm:w-auto px-4 py-3 rounded-xl bg-amber-950/50 border border-amber-500/50 text-amber-300 font-bold flex items-center gap-2.5 shadow-inner">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping shrink-0"></span>
+              <span id="advanceLockedText">
+                {% if approved_teams|length == 0 %}
+                  🔒 Advance Locked: Approve at least 1 table and start Round {{ state.current_round }} first.
+                {% elif state.round_status == 'waiting' %}
+                  🔒 Advance Locked: Round {{ state.current_round }} has not been played yet! Click "▶ Start Round {{ state.current_round }}" above.
+                {% else %}
+                  🔒 Round {{ state.current_round }} Live ({{ completed_tables|length }}/{{ approved_teams|length }} tables submitted). "Advance to Next Round" unlocks automatically once all tables submit or when you click "⏱ Lock / Time's Up".
+                {% endif %}
+              </span>
+            </div>
 
-          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <!-- UNLOCKED ADVANCE BUTTON (Strictly hidden until all tables submit or round is locked!) -->
+            <div id="advanceUnlockedBox" class="{% if not can_advance %}hidden{% endif %} w-full sm:w-auto">
+              {% if is_final_round %}
+              <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" onsubmit="return confirm('Crown the tournament champion and finalize all scores? This completes the pub quiz.');" class="mgr-action-form w-full sm:w-auto">
+                <input type="hidden" name="action" value="advance_round">
+                <button type="submit" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black uppercase tracking-wider shadow-xl shadow-amber-500/20 flex items-center justify-center gap-2 transition active:scale-95">
+                  <span>🏆 Finalize Tournament &amp; Crown Winner</span>
+                </button>
+              </form>
+              {% else %}
+              <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="mgr-action-form w-full sm:w-auto">
+                <input type="hidden" name="action" value="advance_round">
+                <button type="submit" id="btnAdvanceRound" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-black uppercase tracking-wider shadow-xl shadow-purple-950/40 flex items-center justify-center gap-2 transition active:scale-95 ring-2 ring-purple-400/50">
+                  <span>⏩ Advance to Next Round (Round {{ state.current_round + 1 }}) &rarr;</span>
+                </button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 w-full sm:w-auto shrink-0">
             <!-- Clear All Tables -->
-            <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" onsubmit="return confirm('Clear all registered tables?');" class="w-full sm:w-auto">
+            <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" onsubmit="return confirm('Clear all registered tables?');" class="mgr-action-form w-full sm:w-auto">
               <input type="hidden" name="action" value="clear_tables">
               <button type="submit" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 hover:border-amber-500 text-slate-400 hover:text-amber-300 font-bold uppercase transition">
                 <span>🧹 Clear Tables</span>
@@ -172,7 +282,7 @@
             </form>
 
             <!-- Reset Tournament -->
-            <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" onsubmit="return confirm('Reset tournament to Round 1 and clear all tables?');" class="w-full sm:w-auto">
+            <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" onsubmit="return confirm('Reset tournament to Round 1 and clear all tables?');" class="mgr-action-form w-full sm:w-auto">
               <input type="hidden" name="action" value="reset_quiz">
               <button type="submit" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 hover:border-rose-500 text-slate-400 hover:text-rose-300 font-bold uppercase transition">
                 <span>🔄 Reset Tournament</span>
@@ -183,73 +293,65 @@
       </div>
 
       <!-- BOUNCER: PENDING TABLE APPROVALS (ANTI-CHEATING GATED QUEUE) -->
-      <div class="p-5 sm:p-6 rounded-3xl bg-slate-950/90 border border-amber-500/40 shadow-xl space-y-4 font-mono">
+      <div class="p-5 sm:p-6 rounded-3xl bg-slate-950/90 border-2 border-amber-500/40 shadow-xl space-y-4 font-mono">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-500/20 pb-3">
           <div>
             <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold uppercase border border-amber-500/30">
-              <span>🛡️</span> Digital Bouncer Queue
+              <span>🛡️</span> Digital Bouncer Queue (Live Auto-Updating)
             </div>
             <h2 class="text-lg font-black text-white mt-1">
-              Table Registration Approvals ({{ pending_teams|length }} Pending)
+              Table Registration Approvals (<span id="pendingCountBadge">{{ pending_teams|length }}</span> Pending)
             </h2>
             <p class="text-xs text-slate-400">
-              Only approved tables receive questions and appear on the big screen scoreboard. Blocks online intruders.
+              When players check in on their phones, they appear here automatically within 2 seconds. Click <strong>Approve</strong> to unlock their buzzer and issue their room access!
             </p>
           </div>
 
+          <div id="approveAllContainer" class="{% if not pending_teams %}hidden{% endif %}">
+            <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="mgr-action-form">
+              <input type="hidden" name="action" value="approve_all">
+              <button type="submit" class="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition active:scale-95 flex items-center gap-1.5">
+                <span>✅ Approve All Pending Tables</span>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div id="bouncerQueueBody">
           {% if pending_teams %}
-          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST">
-            <input type="hidden" name="action" value="approve_all">
-            <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider shadow transition active:scale-95 flex items-center gap-1.5">
-              <span>✅ Approve All Pending</span>
-            </button>
-          </form>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {% for team in pending_teams %}
+            <div class="p-4 rounded-2xl bg-amber-950/30 border border-amber-500/40 flex items-center justify-between gap-3">
+              <div>
+                <div class="text-xs font-bold text-amber-300">
+                  Table {{ team.table }} • {{ team.name }}
+                </div>
+                <div class="text-[10px] text-slate-400 mt-0.5">
+                  {{ team.members or 4 }} Players • Awaiting host verification
+                </div>
+              </div>
+              
+              <div class="flex items-center gap-2">
+                <button type="button" onclick="quickTeamAction('approve_team', '{{ team.table|e }}', '{{ team.name|e }}')" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider transition active:scale-95">
+                  ✓ Approve
+                </button>
+                <button type="button" onclick="quickTeamAction('reject_team', '{{ team.table|e }}', '{{ team.name|e }}')" class="px-3 py-2 rounded-xl bg-slate-900 border border-rose-500/40 text-rose-300 hover:bg-rose-950 text-xs font-bold uppercase transition active:scale-95">
+                  ✕ Reject
+                </button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="py-6 text-center text-xs text-slate-500 italic">
+            No pending table requests right now. New table check-ins will pop up here automatically!
+          </div>
           {% endif %}
         </div>
 
-        {% if pending_teams %}
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {% for team in pending_teams %}
-          <div class="p-4 rounded-2xl bg-amber-950/30 border border-amber-500/40 flex items-center justify-between gap-3">
-            <div>
-              <div class="text-xs font-bold text-amber-300">
-                Table {{ team.table }} • {{ team.name }}
-              </div>
-              <div class="text-[10px] text-slate-400 mt-0.5">
-                {{ team.members or 4 }} Players • Awaiting verification
-              </div>
-            </div>
-            
-            <div class="flex items-center gap-2">
-              <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST">
-                <input type="hidden" name="action" value="approve_team">
-                <input type="hidden" name="table" value="{{ team.table }}">
-                <input type="hidden" name="team_name" value="{{ team.name }}">
-                <button type="submit" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider transition active:scale-95" title="Verify this table is in the pub">
-                  Approve
-                </button>
-              </form>
-              <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST">
-                <input type="hidden" name="action" value="reject_team">
-                <input type="hidden" name="table" value="{{ team.table }}">
-                <input type="hidden" name="team_name" value="{{ team.name }}">
-                <button type="submit" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-rose-500/40 text-rose-300 hover:bg-rose-950 text-xs font-bold uppercase transition active:scale-95" title="Reject intruder">
-                  Reject
-                </button>
-              </form>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-        {% else %}
-        <div class="py-6 text-center text-xs text-slate-500 italic">
-          No pending table requests. All registered tables are approved.
-        </div>
-        {% endif %}
-
         <!-- Manual Table / Paper Slip Entry -->
         <div class="pt-4 border-t border-purple-500/20">
-          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="flex flex-col sm:flex-row items-center gap-3">
+          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="mgr-action-form flex flex-col sm:flex-row items-center gap-3">
             <input type="hidden" name="action" value="add_manual_team">
             <span class="text-xs text-slate-300 font-bold whitespace-nowrap">
               + Add Manual Table / Paper Slip:
@@ -279,40 +381,36 @@
       <div class="p-5 sm:p-6 rounded-3xl bg-slate-950/90 border border-purple-500/30 shadow-xl space-y-4 font-mono">
         <div class="flex items-center justify-between border-b border-purple-500/20 pb-3">
           <div class="text-base font-black text-white flex items-center gap-2">
-            <span>📋</span> APPROVED IN-VENUE TEAMS ({{ approved_teams|length }} / {{ config.max_tables }} Tables Max)
+            <span>📋</span> APPROVED TEAMS ROSTER (<span id="approvedCountBadge">{{ approved_teams|length }}</span> / {{ config.max_tables }} Tables Max)
           </div>
-          <span class="text-xs text-slate-400">Score Tracker</span>
+          <span class="text-xs text-slate-400">Live Standings</span>
         </div>
 
-        {% if approved_teams %}
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-          {% for team in approved_teams %}
-          <div class="p-3.5 rounded-2xl bg-slate-900/80 border border-purple-500/20 flex items-center justify-between">
-            <div>
-              <div class="text-xs font-bold text-white">
-                Table {{ team.table }} • {{ team.name }}
+        <div id="approvedRosterBody">
+          {% if approved_teams %}
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {% for team in approved_teams %}
+            <div class="p-3.5 rounded-2xl bg-slate-900/80 border border-purple-500/20 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-white">
+                  Table {{ team.table }} • {{ team.name }}
+                </div>
+                <div class="text-[10px] text-cyan-400 mt-0.5">
+                  {{ team.score or 0 }} Points (Rank #{{ team.rank or loop.index }})
+                </div>
               </div>
-              <div class="text-[10px] text-cyan-400 mt-0.5">
-                {{ team.score or 0 }} Points (Rank #{{ team.rank or loop.index }})
-              </div>
-            </div>
-            
-            <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" onsubmit="return confirm('Remove table from match?');">
-              <input type="hidden" name="action" value="reject_team">
-              <input type="hidden" name="table" value="{{ team.table }}">
-              <input type="hidden" name="team_name" value="{{ team.name }}">
-              <button type="submit" class="text-slate-500 hover:text-rose-400 text-xs transition" title="Kick table">
+              <button type="button" onclick="if(confirm('Remove table from match?')) quickTeamAction('reject_team', '{{ team.table|e }}', '{{ team.name|e }}')" class="text-slate-500 hover:text-rose-400 text-xs transition px-2 py-1" title="Remove table">
                 ✕
               </button>
-            </form>
+            </div>
+            {% endfor %}
           </div>
-          {% endfor %}
+          {% else %}
+          <div class="py-6 text-center text-xs text-slate-500 italic">
+            No approved teams yet. Waiting for tables to check in or submit paper slips.
+          </div>
+          {% endif %}
         </div>
-        {% else %}
-        <div class="py-6 text-center text-xs text-slate-500 italic">
-          No approved teams yet. Waiting for pub tables to register or submit paper slips.
-        </div>
-        {% endif %}
       </div>
 
     </div>
@@ -331,7 +429,7 @@
           </p>
         </div>
 
-        <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="space-y-5 text-xs">
+        <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="mgr-action-form space-y-5 text-xs">
           <input type="hidden" name="action" value="save_config">
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -418,7 +516,7 @@
           </p>
         </div>
 
-        <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="space-y-5 text-xs">
+        <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="mgr-action-form space-y-5 text-xs">
           <input type="hidden" name="action" value="save_config">
           <input type="hidden" name="total_rounds" value="{{ config.total_rounds or 5 }}">
           <input type="hidden" name="max_tables" value="{{ config.max_tables or 20 }}">
@@ -518,6 +616,16 @@
 <div id="toastBox" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
 <script>
+var leagueSlug = "{{ league.slug }}";
+var actionUrl = "{{ url_for('arena.league_manager_action', slug=league.slug) }}";
+var currentRoundNum = {{ state.current_round }};
+var totalRoundsConfig = {{ config.total_rounds or 5 }};
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 function showToast(msg, isError) {
   var box = document.getElementById('toastBox');
   if (!box) return;
@@ -546,9 +654,233 @@ function switchManagerTab(tabKey, btn) {
   if (tabKey === 'promos') document.getElementById('tabPromos').classList.remove('hidden');
 }
 
+function quickTeamAction(actionName, tableNum, teamName) {
+  var fd = new FormData();
+  fd.append('action', actionName);
+  fd.append('table', tableNum);
+  fd.append('team_name', teamName);
+
+  fetch(actionUrl, {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+    body: fd
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data && data.success) {
+      showToast(data.message || 'Updated!');
+      pollManagerState();
+    } else {
+      showToast((data && data.error) || 'Action failed', true);
+    }
+  })
+  .catch(function() { window.location.reload(); });
+}
+
+// Live AJAX Poller for Quizmaster Console (Updates Bouncer Queue, Table Submissions & Progression Gate automatically!)
+function pollManagerState() {
+  fetch('/arena/leagues/' + encodeURIComponent(leagueSlug) + '/state?t=' + Date.now(), { cache: 'no-store' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data || !data.success) return;
+
+      // If round changed on server, reload to sync round headers
+      if (data.current_round !== currentRoundNum) {
+        window.location.reload();
+        return;
+      }
+
+      var allTeams = data.teams || [];
+      var pendingTeams = allTeams.filter(function(t) { return t.status === 'pending'; });
+      var approvedTeams = allTeams.filter(function(t) { return t.status !== 'pending'; });
+      var completedTables = approvedTeams.filter(function(t) {
+        return t['round_' + data.current_round] !== undefined && t['round_' + data.current_round] !== null;
+      });
+
+      var canAdvance = approvedTeams.length > 0 && (
+        completedTables.length >= approvedTeams.length ||
+        data.round_status === 'closed' ||
+        data.round_status === 'break' ||
+        data.round_status === 'finished'
+      );
+
+      // 1. Update Phase Badge
+      var phaseBadge = document.getElementById('hdrPhaseBadge');
+      if (phaseBadge) {
+        phaseBadge.textContent = '● Phase: ' + String(data.round_status || 'waiting').toUpperCase();
+      }
+      var revBadge = document.getElementById('hdrRevealedBadge');
+      if (revBadge) {
+        if (data.answers_revealed) revBadge.classList.remove('hidden');
+        else revBadge.classList.add('hidden');
+      }
+
+      // 2. Enable / Disable Action Buttons based on live state
+      var btnClose = document.getElementById('btnCloseRound');
+      if (btnClose) {
+        btnClose.disabled = (data.round_status !== 'active');
+        btnClose.className = 'w-full py-4 px-3 rounded-2xl ' + (data.round_status === 'active'
+          ? 'bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white shadow-lg shadow-rose-950/40 cursor-pointer'
+          : 'bg-slate-900 border border-slate-800 text-slate-600 cursor-not-allowed') + ' font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition active:scale-95';
+      }
+
+      var btnRev = document.getElementById('btnRevealAnswers');
+      if (btnRev) {
+        btnRev.disabled = !canAdvance;
+        btnRev.className = 'w-full py-4 px-3 rounded-2xl ' + (canAdvance
+          ? 'bg-gradient-to-r from-cyan-500 via-sky-500 to-teal-400 hover:from-cyan-400 hover:to-sky-400 text-slate-950 shadow-lg shadow-cyan-950/40 cursor-pointer'
+          : 'bg-slate-900 border border-slate-800 text-slate-600 cursor-not-allowed') + ' font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition active:scale-95';
+      }
+
+      var btnBrk = document.getElementById('btnStartBreak');
+      if (btnBrk) {
+        btnBrk.disabled = !canAdvance;
+        btnBrk.className = 'w-full py-4 px-3 rounded-2xl ' + (canAdvance
+          ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-slate-950 shadow-lg shadow-amber-950/40 cursor-pointer'
+          : 'bg-slate-900 border border-slate-800 text-slate-600 cursor-not-allowed') + ' font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition active:scale-95';
+      }
+
+      // 3. Update Live Table Submission Tracker
+      var th = document.getElementById('trackerHeadline');
+      if (th) {
+        th.textContent = 'ROUND ' + data.current_round + ' LIVE TABLE SUBMISSIONS (' + completedTables.length + ' / ' + approvedTeams.length + ' TABLES IN)';
+      }
+      var ts = document.getElementById('trackerSubtext');
+      if (ts) {
+        if (approvedTeams.length === 0) {
+          ts.className = 'text-[11px] font-bold text-amber-300';
+          ts.textContent = '⏳ Waiting for tables to check in & be approved';
+        } else if (canAdvance) {
+          ts.className = 'text-[11px] font-bold text-emerald-400';
+          ts.textContent = '✅ All tables locked in! Ready to Reveal Answers or Advance to Next Round!';
+        } else if (data.round_status === 'waiting') {
+          ts.className = 'text-[11px] font-bold text-amber-300';
+          ts.textContent = '⏸️ Click "▶ Start Round ' + data.current_round + '" above to begin';
+        } else {
+          ts.className = 'text-[11px] font-bold text-amber-300';
+          ts.textContent = '⏳ Waiting for ' + (approvedTeams.length - completedTables.length) + ' more table(s) to finish...';
+        }
+      }
+
+      var progBar = document.getElementById('submissionProgressBar');
+      if (progBar) {
+        var pct = approvedTeams.length > 0 ? Math.round((completedTables.length / approvedTeams.length) * 100) : 0;
+        progBar.style.width = pct + '%';
+      }
+
+      var subGrid = document.getElementById('liveSubmissionGrid');
+      if (subGrid) {
+        if (approvedTeams.length === 0) {
+          subGrid.innerHTML = '<div class="col-span-full py-3 text-center text-xs text-slate-500 italic">No approved tables yet. Approve tables in the Digital Bouncer Queue below!</div>';
+        } else {
+          var sHtml = '';
+          approvedTeams.forEach(function(team) {
+            var rScore = team['round_' + data.current_round];
+            var pQ = team['progress_q_' + data.current_round] || 0;
+            var pScore = team['partial_round_' + data.current_round] || 0;
+            var hasSub = (rScore !== undefined && rScore !== null);
+            var cardCls = hasSub
+              ? 'bg-emerald-950/40 border-emerald-500/50'
+              : (data.round_status === 'active' ? 'bg-amber-950/30 border-amber-500/40' : 'bg-slate-950/70 border-purple-500/20');
+            var badgeHtml = hasSub
+              ? '<span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-black block">✅ SUBMITTED (+' + rScore + ')</span>'
+              : (data.round_status === 'active'
+                  ? '<span class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold block animate-pulse">⏳ ' + (pQ > 0 ? ('Q ' + pQ + '/5 (' + pScore + ' pts)') : 'Answering...') + '</span>'
+                  : '<span class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 text-[10px] font-bold block">🕒 Ready</span>');
+
+            sHtml += '<div class="p-3 rounded-xl border ' + cardCls + ' flex items-center justify-between gap-2">' +
+              '<div class="truncate">' +
+                '<div class="text-xs font-bold text-white truncate">Table ' + escapeHtml(team.table) + ' • ' + escapeHtml(team.name) + '</div>' +
+                '<div class="text-[10px] text-slate-400">Total: ' + (team.score || 0) + ' PTS</div>' +
+              '</div>' +
+              '<div class="shrink-0 text-right">' + badgeHtml + '</div>' +
+            '</div>';
+          });
+          subGrid.innerHTML = sHtml;
+        }
+      }
+
+      // 4. Update Strict Progression Gate (Show/Hide Advance to Next Round Button!)
+      var lockedBanner = document.getElementById('advanceLockedBanner');
+      var lockedText = document.getElementById('advanceLockedText');
+      var unlockedBox = document.getElementById('advanceUnlockedBox');
+      if (canAdvance) {
+        if (lockedBanner) lockedBanner.classList.add('hidden');
+        if (unlockedBox) unlockedBox.classList.remove('hidden');
+      } else {
+        if (lockedBanner) lockedBanner.classList.remove('hidden');
+        if (unlockedBox) unlockedBox.classList.add('hidden');
+        if (lockedText) {
+          if (approvedTeams.length === 0) {
+            lockedText.textContent = '🔒 Advance Locked: Approve at least 1 table and start Round ' + data.current_round + ' first.';
+          } else if (data.round_status === 'waiting') {
+            lockedText.textContent = '🔒 Advance Locked: Round ' + data.current_round + ' has not been played yet! Click "▶ Start Round ' + data.current_round + '" above.';
+          } else {
+            lockedText.textContent = '🔒 Round ' + data.current_round + ' Live (' + completedTables.length + '/' + approvedTeams.length + ' tables submitted). "Advance to Next Round" unlocks automatically once all tables submit or when you click "⏱ Lock / Time\'s Up".';
+          }
+        }
+      }
+
+      // 5. Update Pending Bouncer Queue Live!
+      var pBadge = document.getElementById('pendingCountBadge');
+      if (pBadge) pBadge.textContent = pendingTeams.length;
+      var appAll = document.getElementById('approveAllContainer');
+      if (appAll) {
+        if (pendingTeams.length > 0) appAll.classList.remove('hidden');
+        else appAll.classList.add('hidden');
+      }
+      var bouncerBody = document.getElementById('bouncerQueueBody');
+      if (bouncerBody) {
+        if (pendingTeams.length === 0) {
+          bouncerBody.innerHTML = '<div class="py-6 text-center text-xs text-slate-500 italic">No pending table requests right now. New table check-ins will pop up here automatically!</div>';
+        } else {
+          var bHtml = '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">';
+          pendingTeams.forEach(function(team) {
+            bHtml += '<div class="p-4 rounded-2xl bg-amber-950/30 border border-amber-500/40 flex items-center justify-between gap-3">' +
+              '<div>' +
+                '<div class="text-xs font-bold text-amber-300">Table ' + escapeHtml(team.table) + ' • ' + escapeHtml(team.name) + '</div>' +
+                '<div class="text-[10px] text-slate-400 mt-0.5">' + (team.members || 4) + ' Players • Awaiting host verification</div>' +
+              '</div>' +
+              '<div class="flex items-center gap-2">' +
+                '<button type="button" onclick="quickTeamAction(\'approve_team\', \'' + escapeHtml(team.table) + '\', \'' + escapeHtml(team.name) + '\')" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider transition active:scale-95">✓ Approve</button>' +
+                '<button type="button" onclick="quickTeamAction(\'reject_team\', \'' + escapeHtml(team.table) + '\', \'' + escapeHtml(team.name) + '\')" class="px-3 py-2 rounded-xl bg-slate-900 border border-rose-500/40 text-rose-300 hover:bg-rose-950 text-xs font-bold uppercase transition active:scale-95">✕ Reject</button>' +
+              '</div>' +
+            '</div>';
+          });
+          bHtml += '</div>';
+          bouncerBody.innerHTML = bHtml;
+        }
+      }
+
+      // 6. Update Approved Roster Count & Cards
+      var aBadge = document.getElementById('approvedCountBadge');
+      if (aBadge) aBadge.textContent = approvedTeams.length;
+      var aRoster = document.getElementById('approvedRosterBody');
+      if (aRoster) {
+        if (approvedTeams.length === 0) {
+          aRoster.innerHTML = '<div class="py-6 text-center text-xs text-slate-500 italic">No approved teams yet. Waiting for tables to check in or submit paper slips.</div>';
+        } else {
+          var rHtml = '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">';
+          approvedTeams.forEach(function(team, idx) {
+            rHtml += '<div class="p-3.5 rounded-2xl bg-slate-900/80 border border-purple-500/20 flex items-center justify-between">' +
+              '<div>' +
+                '<div class="text-xs font-bold text-white">Table ' + escapeHtml(team.table) + ' • ' + escapeHtml(team.name) + '</div>' +
+                '<div class="text-[10px] text-cyan-400 mt-0.5">' + (team.score || 0) + ' Points (Rank #' + (team.rank || (idx + 1)) + ')</div>' +
+              '</div>' +
+              '<button type="button" onclick="if(confirm(\'Remove table from match?\')) quickTeamAction(\'reject_team\', \'' + escapeHtml(team.table) + '\', \'' + escapeHtml(team.name) + '\')" class="text-slate-500 hover:text-rose-400 text-xs transition px-2 py-1" title="Remove table">✕</button>' +
+            '</div>';
+          });
+          rHtml += '</div>';
+          aRoster.innerHTML = rHtml;
+        }
+      }
+    })
+    .catch(function() {});
+}
+
 // Intercept manager form actions for instant async response & toasts
 document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('form[action*="/manager/action"]').forEach(function(form) {
+  document.querySelectorAll('form.mgr-action-form').forEach(function(form) {
     form.addEventListener('submit', function(e) {
       var actionVal = (form.querySelector('input[name="action"]') || {}).value;
       if (actionVal === 'manager_logout') return;
@@ -572,18 +904,20 @@ document.addEventListener('DOMContentLoaded', function() {
           showToast(data.message || 'Action executed successfully!');
           setTimeout(function() {
             window.location.reload();
-          }, 400);
+          }, 350);
         } else {
-          showToast((data && data.error) || 'Command failed', true);
+          showToast((data && data.error) || 'Command blocked by safety gate', true);
           if (btn) btn.disabled = false;
         }
       })
       .catch(function(err) {
-        // Fallback to native form submit on error
         form.submit();
       });
     });
   });
+
+  // Start automatic 2.5-second live polling on Quizmaster console
+  setInterval(pollManagerState, 2500);
 });
 </script>
 {% endblock %}

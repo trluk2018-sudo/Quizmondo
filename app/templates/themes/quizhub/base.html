@@ -185,6 +185,9 @@
       <a href="{{ url_for('arena.leaderboard') }}" class="px-2.5 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1 transition {% if request.path == '/arena/leaderboard' %}bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold{% else %}text-slate-300{% endif %}">
         <span>🏆</span><span>Ranks</span>
       </a>
+      <button type="button" onclick="installPwa()" class="px-2.5 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold hover:bg-emerald-500/30 transition">
+        <span>📲</span><span>Add App</span>
+      </button>
     </div>
 
     <!-- Mobile Navigation Drawer -->
@@ -240,7 +243,10 @@
         </a>
         {% endif %}
       </div>
-      <div class="pt-2">
+      <div class="pt-2 space-y-2">
+        <button type="button" onclick="installPwa()" class="block w-full text-center py-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold">
+          📲 Add Quizmondo App to Phone
+        </button>
         <a href="{{ url_for('arena.dashboard') }}" class="block w-full text-center py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-slate-950 font-black uppercase tracking-wider shadow-lg">
           Launch Arena &rarr;
         </a>
@@ -326,7 +332,80 @@
     </div>
   </footer>
 
+  <!-- Global Add App to Phone (PWA / Shortcut) Modal -->
+  <div id="addAppModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div class="bg-slate-950 border-2 border-emerald-500/50 rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-5 shadow-2xl font-mono text-xs">
+      <div class="flex items-center justify-between border-b border-purple-500/20 pb-3">
+        <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
+          <span>📲</span> <span>Add Quizmondo to Your Phone</span>
+        </h3>
+        <button type="button" onclick="closeAddAppModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
+
+      <p class="text-slate-300 leading-relaxed">
+        Install the <strong class="text-cyan-300">Quizmondo Arena</strong> shortcut on your home screen for instant 1-tap full-screen access:
+      </p>
+
+      <div class="space-y-3">
+        <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-purple-500/30 space-y-1.5">
+          <div class="font-black text-cyan-300 text-xs flex items-center gap-1.5">
+            <span>🍎</span> <span>iPhone &amp; iPad (Safari)</span>
+          </div>
+          <ol class="list-decimal list-inside text-slate-300 space-y-1 text-[11px]">
+            <li>Tap the <strong class="text-white">Share</strong> button <span class="px-1.5 py-0.5 rounded bg-slate-800 text-cyan-300">⬆️</span> at the bottom of Safari.</li>
+            <li>Scroll down and tap <strong class="text-emerald-300">&ldquo;Add to Home Screen ➕&rdquo;</strong>.</li>
+            <li>Tap <strong class="text-white">Add</strong> in the top corner.</li>
+          </ol>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-purple-500/30 space-y-1.5">
+          <div class="font-black text-emerald-300 text-xs flex items-center gap-1.5">
+            <span>🤖</span> <span>Android (Chrome / Samsung Internet)</span>
+          </div>
+          <ol class="list-decimal list-inside text-slate-300 space-y-1 text-[11px]">
+            <li>Tap the <strong class="text-white">Menu</strong> icon <span class="px-1.5 py-0.5 rounded bg-slate-800 text-emerald-300">⋮</span> at the top right of your browser.</li>
+            <li>Tap <strong class="text-emerald-300">&ldquo;Add to Home screen&rdquo;</strong> or <strong class="text-emerald-300">&ldquo;Install app&rdquo;</strong>.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="pt-2 flex justify-end">
+        <button type="button" onclick="closeAddAppModal()" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black uppercase tracking-wider">
+          Got It! 👍
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    var globalDeferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      globalDeferredPrompt = e;
+      window.deferredPrompt = e;
+      var btn = document.getElementById('pwaInstallBtn');
+      if (btn) btn.classList.remove('hidden');
+    });
+
+    function installPwa() {
+      var promptEvt = window.deferredPrompt || globalDeferredPrompt;
+      if (promptEvt) {
+        promptEvt.prompt();
+        promptEvt.userChoice.then(function(choiceResult) {
+          window.deferredPrompt = null;
+          globalDeferredPrompt = null;
+        });
+      } else {
+        var modal = document.getElementById('addAppModal');
+        if (modal) modal.classList.remove('hidden');
+      }
+    }
+
+    function closeAddAppModal() {
+      var modal = document.getElementById('addAppModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
       var btn = document.getElementById('mobileMenuBtn');
       var drawer = document.getElementById('mobileMenuDrawer');

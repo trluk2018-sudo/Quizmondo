@@ -507,7 +507,7 @@ class PubLeague(db.Model):
             if isinstance(data, dict):
                 data.setdefault('teams', [])
                 data.setdefault('current_round', 1)
-                data.setdefault('round_status', 'active' if self.is_virtual_league() else 'waiting')
+                data.setdefault('round_status', 'waiting')
                 data.setdefault('answers_revealed', False)
                 data.setdefault('config', default_config)
                 # Ensure all subkeys in config exist
@@ -518,7 +518,7 @@ class PubLeague(db.Model):
                 return {
                     'teams': data,
                     'current_round': 1,
-                    'round_status': 'active' if self.is_virtual_league() else 'waiting',
+                    'round_status': 'waiting',
                     'answers_revealed': False,
                     'config': default_config
                 }
@@ -527,7 +527,7 @@ class PubLeague(db.Model):
         return {
             'teams': [],
             'current_round': 1,
-            'round_status': 'active' if self.is_virtual_league() else 'waiting',
+            'round_status': 'waiting',
             'answers_revealed': False,
             'config': default_config
         }

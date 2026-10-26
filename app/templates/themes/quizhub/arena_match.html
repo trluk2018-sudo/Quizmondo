@@ -42,6 +42,11 @@
           <span class="px-4 py-1.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-xs font-bold uppercase tracking-wider">
             🏆 6-ROUND DUEL COMPLETED
           </span>
+        {% elif is_online_matchmaking and not opponent_assigned %}
+          <span class="px-4 py-1.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+            🌐 WAITING FOR A PLAYER TO ACCEPT YOUR CHALLENGE...
+          </span>
         {% elif is_player1 and match.current_round == 1 and my_turn and not opponent_assigned %}
           <span class="px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
@@ -96,6 +101,10 @@
               {% if is_player2 %}
               <span class="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-cyan-400 text-slate-950 font-mono font-black text-[9px] uppercase tracking-wider">YOU</span>
               {% endif %}
+            {% elif is_online_matchmaking %}
+              <div class="w-16 h-16 sm:w-24 sm:h-24 rounded-3xl bg-slate-900 border-2 border-dashed border-cyan-400/50 flex items-center justify-center text-2xl sm:text-3xl mx-auto text-cyan-300 animate-pulse">
+                🌐
+              </div>
             {% else %}
               <div class="w-16 h-16 sm:w-24 sm:h-24 rounded-3xl bg-slate-900 border-2 border-dashed border-emerald-500/40 flex items-center justify-center text-2xl sm:text-3xl mx-auto text-emerald-300">
                 📲
@@ -103,7 +112,7 @@
             {% endif %}
           </div>
           <div class="font-mono font-bold text-xs sm:text-base text-white truncate max-w-[130px] sm:max-w-none pt-1">
-            {% if opponent_assigned %}{{ match.player2_name }}{% elif is_invited_challenger %}You (Challenger){% else %}Invited Friend{% endif %}
+            {% if opponent_assigned %}{{ match.player2_name }}{% elif is_invited_challenger %}You (Challenger){% elif is_online_matchmaking %}Searching Online Player...{% else %}Invited Friend{% endif %}
           </div>
           <div class="text-2xl sm:text-4xl font-black font-mono text-pink-400">
             {{ match.p2_total_score }} <span class="text-[10px] sm:text-xs text-slate-400 font-normal">PTS</span>
@@ -227,7 +236,46 @@
           <!-- ============================================================== -->
           <!-- HUMAN DUEL: YOUR TURN TO PLAY!                                 -->
           <!-- ============================================================== -->
-            {% if is_player1 and match.current_round == 1 and not opponent_assigned %}
+            {% if is_player1 and match.current_round == 1 and is_online_matchmaking and not opponent_assigned %}
+            <!-- ONLINE CHALLENGE MATCHMAKING WAITING SCREEN WITH INSTANT CONVERT OPTIONS -->
+            <div class="space-y-5">
+              <div class="p-6 rounded-2xl bg-gradient-to-b from-cyan-950/60 via-slate-950 to-purple-950/50 border-2 border-cyan-400/60 space-y-4 text-center shadow-2xl">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-black uppercase border border-cyan-400/40">
+                  <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+                  <span>🌐 ONLINE CHALLENGE QUEUE</span>
+                </div>
+                <h3 class="text-xl sm:text-2xl font-black text-white">
+                  Waiting for a Player to Accept Your Challenge...
+                </h3>
+                <p class="text-xs text-slate-300 max-w-lg mx-auto leading-relaxed">
+                  Searching the live arena for an online challenger in <strong class="text-cyan-300">{{ active_round.category_name if active_round else 'Trivia' }}</strong>!
+                  If no online player accepts right away, you can convert this challenge to a <strong>WhatsApp Challenge (Challenge a Friend)</strong> or <strong>Play Against Cyber Bot Nova</strong> immediately:
+                </p>
+
+                <!-- Primary Convert Options: WhatsApp Challenge or Bot Nova -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 max-w-xl mx-auto">
+                  <a href="{{ url_for('arena.convert_to_whatsapp', match_code=match.match_code) }}" class="w-full py-3.5 px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-xl flex items-center justify-center gap-2 transition transform hover:-translate-y-0.5 active:scale-95">
+                    <span>💬 Convert to WhatsApp Challenge (Challenge a Friend)</span>
+                  </a>
+                  <form action="{{ url_for('arena.switch_to_bot', match_code=match.match_code) }}" method="POST" class="w-full">
+                    <button type="submit" class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-xl flex items-center justify-center gap-2 transition transform hover:-translate-y-0.5 active:scale-95 border border-purple-400/40">
+                      <span>🤖 Play Against Cyber Bot Nova</span>
+                    </button>
+                  </form>
+                </div>
+
+                <div class="pt-3 border-t border-purple-500/20 space-y-2">
+                  <p class="text-[11px] text-slate-400">
+                    Or lock in your Round 1 score right now while waiting for a challenger to accept:
+                  </p>
+                  <a href="{{ url_for('arena.play_round', match_code=match.match_code) }}" class="inline-flex w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl items-center justify-center gap-2 transition transform hover:scale-105 active:scale-95">
+                    <span>🚀 Play Round 1 While Waiting &rarr;</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {% elif is_player1 and match.current_round == 1 and not opponent_assigned %}
             <!-- STEP 1: INVITE FRIEND ON WHATSAPP -> STEP 2: PLAY ROUND 1 -->
             <div class="space-y-5">
               <div class="p-5 rounded-2xl bg-emerald-950/40 border-2 border-emerald-500/40 space-y-3 text-center">
@@ -263,10 +311,15 @@
                 <p class="text-xs text-slate-300 max-w-md mx-auto">
                   Play Round 1 now (3 questions). Once you finish, your score &amp; time will be waiting for your friend to accept the challenge!
                 </p>
-                <div class="pt-1">
+                <div class="pt-1 flex flex-col sm:flex-row items-center justify-center gap-3">
                   <a href="{{ url_for('arena.play_round', match_code=match.match_code) }}" class="inline-flex w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black text-sm sm:text-base uppercase tracking-wider shadow-2xl items-center justify-center gap-2 transition transform hover:scale-105 active:scale-95">
                     <span>🚀 Play Round 1 Now &rarr;</span>
                   </a>
+                  <form action="{{ url_for('arena.switch_to_bot', match_code=match.match_code) }}" method="POST" class="w-full sm:w-auto">
+                    <button type="submit" class="w-full px-5 py-4 rounded-2xl bg-purple-900/60 hover:bg-purple-800 border border-purple-400/40 text-purple-200 hover:text-white font-bold text-xs uppercase tracking-wider transition">
+                      <span>🤖 Or Play Against Nova</span>
+                    </button>
+                  </form>
                 </div>
               </div>
             </div>
@@ -365,7 +418,27 @@
             </div>
             {% endif %}
 
-            {% if not opponent_assigned %}
+            {% if is_online_matchmaking and not opponent_assigned %}
+            <div class="p-5 rounded-2xl bg-cyan-950/40 border-2 border-cyan-400/50 space-y-3">
+              <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-bold">
+                <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                🌐 Waiting for a Player to Accept Your Challenge...
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                No online challenger has joined yet! You can convert this duel to a <strong>WhatsApp Challenge (Challenge a Friend)</strong> or <strong>Play Against Cyber Bot Nova</strong> right now:
+              </p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <a href="{{ url_for('arena.convert_to_whatsapp', match_code=match.match_code) }}" class="w-full py-3.5 px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-xl flex items-center justify-center gap-2 transition active:scale-95">
+                  <span>💬 Convert to WhatsApp Challenge</span>
+                </a>
+                <form action="{{ url_for('arena.switch_to_bot', match_code=match.match_code) }}" method="POST" class="w-full">
+                  <button type="submit" class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-xl flex items-center justify-center gap-2 transition active:scale-95 border border-purple-400/40">
+                    <span>🤖 Play Against Cyber Bot Nova</span>
+                  </button>
+                </form>
+              </div>
+            </div>
+            {% elif not opponent_assigned %}
             <div class="p-5 rounded-2xl bg-amber-950/30 border border-amber-500/40 space-y-2">
               <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold">
                 <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
@@ -402,6 +475,13 @@
               <button type="button" onclick="shareMatchLink()" class="w-full sm:w-auto px-5 py-4 rounded-2xl bg-slate-900 border border-purple-500/40 hover:border-cyan-400 text-cyan-300 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95">
                 <span>📋 Copy Link &amp; Stats</span>
               </button>
+              {% if not opponent_assigned and not is_online_matchmaking %}
+              <form action="{{ url_for('arena.switch_to_bot', match_code=match.match_code) }}" method="POST" class="w-full sm:w-auto">
+                <button type="submit" class="w-full px-5 py-4 rounded-2xl bg-purple-900/60 hover:bg-purple-800 border border-purple-400/40 text-purple-200 hover:text-white font-bold text-xs uppercase tracking-wider transition">
+                  <span>🤖 Play vs Bot Nova</span>
+                </button>
+              </form>
+              {% endif %}
             </div>
 
             <!-- Visual Duel Share Card Preview -->
@@ -592,6 +672,30 @@ function copyToClipboard(text) {
   } else {
     prompt("Copy this challenge message to send to your friend:", text);
   }
+}
+
+// Auto-poll match state when waiting for an online challenger or opponent turn
+var initialOpponentAssigned = {{ 'true' if opponent_assigned else 'false' }};
+var initialRound = {{ match.current_round }};
+var initialTurn = {{ match.current_turn }};
+var initialStatus = {{ match.status|tojson }};
+
+if (initialStatus !== 'completed') {
+  setInterval(function() {
+    fetch("/arena/match/{{ match.match_code }}/status", { headers: { 'Accept': 'application/json' } })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (
+          data.opponent_assigned !== initialOpponentAssigned ||
+          data.current_round !== initialRound ||
+          data.current_turn !== initialTurn ||
+          data.status !== initialStatus
+        ) {
+          window.location.href = "/arena/match/{{ match.match_code }}";
+        }
+      })
+      .catch(function() {});
+  }, 4000);
 }
 </script>
 {% endblock %}

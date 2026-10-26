@@ -980,6 +980,12 @@ def seed_quizmondo_full_environment():
                     pack.icon = cat_info['icon']
                     pack.question_count = cat_info['question_count']
 
+                if cat_slug in ('match-flags', 'football-badges', 'brand-logos', 'country-shapes'):
+                    vis_cnt = QuizQuestion.query.filter_by(category_slug=cat_slug, question_type='image').count()
+                    if vis_cnt < 100:
+                        QuizQuestion.query.filter_by(category_slug=cat_slug, is_community=False).delete(synchronize_session=False)
+                        db.session.commit()
+
                 existing_prompts = set(
                     r[0] for r in db.session.query(QuizQuestion.prompt).filter_by(category_slug=cat_slug).all()
                 )

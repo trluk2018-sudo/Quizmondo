@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" width="100%" height="100%">
+<rect width="200" height="240" rx="24" fill="#0f172a"/><path d="M40 40 H160 V145 Q100 212 40 145 Z" fill="#FFFFFF" stroke="#D4AF37" stroke-width="7"/><rect x="48" y="44" width="22" height="125" fill="#000000"/><rect x="90" y="44" width="22" height="145" fill="#000000"/><rect x="130" y="44" width="22" height="125" fill="#000000"/>
+</svg>

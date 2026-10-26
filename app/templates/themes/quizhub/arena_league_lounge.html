@@ -5,7 +5,7 @@
 {% block head_extra %}
 <meta property="og:type" content="game">
 <meta property="og:title" content="🍻 {{ league.name }} • Pub Quiz Squad Invite">
-<meta property="og:description" content="Join our table squad at {{ league.venue_name }}! Room PIN: {{ league.pin_code }}. {{ league.schedule_day }}.">
+<meta property="og:description" content="Join our table squad at {{ league.venue_name }}! {{ league.schedule_day }}.">
 <meta property="og:image" content="{{ request.url_root.rstrip('/') }}/arena/leagues/{{ league.slug }}/card.png">
 <meta property="og:image:secure_url" content="{{ request.url_root.rstrip('/') }}/arena/leagues/{{ league.slug }}/card.png">
 <meta property="og:image:type" content="image/png">
@@ -16,6 +16,7 @@
 {% endblock %}
 
 {% block content %}
+{% set is_host_or_admin = (session.get('user_role') in ('super_admin', 'admin', 'quizmaster') or session.get('quizmaster_auth_' ~ league.slug)) %}
 <div class="min-h-screen bg-[#090317] text-slate-100 font-sans py-10 relative overflow-hidden">
   <!-- Glowing ambient lights -->
   <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-gradient-to-r from-purple-600/20 via-pink-600/15 to-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
@@ -23,30 +24,30 @@
   <div class="max-w-5xl mx-auto px-4 sm:px-6 relative z-10 space-y-8">
 
     <!-- Top Breadcrumb -->
-    <div class="flex items-center justify-between border-b border-purple-500/20 pb-4">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-purple-500/20 pb-4">
       <a href="{{ url_for('arena.leagues') }}" class="text-xs font-mono text-cyan-400 hover:text-cyan-300">
         &larr; Back to Pub Leagues Directory
       </a>
-      <div class="flex items-center gap-3">
-        {% if not is_virtual %}
+      <div class="flex flex-wrap items-center gap-2.5">
         <a href="{{ url_for('arena.league_manager', slug=league.slug) }}" class="px-3.5 py-1.5 rounded-xl bg-purple-900/60 border border-purple-400/40 text-purple-200 font-mono text-xs font-bold hover:bg-purple-800 transition flex items-center gap-1.5 shadow-lg">
           <span>🎙️ Quizmaster Console</span>
         </a>
-        {% endif %}
+        {% if is_host_or_admin %}
         <a href="{{ url_for('arena.league_tv', slug=league.slug) }}" target="_blank" class="px-3.5 py-1.5 rounded-xl bg-slate-900 border border-cyan-500/40 text-cyan-300 font-mono text-xs font-bold hover:bg-slate-800 transition flex items-center gap-1.5">
           <span>🖥️ Launch Big Screen TV Projector</span>
         </a>
+        {% endif %}
       </div>
     </div>
 
     <!-- Venue Hero Header -->
-    <div class="p-8 sm:p-10 rounded-3xl bg-slate-950/95 border-2 border-purple-500/40 backdrop-blur shadow-2xl relative overflow-hidden space-y-6">
+    <div class="p-6 sm:p-10 rounded-3xl bg-slate-950/95 border-2 border-purple-500/40 backdrop-blur shadow-2xl relative overflow-hidden space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-purple-500/20 pb-6">
         <div>
           <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-400/40 text-purple-300 font-mono text-xs font-bold uppercase mb-2">
-            <span>🍻 {{ league.venue_name }}</span>
+            <span>{% if is_virtual %}🌐{% else %}🍻{% endif %} {{ league.venue_name }}</span>
           </div>
-          <h1 class="text-3xl sm:text-4xl font-black font-mono text-white tracking-tight">
+          <h1 class="text-2xl sm:text-4xl font-black font-mono text-white tracking-tight">
             {{ league.name }}
           </h1>
           <p class="text-xs font-mono text-slate-400 mt-1 max-w-xl">
@@ -54,19 +55,34 @@
           </p>
         </div>
 
-        <div class="flex flex-col items-center sm:items-end font-mono">
-          <div class="text-xs text-slate-400">TABLE ROOM PIN</div>
-          <div class="text-3xl font-black text-amber-400 tracking-widest bg-slate-900 px-4 py-1.5 rounded-2xl border border-amber-400/30 shadow-inner mt-1">
-            {{ league.pin_code }}
-          </div>
-          <div class="text-[10px] text-cyan-400 mt-1 font-bold">{{ league.schedule_day }}</div>
+        <!-- Venue Access Status (Room PIN is NEVER leaked publicly on physical/virtual lounge pages!) -->
+        <div class="flex flex-col items-center sm:items-end font-mono shrink-0">
+          {% if is_host_or_admin %}
+            <div class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">🎙️ QUIZMASTER ONLY • VENUE PIN</div>
+            <div class="text-2xl sm:text-3xl font-black text-amber-400 tracking-widest bg-slate-900 px-4 py-1.5 rounded-2xl border border-amber-400/40 shadow-inner mt-1">
+              {{ league.pin_code }}
+            </div>
+            <div class="text-[10px] text-slate-400 mt-1">Give out at venue or show on TV screen</div>
+          {% elif is_virtual %}
+            <div class="text-[10px] text-cyan-400 font-bold uppercase tracking-wider">VIRTUAL ROOM ACCESS</div>
+            <div class="text-xs font-black text-cyan-300 bg-cyan-950/60 px-4 py-2.5 rounded-2xl border border-cyan-500/40 shadow-inner mt-1 flex items-center gap-2">
+              <span>🛡️</span> <span>PIN Issued on Host Approval</span>
+            </div>
+            <div class="text-[10px] text-slate-400 mt-1">{{ league.schedule_day }}</div>
+          {% else %}
+            <div class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">IN-VENUE ACCESS</div>
+            <div class="text-xs font-black text-amber-300 bg-amber-950/50 px-4 py-2.5 rounded-2xl border border-amber-500/40 shadow-inner mt-1 flex items-center gap-2">
+              <span>🔒</span> <span>PIN Given Out at Venue Only</span>
+            </div>
+            <div class="text-[10px] text-cyan-400 mt-1 font-bold">{{ league.schedule_day }}</div>
+          {% endif %}
         </div>
       </div>
 
       <!-- 5 Tournament Rounds Overview -->
       <div class="space-y-3">
         <h4 class="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400">
-          5-Round Tournament Schedule
+          {% if is_virtual %}Virtual Pub Quiz Rounds{% else %}5-Round Venue Tournament Schedule{% endif %}
         </h4>
         <div class="grid grid-cols-1 sm:grid-cols-5 gap-2.5 font-mono text-xs">
           <div class="p-3 rounded-xl bg-slate-900/90 border border-purple-500/20 space-y-1">
@@ -105,19 +121,17 @@
           <div class="space-y-1">
             <div class="flex items-center justify-between">
               <h3 class="text-sm font-black font-mono text-white uppercase tracking-wider flex items-center gap-2">
-                <span>👥</span> Join Table / Register Squad
+                <span>👥</span> {% if is_virtual %}Request Virtual Squad Entry{% else %}Check In Your Venue Table{% endif %}
               </h3>
-              {% if not is_virtual %}
               <span class="px-2 py-0.5 rounded-full bg-purple-900/60 border border-purple-500/30 text-[10px] text-cyan-300 font-bold">
                 {{ teams|length }} / {{ (league.get_state().get('config') or {}).get('max_tables', 20) }} Tables
               </span>
-              {% endif %}
             </div>
-            <p class="text-[11px] font-mono text-slate-400">
-              {% if not is_virtual %}
-              Enter Table # and Name. Once verified by the Quizmaster on the host console, your phone buzzer will unlock!
+            <p class="text-[11px] font-mono text-slate-400 leading-relaxed">
+              {% if is_virtual %}
+              Enter your Squad Name below to request entry. Once the Quizmaster/Admin approves your request, your Room PIN is issued and your buzzer unlocks automatically!
               {% else %}
-              Enter your Table Number and Team Name to submit answers for all rounds and appear on the scoreboard.
+              Enter your Table # and Team Name (plus the Venue PIN if announced by the Quizmaster). Once verified by the Quizmaster on the host console, your phone buzzer unlocks!
               {% endif %}
             </p>
           </div>
@@ -133,28 +147,37 @@
           {% endif %}
 
           <form action="{{ url_for('arena.league_room', slug=league.slug) }}" method="GET" class="space-y-4 font-mono text-xs">
+            {% if not is_virtual %}
             <div class="space-y-1.5">
-              <label class="block font-bold text-slate-300 uppercase">Venue Room PIN <span class="text-rose-400">*</span></label>
-              <input type="text" name="pin" required placeholder="Enter 4-digit PIN (e.g. {{ league.pin_code }})" value="{{ league.pin_code }}" class="w-full bg-slate-950 border border-purple-500/30 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400">
-              <span class="text-[10px] text-slate-500">Displayed on the venue TV projector</span>
+              <label class="block font-bold text-slate-300 uppercase">Venue Room PIN <span class="text-slate-500 font-normal">(Given at Venue)</span></label>
+              <input type="text" name="pin" maxlength="6" placeholder="Enter 4-digit PIN from Quizmaster / TV (or leave blank for Bouncer approval)" value="{{ session.get('pub_pin_' ~ league.slug) or '' }}" class="w-full bg-slate-950 border border-purple-500/30 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400">
+              <span class="text-[10px] text-slate-400 block">🔒 Not shown online — ask the Quizmaster at the venue or submit for Bouncer approval!</span>
             </div>
+            {% else %}
+            <div class="p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-[11px] text-cyan-200 flex items-center gap-2">
+              <span>🔑</span>
+              <span>Your Virtual Room PIN will be displayed on your screen as soon as the host approves your squad request!</span>
+            </div>
+            {% endif %}
 
             <div class="grid grid-cols-3 gap-3">
               <div class="space-y-1.5 col-span-1">
-                <label class="block font-bold text-slate-300 uppercase">Table #</label>
-                <input type="text" name="table" required placeholder="e.g. 4" value="{{ session.get('pub_table_num') or '4' }}" class="w-full bg-slate-950 border border-purple-500/30 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400">
+                <label class="block font-bold text-slate-300 uppercase">{% if is_virtual %}Squad #{% else %}Table #{% endif %}</label>
+                <input type="text" name="table" required placeholder="e.g. 1" value="{{ session.get('pub_table_num') or '' }}" class="w-full bg-slate-950 border border-purple-500/30 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400">
               </div>
               <div class="space-y-1.5 col-span-2">
                 <label class="block font-bold text-slate-300 uppercase">Squad / Team Name</label>
-                <input type="text" name="team" required placeholder="e.g. The Brainiacs" value="{{ session.get('pub_team_name') or 'Table Squad' }}" class="w-full bg-slate-950 border border-purple-500/30 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400">
+                <input type="text" name="team" required placeholder="e.g. The Brainiacs" value="{{ session.get('pub_team_name') or '' }}" class="w-full bg-slate-950 border border-purple-500/30 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400">
               </div>
             </div>
 
             <button type="submit" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r {% if is_started %}from-amber-600 via-orange-600 to-purple-600 hover:from-amber-500 hover:to-purple-500{% else %}from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500{% endif %} text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition transform hover:-translate-y-0.5">
               {% if is_started %}
-              🔒 Reconnect Registered Table &rarr;
+              🔒 Reconnect Approved Table &rarr;
+              {% elif is_virtual %}
+              🚀 Request Virtual Pub Entry &rarr;
               {% else %}
-              🎮 Enter Pub Quiz Room &rarr;
+              🎮 Check In Table &amp; Request Approval &rarr;
               {% endif %}
             </button>
           </form>
@@ -173,10 +196,10 @@
             <h3 class="text-sm font-black font-mono text-white uppercase tracking-wider flex items-center gap-2">
               <span>🏆</span> Live Table Standings
             </h3>
-            <span class="text-[11px] font-mono text-cyan-400 font-bold">5-Round Tournament</span>
+            <span class="text-[11px] font-mono text-cyan-400 font-bold">Live Scoreboard</span>
           </div>
 
-          <div class="space-y-2 font-mono text-xs">
+          <div class="space-y-2 font-mono text-xs" id="loungeStandingsList">
             {% if teams %}
               {% for t in teams %}
               <div class="p-3.5 rounded-xl {% if loop.index == 1 %}bg-amber-950/40 border border-amber-400/50{% elif loop.index == 2 %}bg-slate-800/80 border border-slate-600/40{% elif loop.index == 3 %}bg-amber-900/20 border border-amber-700/40{% else %}bg-slate-950/60 border border-purple-500/20{% endif %} flex items-center justify-between">
@@ -202,7 +225,7 @@
                 </div>
                 <div class="text-sm font-bold text-white uppercase tracking-wider">No Tables Checked In Yet</div>
                 <p class="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
-                  Be the first squad to check in your table on the left! As soon as the Quizmaster starts the round, scores will update here live.
+                  Be the first squad to check in your table on the left! As soon as the Quizmaster approves tables and starts the round, scores will update here live.
                 </p>
               </div>
             {% endif %}
@@ -219,12 +242,9 @@
 function shareTableInvite() {
   var url = window.location.origin + "{{ url_for('arena.league_lounge', slug=league.slug) }}";
   var text =
-    "┏━━━━━━━━━━━━━━━━━━━━━┓\n" +
-    "🍻 *PUB QUIZ SQUAD INVITE* 🍻\n" +
-    "┗━━━━━━━━━━━━━━━━━━━━━┛\n" +
+    "🍻 *PUB QUIZ SQUAD INVITE!* 🍻\n" +
     "📍 *{{ league.venue_name }}*\n" +
     "🏆 *Tournament:* {{ league.name }}\n" +
-    "🔑 *Venue Room PIN:* `{{ league.pin_code }}`\n" +
     "📅 *Schedule:* {{ league.schedule_day }}\n\n" +
     "👇 *TAP LINK BELOW TO JOIN OUR SQUAD:* 👇\n" +
     url;
@@ -233,10 +253,6 @@ function shareTableInvite() {
       window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(text), "_blank");
     });
   } else {
-    window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(text), "_blank");
-  }
-}
-</script>
     window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(text), "_blank");
   }
 }

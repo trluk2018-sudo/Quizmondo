@@ -37,6 +37,23 @@ def create_app(test_config=None):
     # Init database
     db.init_app(app)
 
+    # High-concurrency SQLite tuning (WAL mode, busy_timeout, cache) for 100s of concurrent players
+    try:
+        from sqlalchemy import event
+        from sqlalchemy.engine import Engine
+
+        @event.listens_for(Engine, "connect")
+        def _set_sqlite_pragma(dbapi_connection, connection_record):
+            if db_url.startswith('sqlite'):
+                cursor = dbapi_connection.cursor()
+                cursor.execute("PRAGMA journal_mode=WAL;")
+                cursor.execute("PRAGMA synchronous=NORMAL;")
+                cursor.execute("PRAGMA busy_timeout=15000;")
+                cursor.execute("PRAGMA cache_size=-32000;")
+                cursor.close()
+    except Exception:
+        pass
+
     @app.before_request
     def ensure_persistent_login_state():
         """Keep player and admin login state rock-solid across all pages, tabs, and duels."""
@@ -205,6 +222,14 @@ def _ensure_schema():
             if 'is_community' not in cols_questions:
                 db.session.execute(text("ALTER TABLE quiz_questions ADD COLUMN is_community BOOLEAN DEFAULT 0"))
             db.session.commit()
+
+        # High-concurrency composite indexes for matchmaking, round lookup, and visual question selection
+        db.session.execute(text("CREATE INDEX IF NOT EXISTS ix_qq_cat_type_diff ON quiz_questions (category_slug, question_type, difficulty)"))
+        db.session.execute(text("CREATE INDEX IF NOT EXISTS ix_am_p1_status ON arena_matches (player1_session, status)"))
+        db.session.execute(text("CREATE INDEX IF NOT EXISTS ix_am_p2_status ON arena_matches (player2_session, status)"))
+        db.session.execute(text("CREATE INDEX IF NOT EXISTS ix_ar_match_round ON arena_rounds (match_id, round_number)"))
+        db.session.execute(text("CREATE INDEX IF NOT EXISTS ix_pp_xp ON player_profiles (xp DESC)"))
+        db.session.commit()
     except Exception:
         db.session.rollback()
 
@@ -541,10 +566,14 @@ def _seed_defaults():
 
         SiteSetting.set('initial_modules_seeded', '1')
 
-    # Ensure Quizmondo questions, pub leagues, categories, posts, and page modules are synchronized
+    # Ensure Quizmondo questions, pub leagues, categories, posts, and page modules are synchronized once per seed version
     try:
-        from app.utils.quiz_seed import seed_quizmondo_full_environment
-        seed_quizmondo_full_environment()
+        from .models import QuizPack
+        current_seed_ver = SiteSetting.get('quizmondo_seed_version')
+        if current_seed_ver != '2026.10.26.v3' or QuizPack.query.count() < 15:
+            from app.utils.quiz_seed import seed_quizmondo_full_environment
+            seed_quizmondo_full_environment()
+            SiteSetting.set('quizmondo_seed_version', '2026.10.26.v3')
     except Exception as e:
         app.logger.warning(f"Could not synchronize quizmondo seed environment: {e}")
 

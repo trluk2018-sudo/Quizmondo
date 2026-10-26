@@ -149,7 +149,10 @@ function renderMedia(q) {
     }
   } else if (q.question_type === 'image' && q.media_url) {
     mediaBox.classList.remove('hidden');
-    mediaBox.innerHTML = '<div class="relative w-full max-h-64 flex items-center justify-center p-3 bg-slate-950/80"><img src="' + q.media_url + '" alt="Visual clue" class="max-h-60 rounded-xl object-contain shadow-lg border border-purple-500/20"></div>';
+    mediaBox.innerHTML = '<div class="relative w-full flex flex-col items-center justify-center p-4 bg-slate-950/90 space-y-2">' +
+      '<span class="px-3 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 font-mono font-bold text-[10px] uppercase tracking-wider">🎯 Visual Matching Challenge</span>' +
+      '<img src="' + q.media_url + '" alt="Visual clue" class="max-h-56 sm:max-h-64 rounded-xl object-contain shadow-lg border border-purple-500/30 bg-slate-900/80 p-2">' +
+      '</div>';
   }
 }
 
@@ -360,6 +363,11 @@ function showRocketAnimation(data) {
 
   latestWhatsAppNudgeText = data.whatsapp_nudge_text || '';
   modal.classList.remove('hidden');
+  modal.scrollTop = 0;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  var revealStageReset = document.getElementById('scoreRevealStage');
+  if (revealStageReset) revealStageReset.classList.add('hidden');
 
   if (window.quizAudio) {
     window.quizAudio.playTick();
@@ -393,10 +401,25 @@ function showRocketAnimation(data) {
   var status1 = document.getElementById('telemetryLine1');
   var status2 = document.getElementById('telemetryLine2');
 
+  if (trail) {
+    trail.style.transition = 'none';
+    trail.style.width = '0%';
+  }
+  if (rocket) {
+    rocket.style.transition = 'none';
+    rocket.style.left = '2%';
+  }
+
   setTimeout(function() {
-    if (trail) trail.style.width = '100%';
-    if (rocket) rocket.style.left = '95%';
-  }, 100);
+    if (trail) {
+      trail.style.transition = 'width 2.1s cubic-bezier(0.22, 1, 0.36, 1)';
+      trail.style.width = '100%';
+    }
+    if (rocket) {
+      rocket.style.transition = 'left 2.1s cubic-bezier(0.22, 1, 0.36, 1)';
+      rocket.style.left = '94%';
+    }
+  }, 80);
 
   if (data.is_bot) {
     if (tickerLabel) tickerLabel.textContent = 'Bot Nova Tally';
@@ -580,16 +603,44 @@ initQuestion();
 <!-- ======================================================== -->
 <!-- ROCKET TO MARS / HURDLE SPRINT ANIMATION & SCORE REVEAL  -->
 <!-- ======================================================== -->
-<div id="rocketModal" class="hidden fixed inset-0 z-50 bg-[#060112]/98 backdrop-blur-md overflow-y-auto p-4 sm:p-8 flex flex-col justify-center items-center">
+<style>
+  #rocketModal {
+    background-color: rgba(6, 1, 18, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .qm-starfield {
+    background-image: radial-gradient(rgba(168, 85, 247, 0.7) 1.5px, transparent 1.5px), radial-gradient(rgba(34, 211, 238, 0.5) 1px, transparent 1px);
+    background-size: 24px 24px, 36px 36px;
+    background-position: 0 0, 12px 12px;
+  }
+  .qm-planet-origin {
+    box-shadow: 0 0 24px rgba(6, 182, 212, 0.65);
+  }
+  .qm-planet-dest {
+    box-shadow: 0 0 24px rgba(244, 63, 94, 0.65);
+  }
+  #plasmaTrail {
+    width: 0%;
+    transition: width 2.1s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 0 14px rgba(34, 211, 238, 0.8);
+  }
+  #flyingRocket {
+    left: 2%;
+    transition: left 2.1s cubic-bezier(0.22, 1, 0.36, 1);
+    filter: drop-shadow(0 0 14px rgba(236, 72, 153, 0.95));
+  }
+</style>
+<div id="rocketModal" class="hidden fixed inset-0 z-50 overflow-y-auto p-4 sm:p-8 flex flex-col justify-start sm:justify-center items-center">
   <div class="max-w-2xl w-full my-auto space-y-6 text-center font-mono">
     
     <!-- STAGE 1: Animated Earth to Mars Flight -->
-    <div id="animationStage" class="relative p-6 sm:p-8 rounded-3xl bg-slate-950/90 border-2 border-purple-500/50 shadow-2xl overflow-hidden space-y-6">
-      <div class="absolute inset-0 bg-[radial-gradient(#a855f7_1px,transparent_1px)] [background-size:16px_16px] opacity-25"></div>
+    <div id="animationStage" class="relative p-6 sm:p-8 rounded-3xl bg-slate-950 border-2 border-purple-500/60 shadow-2xl overflow-hidden space-y-6">
+      <div class="absolute inset-0 qm-starfield opacity-30 pointer-events-none"></div>
 
       <!-- Mission Badge -->
-      <div class="relative z-10 flex items-center justify-between text-xs font-bold">
-        <span class="px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-400/50 text-cyan-300 uppercase tracking-widest flex items-center gap-1.5">
+      <div class="relative z-10 flex flex-wrap items-center justify-between gap-2 text-xs font-bold">
+        <span class="px-3 py-1 rounded-full bg-cyan-950/90 border border-cyan-400/50 text-cyan-300 uppercase tracking-widest flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
           <span id="missionBadgeText">MISSION: EARTH ➔ MOON SPRINT</span>
         </span>
@@ -600,7 +651,7 @@ initQuestion();
       <div class="relative z-10 py-6 px-2 flex items-center justify-between">
         <!-- Planet Origin -->
         <div class="flex flex-col items-center space-y-1 shrink-0">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-blue-600 via-cyan-400 to-emerald-400 shadow-[0_0_20px_rgba(6,182,212,0.6)] flex items-center justify-center text-3xl animate-pulse">
+          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-blue-600 via-cyan-400 to-emerald-400 qm-planet-origin flex items-center justify-center text-3xl animate-pulse">
             <span id="planetOriginIcon">🌍</span>
           </div>
           <span id="planetOriginName" class="text-[11px] font-black text-cyan-300">EARTH</span>
@@ -608,16 +659,16 @@ initQuestion();
         </div>
 
         <!-- Trajectory Track with Plasma Trail and Rocket -->
-        <div class="relative flex-1 mx-3 sm:mx-6 h-3 bg-purple-950/80 rounded-full border border-purple-500/40 overflow-visible">
-          <div id="plasmaTrail" class="absolute top-0 left-0 h-full bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-full transition-all duration-[2000ms] ease-out w-0"></div>
-          <div id="flyingRocket" class="absolute -top-5 left-0 transition-all duration-[2000ms] ease-out transform -translate-x-1/2 flex items-center text-3xl sm:text-4xl drop-shadow-[0_0_15px_rgba(236,72,153,0.9)]">
+        <div class="relative flex-1 mx-3 sm:mx-6 h-3.5 bg-purple-950 rounded-full border border-purple-500/50 overflow-visible">
+          <div id="plasmaTrail" class="absolute top-0 left-0 h-full bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-full"></div>
+          <div id="flyingRocket" class="absolute -top-5 transform -translate-x-1/2 flex items-center text-3xl sm:text-4xl">
             <span>🚀</span>
           </div>
         </div>
 
         <!-- Planet Destination -->
         <div class="flex flex-col items-center space-y-1 shrink-0">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-amber-700 via-red-500 to-orange-400 shadow-[0_0_20px_rgba(239,68,68,0.6)] flex items-center justify-center text-3xl">
+          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-amber-700 via-red-500 to-orange-400 qm-planet-dest flex items-center justify-center text-3xl">
             <span id="planetDestIcon">🌕</span>
           </div>
           <span id="planetDestName" class="text-[11px] font-black text-rose-400">THE MOON</span>

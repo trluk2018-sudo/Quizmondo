@@ -22,23 +22,23 @@
       <div class="space-y-2">
         <h1 class="text-2xl sm:text-3xl font-black font-mono text-white">Pub Quiz Leagues &amp; Team Rooms</h1>
         <p class="text-xs font-mono text-slate-400">
-          Play in-person at a partner pub with your table PIN, or join a virtual pub team to battle remote squads across the globe!
+          Play in-person at a partner pub with the PIN announced at the venue, or request entry to a Virtual Pub Quiz where the Quizmaster issues your Room PIN upon approval!
         </p>
       </div>
 
       <!-- Quick Join PIN Code Box -->
       <div class="p-6 rounded-2xl bg-gradient-to-r from-purple-950/50 via-slate-900 to-indigo-950/50 border border-purple-500/30 font-mono space-y-3">
         <div class="font-bold text-xs text-cyan-300 uppercase flex items-center gap-2">
-          <span>🔑</span> Have an In-Venue Room PIN?
+          <span>🔑</span> Have a Venue or Approved Room PIN?
         </div>
         <form action="{{ url_for('arena.league_join') }}" method="POST" class="flex flex-col sm:flex-row gap-3">
-          <input type="text" name="pin_code" maxlength="6" required placeholder="Enter 4-Digit Room PIN (e.g. 7742)" class="px-4 py-2.5 rounded-xl bg-slate-950 border border-purple-500/30 text-white font-mono text-sm uppercase tracking-widest focus:outline-none focus:border-cyan-400 flex-1">
+          <input type="text" name="pin_code" maxlength="6" required placeholder="Enter 4-Digit Venue / Host PIN" class="px-4 py-2.5 rounded-xl bg-slate-950 border border-purple-500/30 text-white font-mono text-sm uppercase tracking-widest focus:outline-none focus:border-cyan-400 flex-1">
           <button type="submit" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs uppercase tracking-wider transition">
             Join Venue Room &rarr;
           </button>
         </form>
         <p class="text-[10px] text-slate-400">
-          Pub room PINs are displayed on the venue's big-screen TV or announced by the quizmaster at the bar.
+          🔒 Physical pub room PINs are ONLY given out at the venue by the Quizmaster (or shown on the venue's projector screen).
         </p>
       </div>
 
@@ -52,24 +52,24 @@
           {% set is_online = ('online' in lg.slug or 'cyber' in lg.slug or 'virtual' in lg.name|lower) %}
           <div class="p-5 rounded-2xl bg-slate-900/60 border {% if is_online %}border-cyan-500/40 bg-gradient-to-r from-cyan-950/20 via-slate-900/60 to-purple-950/20{% else %}border-purple-500/20{% endif %} font-mono flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-cyan-400/50 transition">
             <div class="space-y-1">
-              <div class="flex items-center gap-2">
+              <div class="flex flex-wrap items-center gap-2">
                 <span class="text-lg">{% if is_online %}🌐{% else %}🍺{% endif %}</span>
                 <span class="font-bold text-sm text-white">{{ lg.name }}</span>
                 {% if is_online %}
-                <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[10px] font-bold border border-cyan-500/30">ONLINE LEAGUE • OPEN</span>
+                <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[10px] font-bold border border-cyan-500/30">VIRTUAL PUB • REQUEST APPROVAL</span>
                 {% else %}
-                <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-bold border border-amber-500/30">IN-VENUE PIN GATED</span>
+                <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-bold border border-amber-500/30">🔒 IN-VENUE ONLY • HOST BOUNCER</span>
                 {% endif %}
               </div>
               <div class="text-xs text-slate-400">{{ lg.venue_name }} &bull; {{ lg.schedule_day }}</div>
               <div class="text-[11px] text-purple-300">{{ lg.description }}</div>
             </div>
             <div class="flex items-center gap-2 shrink-0">
-              <a href="{{ url_for('arena.league_tv', slug=lg.slug) }}" target="_blank" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-xs uppercase border border-cyan-500/30 transition flex items-center gap-1.5" title="Open Big Screen TV Projector View">
-                <span>🖥️ TV Mode</span>
+              <a href="{{ url_for('arena.league_manager', slug=lg.slug) }}" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-purple-300 font-bold text-xs uppercase border border-purple-500/30 transition flex items-center gap-1" title="Quizmaster Console">
+                <span>🎙️ Host</span>
               </a>
               <a href="{{ url_for('arena.league_lounge', slug=lg.slug) }}" class="px-4 py-2 rounded-xl bg-gradient-to-r {% if is_online %}from-cyan-500 to-blue-600 text-slate-950{% else %}from-purple-600 to-indigo-600 text-white{% endif %} font-bold text-xs uppercase transition">
-                Enter Lounge &rarr;
+                {% if is_online %}Request Entry &rarr;{% else %}Venue Check-In &rarr;{% endif %}
               </a>
             </div>
           </div>

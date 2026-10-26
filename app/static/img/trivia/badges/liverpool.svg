@@ -1,6 +1,3 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" width="200" height="240">
-<rect width="100%" height="100%" rx="24" fill="#0f172a"/>
-<path d="M100 20 L165 40 L160 175 Q100 220 100 220 Q40 175 35 175 L30 40 Z" fill="#C8102E" stroke="#00B2A9" stroke-width="5"/>
-<text x="100" y="70" font-family="serif" font-size="20" font-weight="bold" fill="#F6EB61" text-anchor="middle">L.F.C.</text>
-<path d="M95 90 C90 85 92 78 100 78 C108 78 112 85 106 95 L115 110 L108 125 L112 150 L98 145 L88 150 L94 125 L88 110 Z" fill="#F6EB61"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" width="100%" height="100%">
+<rect width="200" height="240" rx="24" fill="#0f172a"/><path d="M100 20 L170 48 L155 178 Q100 220 100 220 Q45 178 30 178 L30 48 Z" fill="#C8102E" stroke="#F6EB61" stroke-width="6"/><path d="M100 65 C80 85 75 125 100 155 C125 125 120 85 100 65 Z" fill="#F6EB61"/><circle cx="100" cy="58" r="10" fill="#F6EB61"/>
 </svg>

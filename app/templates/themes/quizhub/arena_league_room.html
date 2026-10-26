@@ -48,55 +48,60 @@
     <!-- MAIN GAME CONTAINER -->
     <div id="pubQuizContainer" class="p-6 sm:p-10 rounded-3xl bg-slate-950/95 border-2 border-purple-500/40 backdrop-blur shadow-2xl space-y-8 relative overflow-hidden">
 
-      <!-- 0. IN-VENUE DIGITAL BOUNCER PENDING SCREEN (Until Quizmaster approves) -->
-      <div id="bouncerPendingScreen" class="{% if is_approved or is_virtual %}hidden{% endif %} py-12 text-center space-y-6">
+      <!-- 0. DIGITAL BOUNCER PENDING SCREEN (Until Quizmaster approves table / virtual squad) -->
+      <div id="bouncerPendingScreen" class="{% if is_approved %}hidden{% endif %} py-12 text-center space-y-6">
         <div class="w-20 h-20 rounded-3xl bg-amber-500/20 border-2 border-amber-400/50 flex items-center justify-center text-4xl mx-auto shadow-xl animate-pulse">
           🛡️
         </div>
         <div class="space-y-2">
           <span class="text-xs font-mono font-bold uppercase tracking-widest text-amber-400">
-            IN-VENUE GATEWAY &bull; TABLE {{ table_num }}
+            {% if is_virtual %}VIRTUAL PUB GATEWAY{% else %}IN-VENUE GATEWAY{% endif %} &bull; TABLE {{ table_num }}
           </span>
           <h2 class="text-2xl sm:text-3xl font-black text-white font-mono">
             Pending Host Approval
           </h2>
           <p class="text-xs text-slate-300 max-w-md mx-auto font-mono leading-relaxed">
-            Your table squad <strong class="text-amber-300">{{ team_name }}</strong> is queued for approval. To prevent internet crashers, the Quizmaster verifies each in-venue table or takes your paper entry slip.
+            Your squad <strong class="text-amber-300">{{ team_name }}</strong> is queued in the Quizmaster's Digital Bouncer. Once the Quizmaster approves your request, your room access &amp; PIN will unlock automatically!
           </p>
         </div>
         <div class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-950/80 border border-purple-500/30 text-cyan-300 font-mono text-xs">
           <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
-          <span>Awaiting Quizmaster 1-click confirmation...</span>
+          <span>Awaiting Quizmaster 1-click approval... (Auto-syncing)</span>
         </div>
         <p class="text-[11px] text-slate-500 font-mono">
-          This screen will automatically unlock the buzzer as soon as you are verified!
+          No need to refresh — this screen unlocks automatically within 2 seconds of approval!
         </p>
       </div>
 
       <!-- 1. WAITING FOR QUIZMASTER SCREEN (Approved, waiting for round to start) -->
-      <div id="waitingForHostScreen" class="{% if not is_approved or is_virtual or state.round_status == 'active' %}hidden{% endif %} py-12 text-center space-y-6">
+      <div id="waitingForHostScreen" class="{% if not is_approved or state.round_status == 'active' %}hidden{% endif %} py-12 text-center space-y-6">
         <div class="w-20 h-20 rounded-3xl bg-amber-500/20 border-2 border-amber-400/50 flex items-center justify-center text-4xl mx-auto shadow-xl animate-bounce">
           🍻
         </div>
         <div class="space-y-2">
-          <span class="text-xs font-mono font-bold uppercase tracking-widest text-emerald-400">
-            TABLE {{ table_num }} APPROVED &bull; {{ team_name }}
-          </span>
+          <div class="flex flex-wrap items-center justify-center gap-2">
+            <span class="text-xs font-mono font-bold uppercase tracking-widest text-emerald-400">
+              ✓ TABLE {{ table_num }} APPROVED &bull; {{ team_name }}
+            </span>
+            <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-mono text-[11px] font-bold">
+              🔑 Approved Room PIN: {{ league.pin_code }}
+            </span>
+          </div>
           <h2 class="text-2xl sm:text-3xl font-black text-white font-mono">
             Waiting for Quizmaster to Start Round {{ current_round }}
           </h2>
           <p class="text-xs text-slate-300 max-w-md mx-auto font-mono leading-relaxed">
-            Grab a drink at the bar and get your table ready! As soon as the Quizmaster activates Round {{ current_round }} ({{ round_info.name }}) on the big screen, questions will launch here simultaneously.
+            Grab a drink and get your squad ready! As soon as the Quizmaster clicks <strong>Start Round {{ current_round }} ({{ round_info.name }})</strong>, questions will launch here automatically.
           </p>
         </div>
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-950/60 border border-purple-500/30 text-cyan-300 font-mono text-xs">
           <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-          <span>Listening for Quizmaster on Big Screen TV...</span>
+          <span>Connected to Quizmaster Live Console...</span>
         </div>
       </div>
 
       <!-- 2. ACTIVE QUESTIONS SCREEN -->
-      <div id="activeQuizScreen" class="{% if not is_approved or (not is_virtual and state.round_status != 'active') %}hidden{% endif %} space-y-8">
+      <div id="activeQuizScreen" class="{% if not is_approved or state.round_status != 'active' %}hidden{% endif %} space-y-8">
         <!-- Top Row: Round Status & Timer -->
         <div class="flex items-center justify-between">
           <div class="space-y-0.5 font-mono text-xs">
@@ -401,21 +406,33 @@ if (submittedRoundScore > 0 && totalScore === 0) {
   totalScore = submittedRoundScore;
 }
 
-// Polling function for In-Venue Pub Quiz
+// Polling function for Pub Quiz (Both Physical Venue & Virtual Host-Gated Leagues)
 function pollVenueState() {
-  if (isVirtual) return;
-
-  fetch('/arena/leagues/' + encodeURIComponent(leagueSlug) + '/state')
+  fetch('/arena/leagues/' + encodeURIComponent(leagueSlug) + '/state?t=' + Date.now(), { cache: 'no-store' })
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (!data.success) return;
 
+      var myTeam = (data.teams || []).find(function(t) {
+        return String(t.table) === String(tableNum) || t.name === teamName;
+      });
+
+      // 0. Detect if Quizmaster clicked "Reset Tournament" or "Clear Tables"
+      if (!myTeam || data.current_round < currentRound) {
+        try {
+          Object.keys(localStorage).forEach(function(k) {
+            if (k.indexOf('pub_state_' + leagueSlug) === 0) {
+              localStorage.removeItem(k);
+            }
+          });
+        } catch(e) {}
+        window.location.href = '/arena/leagues/' + encodeURIComponent(leagueSlug) + '/room?table=' + encodeURIComponent(tableNum) + '&team=' + encodeURIComponent(teamName);
+        return;
+      }
+
       // 1. Check if our table has been approved by the Quizmaster bouncer
-      if (!isApproved && data.teams) {
-        var myTeam = data.teams.find(function(t) {
-          return String(t.table) === String(tableNum) || t.name === teamName;
-        });
-        if (myTeam && myTeam.status !== 'pending') {
+      if (!isApproved && myTeam) {
+        if (myTeam.status !== 'pending') {
           isApproved = true;
           var bouncerScreen = document.getElementById('bouncerPendingScreen');
           if (bouncerScreen) bouncerScreen.classList.add('hidden');
@@ -466,10 +483,7 @@ function pollVenueState() {
         if (quizScreen) quizScreen.classList.add('hidden');
         if (waitScreen) waitScreen.classList.add('hidden');
 
-        var myTeam = (data.teams || []).find(function(t) {
-          return String(t.table) === String(tableNum) || t.name === teamName;
-        });
-        var rScore = myTeam ? (myTeam['round_' + currentRound] || totalScore) : totalScore;
+        var rScore = myTeam ? (myTeam['round_' + currentRound] !== undefined ? myTeam['round_' + currentRound] : totalScore) : totalScore;
         var tScore = myTeam ? (myTeam.score || totalScore) : totalScore;
         var myRank = myTeam ? (myTeam.rank || 1) : 1;
 
@@ -644,6 +658,20 @@ function choosePubAnswer(choice) {
     }));
   } catch(e) {}
 
+  // Send live progress ping to server so Quizmaster sees table progress & partial score in real time!
+  try {
+    var progData = new FormData();
+    progData.append('table', tableNum);
+    progData.append('team', teamName);
+    progData.append('round', currentRound);
+    progData.append('question_index', currentIndex + 1);
+    progData.append('partial_score', totalScore);
+    fetch('/arena/leagues/' + encodeURIComponent(leagueSlug) + '/progress', {
+      method: 'POST',
+      body: progData
+    }).catch(function() {});
+  } catch(e) {}
+
   if (window.quizAudio) window.quizAudio.playTick();
 
   setTimeout(function() {
@@ -677,28 +705,16 @@ function finishRound() {
   })
   .then(function(res) { return res.json(); })
   .then(function(data) {
-    if (!isVirtual) {
-      document.getElementById('activeQuizScreen').classList.add('hidden');
-      document.getElementById('submissionsLockedScreen').classList.remove('hidden');
-    } else {
+    document.getElementById('activeQuizScreen').classList.add('hidden');
+    if (data && data.all_tables_finished) {
       showIntermission(data);
+    } else {
+      document.getElementById('submissionsLockedScreen').classList.remove('hidden');
     }
   })
   .catch(function(err) {
-    if (!isVirtual) {
-      document.getElementById('activeQuizScreen').classList.add('hidden');
-      document.getElementById('submissionsLockedScreen').classList.remove('hidden');
-    } else {
-      showIntermission({
-        completed_round: currentRound,
-        round_score: totalScore,
-        total_score: totalScore,
-        rank: 1,
-        total_rounds: totalRounds,
-        next_round: currentRound < totalRounds ? currentRound + 1 : null,
-        next_round_title: currentRound < totalRounds ? 'Next Round' : 'Tournament Complete'
-      });
-    }
+    document.getElementById('activeQuizScreen').classList.add('hidden');
+    document.getElementById('submissionsLockedScreen').classList.remove('hidden');
   });
 }
 
@@ -786,19 +802,10 @@ function showIntermission(data) {
     document.getElementById('intermissionTitle').textContent = 'Intermission & Next Round';
     document.getElementById('intermissionSubtitle').textContent = 'Review your answers above and enjoy the intermission break before launching next round.';
 
-    if (isVirtual) {
-      if (btnNext) {
-        btnNext.classList.remove('hidden');
-        btnNext.textContent = '▶ Start Level ' + data.next_round + ': ' + (data.next_round_title || '') + ' →';
-        btnNext.href = '/arena/leagues/' + encodeURIComponent(leagueSlug) + '/room?round=' + data.next_round + '&table=' + encodeURIComponent(tableNum) + '&team=' + encodeURIComponent(teamName);
-      }
-      if (venueWaitBox) venueWaitBox.classList.add('hidden');
-    } else {
-      if (btnNext) btnNext.classList.add('hidden');
-      if (venueWaitBox) {
-        venueWaitBox.classList.remove('hidden');
-        venueWaitBox.innerHTML = '<span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span><span>⏳ Break in progress: Waiting for Quizmaster to launch Round ' + data.next_round + '...</span>';
-      }
+    if (btnNext) btnNext.classList.add('hidden');
+    if (venueWaitBox) {
+      venueWaitBox.classList.remove('hidden');
+      venueWaitBox.innerHTML = '<span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span><span>⏳ Break in progress: Waiting for Quizmaster to launch Round ' + data.next_round + '...</span>';
     }
   } else {
     // Tournament is completed!
@@ -846,7 +853,7 @@ if (hasSubmittedRound || initialAnswersRevealed || initialRoundStatus === 'break
     if (lockScreen) lockScreen.classList.remove('hidden');
   }
   pollInterval = setInterval(pollVenueState, 2000);
-} else if (isApproved && (isVirtual || initialRoundStatus === 'active')) {
+} else if (isApproved && initialRoundStatus === 'active') {
   // Mid-round active questions: resume from currentIndex
   var quizScreen = document.getElementById('activeQuizScreen');
   if (quizScreen) quizScreen.classList.remove('hidden');
