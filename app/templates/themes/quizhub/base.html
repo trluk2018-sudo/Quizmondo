@@ -112,9 +112,11 @@
           <a href="{{ url_for('arena.leaderboard') }}" class="hover:text-cyan-400 transition py-1 flex items-center gap-1 {% if request.path == '/arena/leaderboard' %}text-cyan-400 font-bold{% endif %}">
             <span>🏆</span> Ranks
           </a>
+          {% if session.get('user_role') in ('creator', 'author', 'editor', 'admin') or session.get('is_creator') %}
           <a href="{{ url_for('arena.create_question') }}" class="hover:text-cyan-400 transition py-1 flex items-center gap-1 {% if request.path == '/arena/create' %}text-cyan-400 font-bold{% endif %}">
             <span>✏️</span> Studio
           </a>
+          {% endif %}
           <a href="{{ url_for('public.posts') }}" class="hover:text-cyan-400 transition py-1 flex items-center gap-1 {% if request.path.startswith('/posts') %}text-cyan-400 font-bold{% endif %}">
             <span>💡</span> Guides &amp; Facts
           </a>
@@ -171,9 +173,11 @@
       <a href="{{ url_for('arena.leaderboard') }}" class="block px-3.5 py-2.5 rounded-xl text-slate-200 hover:bg-purple-900/40 hover:text-cyan-300 transition">
         🏆 Global Leaderboard
       </a>
+      {% if session.get('user_role') in ('creator', 'author', 'editor', 'admin') or session.get('is_creator') %}
       <a href="{{ url_for('arena.create_question') }}" class="block px-3.5 py-2.5 rounded-xl text-slate-200 hover:bg-purple-900/40 hover:text-cyan-300 transition">
         ✏️ Quiz Creator Studio
       </a>
+      {% endif %}
       <a href="{{ url_for('public.posts') }}" class="block px-3.5 py-2.5 rounded-xl text-slate-200 hover:bg-purple-900/40 hover:text-cyan-300 transition">
         💡 Guides, Facts &amp; Trivia
       </a>

@@ -297,6 +297,51 @@ function finishRound() {
   });
 }
 
+var PLANETARY_JOURNEYS = {
+  1: {
+    originIcon: '🌍', originName: 'EARTH', originSub: 'Round 1 Launch',
+    destIcon: '🌕', destName: 'THE MOON', destSub: 'Lunar Colony',
+    missionTitle: 'MISSION: EARTH ➔ MOON SPRINT',
+    distance: '384,400 KM',
+    arrivalMsg: '🌕 Lunar Orbit Achieved! Telemetry Synchronized.'
+  },
+  2: {
+    originIcon: '🌕', originName: 'THE MOON', originSub: 'Lunar Base',
+    destIcon: '🪐', destName: 'MARS', destSub: 'Red Planet Colony',
+    missionTitle: 'MISSION: MOON ➔ MARS EXPEDITION',
+    distance: '225,000,000 KM',
+    arrivalMsg: '🪐 Mars Orbit Achieved! Telemetry Synchronized.'
+  },
+  3: {
+    originIcon: '🪐', originName: 'MARS', originSub: 'Martian Outpost',
+    destIcon: '♃', destName: 'JUPITER', destSub: 'Great Red Spot',
+    missionTitle: 'MISSION: MARS ➔ JUPITER VOYAGE',
+    distance: '550,000,000 KM',
+    arrivalMsg: '♃ Jovian Gravity Assist Locked! Telemetry Synchronized.'
+  },
+  4: {
+    originIcon: '♃', originName: 'JUPITER', originSub: 'Jovian Orbit',
+    destIcon: '🪐', destName: 'SATURN', destSub: 'Ring Titan',
+    missionTitle: 'MISSION: JUPITER ➔ SATURN FLYBY',
+    distance: '650,000,000 KM',
+    arrivalMsg: '🪐 Saturn Rings Traversed! Telemetry Synchronized.'
+  },
+  5: {
+    originIcon: '🪐', originName: 'SATURN', originSub: 'Titan Enclave',
+    destIcon: '🌌', destName: 'DEEP SPACE', destSub: 'Galactic Core',
+    missionTitle: 'MISSION: SATURN ➔ DEEP GALAXY FINALE',
+    distance: '1,500,000,000 KM',
+    arrivalMsg: '🌌 Cosmic Edge & Galactic Core Reached! Finale Synchronized.'
+  },
+  6: {
+    originIcon: '🌌', originName: 'DEEP SPACE', originSub: 'Cosmic Edge',
+    destIcon: '🏆', destName: 'VICTORY NEBULA', destSub: 'Hall of Fame',
+    missionTitle: 'MISSION: CHAMPIONSHIP TRIUMPH',
+    distance: 'INFINITY',
+    arrivalMsg: '🏆 Championship Orbit Secured! Telemetry Synchronized.'
+  }
+};
+
 function showRocketAnimation(data) {
   var modal = document.getElementById('rocketModal');
   if (!modal) {
@@ -310,7 +355,28 @@ function showRocketAnimation(data) {
     window.quizAudio.playTick();
   }
 
-  // Trigger rocket transit from Earth to Mars
+  // Setup dynamic planetary journey for this round
+  var journey = PLANETARY_JOURNEYS[currentRound] || PLANETARY_JOURNEYS[1];
+
+  var badgeText = document.getElementById('missionBadgeText');
+  var pOrigIcon = document.getElementById('planetOriginIcon');
+  var pOrigName = document.getElementById('planetOriginName');
+  var pOrigSub = document.getElementById('planetOriginSub');
+  var pDestIcon = document.getElementById('planetDestIcon');
+  var pDestName = document.getElementById('planetDestName');
+  var pDestSub = document.getElementById('planetDestSub');
+  var distEl = document.getElementById('telemetryDistance');
+
+  if (badgeText) badgeText.textContent = journey.missionTitle;
+  if (pOrigIcon) pOrigIcon.textContent = journey.originIcon;
+  if (pOrigName) pOrigName.textContent = journey.originName;
+  if (pOrigSub) pOrigSub.textContent = journey.originSub;
+  if (pDestIcon) pDestIcon.textContent = journey.destIcon;
+  if (pDestName) pDestName.textContent = journey.destName;
+  if (pDestSub) pDestSub.textContent = journey.destSub;
+  if (distEl) distEl.textContent = journey.distance;
+
+  // Trigger rocket transit across interplanetary path
   var trail = document.getElementById('plasmaTrail');
   var rocket = document.getElementById('flyingRocket');
   var ticker = document.getElementById('botScoreTicker');
@@ -335,7 +401,7 @@ function showRocketAnimation(data) {
   }, 60);
 
   setTimeout(function() {
-    if (status1) status1.textContent = "🪐 Mars Orbit Achieved! Telemetry Synchronized.";
+    if (status1) status1.textContent = journey.arrivalMsg;
     if (status2) status2.textContent = "🤖 Cyber Bot Nova locked in: +" + targetBotScore + " PTS";
     if (window.quizAudio) window.quizAudio.playVictory();
   }, 1800);
@@ -425,20 +491,20 @@ initQuestion();
       <div class="relative z-10 flex items-center justify-between text-xs font-bold">
         <span class="px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-400/50 text-cyan-300 uppercase tracking-widest flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-          <span>MISSION: EARTH ➔ MARS SPRINT</span>
+          <span id="missionBadgeText">MISSION: EARTH ➔ MOON SPRINT</span>
         </span>
-        <span id="telemetryStatus" class="text-amber-400">TELEMETRY LOCKED</span>
+        <span class="text-amber-400 font-mono text-[11px]">DIST: <span id="telemetryDistance" class="font-bold">384,400 KM</span></span>
       </div>
 
       <!-- Flight Arena Track -->
       <div class="relative z-10 py-6 px-2 flex items-center justify-between">
-        <!-- Earth -->
+        <!-- Planet Origin -->
         <div class="flex flex-col items-center space-y-1 shrink-0">
           <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-blue-600 via-cyan-400 to-emerald-400 shadow-[0_0_20px_rgba(6,182,212,0.6)] flex items-center justify-center text-3xl animate-pulse">
-            🌍
+            <span id="planetOriginIcon">🌍</span>
           </div>
-          <span class="text-[11px] font-black text-cyan-300">EARTH</span>
-          <span class="text-[9px] text-slate-400">Round Origin</span>
+          <span id="planetOriginName" class="text-[11px] font-black text-cyan-300">EARTH</span>
+          <span id="planetOriginSub" class="text-[9px] text-slate-400">Round Origin</span>
         </div>
 
         <!-- Trajectory Track with Plasma Trail and Rocket -->
@@ -449,13 +515,13 @@ initQuestion();
           </div>
         </div>
 
-        <!-- Mars -->
+        <!-- Planet Destination -->
         <div class="flex flex-col items-center space-y-1 shrink-0">
           <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-amber-700 via-red-500 to-orange-400 shadow-[0_0_20px_rgba(239,68,68,0.6)] flex items-center justify-center text-3xl">
-            🪐
+            <span id="planetDestIcon">🌕</span>
           </div>
-          <span class="text-[11px] font-black text-rose-400">MARS</span>
-          <span class="text-[9px] text-slate-400">Colony Goal</span>
+          <span id="planetDestName" class="text-[11px] font-black text-rose-400">THE MOON</span>
+          <span id="planetDestSub" class="text-[9px] text-slate-400">Lunar Colony</span>
         </div>
       </div>
 

@@ -122,6 +122,16 @@
             </p>
           </div>
 
+          {% if is_started %}
+          <div class="p-3.5 rounded-2xl bg-amber-950/60 border border-amber-500/40 text-amber-200 font-mono text-xs flex items-center gap-3 shadow-md">
+            <span class="text-xl">🔒</span>
+            <div>
+              <strong class="text-amber-300 uppercase block tracking-wider">Tournament In Play: Round {{ state.current_round }}</strong>
+              <p class="text-[11px] text-slate-300 mt-0.5">New table registrations are closed for this active session. Previously registered tables may reconnect below.</p>
+            </div>
+          </div>
+          {% endif %}
+
           <form action="{{ url_for('arena.league_room', slug=league.slug) }}" method="GET" class="space-y-4 font-mono text-xs">
             <div class="space-y-1.5">
               <label class="block font-bold text-slate-300 uppercase">Venue Room PIN <span class="text-rose-400">*</span></label>
@@ -140,8 +150,12 @@
               </div>
             </div>
 
-            <button type="submit" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition transform hover:-translate-y-0.5">
+            <button type="submit" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r {% if is_started %}from-amber-600 via-orange-600 to-purple-600 hover:from-amber-500 hover:to-purple-500{% else %}from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500{% endif %} text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition transform hover:-translate-y-0.5">
+              {% if is_started %}
+              🔒 Reconnect Registered Table &rarr;
+              {% else %}
               🎮 Enter Pub Quiz Room &rarr;
+              {% endif %}
             </button>
           </form>
 

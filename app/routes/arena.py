@@ -672,7 +672,9 @@ def player_register():
             flash("An account with that email already exists. Try logging in instead.", "error")
             return render_template('themes/quizhub/arena_register.html', player=player)
 
-        user = User(username=username, email=email, role='player')
+        is_creator = bool(request.form.get('is_creator'))
+        assigned_role = 'creator' if is_creator else 'player'
+        user = User(username=username, email=email, role=assigned_role)
         user.set_password(password)
         db.session.add(user)
         db.session.flush()
@@ -687,6 +689,7 @@ def player_register():
         session['user_id'] = user.id
         session['username'] = user.username
         session['user_role'] = user.role
+        session['is_creator'] = is_creator
         session['qm_player_key'] = player.session_key
 
         flash(f"Welcome to Quizmondo, {username}! Your stats, coins, and duels are now permanently saved.", "success")
@@ -807,12 +810,18 @@ def league_lounge(slug):
     """Pub League Venue Lounge: Squad registration, schedule, and TV mode."""
     player = get_current_player()
     league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
+    state = league.get_state()
+    is_virtual = league.is_virtual_league()
+    is_started = False if is_virtual else (state.get('current_round', 1) > 1 or state.get('round_status') in ('active', 'break', 'closed', 'finished'))
     # Only display approved real teams on lounge scoreboard (no mock demo teams!)
     teams = [t for t in league.get_teams() if t.get('status') != 'pending']
     return render_template(
         'themes/quizhub/arena_league_lounge.html',
         player=player,
         league=league,
+        state=state,
+        is_virtual=is_virtual,
+        is_started=is_started,
         teams=teams
     )
 
@@ -1146,6 +1155,13 @@ def league_room(slug):
 
     if not is_virtual:
         if not team_entry:
+            # Strictly prevent new teams from joining a pub quiz tournament that has already started
+            quiz_already_started = (state.get('current_round', 1) > 1 or state.get('round_status') in ('active', 'break', 'closed', 'finished'))
+            if quiz_already_started:
+                curr_r = state.get('current_round', 1)
+                flash(f"Table registration is closed: {league.name} has already started Round {curr_r}. New tables cannot join mid-tournament. Please check in with the Quizmaster or join before the next match.", "error")
+                return redirect(url_for('arena.league_lounge', slug=slug))
+
             approved_count = len([t for t in teams if t.get('status') != 'pending'])
             if approved_count >= max_tables:
                 flash(f"This pub venue has reached its maximum table capacity of {max_tables} tables. Please check with the Quizmaster.", "error")
@@ -1363,7 +1379,15 @@ def passes_safety_filter(text: str) -> bool:
 
 @arena_bp.route('/create', methods=['GET', 'POST'])
 def create_question():
-    """Community Quiz and Trivia Pack Studio."""
+    """Community Quiz and Trivia Pack Studio - restricted to quiz creators."""
+    user_id = session.get('user_id')
+    user_role = session.get('user_role')
+    is_creator = user_role in ('creator', 'author', 'editor', 'admin') or session.get('is_creator')
+
+    if not user_id or not is_creator:
+        flash("Quiz Creator Studio is reserved for verified quiz creators. Please log in or register a Creator profile.", "info")
+        return redirect(url_for('arena.player_login', next=url_for('arena.create_question')))
+
     player = get_current_player()
     
     if request.method == 'POST':

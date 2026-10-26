@@ -1,4 +1,5 @@
 """Initial question seed, packs catalog, pub leagues, and homepage module synchronizer for Quizmondo Arena."""
+import os
 import json
 from datetime import datetime, timedelta
 from ..models import db, QuizQuestion, QuizPack, PubLeague, PageModule, MenuItem, Post, Category, SiteSetting
@@ -950,6 +951,66 @@ def seed_quizmondo_full_environment():
         db.session.commit()
     except Exception as e:
         print('Error seeding extra questions:', e)
+
+    # 2c. Synchronize 15 Mega Categories (3,000+ Questions)
+    try:
+        mega_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'mega_questions_3000.json')
+        if os.path.exists(mega_path):
+            with open(mega_path, 'r', encoding='utf-8') as f:
+                mega_data = json.load(f)
+
+            for cat_slug, cat_info in mega_data.get('categories', {}).items():
+                pack = QuizPack.query.filter_by(category_slug=cat_slug).first()
+                if not pack:
+                    pack = QuizPack(
+                        title=cat_info['title'],
+                        slug=cat_slug,
+                        description=cat_info['description'],
+                        icon=cat_info['icon'],
+                        category_slug=cat_slug,
+                        is_community=False,
+                        author_name='Quizmondo Master',
+                        question_count=cat_info['question_count']
+                    )
+                    db.session.add(pack)
+                    db.session.flush()
+                else:
+                    pack.title = cat_info['title']
+                    pack.description = cat_info['description']
+                    pack.icon = cat_info['icon']
+                    pack.question_count = cat_info['question_count']
+
+                existing_prompts = set(
+                    r[0] for r in db.session.query(QuizQuestion.prompt).filter_by(category_slug=cat_slug).all()
+                )
+
+                new_q_objects = []
+                for q_item in cat_info.get('questions', []):
+                    if q_item['prompt'] not in existing_prompts:
+                        q = QuizQuestion(
+                            category_slug=cat_slug,
+                            category_name=cat_info['title'],
+                            pack_slug=cat_slug,
+                            prompt=q_item['prompt'],
+                            question_type=q_item.get('type', 'classic'),
+                            options_json=json.dumps(q_item['options']),
+                            correct_option=q_item['correct'],
+                            explanation=q_item['explanation'],
+                            difficulty=q_item.get('difficulty', 'medium'),
+                            points=100,
+                            time_limit=15,
+                            status='approved',
+                            is_community=False
+                        )
+                        new_q_objects.append(q)
+                        existing_prompts.add(q_item['prompt'])
+
+                if new_q_objects:
+                    db.session.bulk_save_objects(new_q_objects)
+                    db.session.commit()
+            print("MEGA_CATEGORIES_SYNCHRONIZED_SUCCESSFULLY")
+    except Exception as e:
+        print('Error seeding mega categories:', e)
 
     # 3. Synchronize Pub Leagues (Always start clean with 0 demo tables)
     DEMO_TEAM_NAMES = {
