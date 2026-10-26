@@ -2,9 +2,10 @@ import json
 import random
 import secrets
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, flash, current_app
+from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, flash, current_app, Response
 from sqlalchemy.sql.expression import func
 from ..models import db, User, PlayerProfile, ArenaMatch, ArenaRound, QuizQuestion, QuizPack, PubLeague, SiteSetting
+from ..utils.share_card import generate_duel_card_png, generate_pub_card_png
 
 arena_bp = Blueprint('arena', __name__, url_prefix='/arena')
 
@@ -222,14 +223,27 @@ def match_lobby(match_code):
     base_url = current_app.config.get('APP_PUBLIC_URL', request.host_url.rstrip('/'))
     play_url = f"{base_url}/arena/match/{match.match_code}/play"
     invite_url = play_url
-    whatsapp_text = (
-        f"🎮 Duel Challenge on Quizmondo! {player.display_name} challenged you to a trivia duel! "
-        f"Tap here to play your questions now: {play_url}"
-    )
+    active_cat = active_round.category_name if active_round else "General Trivia"
     target_nudgee = opponent_name if (opponent_assigned and opponent_name) else 'Challenger'
+    whatsapp_text = (
+        f"┏━━━━━━━━━━━━━━━━━━━━━┓\n"
+        f"⚡ *QUIZMONDO ARENA DUEL* ⚡\n"
+        f"┗━━━━━━━━━━━━━━━━━━━━━┛\n"
+        f"🎯 *{player.display_name}* has challenged you to a live trivia duel!\n"
+        f"🔥 *Round {match.current_round}:* {active_cat}\n"
+        f"🏆 *Target Score:* {match.p1_total_score} PTS\n\n"
+        f"👇 *TAP LINK BELOW TO CLASH NOW:* 👇\n"
+        f"{play_url}"
+    )
     whatsapp_nudge_text = (
-        f"🔔 Hey {target_nudgee}! It's your turn in our Quizmondo trivia duel vs {player.display_name}! "
-        f"Tap here to play Round {match.current_round} now: {play_url}"
+        f"┏━━━━━━━━━━━━━━━━━━━━━┓\n"
+        f"🔔 *ROUND {match.current_round} ARENA NUDGE* 🔔\n"
+        f"┗━━━━━━━━━━━━━━━━━━━━━┛\n"
+        f"⚔️ Hey *{target_nudgee}*! *{player.display_name}* just finished Round {match.current_round}!\n"
+        f"📊 *Scoreboard:* {player.display_name} ({match.p1_total_score} pts) vs {opponent_name} ({match.p2_total_score} pts)\n"
+        f"⚡ It's *YOUR TURN* to buzz in and take the lead!\n\n"
+        f"👇 *TAP LINK BELOW TO PLAY ROUND {match.current_round}:* 👇\n"
+        f"{play_url}"
     )
 
     all_rounds = match.rounds.all()
@@ -251,6 +265,26 @@ def match_lobby(match_code):
         whatsapp_nudge_text=whatsapp_nudge_text,
         has_account=bool(session.get('user_id'))
     )
+
+
+@arena_bp.route('/match/<match_code>/card.png')
+def match_card_image(match_code):
+    """Dynamic 1200x630 OpenGraph match preview card for WhatsApp and social sharing."""
+    match = ArenaMatch.query.filter_by(match_code=match_code).first_or_404()
+    active_r = match.rounds.filter_by(round_number=match.current_round).first()
+    cat_name = active_r.category_name if active_r else "General Trivia"
+    png_bytes = generate_duel_card_png(
+        p1_name=match.player1_name or "Player 1",
+        p2_name=match.player2_name or "Challenger",
+        round_num=match.current_round,
+        category_name=cat_name,
+        p1_score=match.p1_total_score,
+        p2_score=match.p2_total_score,
+        match_code=match.match_code
+    )
+    resp = Response(png_bytes, mimetype='image/png')
+    resp.headers['Cache-Control'] = 'public, max-age=60'
+    return resp
 
 
 @arena_bp.route('/match/<match_code>/nudge')
@@ -773,20 +807,32 @@ def league_lounge(slug):
     """Pub League Venue Lounge: Squad registration, schedule, and TV mode."""
     player = get_current_player()
     league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
-    teams = league.get_teams()
-    if not teams:
-        teams = [
-            {'name': 'The Quizly Bears', 'score': 480, 'members': 4, 'rank': 1},
-            {'name': 'Tequila Mockingbird', 'score': 420, 'members': 3, 'rank': 2},
-            {'name': 'Trivia Newton John', 'score': 390, 'members': 5, 'rank': 3},
-            {'name': 'Quiz Pro Quo', 'score': 350, 'members': 2, 'rank': 4}
-        ]
+    # Only display approved real teams on lounge scoreboard (no mock demo teams!)
+    teams = [t for t in league.get_teams() if t.get('status') != 'pending']
     return render_template(
         'themes/quizhub/arena_league_lounge.html',
         player=player,
         league=league,
         teams=teams
     )
+
+
+@arena_bp.route('/leagues/<slug>/card.png')
+def league_card_image(slug):
+    """Dynamic 1200x630 OpenGraph pub quiz venue invite card for WhatsApp / social previews."""
+    league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
+    state = league.get_state()
+    cfg = state.get('config', {})
+    png_bytes = generate_pub_card_png(
+        venue_name=league.venue_name or league.name,
+        pin_code=league.pin_code,
+        schedule_day=league.schedule_day,
+        first_prize=cfg.get('first_prize'),
+        second_prize=cfg.get('second_prize')
+    )
+    resp = Response(png_bytes, mimetype='image/png')
+    resp.headers['Cache-Control'] = 'public, max-age=120'
+    return resp
 
 
 def get_next_weekly_pub_date():
@@ -1038,15 +1084,17 @@ def league_manager_action(slug):
         state['current_round'] = 1
         state['round_status'] = 'waiting' if not league.is_virtual_league() else 'active'
         state['answers_revealed'] = False
-        for t in teams:
-            t['score'] = 0
-            for k in list(t.keys()):
-                if k.startswith('round_'):
-                    del t[k]
-        state['teams'] = teams
+        state['teams'] = []
+        state['round_questions'] = {}
         league.set_state(state)
         db.session.commit()
-        return respond("Tournament reset! Ready for a fresh match.")
+        return respond("Tournament reset! All tables cleared. Ready for fresh check-ins.")
+
+    elif action == 'clear_tables':
+        state['teams'] = []
+        league.set_state(state)
+        db.session.commit()
+        return respond("All registered tables cleared!")
 
     league.set_state(state)
     db.session.commit()
@@ -1079,8 +1127,11 @@ def league_room(slug):
         round_info = VIRTUAL_PUB_ROUNDS_CONFIG.get(current_round, VIRTUAL_PUB_ROUNDS_CONFIG[1])
     else:
         total_rounds = int(cfg.get('total_rounds', 5))
-        current_round = state.get('current_round', 1)
-        round_info = PUB_ROUNDS_CONFIG.get(current_round, PUB_ROUNDS_CONFIG.get(1, {'number': 1, 'name': f'Round {current_round}', 'cat_slug': 'world-history', 'icon': '🌍'}))
+        # IN-VENUE PUB QUIZ: The active round is GOVERNED STRICTLY BY THE QUIZMASTER!
+        current_round = int(state.get('current_round', 1))
+        if current_round < 1 or current_round > total_rounds:
+            current_round = 1
+        round_info = PUB_ROUNDS_CONFIG.get(current_round, PUB_ROUNDS_CONFIG.get(1, {'number': 1, 'name': f'Round {current_round}', 'cat_slug': 'world-history', 'icon': '🧠'}))
 
     table_num = request.args.get('table') or session.get('pub_table_num') or '1'
     session['pub_table_num'] = str(table_num)
@@ -1117,15 +1168,40 @@ def league_room(slug):
     else:
         is_approved = True
 
-    # Exclude questions already seen in this session to strictly prevent repeats
-    seen_qids = session.get('pub_seen_qids', [])
-    total_q_count = QuizQuestion.query.count()
-    if len(seen_qids) >= max(10, total_q_count - 10):
-        seen_qids = []
+    # Check if this table has already submitted answers for the active round
+    has_submitted_round = False
+    submitted_round_score = 0
+    if team_entry:
+        r_score = team_entry.get(f'round_{current_round}')
+        if r_score is not None:
+            has_submitted_round = True
+            submitted_round_score = int(r_score)
 
-    cat_slug = round_info['cat_slug']
-    questions = get_random_questions(category_slug=cat_slug, count=5, exclude_ids=seen_qids)
-    session['pub_seen_qids'] = list(set(seen_qids + [q.id for q in questions]))
+    # PINNED ROUND QUESTIONS: Guarantee all tables and TV screen receive identical questions
+    round_questions_map = state.get('round_questions', {})
+    r_key = str(current_round)
+    pinned_ids = round_questions_map.get(r_key)
+    questions = []
+    if pinned_ids and isinstance(pinned_ids, list):
+        for qid in pinned_ids:
+            q = QuizQuestion.query.get(qid)
+            if q:
+                questions.append(q)
+
+    if len(questions) < 5:
+        all_pinned = []
+        for q_list in round_questions_map.values():
+            if isinstance(q_list, list):
+                all_pinned.extend(q_list)
+        seen_qids = session.get('pub_seen_qids', [])
+        exclude_ids = list(set(seen_qids + all_pinned))
+        cat_slug = round_info['cat_slug']
+        questions = get_random_questions(category_slug=cat_slug, count=5, exclude_ids=exclude_ids)
+        round_questions_map[r_key] = [q.id for q in questions]
+        state['round_questions'] = round_questions_map
+        league.set_state(state)
+        db.session.commit()
+        session['pub_seen_qids'] = list(set(exclude_ids + [q.id for q in questions]))
 
     # Always include answers in payload so client can reveal answers at end of round / quiz
     questions_json = [q.to_dict(include_answer=True) for q in questions]
@@ -1194,6 +1270,8 @@ def league_room(slug):
         questions_json=questions_json,
         is_virtual=is_virtual,
         is_approved=is_approved,
+        has_submitted_round=has_submitted_round,
+        submitted_round_score=submitted_round_score,
         config=cfg,
         next_pub_date=get_next_weekly_pub_date(),
         state=state
@@ -1209,14 +1287,24 @@ def league_tv(slug):
     current_round = state.get('current_round', 1)
     round_info = PUB_ROUNDS_CONFIG.get(current_round, PUB_ROUNDS_CONFIG[1])
 
-    # Get questions for current round to display answer key when revealed
-    cat_slug = round_info['cat_slug']
-    questions = QuizQuestion.query.filter_by(category_slug=cat_slug).limit(5).all()
-    if len(questions) < 5:
-        extra_q = QuizQuestion.query.filter(QuizQuestion.category_slug != cat_slug).limit(5 - len(questions)).all()
-        questions = list(questions) + list(extra_q)
+    # Big Screen TV MUST display the identical questions that tables are answering / reviewing
+    round_questions_map = state.get('round_questions', {})
+    pinned_ids = round_questions_map.get(str(current_round), [])
+    questions = []
+    if pinned_ids and isinstance(pinned_ids, list):
+        for qid in pinned_ids:
+            q = QuizQuestion.query.get(qid)
+            if q:
+                questions.append(q)
 
-    teams = league.get_teams()
+    if not questions:
+        cat_slug = round_info['cat_slug']
+        questions = QuizQuestion.query.filter_by(category_slug=cat_slug).limit(5).all()
+        if len(questions) < 5:
+            extra_q = QuizQuestion.query.filter(QuizQuestion.category_slug != cat_slug).limit(5 - len(questions)).all()
+            questions = list(questions) + list(extra_q)
+
+    teams = [t for t in league.get_teams() if t.get('status') != 'pending']
     return render_template(
         'themes/quizhub/arena_league_tv.html',
         league=league,

@@ -2,6 +2,19 @@
 
 {% block title %}{{ league.name }} • Venue Lounge • Quizmondo{% endblock %}
 
+{% block head_extra %}
+<meta property="og:type" content="game">
+<meta property="og:title" content="🍻 {{ league.name }} • Pub Quiz Squad Invite">
+<meta property="og:description" content="Join our table squad at {{ league.venue_name }}! Room PIN: {{ league.pin_code }}. {{ league.schedule_day }}.">
+<meta property="og:image" content="{{ request.url_root.rstrip('/') }}/arena/leagues/{{ league.slug }}/card.png">
+<meta property="og:image:secure_url" content="{{ request.url_root.rstrip('/') }}/arena/leagues/{{ league.slug }}/card.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{{ request.url_root.rstrip('/') }}/arena/leagues/{{ league.slug }}/card.png">
+{% endblock %}
+
 {% block content %}
 <div class="min-h-screen bg-[#090317] text-slate-100 font-sans py-10 relative overflow-hidden">
   <!-- Glowing ambient lights -->
@@ -123,14 +136,12 @@
               </div>
               <div class="space-y-1.5 col-span-2">
                 <label class="block font-bold text-slate-300 uppercase">Squad / Team Name</label>
-                <input type="text" name="team" required placeholder="e.g. The Quizly Bears" value="{{ session.get('pub_team_name') or 'Table Squad' }}" class="w-full bg-slate-950 border border-purple-500/30 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400">
+                <input type="text" name="team" required placeholder="e.g. The Brainiacs" value="{{ session.get('pub_team_name') or 'Table Squad' }}" class="w-full bg-slate-950 border border-purple-500/30 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400">
               </div>
             </div>
 
-            <input type="hidden" name="round" value="1">
-
             <button type="submit" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition transform hover:-translate-y-0.5">
-              🎮 Start Round 1: General Knowledge &rarr;
+              🎮 Enter Pub Quiz Room &rarr;
             </button>
           </form>
 
@@ -152,23 +163,35 @@
           </div>
 
           <div class="space-y-2 font-mono text-xs">
-            {% for t in teams %}
-            <div class="p-3.5 rounded-xl {% if loop.index == 1 %}bg-amber-950/40 border border-amber-400/50{% elif loop.index == 2 %}bg-slate-800/80 border border-slate-600/40{% elif loop.index == 3 %}bg-amber-900/20 border border-amber-700/40{% else %}bg-slate-950/60 border border-purple-500/20{% endif %} flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <span class="w-7 h-7 rounded-lg {% if loop.index == 1 %}bg-amber-400 text-slate-950{% elif loop.index == 2 %}bg-slate-300 text-slate-950{% elif loop.index == 3 %}bg-amber-600 text-white{% else %}bg-purple-900/60 text-purple-200{% endif %} flex items-center justify-center font-black text-xs">
-                  #{{ loop.index }}
-                </span>
-                <div>
-                  <span class="font-bold text-white block text-sm">{{ t.name }}</span>
-                  <span class="text-[10px] text-slate-400">{{ t.members or 4 }} players &bull; Table {{ t.table or loop.index }}</span>
+            {% if teams %}
+              {% for t in teams %}
+              <div class="p-3.5 rounded-xl {% if loop.index == 1 %}bg-amber-950/40 border border-amber-400/50{% elif loop.index == 2 %}bg-slate-800/80 border border-slate-600/40{% elif loop.index == 3 %}bg-amber-900/20 border border-amber-700/40{% else %}bg-slate-950/60 border border-purple-500/20{% endif %} flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="w-7 h-7 rounded-lg {% if loop.index == 1 %}bg-amber-400 text-slate-950{% elif loop.index == 2 %}bg-slate-300 text-slate-950{% elif loop.index == 3 %}bg-amber-600 text-white{% else %}bg-purple-900/60 text-purple-200{% endif %} flex items-center justify-center font-black text-xs">
+                    #{{ loop.index }}
+                  </span>
+                  <div>
+                    <span class="font-bold text-white block text-sm">{{ t.name }}</span>
+                    <span class="text-[10px] text-slate-400">{{ t.members or 4 }} players &bull; Table {{ t.table or loop.index }}</span>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span class="font-black text-cyan-300 text-base block">{{ t.score }} PTS</span>
+                  <span class="text-[10px] text-slate-500">Total</span>
                 </div>
               </div>
-              <div class="text-right">
-                <span class="font-black text-cyan-300 text-base block">{{ t.score }} PTS</span>
-                <span class="text-[10px] text-slate-500">Total</span>
+              {% endfor %}
+            {% else %}
+              <div class="py-12 text-center space-y-3 font-mono">
+                <div class="w-16 h-16 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-3xl mx-auto shadow-inner">
+                  🍻
+                </div>
+                <div class="text-sm font-bold text-white uppercase tracking-wider">No Tables Checked In Yet</div>
+                <p class="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
+                  Be the first squad to check in your table on the left! As soon as the Quizmaster starts the round, scores will update here live.
+                </p>
               </div>
-            </div>
-            {% endfor %}
+            {% endif %}
           </div>
         </div>
 
@@ -181,10 +204,25 @@
 <script>
 function shareTableInvite() {
   var url = window.location.origin + "{{ url_for('arena.league_lounge', slug=league.slug) }}";
-  var text = "🍻 Join our pub quiz table team at {{ league.venue_name }} on Quizmondo! Room PIN: {{ league.pin_code }} -> " + url;
+  var text =
+    "┏━━━━━━━━━━━━━━━━━━━━━┓\n" +
+    "🍻 *PUB QUIZ SQUAD INVITE* 🍻\n" +
+    "┗━━━━━━━━━━━━━━━━━━━━━┛\n" +
+    "📍 *{{ league.venue_name }}*\n" +
+    "🏆 *Tournament:* {{ league.name }}\n" +
+    "🔑 *Venue Room PIN:* `{{ league.pin_code }}`\n" +
+    "📅 *Schedule:* {{ league.schedule_day }}\n\n" +
+    "👇 *TAP LINK BELOW TO JOIN OUR SQUAD:* 👇\n" +
+    url;
   if (navigator.share) {
-    navigator.share({ title: "{{ league.name }}", text: text, url: url }).catch(function() {});
+    navigator.share({ title: "{{ league.name }}", text: text, url: url }).catch(function() {
+      window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(text), "_blank");
+    });
   } else {
+    window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(text), "_blank");
+  }
+}
+</script>
     window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(text), "_blank");
   }
 }

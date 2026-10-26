@@ -762,12 +762,7 @@ SEED_LEAGUES = [
         'venue_name': 'Quizmondo Cyber Tavern (Online Virtual Pub)',
         'description': 'Compete from home! Join a virtual pub squad, rep your local town, and battle remote teams across the globe in online pub quiz showdowns.',
         'schedule_day': 'Live 24/7 • Hourly Tournaments',
-        'teams': [
-            {'name': 'London Pint Pullers', 'score': 680, 'members': 4, 'rank': 1},
-            {'name': 'Dublin Craic Squad', 'score': 640, 'members': 4, 'rank': 2},
-            {'name': 'Sydney Harbour Brains', 'score': 610, 'members': 3, 'rank': 3},
-            {'name': 'New York Trivia Cartel', 'score': 570, 'members': 5, 'rank': 4}
-        ]
+        'teams': []
     },
     {
         'name': 'The Dog & Partridge Quiz League',
@@ -776,12 +771,7 @@ SEED_LEAGUES = [
         'venue_name': 'The Dog & Partridge Sports & Social Lounge',
         'description': 'Weekly Thursday showdown with live big screen leaderboards and bar vouchers.',
         'schedule_day': 'Every Thursday at 20:00 GMT',
-        'teams': [
-            {'name': 'The Quizly Bears', 'score': 540, 'members': 4, 'rank': 1},
-            {'name': 'Tequila Mockingbird', 'score': 490, 'members': 3, 'rank': 2},
-            {'name': 'Trivia Newton John', 'score': 450, 'members': 5, 'rank': 3},
-            {'name': 'Quiz Pro Quo', 'score': 380, 'members': 2, 'rank': 4}
-        ]
+        'teams': []
     },
     {
         'name': 'The Red Lion Virtual Pub Showdown',
@@ -790,12 +780,7 @@ SEED_LEAGUES = [
         'venue_name': 'The Red Lion Tavern & Craft Ale Bar',
         'description': 'High-octane pub quiz tournament with 5 rounds of audio, cinema, and history trivia.',
         'schedule_day': 'Every Tuesday at 19:30 GMT',
-        'teams': [
-            {'name': 'Smarty Pints', 'score': 620, 'members': 4, 'rank': 1},
-            {'name': 'Beer Today, Gone Tomorrow', 'score': 580, 'members': 4, 'rank': 2},
-            {'name': 'Fact Hunters', 'score': 510, 'members': 3, 'rank': 3},
-            {'name': 'The Fellowship of the Quiz', 'score': 460, 'members': 5, 'rank': 4}
-        ]
+        'teams': []
     },
     {
         'name': "The King's Arms Sunday Brain Buster",
@@ -804,11 +789,7 @@ SEED_LEAGUES = [
         'venue_name': "The King's Arms Traditional Coaching Inn",
         'description': 'End your weekend with the ultimate pub quiz championship. Prizes for 1st, 2nd, and Best Team Name!',
         'schedule_day': 'Every Sunday at 18:00 GMT',
-        'teams': [
-            {'name': 'Agatha Quiztie', 'score': 590, 'members': 4, 'rank': 1},
-            {'name': 'Universally Challenged', 'score': 540, 'members': 4, 'rank': 2},
-            {'name': 'Panic at the Distro', 'score': 480, 'members': 3, 'rank': 3}
-        ]
+        'teams': []
     }
 ]
 
@@ -970,7 +951,13 @@ def seed_quizmondo_full_environment():
     except Exception as e:
         print('Error seeding extra questions:', e)
 
-    # 3. Synchronize Pub Leagues
+    # 3. Synchronize Pub Leagues (Always start clean with 0 demo tables)
+    DEMO_TEAM_NAMES = {
+        'The Quizly Bears', 'Tequila Mockingbird', 'Trivia Newton John', 'Quiz Pro Quo',
+        'Smarty Pints', 'Beer Today, Gone Tomorrow', 'Fact Hunters', 'The Fellowship of the Quiz',
+        'Agatha Quiztie', 'Universally Challenged', 'Panic at the Distro',
+        'London Pint Pullers', 'Dublin Craic Squad', 'Sydney Harbour Brains', 'New York Trivia Cartel'
+    }
     for lg_data in SEED_LEAGUES:
         league = PubLeague.query.filter_by(slug=lg_data['slug']).first()
         if not league:
@@ -983,11 +970,15 @@ def seed_quizmondo_full_environment():
                 schedule_day=lg_data['schedule_day'],
                 is_active=True
             )
-            league.set_teams(lg_data['teams'])
+            league.set_teams([])
             db.session.add(league)
         else:
-            if not league.get_teams():
-                league.set_teams(lg_data['teams'])
+            # Purge any legacy demo tables from existing leagues
+            current_teams = league.get_teams()
+            real_teams = [t for t in current_teams if t.get('name') not in DEMO_TEAM_NAMES]
+            if len(real_teams) != len(current_teams):
+                league.set_teams(real_teams)
+    db.session.commit()
 
     # 4. Synchronize Categories & Posts
     for p_item in SEED_POSTS:

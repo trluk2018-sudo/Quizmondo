@@ -366,17 +366,40 @@ var tableNum = "{{ table_num }}";
 var teamName = "{{ team_name }}";
 var isVirtual = {{ 'true' if is_virtual else 'false' }};
 var isApproved = {{ 'true' if is_approved else 'false' }};
+var hasSubmittedRound = {{ 'true' if has_submitted_round else 'false' }};
+var submittedRoundScore = {{ submitted_round_score }};
 var initialRoundStatus = "{{ state.round_status }}";
 var initialAnswersRevealed = {{ 'true' if state.answers_revealed else 'false' }};
 var timeLimitPerQuestion = {{ config.question_time_limit or 15 }};
 
+var storageKey = 'pub_state_' + leagueSlug + '_r' + currentRound + '_t' + tableNum;
+
 var currentIndex = 0;
 var totalScore = 0;
+var recordedAnswers = [];
 var timer = timeLimitPerQuestion;
 var timerInterval = null;
 var answered = false;
 var CIRCUMFERENCE = 264;
 var pollInterval = null;
+
+// Restore persistent round state across browser refresh / device reboot
+try {
+  var stored = localStorage.getItem(storageKey);
+  if (stored) {
+    var savedState = JSON.parse(stored);
+    if (savedState) {
+      if (typeof savedState.currentIndex === 'number') currentIndex = savedState.currentIndex;
+      if (typeof savedState.totalScore === 'number') totalScore = savedState.totalScore;
+      if (Array.isArray(savedState.recordedAnswers)) recordedAnswers = savedState.recordedAnswers;
+      if (savedState.submitted) hasSubmittedRound = true;
+    }
+  }
+} catch(e) {}
+
+if (submittedRoundScore > 0 && totalScore === 0) {
+  totalScore = submittedRoundScore;
+}
 
 // Polling function for In-Venue Pub Quiz
 function pollVenueState() {
@@ -397,10 +420,13 @@ function pollVenueState() {
           var bouncerScreen = document.getElementById('bouncerPendingScreen');
           if (bouncerScreen) bouncerScreen.classList.add('hidden');
           
-          if (data.round_status === 'active') {
+          if (data.round_status === 'active' && !hasSubmittedRound) {
             var quizScreen = document.getElementById('activeQuizScreen');
             if (quizScreen) quizScreen.classList.remove('hidden');
             loadQuestion();
+          } else if (hasSubmittedRound) {
+            var lockScreen = document.getElementById('submissionsLockedScreen');
+            if (lockScreen) lockScreen.classList.remove('hidden');
           } else {
             var waitScreen = document.getElementById('waitingForHostScreen');
             if (waitScreen) waitScreen.classList.remove('hidden');
@@ -411,11 +437,13 @@ function pollVenueState() {
       if (!isApproved) return;
 
       // 2. Host started the round
-      if (data.current_round === currentRound && data.round_status === 'active') {
+      if (data.current_round === currentRound && data.round_status === 'active' && !hasSubmittedRound) {
         var waitScreen = document.getElementById('waitingForHostScreen');
         var quizScreen = document.getElementById('activeQuizScreen');
         if (waitScreen && !waitScreen.classList.contains('hidden')) {
           waitScreen.classList.add('hidden');
+        }
+        if (quizScreen && quizScreen.classList.contains('hidden')) {
           quizScreen.classList.remove('hidden');
           loadQuestion();
         }
@@ -424,22 +452,25 @@ function pollVenueState() {
       // 3. Host revealed answers
       if (data.current_round === currentRound && data.answers_revealed) {
         var lockScreen = document.getElementById('submissionsLockedScreen');
-        if (lockScreen && !lockScreen.classList.contains('hidden')) {
-          lockScreen.classList.add('hidden');
-          showIntermission({
-            completed_round: currentRound,
-            round_score: totalScore,
-            total_score: totalScore,
-            rank: 1,
-            total_rounds: totalRounds,
-            next_round: currentRound < totalRounds ? currentRound + 1 : null,
-            next_round_title: currentRound < totalRounds ? 'Next Round' : 'Tournament Complete'
-          });
-        }
+        var quizScreen = document.getElementById('activeQuizScreen');
+        var waitScreen = document.getElementById('waitingForHostScreen');
+        if (lockScreen) lockScreen.classList.add('hidden');
+        if (quizScreen) quizScreen.classList.add('hidden');
+        if (waitScreen) waitScreen.classList.add('hidden');
+        showIntermission({
+          completed_round: currentRound,
+          round_score: totalScore,
+          total_score: totalScore,
+          rank: 1,
+          total_rounds: totalRounds,
+          next_round: currentRound < totalRounds ? currentRound + 1 : null,
+          next_round_title: currentRound < totalRounds ? 'Next Round' : 'Tournament Complete'
+        });
       }
 
       // 4. Host advanced to next round
       if (data.current_round > currentRound) {
+        try { localStorage.removeItem(storageKey); } catch(e) {}
         window.location.href = '/arena/leagues/' + encodeURIComponent(leagueSlug) + '/room?round=' + data.current_round + '&table=' + encodeURIComponent(tableNum) + '&team=' + encodeURIComponent(teamName);
       }
     })
@@ -493,8 +524,6 @@ function updateTimer() {
   var ratio = Math.max(0, timer) / timeLimitPerQuestion;
   circle.style.strokeDashoffset = CIRCUMFERENCE - (ratio * CIRCUMFERENCE);
 }
-
-var recordedAnswers = [];
 
 var PUB_JOKES = [
   {
@@ -578,6 +607,16 @@ function choosePubAnswer(choice) {
     pts: ptsEarned
   });
 
+  // Persist mid-round state into localStorage so page refresh preserves progress
+  try {
+    localStorage.setItem(storageKey, JSON.stringify({
+      currentIndex: currentIndex + 1,
+      totalScore: totalScore,
+      recordedAnswers: recordedAnswers,
+      submitted: false
+    }));
+  } catch(e) {}
+
   if (window.quizAudio) window.quizAudio.playTick();
 
   setTimeout(function() {
@@ -588,6 +627,16 @@ function choosePubAnswer(choice) {
 
 function finishRound() {
   clearInterval(timerInterval);
+  hasSubmittedRound = true;
+
+  try {
+    localStorage.setItem(storageKey, JSON.stringify({
+      currentIndex: rawQuestions.length,
+      totalScore: totalScore,
+      recordedAnswers: recordedAnswers,
+      submitted: true
+    }));
+  } catch(e) {}
 
   // Submit score via fetch POST
   var formData = new FormData();
@@ -634,29 +683,49 @@ function showIntermission(data) {
   document.getElementById('modalTotalScore').textContent = data.total_score || totalScore;
   document.getElementById('modalRank').textContent = '#' + (data.rank || 1);
 
-  // 1. RENDER ANSWERS REVEALED ACCORDION (Revealed ONLY at the end of the round!)
+  // 1. RENDER OFFICIAL ROUND ANSWERS REVEALED ACCORDION (Always renders all 5 questions with options and explanations)
   var answersContainer = document.getElementById('revealedAnswersList');
   if (answersContainer) {
     answersContainer.innerHTML = '';
-    recordedAnswers.forEach(function(ans) {
-      var itemDiv = document.createElement('div');
-      itemDiv.className = 'p-3 rounded-xl ' + (ans.is_correct ? 'bg-emerald-950/40 border border-emerald-500/40' : 'bg-rose-950/30 border border-rose-500/30') + ' space-y-1.5';
-      
-      var statusBadge = ans.is_correct
-        ? '<span class="text-emerald-400 font-bold">✓ CORRECT (+' + ans.pts + ' PTS)</span>'
-        : (ans.choice === 'TIMEOUT' ? '<span class="text-amber-400 font-bold">⏱️ TIMEOUT (0 PTS)</span>' : '<span class="text-rose-400 font-bold">✗ INCORRECT (0 PTS)</span>');
+    rawQuestions.forEach(function(q, idx) {
+      var qNum = idx + 1;
+      var userAns = recordedAnswers.find(function(a) { return a.num === qNum; });
+      var userChoice = userAns ? userAns.choice : null;
+      var isCorrect = userAns ? userAns.is_correct : false;
+      var pts = userAns ? userAns.pts : 0;
 
-      itemDiv.innerHTML = '<div class="flex items-center justify-between text-[11px] font-bold text-white">' +
-        '<span>Q' + ans.num + ': ' + escapeHtml(ans.prompt) + '</span>' +
-        statusBadge +
+      var correctOpt = q.correct_option || '';
+      var correctText = (q.options && q.options[correctOpt]) ? q.options[correctOpt] : '';
+      var userChoiceText = (userChoice && q.options && q.options[userChoice]) 
+        ? ('Option ' + userChoice + ': ' + q.options[userChoice])
+        : (userChoice === 'TIMEOUT' ? 'Time Expired' : (userChoice ? 'Option ' + userChoice : 'No answer locked in'));
+
+      var itemDiv = document.createElement('div');
+      itemDiv.className = 'p-4 rounded-2xl ' + (isCorrect ? 'bg-emerald-950/40 border border-emerald-500/40' : 'bg-slate-900/90 border border-purple-500/30') + ' space-y-2';
+
+      var statusBadge = isCorrect
+        ? '<span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/40">✓ CORRECT (+' + pts + ' PTS)</span>'
+        : (userChoice === 'TIMEOUT' 
+            ? '<span class="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">⏱️ TIMEOUT (0 PTS)</span>' 
+            : '<span class="px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30">✗ INCORRECT (0 PTS)</span>');
+
+      itemDiv.innerHTML =
+        '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs font-bold text-white">' +
+          '<span>Q' + qNum + ': ' + escapeHtml(q.prompt) + '</span>' +
+          '<div class="shrink-0">' + statusBadge + '</div>' +
         '</div>' +
-        '<div class="flex items-center gap-3 text-[11px] font-mono">' +
-        '<span class="text-slate-300">Your choice: <strong class="' + (ans.is_correct ? 'text-emerald-300' : 'text-rose-300') + '">' + (ans.choice || 'None') + '</strong></span>' +
-        '<span class="text-slate-500">•</span>' +
-        '<span class="text-cyan-300">Correct Answer: <strong>Option ' + (ans.correct_option || '') + '</strong></span>' +
+        '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono pt-1">' +
+          '<div class="p-2.5 rounded-xl bg-slate-950/60 border ' + (isCorrect ? 'border-emerald-500/30 text-emerald-200' : 'border-rose-500/30 text-rose-200') + '">' +
+            '<span class="text-[10px] text-slate-400 block uppercase font-bold">Your Table Locked In:</span>' +
+            '<strong>' + escapeHtml(userChoiceText) + '</strong>' +
+          '</div>' +
+          '<div class="p-2.5 rounded-xl bg-cyan-950/50 border border-cyan-400/40 text-cyan-200">' +
+            '<span class="text-[10px] text-cyan-400 block uppercase font-bold">Official Correct Answer:</span>' +
+            '<strong>Option ' + escapeHtml(correctOpt) + ': ' + escapeHtml(correctText) + '</strong>' +
+          '</div>' +
         '</div>' +
-        '<div class="text-[10px] text-slate-400 pt-1 border-t border-purple-500/20">' +
-        escapeHtml(ans.explanation) +
+        '<div class="text-[11px] text-slate-300 bg-purple-950/40 p-3 rounded-xl border border-purple-500/20 leading-relaxed">' +
+          '💡 <strong>Explanation:</strong> ' + escapeHtml(q.explanation || 'Official Quizmondo answer archive.') +
         '</div>';
 
       answersContainer.appendChild(itemDiv);
@@ -706,11 +775,39 @@ function escapeHtml(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// Initialize
-if (isApproved && (isVirtual || initialRoundStatus === 'active')) {
+// Initialize on page load
+if (hasSubmittedRound) {
+  // Table already answered this round! NEVER restart questions on refresh!
+  var quizScreen = document.getElementById('activeQuizScreen');
+  var bouncerScreen = document.getElementById('bouncerPendingScreen');
+  var waitScreen = document.getElementById('waitingForHostScreen');
+  if (quizScreen) quizScreen.classList.add('hidden');
+  if (bouncerScreen) bouncerScreen.classList.add('hidden');
+  if (waitScreen) waitScreen.classList.add('hidden');
+
+  if (initialAnswersRevealed) {
+    showIntermission({
+      completed_round: currentRound,
+      round_score: totalScore,
+      total_score: totalScore,
+      rank: 1,
+      total_rounds: totalRounds,
+      next_round: currentRound < totalRounds ? currentRound + 1 : null,
+      next_round_title: currentRound < totalRounds ? 'Next Round' : 'Tournament Complete'
+    });
+  } else {
+    var lockScreen = document.getElementById('submissionsLockedScreen');
+    if (lockScreen) lockScreen.classList.remove('hidden');
+  }
+  pollInterval = setInterval(pollVenueState, 2000);
+} else if (isApproved && (isVirtual || initialRoundStatus === 'active')) {
+  // Mid-round active questions: resume from currentIndex
+  var quizScreen = document.getElementById('activeQuizScreen');
+  if (quizScreen) quizScreen.classList.remove('hidden');
   loadQuestion();
+  pollInterval = setInterval(pollVenueState, 2000);
 } else {
-  // Start polling in venue mode
+  // Waiting for host or bouncer approval
   pollInterval = setInterval(pollVenueState, 2000);
 }
 </script>

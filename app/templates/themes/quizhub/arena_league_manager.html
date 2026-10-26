@@ -142,13 +142,23 @@
             </button>
           </form>
 
-          <!-- Reset Tournament -->
-          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" onsubmit="return confirm('Reset all scores and start a fresh tournament?');" class="w-full sm:w-auto">
-            <input type="hidden" name="action" value="reset_quiz">
-            <button type="submit" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 hover:border-rose-500 text-slate-400 hover:text-rose-300 font-bold uppercase transition">
-              <span>🔄 Reset Tournament</span>
-            </button>
-          </form>
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <!-- Clear All Tables -->
+            <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" onsubmit="return confirm('Clear all registered tables?');" class="w-full sm:w-auto">
+              <input type="hidden" name="action" value="clear_tables">
+              <button type="submit" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 hover:border-amber-500 text-slate-400 hover:text-amber-300 font-bold uppercase transition">
+                <span>🧹 Clear Tables</span>
+              </button>
+            </form>
+
+            <!-- Reset Tournament -->
+            <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" onsubmit="return confirm('Reset tournament to Round 1 and clear all tables?');" class="w-full sm:w-auto">
+              <input type="hidden" name="action" value="reset_quiz">
+              <button type="submit" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 hover:border-rose-500 text-slate-400 hover:text-rose-300 font-bold uppercase transition">
+                <span>🔄 Reset Tournament</span>
+              </button>
+            </form>
+          </div>
         </div>
       </div>
 

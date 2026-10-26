@@ -18,6 +18,17 @@
   <link rel="canonical" href="{{ cur_canonical }}">
   {% if is_noindex %}<meta name="robots" content="noindex, nofollow">{% else %}<meta name="robots" content="index, follow">{% endif %}
 
+  {# Default Social & OpenGraph Metadata (WhatsApp, Facebook, Twitter) #}
+  <meta property="og:site_name" content="Quizmondo">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ cur_meta_title }}">
+  {% if cur_meta_desc %}<meta property="og:description" content="{{ cur_meta_desc }}">{% endif %}
+  <meta property="og:url" content="{{ cur_canonical }}">
+  {% if cur_og_image %}
+  <meta property="og:image" content="{{ cur_og_image if cur_og_image.startswith('http') else request.url_root.rstrip('/') + cur_og_image }}">
+  {% endif %}
+  <meta name="twitter:card" content="summary_large_image">
+
   <!-- Local Compiled Tailwind CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.min.css') }}">
 

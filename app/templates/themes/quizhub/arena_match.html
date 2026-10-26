@@ -3,6 +3,19 @@
 
 {% block title %}Match vs {{ match.player2_name or 'Challenger' }} • Quizmondo Arena{% endblock %}
 
+{% block head_extra %}
+<meta property="og:type" content="game">
+<meta property="og:title" content="⚔️ QUIZMONDO ARENA DUEL • {{ player.display_name }} vs {{ opponent_name or 'Challenger' }}">
+<meta property="og:description" content="🔥 Round {{ match.current_round }} is Live! Tap to enter the arena and clash now!">
+<meta property="og:image" content="{{ request.url_root.rstrip('/') }}/arena/match/{{ match.match_code }}/card.png">
+<meta property="og:image:secure_url" content="{{ request.url_root.rstrip('/') }}/arena/match/{{ match.match_code }}/card.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{{ request.url_root.rstrip('/') }}/arena/match/{{ match.match_code }}/card.png">
+{% endblock %}
+
 {% block content %}
 <div class="min-h-screen bg-[#0a0418] text-slate-100 font-sans py-8 sm:py-12 relative overflow-hidden flex flex-col justify-center">
   <!-- Glowing nebula ambient backdrop -->
@@ -185,8 +198,16 @@
           <!-- ============================================== -->
           <!-- HUMAN DUEL: AWAITING OPPONENT TURN             -->
           <!-- ============================================== -->
-          <div class="p-5 rounded-2xl bg-slate-900/90 border border-purple-500/30 text-center space-y-2 font-mono">
-            <div class="text-xs font-bold text-amber-400 uppercase tracking-wider">
+          <!-- Visual Duel Share Card Preview -->
+          <div class="max-w-md mx-auto space-y-2 text-center font-mono">
+            <div class="relative group">
+              <img src="/arena/match/{{ match.match_code }}/card.png" alt="Quizmondo Duel Card" class="w-full rounded-2xl border-2 border-purple-500/40 shadow-2xl transition transform group-hover:scale-[1.01]">
+              <div class="absolute bottom-2 right-2 px-2.5 py-1 rounded-lg bg-slate-950/80 border border-purple-500/40 text-[10px] text-cyan-300 font-bold backdrop-blur">
+                ⚡ WhatsApp Share Card
+              </div>
+            </div>
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/40">
+              <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
               ⏳ Awaiting Opponent's Turn
             </div>
             <p class="text-xs text-slate-300 leading-relaxed max-w-md mx-auto">
@@ -199,7 +220,7 @@
               <span>💬 Nudge {{ opponent_name or 'Challenger' }} on WhatsApp</span>
             </button>
             <button type="button" onclick="shareMatchLink()" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-slate-900 border border-purple-500/30 hover:border-cyan-400 text-cyan-300 text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95">
-              <span>📋 Copy Direct Round {{ match.current_round }} Link</span>
+              <span>📋 Copy Graphical Card &amp; Link</span>
             </button>
           </div>
 
@@ -333,16 +354,17 @@ function nudgeOnWhatsApp() {
 }
 
 function shareMatchLink() {
+  var shareText = whatsappNudgeText || whatsappInviteText;
   if (navigator.share) {
     navigator.share({
-      title: 'Quizmondo Duel Match',
-      text: whatsappInviteText,
+      title: 'Quizmondo Arena Duel',
+      text: shareText,
       url: matchInviteUrl
     }).catch(function(err) {
-      copyToClipboard(matchInviteUrl);
+      copyToClipboard(shareText);
     });
   } else {
-    copyToClipboard(matchInviteUrl);
+    copyToClipboard(shareText);
   }
 }
 
