@@ -19,15 +19,15 @@
           Trivia Packs &amp; Categories
         </h1>
         <p class="text-xs sm:text-sm text-slate-400 mt-1 max-w-xl">
-          Explore official master packs and custom trivia decks. Challenge a friend or play solo vs Cyber Bot Nova!
+          Tap any pack to play immediately, or choose solo bot play vs friend challenge.
         </p>
       </div>
 
       <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-        <a href="{{ url_for('arena.create_question') }}" class="px-4 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold font-mono text-xs uppercase tracking-wider shadow-lg shadow-cyan-500/20 transition active:scale-95 flex items-center gap-1.5">
+        <a href="{{ url_for('arena.create_question') }}" class="px-4 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold font-mono text-xs uppercase tracking-wider shadow-lg shadow-cyan-500/20 transition active:scale-95 flex items-center gap-1.5 cursor-pointer" style="touch-action: manipulation;">
           <span>✨</span> + Create Custom Quiz
         </a>
-        <a href="{{ url_for('arena.dashboard') }}" class="px-3.5 py-3 rounded-xl bg-slate-900 border border-purple-500/30 hover:border-cyan-400 text-xs text-slate-300 font-mono transition active:scale-95">
+        <a href="{{ url_for('arena.dashboard') }}" class="px-3.5 py-3 rounded-xl bg-slate-900 border border-purple-500/30 hover:border-cyan-400 text-xs text-slate-300 font-mono transition active:scale-95 cursor-pointer" style="touch-action: manipulation;">
           &larr; Arena Lobby
         </a>
       </div>
@@ -35,11 +35,11 @@
 
     <!-- Category Filter Chips (Touch Friendly on Mobile) -->
     <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none font-mono text-xs">
-      <button type="button" onclick="filterCategory('all', this)" class="cat-pill active px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold border border-cyan-400 shadow transition whitespace-nowrap active:scale-95">
+      <button type="button" onclick="filterCategory('all', this)" class="cat-pill active px-4 py-2.5 rounded-xl bg-cyan-500 text-slate-950 font-bold border border-cyan-400 shadow transition whitespace-nowrap active:scale-95 cursor-pointer" style="touch-action: manipulation;">
         🌟 All Decks ({{ packs|length }})
       </button>
       {% for p in packs %}
-      <button type="button" onclick="filterCategory('{{ p.category_slug }}', this)" class="cat-pill px-3.5 py-2 rounded-xl bg-slate-900 border border-purple-500/30 text-slate-300 hover:text-white hover:border-cyan-400 transition whitespace-nowrap active:scale-95">
+      <button type="button" onclick="filterCategory('{{ p.category_slug }}', this)" class="cat-pill px-3.5 py-2.5 rounded-xl bg-slate-900 border border-purple-500/30 text-slate-300 hover:text-white hover:border-cyan-400 transition whitespace-nowrap active:scale-95 cursor-pointer" style="touch-action: manipulation;">
         {{ p.icon }} {{ p.title }}
       </button>
       {% endfor %}
@@ -48,21 +48,32 @@
     <!-- Packs Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" id="packsGrid">
       {% for pack in packs %}
-      <div id="{{ pack.category_slug }}" data-cat="{{ pack.category_slug }}" class="pack-card bg-slate-950/90 border-2 {% if pack.is_community %}border-pink-500/30 hover:border-pink-400{% else %}border-purple-500/30 hover:border-cyan-400{% endif %} rounded-3xl p-5 sm:p-6 backdrop-blur shadow-xl transition transform hover:-translate-y-1 flex flex-col justify-between">
+      <div 
+        id="{{ pack.category_slug }}" 
+        data-cat="{{ pack.category_slug }}" 
+        onclick="if (event.target.tagName !== 'A' && !event.target.closest('a')) { window.location.href = '{{ url_for('arena.create_match', category_slug=pack.category_slug, opponent_mode='bot') }}'; }"
+        class="pack-card bg-slate-950/90 border-2 {% if pack.is_community %}border-pink-500/30 hover:border-pink-400{% else %}border-purple-500/30 hover:border-cyan-400{% endif %} rounded-3xl p-5 sm:p-6 backdrop-blur shadow-xl transition transform hover:-translate-y-1 flex flex-col justify-between cursor-pointer"
+        style="touch-action: manipulation;"
+      >
         
-        <div class="space-y-3">
+        <!-- Clickable Pack Header & Description -->
+        <a href="{{ url_for('arena.create_match', category_slug=pack.category_slug, opponent_mode='bot') }}" class="group block space-y-3 cursor-pointer" style="touch-action: manipulation;" title="Tap to Play {{ pack.title }}">
           <div class="flex items-center justify-between">
-            <span class="text-3xl sm:text-4xl">{{ pack.icon or '📚' }}</span>
+            <span class="text-3xl sm:text-4xl group-hover:scale-110 transition transform">{{ pack.icon or '📚' }}</span>
             <span class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full {% if pack.is_community %}bg-pink-500/20 text-pink-300 border border-pink-500/30{% else %}bg-purple-500/20 text-purple-300 border border-purple-500/30{% endif %} uppercase">
               {% if pack.is_community %}Community Deck{% else %}Master Deck{% endif %}
             </span>
           </div>
 
           <div>
-            <h3 class="text-base sm:text-lg font-black font-mono text-white tracking-tight">{{ pack.title }}</h3>
-            <p class="text-xs text-slate-400 mt-1 leading-relaxed">{{ pack.description or 'A curated question pack for trivia warriors.' }}</p>
+            <h3 class="text-base sm:text-lg font-black font-mono text-white group-hover:text-cyan-300 transition tracking-tight">
+              {{ pack.title }}
+            </h3>
+            <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+              {{ pack.description or 'A curated question pack for trivia warriors.' }}
+            </p>
           </div>
-        </div>
+        </a>
 
         <div class="pt-5 border-t border-purple-500/20 mt-5 space-y-3">
           <div class="flex items-center justify-between font-mono text-xs text-slate-400">
@@ -74,13 +85,13 @@
             </div>
           </div>
 
-          <!-- Dual 1-Click Play Actions for Instant Launch on Mobile & Desktop -->
-          <div class="flex items-center gap-2 pt-1">
-            <a href="{{ url_for('arena.create_match', category_slug=pack.category_slug, opponent_mode='friend') }}" class="w-1/2 py-3 px-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-mono font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition active:scale-95 shadow-md" title="Challenge a friend in this category">
-              <span>⚔️ Challenge</span>
+          <!-- Dual 1-Click Play Actions with Large Touch Targets -->
+          <div class="flex flex-col sm:flex-row items-center gap-2 pt-1 font-mono text-xs">
+            <a href="{{ url_for('arena.create_match', category_slug=pack.category_slug, opponent_mode='bot') }}" class="w-full sm:w-1/2 py-3 px-3 rounded-xl bg-purple-900/60 hover:bg-purple-800 border border-purple-400/50 text-purple-200 hover:text-white font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shadow" style="touch-action: manipulation;" title="Play solo match against Bot Nova">
+              <span>🤖 Solo Bot</span>
             </a>
-            <a href="{{ url_for('arena.create_match', category_slug=pack.category_slug, opponent_mode='bot') }}" class="w-1/2 py-3 px-2 rounded-xl bg-purple-900/40 hover:bg-purple-800/60 border border-purple-500/40 text-purple-200 hover:text-white font-mono font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition active:scale-95" title="Play solo match against Bot Nova">
-              <span>🤖 Play Bot</span>
+            <a href="{{ url_for('arena.create_match', category_slug=pack.category_slug, opponent_mode='friend') }}" class="w-full sm:w-1/2 py-3 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer shadow-md" style="touch-action: manipulation;" title="Challenge a friend in this category">
+              <span>⚔️ Challenge</span>
             </a>
           </div>
         </div>
@@ -98,11 +109,10 @@
 
 <script>
 function filterCategory(catSlug, btn) {
-  // Update active pill
   document.querySelectorAll('.cat-pill').forEach(function(p) {
-    p.className = 'cat-pill px-3.5 py-2 rounded-xl bg-slate-900 border border-purple-500/30 text-slate-300 hover:text-white hover:border-cyan-400 transition whitespace-nowrap active:scale-95';
+    p.className = 'cat-pill px-3.5 py-2.5 rounded-xl bg-slate-900 border border-purple-500/30 text-slate-300 hover:text-white hover:border-cyan-400 transition whitespace-nowrap active:scale-95 cursor-pointer';
   });
-  btn.className = 'cat-pill active px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold border border-cyan-400 shadow transition whitespace-nowrap active:scale-95';
+  btn.className = 'cat-pill active px-4 py-2.5 rounded-xl bg-cyan-500 text-slate-950 font-bold border border-cyan-400 shadow transition whitespace-nowrap active:scale-95 cursor-pointer';
 
   var cards = document.querySelectorAll('.pack-card');
   cards.forEach(function(card) {

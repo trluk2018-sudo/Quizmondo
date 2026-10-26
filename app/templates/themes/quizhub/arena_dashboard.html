@@ -206,12 +206,12 @@
 
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
         {% for p in packs %}
-        <a href="{{ url_for('arena.packs_directory') }}#{{ p.category_slug }}" class="group block p-4 rounded-2xl bg-slate-950/90 border border-purple-500/30 text-center font-mono hover:border-cyan-400 hover:bg-slate-900 transition transform hover:-translate-y-1 active:scale-95 shadow-lg">
+        <a href="{{ url_for('arena.create_match', category_slug=p.category_slug, opponent_mode='bot') }}" class="group block p-4 rounded-2xl bg-slate-950/90 border border-purple-500/30 text-center font-mono hover:border-cyan-400 hover:bg-slate-900 transition transform hover:-translate-y-1 active:scale-95 shadow-lg cursor-pointer" style="touch-action: manipulation;" title="Instant Play {{ p.title }}">
           <div class="text-3xl mb-1 group-hover:scale-110 transition transform">{{ p.icon }}</div>
           <div class="text-xs font-bold text-white group-hover:text-cyan-300 transition truncate">{{ p.title }}</div>
           <div class="text-[10px] text-slate-400 mt-0.5">{{ p.question_count }}+ Questions</div>
           <div class="mt-2 text-[10px] font-bold text-cyan-400 group-hover:underline flex items-center justify-center gap-1">
-            <span>Play Deck</span> <span>&rarr;</span>
+            <span>▶ Play Now</span> <span>&rarr;</span>
           </div>
         </a>
         {% endfor %}
