@@ -1574,6 +1574,22 @@ def duel_delete(id):
     return redirect(request.referrer or url_for('admin.duels'))
 
 
+@admin_bp.route('/duels/bulk-delete', methods=['POST'])
+@login_required
+def duels_bulk_delete():
+    """Delete every duel ticked in the admin duels table in one pass."""
+    ids = [int(v) for v in request.form.getlist('duel_ids') if str(v).isdigit()]
+    if not ids:
+        flash('No duels were selected.', 'error')
+        return redirect(request.referrer or url_for('admin.duels'))
+
+    ArenaRound.query.filter(ArenaRound.match_id.in_(ids)).delete(synchronize_session=False)
+    removed = ArenaMatch.query.filter(ArenaMatch.id.in_(ids)).delete(synchronize_session=False)
+    db.session.commit()
+    flash(f'Deleted {removed} selected Arena Duel(s).', 'success')
+    return redirect(request.referrer or url_for('admin.duels'))
+
+
 @admin_bp.route('/system/clear', methods=['POST'])
 @login_required
 def system_clear():
@@ -1827,6 +1843,38 @@ def player_delete(id):
     db.session.commit()
     flash(f'Deleted user/player "{name}".', 'success')
     return redirect(url_for('admin.players'))
+
+
+@admin_bp.route('/players/bulk-delete', methods=['POST'])
+@login_required
+def players_bulk_delete():
+    """Delete every account ticked in the admin players table in one pass."""
+    ids = [int(v) for v in request.form.getlist('player_ids') if str(v).isdigit()]
+    if not ids:
+        flash('No accounts were selected.', 'error')
+        return redirect(request.referrer or url_for('admin.players'))
+
+    me = session.get('user_id')
+    removed = 0
+    skipped_self = False
+    for p in PlayerProfile.query.filter(PlayerProfile.id.in_(ids)).all():
+        if p.user_id and p.user_id == me:
+            skipped_self = True
+            continue
+        uid = p.user_id
+        db.session.delete(p)
+        if uid:
+            u = db.session.get(User, uid)
+            if u and u.id != me:
+                db.session.delete(u)
+        removed += 1
+    db.session.commit()
+
+    msg = f'Deleted {removed} selected user/player account(s).'
+    if skipped_self:
+        msg += ' Your own active administrator account was skipped.'
+    flash(msg, 'success' if removed else 'error')
+    return redirect(request.referrer or url_for('admin.players'))
 
 
 @admin_bp.route('/players/<int:id>/role', methods=['POST'])

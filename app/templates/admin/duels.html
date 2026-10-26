@@ -25,11 +25,38 @@
     </form>
   </div>
 
+  <!-- Bulk Selection Action Bar -->
+  <form id="bulkDuelsForm" action="{{ url_for('admin.duels_bulk_delete') }}" method="POST"
+        class="flex flex-wrap items-center justify-between gap-3 bg-slate-100 border-2 border-slate-300 rounded-2xl px-4 py-3"
+        onsubmit="return confirmBulkDuelDelete();">
+    <div class="flex items-center gap-3 text-xs font-bold text-slate-800">
+      <span>☑️ Tick duels in the table to delete several at once.</span>
+      <span id="bulkDuelsCount" class="px-2.5 py-1 rounded-full bg-slate-900 text-white font-mono font-black text-[11px]">0 selected</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" onclick="setAllDuelChecks(true)" class="px-3 py-1.5 rounded-lg bg-white border-2 border-slate-300 hover:bg-slate-50 text-slate-900 font-bold text-[11px]">
+        Select All
+      </button>
+      <button type="button" onclick="setAllDuelChecks(false)" class="px-3 py-1.5 rounded-lg bg-white border-2 border-slate-300 hover:bg-slate-50 text-slate-900 font-bold text-[11px]">
+        Clear Selection
+      </button>
+      <button type="submit" id="bulkDuelsDeleteBtn" disabled
+              class="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-white font-black text-[11px] uppercase shadow">
+        🗑️ Delete Selected
+      </button>
+    </div>
+  </form>
+
   <div class="bg-white rounded-2xl border-2 border-slate-300 shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-left text-xs">
         <thead class="bg-slate-200 border-b-2 border-slate-300 text-slate-900 font-black uppercase tracking-wider">
           <tr>
+            <th class="py-3.5 px-4 w-10">
+              <input type="checkbox" id="duelsMasterCheck" onchange="setAllDuelChecks(this.checked)"
+                     title="Select / deselect all duels"
+                     class="w-4 h-4 accent-rose-600 cursor-pointer align-middle">
+            </th>
             <th class="py-3.5 px-4">Match Code</th>
             <th class="py-3.5 px-4">Player 1 (Challenger)</th>
             <th class="py-3.5 px-4 text-center">Score</th>
@@ -43,6 +70,11 @@
         <tbody class="divide-y divide-slate-200">
           {% for m in matches %}
           <tr class="hover:bg-slate-50 transition">
+            <td class="py-3.5 px-4">
+              <input type="checkbox" form="bulkDuelsForm" name="duel_ids" value="{{ m.id }}"
+                     class="duel-check w-4 h-4 accent-rose-600 cursor-pointer align-middle"
+                     onchange="refreshDuelSelection()">
+            </td>
             <td class="py-3.5 px-4 font-mono font-black text-blue-700">
               <a href="{{ url_for('arena.match_lobby', match_code=m.match_code) }}" class="hover:underline flex items-center gap-1">
                 <span>#{{ m.match_code }}</span>
@@ -89,7 +121,7 @@
           </tr>
           {% else %}
           <tr>
-            <td colspan="8" class="py-8 text-center text-slate-700 font-semibold">
+            <td colspan="9" class="py-8 text-center text-slate-700 font-semibold">
               No arena matches logged right now.
             </td>
           </tr>
@@ -100,4 +132,33 @@
   </div>
 
 </div>
+
+<script>
+function duelChecks() {
+  return Array.prototype.slice.call(document.querySelectorAll('.duel-check'));
+}
+
+function setAllDuelChecks(state) {
+  duelChecks().forEach(function (c) { c.checked = state; });
+  refreshDuelSelection();
+}
+
+function refreshDuelSelection() {
+  var all = duelChecks();
+  var picked = all.filter(function (c) { return c.checked; }).length;
+  document.getElementById('bulkDuelsCount').textContent = picked + ' selected';
+  document.getElementById('bulkDuelsDeleteBtn').disabled = picked === 0;
+  var master = document.getElementById('duelsMasterCheck');
+  master.checked = picked > 0 && picked === all.length;
+  master.indeterminate = picked > 0 && picked < all.length;
+}
+
+function confirmBulkDuelDelete() {
+  var picked = duelChecks().filter(function (c) { return c.checked; }).length;
+  if (!picked) { return false; }
+  return confirm('Permanently delete ' + picked + ' selected duel(s)?');
+}
+
+document.addEventListener('DOMContentLoaded', refreshDuelSelection);
+</script>
 {% endblock %}

@@ -96,12 +96,39 @@
     </form>
   </div>
 
+  <!-- Bulk Selection Action Bar -->
+  <form id="bulkPlayersForm" action="{{ url_for('admin.players_bulk_delete') }}" method="POST"
+        class="flex flex-wrap items-center justify-between gap-3 bg-slate-100 border-2 border-slate-300 rounded-2xl px-4 py-3"
+        onsubmit="return confirmBulkPlayerDelete();">
+    <div class="flex items-center gap-3 text-xs font-bold text-slate-800">
+      <span>☑️ Tick accounts in the table to delete several at once.</span>
+      <span id="bulkPlayersCount" class="px-2.5 py-1 rounded-full bg-slate-900 text-white font-mono font-black text-[11px]">0 selected</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" onclick="setAllPlayerChecks(true)" class="px-3 py-1.5 rounded-lg bg-white border-2 border-slate-300 hover:bg-slate-50 text-slate-900 font-bold text-[11px]">
+        Select All
+      </button>
+      <button type="button" onclick="setAllPlayerChecks(false)" class="px-3 py-1.5 rounded-lg bg-white border-2 border-slate-300 hover:bg-slate-50 text-slate-900 font-bold text-[11px]">
+        Clear Selection
+      </button>
+      <button type="submit" id="bulkPlayersDeleteBtn" disabled
+              class="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-white font-black text-[11px] uppercase shadow">
+        🗑️ Delete Selected Accounts
+      </button>
+    </div>
+  </form>
+
   <!-- USERS & PLAYERS TABLE -->
   <div class="bg-white rounded-2xl border-2 border-slate-300 shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-left text-xs">
         <thead class="bg-slate-200 border-b-2 border-slate-300 text-slate-900 font-black uppercase tracking-wider">
           <tr>
+            <th class="py-3.5 px-4 w-10">
+              <input type="checkbox" id="playersMasterCheck" onchange="setAllPlayerChecks(this.checked)"
+                     title="Select / deselect all accounts"
+                     class="w-4 h-4 accent-rose-600 cursor-pointer align-middle">
+            </th>
             <th class="py-3.5 px-4">User / Player</th>
             <th class="py-3.5 px-4">Account Role</th>
             <th class="py-3.5 px-4">Level &amp; XP</th>
@@ -115,6 +142,15 @@
           {% for p in players %}
           {% set linked_user = users_by_id.get(p.user_id) if users_by_id and p.user_id else None %}
           <tr class="hover:bg-slate-50 transition {% if p.is_banned %}bg-rose-50{% endif %}">
+            <td class="py-3.5 px-4">
+              {% if not linked_user or linked_user.id != session.get('user_id') %}
+              <input type="checkbox" form="bulkPlayersForm" name="player_ids" value="{{ p.id }}"
+                     class="player-check w-4 h-4 accent-rose-600 cursor-pointer align-middle"
+                     onchange="refreshPlayerSelection()">
+              {% else %}
+              <span class="text-slate-400 font-bold text-[11px]" title="Your own account cannot be bulk deleted">—</span>
+              {% endif %}
+            </td>
             <td class="py-3.5 px-4">
               <div class="flex items-center gap-3">
                 <span class="w-9 h-9 rounded-xl bg-purple-100 border border-purple-300 flex items-center justify-center text-base font-bold shrink-0">
@@ -205,7 +241,7 @@
           </tr>
           {% else %}
           <tr>
-            <td colspan="7" class="py-8 text-center text-slate-700 font-semibold">
+            <td colspan="8" class="py-8 text-center text-slate-700 font-semibold">
               No matching users or players found.
             </td>
           </tr>
@@ -311,5 +347,32 @@ function openEditUserModal(id, displayName, email, role, xp, coins) {
 function closeEditUserModal() {
   document.getElementById('editUserModal').classList.add('hidden');
 }
+
+function playerChecks() {
+  return Array.prototype.slice.call(document.querySelectorAll('.player-check'));
+}
+
+function setAllPlayerChecks(state) {
+  playerChecks().forEach(function (c) { c.checked = state; });
+  refreshPlayerSelection();
+}
+
+function refreshPlayerSelection() {
+  var all = playerChecks();
+  var picked = all.filter(function (c) { return c.checked; }).length;
+  document.getElementById('bulkPlayersCount').textContent = picked + ' selected';
+  document.getElementById('bulkPlayersDeleteBtn').disabled = picked === 0;
+  var master = document.getElementById('playersMasterCheck');
+  master.checked = picked > 0 && picked === all.length;
+  master.indeterminate = picked > 0 && picked < all.length;
+}
+
+function confirmBulkPlayerDelete() {
+  var picked = playerChecks().filter(function (c) { return c.checked; }).length;
+  if (!picked) { return false; }
+  return confirm('Permanently delete ' + picked + ' selected account(s)? This also removes their login.');
+}
+
+document.addEventListener('DOMContentLoaded', refreshPlayerSelection);
 </script>
 {% endblock %}
