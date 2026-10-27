@@ -491,11 +491,14 @@ class PubLeague(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def looks_virtual(self) -> bool:
-        """Guess the mode from the naming, used to seed the flag and as a legacy fallback."""
+        """Guess the mode from the slug, used to seed the flag and as a legacy fallback.
+
+        Only the slug counts. A physical pub can easily call its night a 'Virtual
+        Pub Showdown' in the league name or the venue name, and reading those is
+        what had The Red Lion running as an online league.
+        """
         s = (self.slug or '').lower()
-        n = (self.name or '').lower()
-        v = (self.venue_name or '').lower()
-        return 'online' in s or 'cyber' in s or 'virtual' in n or 'virtual' in v
+        return 'online' in s or 'cyber' in s or 'virtual' in s
 
     def is_virtual_league(self) -> bool:
         # The explicit admin toggle wins; leagues from before the column fall back to the naming

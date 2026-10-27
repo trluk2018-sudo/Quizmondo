@@ -1826,20 +1826,13 @@ def pub_question_secs(cfg):
     return max(PUB_MIN_QUESTION_SECS, min(PUB_MAX_QUESTION_SECS, secs))
 
 
-def pub_max_round_score(cfg, round_num, total_rounds):
-    """Highest score a round can possibly be worth, used to cap a legacy client total."""
-    per_q = 100 + pub_question_secs(cfg) * 2
-    if round_num >= total_rounds:
-        per_q = round(per_q * 1.5)
-    return per_q * PUB_QUESTIONS_PER_ROUND
-
-
 def score_pub_answers(state, round_num, raw_answers, cfg, total_rounds):
     """Score a squad's answers against the questions pinned for this round.
 
     The phone used to work out its own round total and post it, which meant the
     score was whatever the browser said it was. The answers are scored here now,
     against the pinned question set, so a tampered payload cannot invent points.
+    Returns None when there is nothing scoreable, which the callers refuse.
     """
     if not raw_answers:
         return None
@@ -2031,9 +2024,7 @@ def league_progress(slug):
     total_rounds = int(cfg.get('total_rounds', 3 if is_virtual else 5))
     scored = score_pub_answers(state, curr_r, request.form.get('answers'), cfg, total_rounds)
     if scored is None:
-        # Older phone still posting only its own total: accept it, but never above what the round can pay
-        scored = min(int(request.form.get('partial_score') or 0),
-                     pub_max_round_score(cfg, curr_r, total_rounds))
+        return jsonify({'success': False, 'error': 'Answers required to score this round'}), 400
     partial_score = scored
     is_final_q = (q_idx >= PUB_QUESTIONS_PER_ROUND or request.form.get('is_final') == '1')
 
@@ -2387,9 +2378,7 @@ def league_room(slug):
         teams = state.get('teams', [])
         round_score = score_pub_answers(state, current_round, request.form.get('answers'), cfg, total_rounds)
         if round_score is None:
-            # Older phone still posting only its own total: accept it, but never above what the round can pay
-            round_score = min(int(request.form.get('score', 0)),
-                              pub_max_round_score(cfg, current_round, total_rounds))
+            return jsonify({'success': False, 'error': 'Answers required to score this round'}), 400
         team_entry = resolve_pub_team(state, player, table_num, team_name, is_virtual)
 
         # Only an approved squad may bank a score, and only while the host has the round open.

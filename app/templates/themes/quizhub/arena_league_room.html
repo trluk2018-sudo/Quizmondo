@@ -691,7 +691,6 @@ function choosePubAnswer(choice) {
     progData.append('team', teamName);
     progData.append('round', currentRound);
     progData.append('question_index', currentIndex + 1);
-    progData.append('partial_score', totalScore);
     progData.append('answers', JSON.stringify(answerPayload()));
     if (currentIndex + 1 >= rawQuestions.length) {
       progData.append('is_final', '1');
@@ -732,7 +731,6 @@ function finishRound() {
 
   // Submit score via fetch POST
   var formData = new FormData();
-  formData.append('score', totalScore);
   formData.append('answers', JSON.stringify(answerPayload()));
   formData.append('table', tableNum);
   formData.append('team', teamName);
