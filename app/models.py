@@ -147,6 +147,38 @@ class Media(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+class FeaturedGame(db.Model):
+    """A slide in the hero's featured game gallery.
+
+    The hero used to hard-code one image and one caption, so changing what the
+    homepage promoted meant editing a template. These are rows instead: add a few,
+    order them, and the hero rotates through whatever is active.
+    """
+    __tablename__ = 'featured_games'
+
+    id = db.Column(db.Integer, primary_key=True)
+    label = db.Column(db.String(60), default='FEATURED GAME')
+    title = db.Column(db.String(150), nullable=False)
+    image_url = db.Column(db.String(500), default='')
+    link_url = db.Column(db.String(500), default='/arena/')
+    cta_text = db.Column(db.String(40), default='PLAY NOW')
+    # Optional: ties the slide to a quiz category, purely for the admin's own reference
+    category_slug = db.Column(db.String(80), default='')
+    credit = db.Column(db.String(200), default='')
+    sort_order = db.Column(db.Integer, default=0, index=True)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def resolved_image(self) -> str:
+        """Where the image actually lives: an uploaded file, a pasted URL, or the packaged fallback."""
+        src = (self.image_url or '').strip()
+        if not src:
+            return '/static/img/quizhub_hero.jpg'
+        if src.startswith(('http://', 'https://', '/')):
+            return src
+        return '/static/img/' + src
+
+
 class MenuItem(db.Model):
     __tablename__ = 'menu_items'
 

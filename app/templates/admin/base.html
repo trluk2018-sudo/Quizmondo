@@ -191,6 +191,9 @@
         <a href="{{ url_for('admin.media') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if 'media' in request.endpoint %}bg-amber-400 text-slate-950 font-black shadow{% else %}text-slate-100 hover:bg-amber-500/25 hover:text-white font-semibold{% endif %}">
           <span>🖼️</span> <span>Media Library</span>
         </a>
+        <a href="{{ url_for('admin.featured_games') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if request.endpoint == 'admin.featured_games' %}bg-amber-400 text-slate-950 font-black shadow{% else %}text-slate-100 hover:bg-amber-500/25 hover:text-white font-semibold{% endif %}">
+          <span>🖼️</span> <span>Featured Games</span>
+        </a>
       </div>
 
       <!-- BLOCK 5: DESIGN & INTERFACE (Blue / Indigo Shaded Block) -->

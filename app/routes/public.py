@@ -1,6 +1,6 @@
 import json
 from flask import Blueprint, render_template, request, abort, Response, current_app, flash, redirect, url_for, session
-from ..models import db, Post, Page, Category, Media, MenuItem, SidebarWidget, SiteSetting, PageModule, PlayerProfile, ArenaMatch
+from ..models import db, Post, Page, Category, Media, MenuItem, SidebarWidget, SiteSetting, PageModule, PlayerProfile, ArenaMatch, FeaturedGame
 
 public_bp = Blueprint('public', __name__)
 
@@ -54,8 +54,17 @@ def inject_global_data():
     except Exception:
         pass
 
+    # Hero gallery slides; an empty list leaves the hero on its packaged image
+    try:
+        featured_games = FeaturedGame.query.filter_by(is_active=True).order_by(
+            FeaturedGame.sort_order.asc(), FeaturedGame.id.asc()
+        ).all()
+    except Exception:
+        featured_games = []
+
     return {
         'settings': settings,
+        'featured_games': featured_games,
         'header_nav': header_nav,
         'footer_nav': footer_nav,
         'solutions_nav': solutions_nav,

@@ -3,7 +3,7 @@ import json
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify, session
 from werkzeug.utils import secure_filename
-from ..models import db, User, Post, Category, Page, Media, MenuItem, SidebarWidget, SiteSetting, PageModule, slugify, QuizQuestion, QuizPack, PlayerProfile, ArenaMatch, ArenaRound, PubLeague, PubLeagueResult, pub_season_label
+from ..models import db, User, Post, Category, Page, Media, MenuItem, SidebarWidget, SiteSetting, PageModule, slugify, QuizQuestion, QuizPack, PlayerProfile, ArenaMatch, ArenaRound, PubLeague, PubLeagueResult, pub_season_label, FeaturedGame
 from ..utils.modules import get_default_config, get_module_definition, MODULE_DEFINITIONS
 from .auth import login_required
 
@@ -507,6 +507,107 @@ def page_delete(page_id):
 def media():
     items = Media.query.order_by(Media.created_at.desc()).all()
     return render_template('admin/media.html', media=items)
+
+
+def save_uploaded_image(file, prefix='img'):
+    """Store an uploaded image the same way the media library does, and return its web path."""
+    if not file or not file.filename or not allowed_file(file.filename):
+        return None
+    raw_name = secure_filename(file.filename)
+    filename = f"{prefix}_{int(datetime.utcnow().timestamp())}_{raw_name}"
+    upload_dir = current_app.config.get('UPLOAD_FOLDER') or os.path.join(current_app.static_folder, 'uploads')
+    os.makedirs(upload_dir, exist_ok=True)
+    file.save(os.path.join(upload_dir, filename))
+    return f"/uploads/{filename}"
+
+
+@admin_bp.route('/featured', methods=['GET', 'POST'])
+@login_required
+def featured_games():
+    """Manage the rotating featured-game gallery shown in the homepage hero."""
+    if request.method == 'POST':
+        action = (request.form.get('action') or 'create').strip()
+
+        if action == 'create':
+            title = (request.form.get('title') or '').strip()
+            if not title:
+                flash('A title is required for a featured game.', 'error')
+                return redirect(url_for('admin.featured_games'))
+            uploaded = save_uploaded_image(request.files.get('image_file'), 'featured')
+            last = db.session.query(db.func.max(FeaturedGame.sort_order)).scalar() or 0
+            slide = FeaturedGame(
+                label=(request.form.get('label') or 'FEATURED GAME').strip(),
+                title=title,
+                image_url=uploaded or (request.form.get('image_url') or '').strip(),
+                link_url=(request.form.get('link_url') or '/arena/').strip(),
+                cta_text=(request.form.get('cta_text') or 'PLAY NOW').strip(),
+                category_slug=(request.form.get('category_slug') or '').strip(),
+                credit=(request.form.get('credit') or '').strip(),
+                sort_order=last + 1,
+                is_active=True
+            )
+            db.session.add(slide)
+            db.session.commit()
+            flash(f'"{slide.title}" added to the hero gallery.', 'success')
+            return redirect(url_for('admin.featured_games'))
+
+        slide = db.session.get(FeaturedGame, int(request.form.get('slide_id') or 0))
+        if not slide:
+            flash('Featured game not found.', 'error')
+            return redirect(url_for('admin.featured_games'))
+
+        if action == 'update':
+            title = (request.form.get('title') or '').strip()
+            if not title:
+                flash('A title is required for a featured game.', 'error')
+                return redirect(url_for('admin.featured_games'))
+            uploaded = save_uploaded_image(request.files.get('image_file'), 'featured')
+            slide.label = (request.form.get('label') or 'FEATURED GAME').strip()
+            slide.title = title
+            if uploaded:
+                slide.image_url = uploaded
+            else:
+                slide.image_url = (request.form.get('image_url') or '').strip()
+            slide.link_url = (request.form.get('link_url') or '/arena/').strip()
+            slide.cta_text = (request.form.get('cta_text') or 'PLAY NOW').strip()
+            slide.category_slug = (request.form.get('category_slug') or '').strip()
+            slide.credit = (request.form.get('credit') or '').strip()
+            db.session.commit()
+            flash(f'"{slide.title}" updated.', 'success')
+
+        elif action == 'toggle_active':
+            slide.is_active = not slide.is_active
+            db.session.commit()
+            flash(f'"{slide.title}" is now {"showing" if slide.is_active else "hidden"} on the homepage.', 'success')
+
+        elif action == 'delete':
+            db.session.delete(slide)
+            db.session.commit()
+            flash('Featured game removed.', 'success')
+
+        elif action in ('move_up', 'move_down'):
+            ordered = FeaturedGame.query.order_by(FeaturedGame.sort_order.asc(), FeaturedGame.id.asc()).all()
+            idx = next((i for i, x in enumerate(ordered) if x.id == slide.id), None)
+            swap_with = idx - 1 if action == 'move_up' else idx + 1
+            if idx is not None and 0 <= swap_with < len(ordered):
+                other = ordered[swap_with]
+                slide.sort_order, other.sort_order = other.sort_order, slide.sort_order
+                # Equal values would leave the order unchanged, so separate them first
+                if slide.sort_order == other.sort_order:
+                    other.sort_order = slide.sort_order + (1 if action == 'move_up' else -1)
+                db.session.commit()
+
+        return redirect(url_for('admin.featured_games'))
+
+    slides = FeaturedGame.query.order_by(FeaturedGame.sort_order.asc(), FeaturedGame.id.asc()).all()
+    categories = [
+        {'slug': r[0], 'name': r[1], 'count': r[2]}
+        for r in db.session.query(
+            QuizQuestion.category_slug, QuizQuestion.category_name, db.func.count(QuizQuestion.id)
+        ).group_by(QuizQuestion.category_slug).order_by(QuizQuestion.category_name).all()
+    ]
+    library = Media.query.filter(Media.file_type.like('image/%')).order_by(Media.created_at.desc()).limit(24).all()
+    return render_template('admin/featured.html', slides=slides, categories=categories, library=library)
 
 
 @admin_bp.route('/media/upload', methods=['POST'])

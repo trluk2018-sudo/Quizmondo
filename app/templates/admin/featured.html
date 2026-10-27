@@ -1,0 +1,242 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Featured Games • Quizmondo{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800">Homepage Featured Games</h1>
+    <p class="text-xs text-slate-500">
+      The gallery in the hero image on the homepage. Add a slide per category, set its picture, caption and link,
+      and drag the order with the arrows. The hero rotates through everything marked as showing.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Add a slide -->
+    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4 text-xs h-fit">
+      <h3 class="font-bold text-slate-800 text-sm border-b pb-2">Add a Featured Game</h3>
+
+      <form method="POST" enctype="multipart/form-data" class="space-y-4">
+        <input type="hidden" name="action" value="create">
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Title *</label>
+          <input type="text" name="title" required placeholder="e.g. Retro Arcade &amp; Video Game Trivia" class="w-full p-2.5 border rounded-lg text-slate-800">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Small label above the title</label>
+          <input type="text" name="label" value="FEATURED GAME" class="w-full p-2.5 border rounded-lg text-slate-800">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Quiz category <span class="text-slate-400 font-normal">(optional)</span></label>
+          <select name="category_slug" class="w-full p-2.5 border rounded-lg text-slate-800">
+            <option value="">Not tied to a category</option>
+            {% for c in categories %}
+            <option value="{{ c.slug }}">{{ c.name }} ({{ c.count }} questions)</option>
+            {% endfor %}
+          </select>
+          <span class="text-[11px] text-slate-400">Just a note to yourself about what the slide is promoting.</span>
+        </div>
+
+        <div class="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Picture: upload a file</label>
+            <input type="file" name="image_file" accept="image/*" class="w-full text-slate-600">
+          </div>
+          <div class="text-center text-[11px] text-slate-400 font-bold">— or —</div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Picture: paste an image URL</label>
+            <input type="url" name="image_url" placeholder="https://cdn.pixabay.com/..." class="w-full p-2.5 border rounded-lg text-slate-800">
+            <span class="text-[11px] text-slate-400">A Pixabay or Unsplash link works. An uploaded file wins if you give both.</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Picture credit <span class="text-slate-400 font-normal">(optional)</span></label>
+          <input type="text" name="credit" placeholder="e.g. Photo: Pixabay" class="w-full p-2.5 border rounded-lg text-slate-800">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Button text</label>
+            <input type="text" name="cta_text" value="PLAY NOW" class="w-full p-2.5 border rounded-lg text-slate-800">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Links to</label>
+            <input type="text" name="link_url" value="/arena/" class="w-full p-2.5 border rounded-lg text-slate-800">
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm">
+          Add to the Gallery
+        </button>
+      </form>
+
+      {% if library %}
+      <div class="pt-4 border-t border-slate-200 space-y-2">
+        <div class="font-bold text-slate-700">Already in your media library</div>
+        <p class="text-[11px] text-slate-400">Click a thumbnail to copy its path, then paste it into the image URL box.</p>
+        <div class="grid grid-cols-4 gap-2">
+          {% for m in library %}
+          <button type="button" onclick="copyPath('{{ m.file_path }}')" title="{{ m.original_name }}" class="aspect-square rounded-lg overflow-hidden border border-slate-200 hover:border-blue-400 transition">
+            <img src="{{ m.file_path }}" alt="{{ m.alt_text or m.original_name }}" class="w-full h-full object-cover">
+          </button>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- The gallery -->
+    <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-fit">
+      <div class="p-4 border-b bg-slate-50 font-bold text-slate-700 text-xs flex items-center justify-between">
+        <span>Gallery ({{ slides|length }})</span>
+        <span class="font-normal text-slate-400">Shown in this order on the homepage</span>
+      </div>
+
+      <div class="divide-y divide-slate-100 text-xs">
+        {% for s in slides %}
+        <div class="p-4 space-y-3 {% if not s.is_active %}bg-slate-50/70{% endif %}">
+
+          <div class="flex items-start gap-4">
+            <img src="{{ s.resolved_image() }}" alt="{{ s.title }}" class="w-28 h-20 object-cover rounded-lg border border-slate-200 shrink-0 bg-slate-100">
+
+            <div class="flex-1 space-y-1 min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="font-bold text-sm text-slate-800">{{ s.title }}</span>
+                {% if not s.is_active %}
+                <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-600 font-bold">Hidden</span>
+                {% else %}
+                <span class="px-2 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold">Showing</span>
+                {% endif %}
+              </div>
+              <div class="text-slate-500">{{ s.label }} &bull; links to <code class="text-slate-700">{{ s.link_url }}</code></div>
+              {% if s.category_slug %}
+              <div class="text-[11px] text-slate-400">Category: {{ s.category_slug }}</div>
+              {% endif %}
+              {% if s.credit %}
+              <div class="text-[11px] text-slate-400">{{ s.credit }}</div>
+              {% endif %}
+            </div>
+
+            <div class="flex items-center gap-1 shrink-0">
+              <form method="POST" class="inline">
+                <input type="hidden" name="action" value="move_up">
+                <input type="hidden" name="slide_id" value="{{ s.id }}">
+                <button type="submit" {% if loop.first %}disabled{% endif %} class="px-2 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed" title="Move up">&uarr;</button>
+              </form>
+              <form method="POST" class="inline">
+                <input type="hidden" name="action" value="move_down">
+                <input type="hidden" name="slide_id" value="{{ s.id }}">
+                <button type="submit" {% if loop.last %}disabled{% endif %} class="px-2 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed" title="Move down">&darr;</button>
+              </form>
+              <button type="button" onclick="document.getElementById('edit-{{ s.id }}').classList.toggle('hidden')" class="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-300 text-slate-700 font-bold hover:bg-slate-200 transition">
+                Edit
+              </button>
+            </div>
+          </div>
+
+          <div id="edit-{{ s.id }}" class="hidden pt-3 border-t border-slate-200 space-y-3">
+            <form method="POST" enctype="multipart/form-data" class="space-y-3">
+              <input type="hidden" name="action" value="update">
+              <input type="hidden" name="slide_id" value="{{ s.id }}">
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Title *</label>
+                  <input type="text" name="title" required value="{{ s.title }}" class="w-full p-2.5 border rounded-lg text-slate-800">
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Small label</label>
+                  <input type="text" name="label" value="{{ s.label }}" class="w-full p-2.5 border rounded-lg text-slate-800">
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Button text</label>
+                  <input type="text" name="cta_text" value="{{ s.cta_text }}" class="w-full p-2.5 border rounded-lg text-slate-800">
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Links to</label>
+                  <input type="text" name="link_url" value="{{ s.link_url }}" class="w-full p-2.5 border rounded-lg text-slate-800">
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Quiz category</label>
+                  <select name="category_slug" class="w-full p-2.5 border rounded-lg text-slate-800">
+                    <option value="">Not tied to a category</option>
+                    {% for c in categories %}
+                    <option value="{{ c.slug }}" {% if c.slug == s.category_slug %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Picture credit</label>
+                  <input type="text" name="credit" value="{{ s.credit }}" class="w-full p-2.5 border rounded-lg text-slate-800">
+                </div>
+              </div>
+
+              <div class="p-3 rounded-lg bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Replace picture with an upload</label>
+                  <input type="file" name="image_file" accept="image/*" class="w-full text-slate-600">
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Or set the image URL</label>
+                  <input type="text" name="image_url" value="{{ s.image_url }}" class="w-full p-2.5 border rounded-lg text-slate-800">
+                </div>
+              </div>
+
+              <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm">
+                Save Changes
+              </button>
+            </form>
+
+            <div class="flex items-center gap-2 pt-3 border-t border-slate-200">
+              <form method="POST" class="inline">
+                <input type="hidden" name="action" value="toggle_active">
+                <input type="hidden" name="slide_id" value="{{ s.id }}">
+                <button type="submit" class="px-3 py-2 rounded-lg border font-bold transition {% if s.is_active %}bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100{% else %}bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100{% endif %}">
+                  {% if s.is_active %}Hide from homepage{% else %}Show on homepage{% endif %}
+                </button>
+              </form>
+
+              <form method="POST" class="inline ml-auto" onsubmit="return confirm('Remove this featured game?');">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="slide_id" value="{{ s.id }}">
+                <button type="submit" class="px-3 py-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-bold hover:bg-rose-100 transition">
+                  Delete
+                </button>
+              </form>
+            </div>
+          </div>
+
+        </div>
+        {% else %}
+        <div class="p-10 text-center space-y-2">
+          <div class="text-3xl">🖼️</div>
+          <div class="font-bold text-slate-700">No featured games yet</div>
+          <p class="text-xs text-slate-400 max-w-sm mx-auto">
+            Until you add one, the homepage shows its original packaged image and caption.
+            Add a slide on the left and it takes over straight away.
+          </p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function copyPath(path) {
+  var box = document.querySelector('input[name="image_url"]');
+  if (box) {
+    box.value = path;
+    box.focus();
+  }
+}
+</script>
+{% endblock %}
