@@ -344,8 +344,9 @@ class ArenaMatch(db.Model):
 
     def expected_turn(self) -> int:
         """Deterministic Snake Turn Order:
-        - Odd rounds (1, 3, 5): Player 1 leads, then Player 2 catches up.
-        - Even rounds (2, 4, 6): Player 2 leads, then Player 1 catches up.
+        - Whoever caught up to finish the previous round leads the next one, which
+          is the player recorded in the round's chosen_by when the round was created.
+        - Once one player has answered, the other one is up.
         """
         if self.is_bot:
             return 1
@@ -358,6 +359,11 @@ class ArenaMatch(db.Model):
             return 2
         if p2_done and not p1_done:
             return 1
+        # Nobody has played this round yet: the player who leads it off is the one
+        # submit_round recorded as chosen_by. Falling back to round parity here is
+        # what used to disagree with submit_round whenever Player 2 led Round 1.
+        if active_round.chosen_by in (1, 2):
+            return active_round.chosen_by
         return 1 if (self.current_round % 2 == 1) else 2
 
     def is_player_turn(self, session_key: str) -> bool:
