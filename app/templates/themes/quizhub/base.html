@@ -54,6 +54,20 @@
       --color-quiz-cyan: #06B6D4;
       --color-quiz-blue: #3B82F6;
     }
+
+    /* Every page has large decorative blur orbs positioned deliberately outside their
+       section - some are 900px wide on a 400px phone. Desktop browsers clip them against
+       the section's own overflow-hidden, but iOS Safari lets you pan the whole page
+       sideways to reveal them anyway, which is the side-to-side drift on an iPhone.
+       Clipping at the document level stops it.
+
+       Deliberately overflow-x: clip and not hidden. hidden would turn html into a
+       scroll container, which breaks the sticky header below. clip never does. It
+       needs Safari 16 / Chrome 90, which covers every phone this affects. */
+    html, body {
+      max-width: 100%;
+      overflow-x: clip;
+    }
   </style>
 
   {% if settings.get('google_analytics_id') %}
