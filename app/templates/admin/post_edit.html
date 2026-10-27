@@ -3,7 +3,7 @@
 {% block title %}{{ 'Edit Post: ' ~ post.title if post else 'Create New Post' }}{% endblock %}
 
 {% block content %}
-<form id="post_form" method="POST" class="space-y-6">
+<form id="post_form" method="POST" enctype="multipart/form-data" class="space-y-6">
   <!-- Hidden inputs for post module management -->
   <input type="hidden" id="post_module_order_input" name="module_order" value="{{ (modules_above|map(attribute='id')|list + modules_below|map(attribute='id')|list)|join(',') }}">
   <input type="hidden" id="post_deleted_module_ids_input" name="deleted_module_ids" value="">
@@ -230,16 +230,26 @@
           </select>
         </div>
 
-        <div>
-          <label class="block text-xs font-medium text-slate-600 mb-1">Featured Image URL</label>
-          <input type="text" name="featured_image" value="{{ post.featured_image if post else '' }}" placeholder="https://... or /static/uploads/..." class="w-full text-xs font-mono border border-slate-300 rounded px-2.5 py-2">
+        <div class="space-y-2">
+          <label class="block text-xs font-medium text-slate-600">Article Image</label>
+          {% if post and post.featured_image %}
+          <img src="{{ post.featured_image }}" alt="Current cover" class="w-full h-32 object-cover rounded-lg border border-slate-200">
+          {% endif %}
+          <input type="file" name="featured_image_file" accept="image/*" class="w-full text-xs text-slate-600">
+          <div class="text-center text-[10px] text-slate-400 font-bold">— or paste a URL —</div>
+          <input type="text" name="featured_image" value="{{ post.featured_image if post else '' }}" placeholder="https://cdn.pixabay.com/... or /uploads/..." class="w-full text-xs font-mono border border-slate-300 rounded px-2.5 py-2">
+          <span class="text-[10px] text-slate-400 block">An upload wins if you give both. Leave blank and the feed shows a stock cover.</span>
         </div>
 
-        <div class="pt-2 border-t border-slate-100">
+        <div class="pt-2 border-t border-slate-100 space-y-2">
           <label class="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" name="is_pinned" value="1" {% if post and post.is_pinned %}checked{% endif %} class="rounded border-slate-300 text-blue-600">
-            <span class="text-xs text-slate-700">Pin to top of blog feed</span>
+            <span class="text-xs text-slate-700">Pin to top of the Guides &amp; Facts feed</span>
           </label>
+          <div>
+            <label class="block text-[10px] font-medium text-slate-500 mb-1">Pin order (lower shows first)</label>
+            <input type="number" name="pin_order" value="{{ post.pin_order if post and post.pin_order is not none else 0 }}" min="0" max="99" class="w-24 text-xs border border-slate-300 rounded px-2.5 py-2">
+          </div>
         </div>
 
         <div class="pt-2">

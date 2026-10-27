@@ -793,6 +793,129 @@ SEED_LEAGUES = [
     }
 ]
 
+# ---------------------------------------------------------------------------
+# Pinned how-to guides. These sit at the top of Guides & Facts so a new player
+# can find out how the place works before wading into the trivia articles.
+# ---------------------------------------------------------------------------
+GUIDE_CATEGORY = 'Getting Started'
+
+GUIDE_POSTS = [
+    {
+        'title': 'How to Set Up Your Quizmondo Player Account',
+        'slug': 'how-to-create-a-quizmondo-account',
+        'pin_order': 1,
+        'featured_image': '/static/img/guides/guide-register.svg',
+        'excerpt': 'You can start playing without signing up at all. Here is what an account adds, and how to make one in about two minutes with just a name and a six-digit PIN.',
+        'content': """<p>You do not need an account to play Quizmondo. Open the Arena and you are given a guest player straight away, with a name and an avatar, and you can answer questions immediately. An account matters when you want to keep what you earn.</p>
+<h3>What an account gives you</h3>
+<ul>
+<li><strong>Your XP and rank survive.</strong> A guest lives in your browser. Clear your cookies, switch to your phone, and that progress is gone.</li>
+<li><strong>Duels find you again.</strong> Friends challenging you by link need somewhere to send the result.</li>
+<li><strong>One identity everywhere.</strong> The same account works on your laptop, your phone and a pub table.</li>
+</ul>
+<h3>Making one</h3>
+<ol>
+<li>Choose <strong>Quick Setup</strong> in the Arena header, or go to <code>/arena/register</code>.</li>
+<li>Pick a <strong>player name</strong> of at least three characters. This is what opponents see, so make it something you would enjoy seeing on a leaderboard.</li>
+<li>Add your <strong>email</strong>, which is only used to sign you back in.</li>
+<li>Set a <strong>six-digit PIN</strong>. It works like a phone passcode and is quicker than a password on a mobile keyboard.</li>
+</ol>
+<p>If you were already playing as a guest, your XP comes with you rather than starting again.</p>
+<h3>Signing back in</h3>
+<p>Go to <code>/arena/login</code> and enter your player name or email with your PIN. Forgotten which name you used? The email works just as well.</p>
+<p><a href="/arena/register"><strong>Set up an account now</strong></a> or carry on as a guest and do it later.</p>""",
+    },
+    {
+        'title': 'How to Duel a Friend at Trivia',
+        'slug': 'how-to-play-trivia-duels-against-friends',
+        'pin_order': 2,
+        'featured_image': '/static/img/guides/guide-duels.svg',
+        'excerpt': 'Duels are turn-based, so nobody has to be online at the same time. Send a link, play your three questions, and your opponent answers whenever it suits them.',
+        'content': """<p>A Quizmondo duel is not a race against someone staring at the same screen. It is turn-based, like playing chess by post: you take your turn, they take theirs, and the app keeps score. Neither of you has to be free at the same moment.</p>
+<h3>Starting one</h3>
+<ol>
+<li>From the Arena, choose to start a duel. You get a match with its own code and link.</li>
+<li>Share it. There is a <strong>WhatsApp invite</strong> button that writes the message for you, or you can copy the link anywhere.</li>
+<li>Your friend taps the link. They can play as a guest, so there is nothing to install and no sign-up wall.</li>
+</ol>
+<h3>How a round works</h3>
+<p>Each round is <strong>three questions</strong> from one category, and both players get the identical three, so the comparison is fair. Points come from being right and from being quick, so a confident fast answer beats a cautious slow one.</p>
+<p>When you have both finished a round, you see a question-by-question breakdown of who got what. Then a fresh category is drawn and the next round begins, led off by whoever caught up last.</p>
+<h3>If they take their time</h3>
+<p>Nothing is lost while you wait. The match sits in your lobby and you can send a nudge, which writes another WhatsApp message pointing at the same link. If they never come back, you can <a href="/posts/how-to-play-trivia-against-the-bot">hand the match to the bot</a> and finish it anyway.</p>
+<p><a href="/arena/"><strong>Open the Arena and start a duel</strong></a></p>""",
+    },
+    {
+        'title': 'How to Play Against the Bot, Cyber Bot Nova',
+        'slug': 'how-to-play-trivia-against-the-bot',
+        'pin_order': 3,
+        'featured_image': '/static/img/guides/guide-bot.svg',
+        'excerpt': 'No opponent to hand, or one who has gone quiet? Nova will take the other side of any duel, answers instantly, and is a genuinely useful way to practise a category.',
+        'content': """<p><strong>Cyber Bot Nova</strong> is the house opponent. Nova never needs an invitation, never leaves you waiting, and answers the moment it is their turn, which makes a bot duel the fastest way to get a game in.</p>
+<h3>When to reach for the bot</h3>
+<ul>
+<li><strong>Nobody is about.</strong> Start a duel and take Nova instead of waiting on a friend.</li>
+<li><strong>A match has stalled.</strong> If an opponent has not taken their turn, switch the match to the bot from the lobby and play it out.</li>
+<li><strong>You want practice.</strong> Learning a category against Nova costs you nothing on the leaderboard that matters to your pride.</li>
+</ul>
+<h3>How hard is Nova?</h3>
+<p>Nova gets roughly two questions in three right, with a varying speed bonus, so a solid round will beat them and a sloppy one will not. They are a fair benchmark rather than a pushover or an unbeatable machine.</p>
+<h3>How it plays</h3>
+<p>Exactly like a duel against a person: three questions a round, the same questions for both sides, the same scoring. The difference is that Nova's round is already done by the time you finish yours, so you go straight to the comparison and on to the next round at your own pace.</p>
+<p><a href="/arena/"><strong>Start a duel and pick the bot</strong></a></p>""",
+    },
+    {
+        'title': 'How to Join or Run a Live Pub Quiz',
+        'slug': 'how-to-play-pub-quiz-games',
+        'pin_order': 4,
+        'featured_image': '/static/img/guides/guide-pub.svg',
+        'excerpt': 'Pub quizzes are the live, hosted side of Quizmondo: a quizmaster runs the rounds, tables check in on their phones, and scores land on a big screen. Here is both sides of it.',
+        'content': """<p>A pub quiz is not a duel. It is a live event with a quizmaster calling the rounds, several tables playing at once, and a shared scoreboard. Quizmondo runs them two ways: <strong>in-house</strong>, in an actual pub, and <strong>virtual</strong>, where everyone is at home.</p>
+<h3>Joining as a player</h3>
+<ol>
+<li>Open <strong>Pub Leagues</strong> and pick the league you are playing.</li>
+<li><strong>In a pub?</strong> Enter your table number and team name. The venue PIN is announced in the room or shown on the TV. Everyone on your table shares one scorecard, so one phone per table is plenty.</li>
+<li><strong>Playing from home?</strong> Give your squad a name. You get your own scorecard and a <strong>squad join code</strong> you can share, so mates on other phones can play on the same card as you.</li>
+<li>Wait for the quizmaster to wave you through. Your screen unlocks by itself the moment they approve you.</li>
+</ol>
+<h3>What a round feels like</h3>
+<p>Five questions, a countdown on each one, and no feedback until the end. Your answers lock in as you go, so a lost signal or a closed tab does not cost you the round. When every table is in, the quizmaster reveals the answers and the standings move.</p>
+<p>Between rounds there is usually an interval, and if the venue is running a bar offer it appears on your phone then.</p>
+<h3>Running one as quizmaster</h3>
+<p>Hosting needs a quizmaster or admin account. From the league's host console you approve tables as they check in, start each round, lock a round if a table wanders off, reveal the answers, call the interval and finally crown the winners. You can drive it from your phone while the big screen runs on a laptop plugged into the TV.</p>
+<p>Two settings are worth knowing. <strong>Lock each round on the clock</strong> closes a round by itself once every question's timer has run out, so one table leaving early never holds up the room. <strong>Roll on to the next round by itself</strong> runs the whole quiz unattended, which is what you want for a virtual league and usually not what you want with a microphone in your hand.</p>
+<p><a href="/arena/leagues"><strong>Find a pub quiz league</strong></a></p>""",
+    },
+    {
+        'title': 'How Quizmondo Scoring, Streaks and Ranks Work',
+        'slug': 'how-quizmondo-scoring-and-ranks-work',
+        'pin_order': 5,
+        'featured_image': '/static/img/guides/guide-arena.svg',
+        'excerpt': 'Why a fast right answer is worth more than a slow one, what the final round multiplier does, and how XP turns into a rank. Worth two minutes before your next duel.',
+        'content': """<p>Quizmondo rewards knowing the answer <em>and</em> knowing it quickly. Understanding the sums is worth a surprising number of points.</p>
+<h3>Points on a question</h3>
+<p>A correct answer is worth a base <strong>100 points</strong>, plus a <strong>speed bonus</strong> of two points for every second still on the clock. Answer a 15-second question in four seconds and the bonus is worth 22 points on top. A wrong answer and a timeout both score nothing, so a confident guess costs you no more than running the clock down.</p>
+<h3>The final round counts for more</h3>
+<p>The last round of a pub quiz carries a <strong>1.5x multiplier</strong> on everything you get right. A quiz is rarely over before it is over, and a table three rounds adrift can still take the night.</p>
+<h3>Where the time limit comes from</h3>
+<p>In a pub quiz the quizmaster sets it, anywhere from 15 to 30 seconds. Fifteen is a fast buzzer round; thirty gives a table room to argue. It is worth asking which you are playing before the first question.</p>
+<h3>XP and ranks</h3>
+<p>Playing earns <strong>XP</strong>, which accumulates across duels and pub quizzes and sets your position on the global leaderboard. Unlike a single match score, XP only ever goes up, so turning up regularly counts for as much as a single brilliant night.</p>
+<p>One thing worth knowing: your scores are worked out on the server from the answers you send, not by your phone. Nothing you do in the browser can inflate them.</p>
+<p><a href="/arena/leaderboard"><strong>See where you stand</strong></a></p>""",
+    },
+]
+
+# Stock covers for the trivia articles, which shipped with no image at all and so
+# every card in the feed fell back to the same esports photo.
+ARTICLE_COVERS = [
+    '/static/img/quizhub_trivia.jpg',
+    '/static/img/quizhub_arcade.jpg',
+    '/static/img/quizhub_hero.jpg',
+    '/static/img/quizhub_esports.jpg',
+]
+
+
 SEED_POSTS = [
     {
         'title': 'Which Planet Has the Most Moons? Saturn Overtakes Jupiter in Latest Astronomy Count',
@@ -1070,6 +1193,44 @@ def seed_quizmondo_full_environment():
     db.session.commit()
 
     # 4. Synchronize Categories & Posts
+    for p_item in GUIDE_POSTS:
+        guide_cat = Category.query.filter_by(name=GUIDE_CATEGORY).first()
+        if not guide_cat:
+            guide_cat = Category(name=GUIDE_CATEGORY, slug='getting-started')
+            db.session.add(guide_cat)
+            db.session.flush()
+
+        # Match on slug, then on title, so renaming a guide in the admin does not make
+        # the next deploy create a second copy of it alongside the renamed one
+        guide = Post.query.filter_by(slug=p_item['slug']).first()
+        if not guide:
+            guide = Post.query.filter_by(title=p_item['title']).first()
+        is_new_guide = guide is None
+        if is_new_guide:
+            guide = Post(slug=p_item['slug'], category_id=guide_cat.id,
+                         created_at=datetime.utcnow() - timedelta(days=400))
+            db.session.add(guide)
+        # The wording is maintained here in code, so it keeps improving on each deploy
+        guide.title = p_item['title']
+        guide.excerpt = p_item['excerpt']
+        guide.content = p_item['content']
+        guide.status = 'publish'
+        # Where it sits is the admin's call, so only set that when first created,
+        # otherwise a reorder or an unpin would be undone by the next deploy
+        if is_new_guide:
+            guide.is_pinned = True
+            guide.pin_order = p_item['pin_order']
+        # Likewise the cover: replace the packaged artwork, never a hand-picked image
+        if not guide.featured_image or guide.featured_image.startswith('/static/img/guides/'):
+            guide.featured_image = p_item['featured_image']
+    db.session.commit()
+
+    # Give the trivia articles a cover each, rather than all sharing one fallback
+    for idx, art in enumerate(Post.query.order_by(Post.id.asc()).all()):
+        if not art.featured_image:
+            art.featured_image = ARTICLE_COVERS[idx % len(ARTICLE_COVERS)]
+    db.session.commit()
+
     for p_item in SEED_POSTS:
         cat_name = p_item['category_name']
         cat = Category.query.filter_by(name=cat_name).first()

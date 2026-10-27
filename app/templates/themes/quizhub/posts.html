@@ -32,6 +32,11 @@
                   {{ p.category.name }}
                 </span>
                 {% endif %}
+                {% if p.is_pinned %}
+                <span class="absolute top-3 left-3 text-[10px] font-black uppercase px-2.5 py-1 rounded bg-amber-400 text-slate-950 font-mono shadow-lg flex items-center gap-1">
+                  <span>📌</span> START HERE
+                </span>
+                {% endif %}
               </div>
               <div class="p-6 space-y-2">
                 <span class="text-[10px] font-mono text-slate-400">{{ p.created_at.strftime('%B %d, %Y') }}</span>

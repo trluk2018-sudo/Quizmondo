@@ -95,10 +95,11 @@ def post_new():
             slug=slug,
             content=request.form.get('content') or '',
             excerpt=request.form.get('excerpt') or '',
-            featured_image=request.form.get('featured_image') or '',
+            featured_image=save_uploaded_image(request.files.get('featured_image_file'), 'post') or (request.form.get('featured_image') or ''),
             status=request.form.get('status', 'publish'),
             category_id=int(request.form.get('category_id')) if request.form.get('category_id') else None,
             is_pinned=bool(request.form.get('is_pinned')),
+            pin_order=int(request.form.get('pin_order') or 0),
             meta_title=request.form.get('meta_title', '').strip(),
             meta_description=request.form.get('meta_description', '').strip(),
             meta_keywords=request.form.get('meta_keywords', '').strip(),
@@ -170,10 +171,12 @@ def post_edit(post_id):
         post.title = title
         post.content = request.form.get('content') or ''
         post.excerpt = request.form.get('excerpt') or ''
-        post.featured_image = request.form.get('featured_image') or ''
+        uploaded_cover = save_uploaded_image(request.files.get('featured_image_file'), 'post')
+        post.featured_image = uploaded_cover or (request.form.get('featured_image') or '')
         post.status = request.form.get('status', 'publish')
         post.category_id = int(request.form.get('category_id')) if request.form.get('category_id') else None
         post.is_pinned = bool(request.form.get('is_pinned'))
+        post.pin_order = int(request.form.get('pin_order') or 0)
         post.meta_title = request.form.get('meta_title', '').strip()
         post.meta_description = request.form.get('meta_description', '').strip()
         post.meta_keywords = request.form.get('meta_keywords', '').strip()

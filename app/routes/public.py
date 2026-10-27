@@ -132,7 +132,11 @@ def home():
 def posts():
     page = request.args.get('page', 1, type=int)
     per_page = int(SiteSetting.get('posts_per_page', '10') or '10')
-    pagination = Post.query.filter_by(status='publish').order_by(Post.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    # Pinned guides lead, in their own order, then everything else newest first.
+    # Without this the is_pinned flag in the admin had no effect on the page at all.
+    pagination = Post.query.filter_by(status='publish').order_by(
+        Post.is_pinned.desc(), Post.pin_order.asc(), Post.created_at.desc()
+    ).paginate(page=page, per_page=per_page, error_out=False)
     return render_theme('posts.html', pagination=pagination)
 
 

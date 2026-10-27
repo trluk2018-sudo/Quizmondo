@@ -57,6 +57,8 @@ class Post(db.Model):
     featured_image = db.Column(db.String(300), default='')
     status = db.Column(db.String(20), default='publish')  # 'publish', 'draft'
     is_pinned = db.Column(db.Boolean, default=False)
+    # Lower sorts first among pinned posts, so the how-to guides can be put in reading order
+    pin_order = db.Column(db.Integer, default=0)
     view_count = db.Column(db.Integer, default=0)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=True)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)

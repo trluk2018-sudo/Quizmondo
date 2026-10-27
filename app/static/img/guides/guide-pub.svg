@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450" font-family="Montserrat, 'Arial Black', sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090317"/><stop offset="55%" stop-color="#2d1206"/><stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+    <linearGradient id="ink" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#fbbf24"/>
+    </linearGradient>
+    <radialGradient id="orb" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fbbf24" stop-opacity=".55"/><stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <circle cx="640" cy="120" r="200" fill="url(#orb)"/>
+  <circle cx="120" cy="390" r="150" fill="url(#orb)" opacity=".5"/>
+
+  <g stroke="#fbbf24" stroke-opacity=".16" stroke-width="1">
+    <path d="M0 110 H800"/><path d="M0 230 H800"/><path d="M0 350 H800"/>
+    <path d="M200 0 V450"/><path d="M400 0 V450"/><path d="M600 0 V450"/>
+  </g>
+
+  <g transform="translate(560,150)" opacity=".9">
+    <text x="0" y="0" font-size="150" text-anchor="middle" dominant-baseline="middle">&#127866;</text>
+  </g>
+
+  <g transform="translate(56,150)">
+    <rect x="0" y="-34" width="138" height="24" rx="6" fill="#f472b6"/>
+    <text x="11" y="-17" font-size="12" font-weight="900" fill="#0b041c" letter-spacing="2">QUIZMONDO GUIDE</text>
+    <text x="0" y="22" font-size="46" font-weight="900" fill="url(#ink)">Run a pub quiz</text>
+    <text x="0" y="62" font-size="18" font-weight="500" fill="#fbbf24" opacity=".95">Tables, rounds and a big screen</text>
+    <rect x="0" y="86" width="96" height="5" rx="2.5" fill="#f472b6"/>
+  </g>
+
+  <g transform="translate(56,392)" font-size="13" font-weight="700" fill="#cbd5e1" opacity=".75">
+    <circle cx="5" cy="-4" r="5" fill="#f472b6"/>
+    <text x="20" y="0">quizmondo.com</text>
+  </g>
+</svg>

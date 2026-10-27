@@ -193,6 +193,8 @@ def _ensure_schema():
                 db.session.execute(text("ALTER TABLE posts ADD COLUMN og_image VARCHAR(500) DEFAULT ''"))
             if 'no_index' not in cols_posts:
                 db.session.execute(text("ALTER TABLE posts ADD COLUMN no_index BOOLEAN DEFAULT 0"))
+            if 'pin_order' not in cols_posts:
+                db.session.execute(text("ALTER TABLE posts ADD COLUMN pin_order INTEGER DEFAULT 0"))
             db.session.commit()
 
         cols_menu = [row[1] for row in db.session.execute(text("PRAGMA table_info(menu_items)")).fetchall()]
