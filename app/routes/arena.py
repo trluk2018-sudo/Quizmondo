@@ -1633,6 +1633,15 @@ def league_lounge(slug):
     is_started = (state.get('current_round', 1) > 1 or state.get('round_status') in ('active', 'break', 'closed', 'finished'))
     # Only display approved real teams on lounge scoreboard (no mock demo teams!)
     teams = [t for t in league.get_teams() if t.get('status') != 'pending']
+    # Advertise the rounds this league actually plays, not a hardcoded 5-round venue card
+    active_cfg = VIRTUAL_PUB_ROUNDS_CONFIG if is_virtual else PUB_ROUNDS_CONFIG
+    total_rounds = int((state.get('config') or {}).get('total_rounds', 3 if is_virtual else 5))
+    rounds_overview = []
+    for r_num in range(1, min(total_rounds, len(active_cfg)) + 1):
+        info = dict(active_cfg.get(r_num, {}))
+        info['number'] = r_num
+        info['name'] = (info.get('name') or f'Round {r_num}').split(': ', 1)[-1]
+        rounds_overview.append(info)
     return render_template(
         'themes/quizhub/arena_league_lounge.html',
         player=player,
@@ -1640,7 +1649,8 @@ def league_lounge(slug):
         state=state,
         is_virtual=is_virtual,
         is_started=is_started,
-        teams=teams
+        teams=teams,
+        rounds_overview=rounds_overview
     )
 
 
@@ -1694,6 +1704,72 @@ PUB_ROUNDS_CONFIG = {
 }
 
 
+def resolve_pub_team(state, player, table_num, team_name, is_virtual):
+    """Find the squad row that belongs to this browser session.
+
+    In a physical venue a table number is deliberately shared, so the table
+    number stays the identity. In a virtual league every player checks in from
+    their own device, so the squad is keyed to the player instead — otherwise
+    two players who both type Squad #1 silently end up on one scorecard.
+    """
+    teams = state.get('teams', [])
+    owner_key = getattr(player, 'session_key', None)
+    name_l = (team_name or '').strip().lower()
+
+    def owned():
+        if not owner_key:
+            return None
+        return next((t for t in teams if t.get('owner') and t.get('owner') == owner_key), None)
+
+    if is_virtual:
+        # A virtual squad belongs to the device that checked it in; table numbers are not shared
+        mine = owned()
+        if mine:
+            return mine
+        # Only unclaimed rows (manual host entries, legacy squads) may be adopted by name
+        for t in teams:
+            if name_l and not t.get('owner') and t.get('name', '').strip().lower() == name_l:
+                return t
+        return None
+
+    for t in teams:
+        matches_table = table_num and str(t.get('table', '')).strip() == str(table_num)
+        matches_name = name_l and t.get('name', '').strip().lower() == name_l
+        if matches_table or matches_name:
+            return t
+
+    mine = owned()
+    if mine:
+        return mine
+
+    # Fallback: if there is only 1 approved table in the venue, match it so single-table tests never miss
+    approved_only = [t for t in teams if t.get('status') != 'pending']
+    if len(approved_only) == 1:
+        return approved_only[0]
+    return None
+
+
+def free_pub_squad_slot(teams, table_num, team_name):
+    """Pick a squad number and squad name that no other virtual squad is already using."""
+    taken_tables = {str(t.get('table', '')).strip() for t in teams}
+    taken_names = {t.get('name', '').strip().lower() for t in teams}
+
+    table_num = str(table_num or '1').strip() or '1'
+    if table_num in taken_tables:
+        n = 1
+        while str(n) in taken_tables:
+            n += 1
+        table_num = str(n)
+
+    team_name = (team_name or 'Squad').strip()
+    if team_name.lower() in taken_names:
+        suffix = 2
+        while f"{team_name} ({suffix})".lower() in taken_names:
+            suffix += 1
+        team_name = f"{team_name} ({suffix})"
+    return table_num, team_name
+
+
 @arena_bp.route('/leagues/<slug>/state')
 def league_state(slug):
     """Real-time pub quiz state polling endpoint for Quizmaster console, TV projectors, and player buzzer phones."""
@@ -1729,6 +1805,8 @@ def league_state(slug):
 def league_progress(slug):
     """Receive live per-question progress & partial score from a table so Quizmaster sees live table progress."""
     league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
+    is_virtual = league.is_virtual_league()
+    player = get_current_player(persist=False)
     state = league.get_state()
     teams = state.get('teams', [])
     tbl = str(request.form.get('table') or session.get('pub_table_num') or '').strip()
@@ -1738,17 +1816,11 @@ def league_progress(slug):
     partial_score = int(request.form.get('partial_score') or 0)
     is_final_q = (q_idx >= 5 or request.form.get('is_final') == '1')
 
-    target_team = None
-    for t in teams:
-        if (tbl and str(t.get('table', '')).strip() == tbl) or (tname and t.get('name', '').strip().lower() == tname.lower()):
-            target_team = t
-            break
+    target_team = resolve_pub_team(state, player, tbl, tname, is_virtual)
 
-    # Fallback: if there is only 1 approved table in the venue, match it so single-table tests never miss
-    if not target_team:
-        approved_only = [t for t in teams if t.get('status') != 'pending']
-        if len(approved_only) == 1:
-            target_team = approved_only[0]
+    # Live progress only counts while the host has the round open and the squad is through the bouncer
+    if target_team and (target_team.get('status') == 'pending' or state.get('round_status') != 'active'):
+        return jsonify({'success': False, 'error': 'Round is not open for this squad'}), 403
 
     if target_team:
         target_team[f'progress_q_{curr_r}'] = q_idx
@@ -2042,6 +2114,9 @@ def league_manager_action(slug):
 
     elif action == 'clear_tables':
         state['teams'] = []
+        # Clearing every table ends the live round too, or nobody could ever check in again
+        state['round_status'] = 'waiting'
+        state['answers_revealed'] = False
         state['reset_ts'] = datetime.utcnow().isoformat()
         league.set_state(state)
         db.session.commit()
@@ -2067,46 +2142,27 @@ def league_room(slug):
         current_round = 1
 
     table_num = (request.args.get('table') or request.form.get('table') or session.get('pub_table_num') or '1').strip()
-    session['pub_table_num'] = str(table_num)
-
     team_name = (request.args.get('team') or request.form.get('team') or session.get('pub_team_name') or f"Table {table_num} • {player.display_name}").strip()
-    session['pub_team_name'] = team_name
 
     # Handle POST round score submission FIRST so it never hits GET redirects or race conditions!
     if request.method == 'POST':
         round_score = int(request.form.get('score', 0))
         teams = state.get('teams', [])
+        team_entry = resolve_pub_team(state, player, table_num, team_name, is_virtual)
 
-        target_team = None
-        for t in teams:
-            if str(t.get('table', '')).strip() == str(table_num) or t.get('name', '').strip().lower() == team_name.lower():
-                target_team = t
-                break
+        # Only an approved squad may bank a score, and only while the host has the round open.
+        # A score that arrives late (host already locked the round) is already banked by close_round.
+        if not team_entry or team_entry.get('status') == 'pending':
+            return jsonify({'success': False, 'error': 'Your squad has not been approved by the Quizmaster yet.'}), 403
+        if state.get('round_status') != 'active' and team_entry.get(f'round_{current_round}') is None:
+            return jsonify({'success': False, 'error': f'Round {current_round} is not open for submissions.'}), 403
 
-        # Fallback: if there is only 1 approved table in the venue, match it so it never misses
-        if not target_team:
-            approved_only = [t for t in teams if t.get('status') != 'pending']
-            if len(approved_only) == 1:
-                target_team = approved_only[0]
-
-        if target_team:
-            if target_team.get(f'round_{current_round}') is None:
-                target_team['score'] = int(target_team.get('score', 0)) + round_score
-                target_team[f'round_{current_round}'] = round_score
-                target_team[f'progress_q_{current_round}'] = 5
-            team_entry = target_team
-        else:
-            team_entry = {
-                'name': team_name,
-                'score': round_score,
-                'members': 4,
-                'table': str(table_num),
-                'rank': len(teams) + 1,
-                'status': 'approved',
-                f'round_{current_round}': round_score,
-                f'progress_q_{current_round}': 5
-            }
-            teams.append(team_entry)
+        table_num = str(team_entry.get('table', table_num))
+        team_name = team_entry.get('name', team_name)
+        if team_entry.get(f'round_{current_round}') is None:
+            team_entry['score'] = int(team_entry.get('score', 0)) + round_score
+            team_entry[f'round_{current_round}'] = round_score
+            team_entry[f'progress_q_{current_round}'] = 5
 
         teams.sort(key=lambda x: x.get('score', 0), reverse=True)
         for idx, t in enumerate(teams, 1):
@@ -2155,11 +2211,14 @@ def league_room(slug):
     # Check table capacity & Digital Bouncer approval (for BOTH physical and virtual pub quizzes)
     teams = state.get('teams', [])
     max_tables = int(cfg.get('max_tables', 20))
-    team_entry = next((t for t in teams if str(t.get('table', '')).strip() == str(table_num) or t.get('name', '').strip().lower() == team_name.lower()), None)
+    team_entry = resolve_pub_team(state, player, table_num, team_name, is_virtual)
 
     if not team_entry:
-        # Strictly prevent new teams from joining a pub quiz tournament that has already started
-        quiz_already_started = (state.get('current_round', 1) > 1 or state.get('round_status') in ('active', 'break', 'closed', 'finished'))
+        # Strictly prevent new teams from joining a pub quiz tournament that has already started.
+        # With no squads registered at all there is no tournament in progress to protect.
+        quiz_already_started = bool(teams) and (
+            state.get('current_round', 1) > 1 or state.get('round_status') in ('active', 'break', 'closed', 'finished')
+        )
         if quiz_already_started:
             curr_r = state.get('current_round', 1)
             flash(f"Table registration is closed: {league.name} has already started Round {curr_r}. New tables cannot join mid-tournament. Please check in with the Quizmaster or join before the next match.", "error")
@@ -2169,13 +2228,16 @@ def league_room(slug):
         if approved_count >= max_tables:
             flash(f"This pub venue has reached its maximum table capacity of {max_tables} tables. Please check with the Quizmaster.", "error")
             return redirect(url_for('arena.league_lounge', slug=slug))
+        if is_virtual:
+            table_num, team_name = free_pub_squad_slot(teams, table_num, team_name)
         team_entry = {
             'name': team_name,
             'table': str(table_num),
             'members': 4,
             'score': 0,
             'rank': len(teams) + 1,
-            'status': 'pending'  # Held in bouncer queue until Quizmaster approves
+            'status': 'pending',  # Held in bouncer queue until Quizmaster approves
+            'owner': player.session_key
         }
         teams.append(team_entry)
         state['teams'] = teams
@@ -2183,9 +2245,15 @@ def league_room(slug):
         db.session.commit()
         is_approved = False
     else:
+        # Always play under the squad number & name the host console actually shows
+        table_num = str(team_entry.get('table', table_num))
+        team_name = team_entry.get('name', team_name)
         is_approved = (team_entry.get('status') != 'pending')
         if is_approved:
             session[f'pub_pin_{slug}'] = league.pin_code
+
+    session['pub_table_num'] = str(table_num)
+    session['pub_team_name'] = team_name
 
     # Check if this table has already submitted answers for the active round
     has_submitted_round = False
@@ -2253,7 +2321,8 @@ def league_tv(slug):
     is_virtual = league.is_virtual_league()
     state = league.get_state()
     current_round = state.get('current_round', 1)
-    round_info = PUB_ROUNDS_CONFIG.get(current_round, PUB_ROUNDS_CONFIG[1])
+    active_cfg = VIRTUAL_PUB_ROUNDS_CONFIG if is_virtual else PUB_ROUNDS_CONFIG
+    round_info = active_cfg.get(current_round, active_cfg[1])
 
     # Big Screen TV MUST display the identical questions that tables are answering / reviewing
     round_questions_map = state.get('round_questions', {})

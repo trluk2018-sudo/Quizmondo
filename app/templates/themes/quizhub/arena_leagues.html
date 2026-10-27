@@ -49,7 +49,7 @@
         </h3>
         <div class="space-y-3">
           {% for lg in leagues %}
-          {% set is_online = ('online' in lg.slug or 'cyber' in lg.slug or 'virtual' in lg.name|lower) %}
+          {% set is_online = lg.is_virtual_league() %}
           <div class="p-5 rounded-2xl bg-slate-900/60 border {% if is_online %}border-cyan-500/40 bg-gradient-to-r from-cyan-950/20 via-slate-900/60 to-purple-950/20{% else %}border-purple-500/20{% endif %} font-mono flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-cyan-400/50 transition">
             <div class="space-y-1">
               <div class="flex flex-wrap items-center gap-2">

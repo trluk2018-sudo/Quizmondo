@@ -79,37 +79,21 @@
         </div>
       </div>
 
-      <!-- 5 Tournament Rounds Overview -->
+      <!-- Tournament Rounds Overview -->
       <div class="space-y-3">
         <h4 class="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400">
-          {% if is_virtual %}Virtual Pub Quiz Rounds{% else %}5-Round Venue Tournament Schedule{% endif %}
+          {% if is_virtual %}Virtual Pub Quiz Rounds{% else %}{{ rounds_overview|length }}-Round Venue Tournament Schedule{% endif %}
         </h4>
-        <div class="grid grid-cols-1 sm:grid-cols-5 gap-2.5 font-mono text-xs">
-          <div class="p-3 rounded-xl bg-slate-900/90 border border-purple-500/20 space-y-1">
-            <span class="text-amber-400 font-bold block">Round 1 🧠</span>
-            <span class="text-white font-bold block text-[11px]">General Knowledge</span>
-            <span class="text-[10px] text-slate-400 block">5 Questions • 100 pts</span>
+        <div class="grid grid-cols-1 sm:grid-cols-{{ rounds_overview|length }} gap-2.5 font-mono text-xs">
+          {% for r in rounds_overview %}
+          <div class="p-3 rounded-xl bg-slate-900/90 border {% if loop.last %}border-amber-400/40 bg-amber-950/20{% else %}border-purple-500/20{% endif %} space-y-1">
+            <span class="{% if loop.last %}text-amber-400{% else %}text-cyan-400{% endif %} font-bold block">Round {{ r.number }} {{ r.icon }}</span>
+            <span class="text-white font-bold block text-[11px]">{{ r.name }}</span>
+            <span class="text-[10px] {% if loop.last %}text-amber-300{% else %}text-slate-400{% endif %} block">
+              {% if loop.last %}5 Questions &bull; 1.5x Multiplier{% else %}5 Questions &bull; 100 pts{% endif %}
+            </span>
           </div>
-          <div class="p-3 rounded-xl bg-slate-900/90 border border-purple-500/20 space-y-1">
-            <span class="text-cyan-400 font-bold block">Round 2 🎵</span>
-            <span class="text-white font-bold block text-[11px]">Music &amp; Audio</span>
-            <span class="text-[10px] text-slate-400 block">5 Questions • 100 pts</span>
-          </div>
-          <div class="p-3 rounded-xl bg-slate-900/90 border border-purple-500/20 space-y-1">
-            <span class="text-pink-400 font-bold block">Round 3 🎬</span>
-            <span class="text-white font-bold block text-[11px]">Cinema &amp; TV</span>
-            <span class="text-[10px] text-slate-400 block">5 Questions • 100 pts</span>
-          </div>
-          <div class="p-3 rounded-xl bg-slate-900/90 border border-purple-500/20 space-y-1">
-            <span class="text-emerald-400 font-bold block">Round 4 🗺️</span>
-            <span class="text-white font-bold block text-[11px]">World Geography</span>
-            <span class="text-[10px] text-slate-400 block">5 Questions • 100 pts</span>
-          </div>
-          <div class="p-3 rounded-xl bg-slate-900/90 border border-amber-400/40 bg-amber-950/20 space-y-1">
-            <span class="text-amber-400 font-bold block">Round 5 ⚡</span>
-            <span class="text-white font-bold block text-[11px]">Speed Wipeout!</span>
-            <span class="text-[10px] text-amber-300 block">Double 1.5x Multiplier</span>
-          </div>
+          {% endfor %}
         </div>
       </div>
 
