@@ -2,7 +2,7 @@
 import os
 import json
 from datetime import datetime, timedelta
-from ..models import db, QuizQuestion, QuizPack, PubLeague, PageModule, MenuItem, Post, Category, SiteSetting
+from ..models import db, QuizQuestion, QuizPack, PubLeague, PageModule, MenuItem, Post, Category, SiteSetting, FeaturedGame
 from .modules import get_default_config, MODULE_DEFINITIONS
 
 SEED_PACKS = [
@@ -913,8 +913,12 @@ GUIDE_POSTS = [
 # worse than a generic one. An earlier pass assigned these by position, which is how a
 # piece about Saturn's moons ended up illustrated with a Ludo board.
 ARTICLE_COVERS = {
+    'which-planet-has-the-most-moons-saturn-jupiter': '/static/img/articles/moons.jpg',
+    'ancient-enigmas-7-historical-trivia-facts-that-sound-fake': '/static/img/articles/pyramids.jpg',
+    'the-10-commandments-of-running-a-legend-tier-pub-quiz-night': '/static/img/articles/pub.jpg',
     'chiptunes-waveforms-how-8-bit-audio-boosts-trivia-recall': '/static/img/quizhub_hero.jpg',
     'evolution-of-speedruns-breaking-impossible-video-game-records': '/static/img/quizhub_arcade.jpg',
+    'why-turn-based-quiz-duels-are-the-future': '/static/img/articles/chess.jpg',
 }
 
 # Photos this seeder has handed out itself, so a wrong one can be taken back
@@ -926,11 +930,29 @@ PACKAGED_PHOTOS = (
 )
 
 
+# Articles withdrawn on purpose. This one was built around other broadcasters'
+# programme brands, which is not ours to trade on.
+RETIRED_POSTS = (
+    'bbc-house-of-games-quiz-planet-why-turn-based-duels-rule',
+)
+
+
+def is_seeder_cover(path):
+    """True when the cover is one this seeder set, so it is safe to correct.
+
+    Anything else was chosen in the admin and is left alone.
+    """
+    path = path or ''
+    return (not path) or path in PACKAGED_PHOTOS or path.startswith(
+        ('/static/img/articles/', '/static/img/guides/')
+    )
+
+
 SEED_POSTS = [
     {
         'title': 'Two Countries, One Flag: How Chad and Romania Ended Up Identical',
         'slug': 'chad-romania-identical-flags',
-        'featured_image': '/static/img/guides/article-flags.svg',
+        'featured_image': '/static/img/articles/romania.jpg',
         'excerpt': 'Blue, yellow and red vertical stripes, in that order, flown by two nations 2,500 miles apart. One of them complained to the United Nations about it. Neither has budged.',
         'content': """<p>Put the flags of Chad and Romania side by side and most people cannot tell them apart. Both are vertical tricolours of blue, yellow and red, in that order, in almost the same proportions. The only difference is a slightly deeper shade of blue on the Chadian flag, and even that is not reliable across manufacturers.</p>
 <h3>How it happened</h3>
@@ -946,7 +968,7 @@ SEED_POSTS = [
     {
         'title': 'Honey Never Spoils: The 3,000-Year-Old Jars That Are Still Edible',
         'slug': 'why-honey-never-spoils',
-        'featured_image': '/static/img/guides/article-honey.svg',
+        'featured_image': '/static/img/articles/honey.jpg',
         'excerpt': 'Archaeologists have opened sealed pots of honey from Egyptian tombs and found the contents perfectly good. The reason is a neat piece of chemistry that has nothing to do with preservatives.',
         'content': """<p>Honey is the only common food that does not go off. Sealed properly and kept dry, it will outlast the jar, the shelf and quite possibly the building. Pots recovered from Egyptian tombs, thousands of years old, have been found with their contents still recognisably honey.</p>
 <h3>Why bacteria cannot get a foothold</h3>
@@ -962,7 +984,7 @@ SEED_POSTS = [
     {
         'title': 'Why Pluto Was Demoted, and What It Takes to Count as a Planet',
         'slug': 'why-pluto-is-not-a-planet',
-        'featured_image': '/static/img/guides/article-pluto.svg',
+        'featured_image': '/static/img/articles/solarsystem.jpg',
         'excerpt': 'Pluto did not change in 2006. The definition did. The real culprit was a slightly larger object called Eris, and a question astronomers could no longer dodge.',
         'content': """<p>Pluto was discovered in 1930 and taught as the ninth planet for three generations. In August 2006 it was reclassified as a dwarf planet, and a great many people took it personally. Pluto itself was unaffected. What changed was that astronomers finally had to write down what a planet is.</p>
 <h3>The problem was Eris</h3>
@@ -983,7 +1005,7 @@ SEED_POSTS = [
     {
         'title': 'Where the Pub Quiz Came From: A 1970s Idea to Fill Empty Mondays',
         'slug': 'history-of-the-pub-quiz',
-        'featured_image': '/static/img/guides/article-pubquiz.svg',
+        'featured_image': '/static/img/articles/bar.jpg',
         'excerpt': 'The British pub quiz is barely fifty years old. It was invented to get people into pubs on the quiet nights, and it worked so well that it became a national institution.',
         'content': """<p>The pub quiz feels like something that has always existed, in the way that darts and dominoes do. It has not. It is a product of the 1970s, and it was invented as a commercial fix for a specific problem: pubs were empty from Monday to Wednesday.</p>
 <h3>The men who made it a business</h3>
@@ -1307,13 +1329,16 @@ def seed_quizmondo_full_environment():
 
     # Put the right photo on the two articles a packaged photo actually suits, and take
     # back any photo an earlier pass handed out by position rather than by subject.
+    for slug in RETIRED_POSTS:
+        gone = Post.query.filter_by(slug=slug).first()
+        if gone:
+            db.session.delete(gone)
+    db.session.commit()
+
     for art in Post.query.all():
         wanted = ARTICLE_COVERS.get(art.slug)
-        if wanted:
-            if not art.featured_image or art.featured_image in PACKAGED_PHOTOS:
-                art.featured_image = wanted
-        elif art.featured_image in PACKAGED_PHOTOS:
-            art.featured_image = ''
+        if wanted and is_seeder_cover(art.featured_image):
+            art.featured_image = wanted
     db.session.commit()
 
     # One-off cleanup: earlier seeding runs created second copies of some articles under
@@ -1355,9 +1380,7 @@ def seed_quizmondo_full_environment():
             post.content = p_item['content']
             post.status = 'publish'
         # Give it the packaged cover, unless somebody has chosen their own
-        if p_item.get('featured_image') and (
-            not post.featured_image or post.featured_image.startswith('/static/img/')
-        ):
+        if p_item.get('featured_image') and is_seeder_cover(post.featured_image):
             post.featured_image = p_item['featured_image']
 
     # 5. Synchronize Homepage PageModules for 'quizhub' theme
@@ -1410,4 +1433,26 @@ def seed_quizmondo_full_environment():
         db.session.add(f_item)
 
     db.session.commit()
+
+    # 6. Put the hero's existing featured game into the manager, once.
+    # The hero used to hard-code this slide and the gallery only took over once
+    # something was added, which meant the admin screen was empty while the homepage
+    # was plainly showing a featured game. Seeding it means what is on the page is
+    # what is in the manager, and editable. The marker makes this a one-time thing,
+    # so deleting the slide does not bring it back on the next deploy.
+    if not SiteSetting.query.filter_by(key='featured_games_seeded').first():
+        if FeaturedGame.query.count() == 0:
+            db.session.add(FeaturedGame(
+                label='FEATURED GAME',
+                title='Retro Arcade & Video Game Trivia',
+                image_url='/static/img/quizhub_hero.jpg',
+                link_url='/arena/packs',
+                cta_text='PLAY NOW',
+                category_slug='gaming-esports',
+                sort_order=1,
+                is_active=True
+            ))
+        db.session.add(SiteSetting(key='featured_games_seeded', value='1'))
+        db.session.commit()
+
     print("QUIZMONDO_SEED_SYNCHRONIZED_SUCCESSFULLY")
