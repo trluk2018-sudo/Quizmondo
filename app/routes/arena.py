@@ -4,7 +4,7 @@ import secrets
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, flash, current_app, Response
 from sqlalchemy.sql.expression import func
-from ..models import db, User, PlayerProfile, ArenaMatch, ArenaRound, QuizQuestion, QuizPack, PubLeague, SiteSetting
+from ..models import db, User, PlayerProfile, ArenaMatch, ArenaRound, QuizQuestion, QuizPack, PubLeague, PubLeagueResult, pub_season_label, SiteSetting, slugify
 from ..utils.share_card import generate_duel_card_png, generate_pub_card_png
 
 arena_bp = Blueprint('arena', __name__, url_prefix='/arena')
@@ -1914,6 +1914,47 @@ def close_pub_round(state, round_num):
     state['round_status'] = 'closed'
 
 
+def record_pub_results(league, state):
+    """Copy a finalised tournament into the permanent results table.
+
+    The league state only holds the night in progress and a reset wipes it, so
+    without this a finished quiz leaves no trace and there is nothing to build a
+    league table from. Guarded by a flag, because the host can press Finalize
+    twice and the unattended clock can reach the same place on its own.
+    """
+    if state.get('results_recorded'):
+        return 0
+    teams = [t for t in state.get('teams', []) if t.get('status') != 'pending']
+    if not teams:
+        return 0
+
+    played_at = datetime.utcnow()
+    season = pub_season_label(played_at)
+    ranked = sorted(teams, key=lambda t: int(t.get('score', 0)), reverse=True)
+    written = 0
+    for idx, t in enumerate(ranked, 1):
+        rounds = {k: v for k, v in t.items() if k.startswith('round_') and v is not None}
+        name = (t.get('name') or 'Unnamed squad').strip()
+        db.session.add(PubLeagueResult(
+            league_id=league.id,
+            season=season,
+            played_at=played_at,
+            team_name=name,
+            team_key=slugify(name),
+            table_num=str(t.get('table', '')),
+            position=idx,
+            total_score=int(t.get('score', 0)),
+            rounds_played=len(rounds),
+            round_scores_json=json.dumps(rounds),
+            members=int(t.get('members', 1) or 1)
+        ))
+        written += 1
+
+    state['results_recorded'] = True
+    state['results_recorded_at'] = played_at.isoformat()
+    return written
+
+
 def apply_pub_auto_progression(league, state):
     """Run the clock for a live pub quiz without the host having to click.
 
@@ -1960,6 +2001,7 @@ def apply_pub_auto_progression(league, state):
             state['round_status'] = 'finished'
             state['answers_revealed'] = True
             state['tournament_completed'] = True
+            record_pub_results(league, state)
         changed = True
 
     if changed:
@@ -2289,9 +2331,11 @@ def league_manager_action(slug):
             state['tournament_completed'] = True
             state.pop('round_ends_at', None)
             state.pop('break_ends_at', None)
+            saved = record_pub_results(league, state)
             league.set_state(state)
             db.session.commit()
-            return respond("🏆 Tournament finalized! Champions crowned and final standings displayed on all screens.")
+            tail = f" {saved} results saved to the league table." if saved else ""
+            return respond(f"🏆 Tournament finalized! Champions crowned and final standings displayed on all screens.{tail}")
 
     elif action == 'save_pin':
         new_pin = (request.form.get('pin_code') or '').strip().upper()
@@ -2333,6 +2377,8 @@ def league_manager_action(slug):
         state['round_questions'] = {}
         state.pop('round_ends_at', None)
         state.pop('break_ends_at', None)
+        state.pop('results_recorded', None)
+        state.pop('results_recorded_at', None)
         state['reset_ts'] = datetime.utcnow().isoformat()
         league.set_state(state)
         db.session.commit()
@@ -2345,6 +2391,8 @@ def league_manager_action(slug):
         state['answers_revealed'] = False
         state.pop('round_ends_at', None)
         state.pop('break_ends_at', None)
+        state.pop('results_recorded', None)
+        state.pop('results_recorded_at', None)
         state['reset_ts'] = datetime.utcnow().isoformat()
         league.set_state(state)
         db.session.commit()

@@ -3,7 +3,7 @@ import json
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify, session
 from werkzeug.utils import secure_filename
-from ..models import db, User, Post, Category, Page, Media, MenuItem, SidebarWidget, SiteSetting, PageModule, slugify, QuizQuestion, QuizPack, PlayerProfile, ArenaMatch, ArenaRound, PubLeague
+from ..models import db, User, Post, Category, Page, Media, MenuItem, SidebarWidget, SiteSetting, PageModule, slugify, QuizQuestion, QuizPack, PlayerProfile, ArenaMatch, ArenaRound, PubLeague, PubLeagueResult, pub_season_label
 from ..utils.modules import get_default_config, get_module_definition, MODULE_DEFINITIONS
 from .auth import login_required
 
@@ -1956,6 +1956,59 @@ def leagues():
     if request.method == 'POST':
         action = (request.form.get('action') or 'create').strip()
 
+        if action == 'update_league':
+            league = db.session.get(PubLeague, int(request.form.get('league_id') or 0))
+            if not league:
+                flash('League not found.', 'error')
+                return redirect(url_for('admin.leagues'))
+            name = (request.form.get('name') or '').strip()
+            pin = (request.form.get('pin_code') or '').strip().upper()
+            if not name or not pin:
+                flash('League name and PIN code are required.', 'error')
+                return redirect(url_for('admin.leagues'))
+            if not (4 <= len(pin) <= 6) or not pin.isalnum():
+                flash('Room PIN must be 4 to 6 letters or digits.', 'error')
+                return redirect(url_for('admin.leagues'))
+            clash = PubLeague.query.filter(PubLeague.pin_code == pin, PubLeague.id != league.id).first()
+            if clash:
+                flash(f'PIN {pin} is already used by "{clash.name}". Pick another.', 'error')
+                return redirect(url_for('admin.leagues'))
+            league.name = name
+            league.pin_code = pin
+            league.venue_name = (request.form.get('venue_name') or '').strip() or league.venue_name
+            league.schedule_day = (request.form.get('schedule_day') or '').strip() or league.schedule_day
+            league.description = (request.form.get('description') or '').strip()
+            league.is_virtual = bool(request.form.get('is_virtual'))
+            db.session.commit()
+            flash(f'"{league.name}" updated.', 'success')
+            return redirect(url_for('admin.leagues'))
+
+        if action == 'toggle_active':
+            league = db.session.get(PubLeague, int(request.form.get('league_id') or 0))
+            if not league:
+                flash('League not found.', 'error')
+                return redirect(url_for('admin.leagues'))
+            league.is_active = not league.is_active
+            db.session.commit()
+            shown = 'live and open for check-in' if league.is_active else 'retired and hidden from players'
+            flash(f'"{league.name}" is now {shown}.', 'success')
+            return redirect(url_for('admin.leagues'))
+
+        if action == 'delete_league':
+            league = db.session.get(PubLeague, int(request.form.get('league_id') or 0))
+            if not league:
+                flash('League not found.', 'error')
+                return redirect(url_for('admin.leagues'))
+            kept = league.results.count()
+            if kept:
+                flash(f'"{league.name}" has {kept} recorded results. Retire it instead so its league table survives.', 'error')
+                return redirect(url_for('admin.leagues'))
+            name = league.name
+            db.session.delete(league)
+            db.session.commit()
+            flash(f'League "{name}" deleted.', 'success')
+            return redirect(url_for('admin.leagues'))
+
         if action == 'toggle_virtual':
             league = db.session.get(PubLeague, int(request.form.get('league_id') or 0))
             if not league:
@@ -1999,4 +2052,87 @@ def leagues():
         return redirect(url_for('admin.leagues'))
         
     all_leagues = PubLeague.query.order_by(PubLeague.created_at.desc()).all()
-    return render_template('admin/leagues.html', leagues=all_leagues)
+    # Live state and recorded history, so the list says what each league is actually doing
+    summary = {}
+    for lg in all_leagues:
+        st = lg.get_state()
+        summary[lg.id] = {
+            'round_status': st.get('round_status', 'waiting'),
+            'current_round': st.get('current_round', 1),
+            'total_rounds': (st.get('config') or {}).get('total_rounds'),
+            'tables': len([t for t in st.get('teams', []) if t.get('status') != 'pending']),
+            'pending': len([t for t in st.get('teams', []) if t.get('status') == 'pending']),
+            'nights': lg.results.with_entities(PubLeagueResult.played_at).distinct().count(),
+            'results': lg.results.count()
+        }
+    return render_template('admin/leagues.html', leagues=all_leagues, summary=summary)
+
+
+@admin_bp.route('/leagues/<int:league_id>/results')
+@login_required
+def league_results(league_id):
+    """League tables built from recorded quiz nights: this season, every night, and all time."""
+    league = db.session.get(PubLeague, league_id)
+    if not league:
+        flash('League not found.', 'error')
+        return redirect(url_for('admin.leagues'))
+
+    seasons = [r[0] for r in db.session.query(PubLeagueResult.season)
+               .filter(PubLeagueResult.league_id == league.id)
+               .distinct().order_by(PubLeagueResult.season.desc()).all() if r[0]]
+    season = request.args.get('season') or (seasons[0] if seasons else pub_season_label())
+
+    rows = PubLeagueResult.query.filter_by(league_id=league.id, season=season).all()
+
+    # Season table: one line per squad, points for where they finished each night.
+    # Oldest night first, so a squad that retyped its name shows the spelling it used last.
+    table = {}
+    for r in sorted(rows, key=lambda r: (r.played_at or datetime.min)):
+        key = r.team_key or slugify(r.team_name)
+        e = table.setdefault(key, {
+            'team_name': r.team_name, 'played': 0, 'points': 0, 'total_score': 0,
+            'wins': 0, 'podiums': 0, 'best_position': None, 'best_score': 0
+        })
+        e['team_name'] = r.team_name
+        e['played'] += 1
+        e['points'] += r.league_points()
+        e['total_score'] += r.total_score or 0
+        if r.position == 1:
+            e['wins'] += 1
+        if r.position and r.position <= 3:
+            e['podiums'] += 1
+        if e['best_position'] is None or (r.position and r.position < e['best_position']):
+            e['best_position'] = r.position
+        e['best_score'] = max(e['best_score'], r.total_score or 0)
+    season_table = sorted(table.values(), key=lambda e: (-e['points'], -e['total_score'], e['team_name'].lower()))
+
+    # Every night in this season, newest first, with who won it
+    nights_map = {}
+    for r in sorted(rows, key=lambda r: (r.played_at or datetime.min), reverse=True):
+        night = nights_map.setdefault(r.played_at, {'played_at': r.played_at, 'teams': 0, 'winner': None, 'top_score': 0})
+        night['teams'] += 1
+        if r.position == 1:
+            night['winner'] = r.team_name
+            night['top_score'] = r.total_score or 0
+    nights = list(nights_map.values())
+
+    # All time, across every season this league has played
+    hall = db.session.query(
+        PubLeagueResult.team_name,
+        db.func.count(PubLeagueResult.id).label('played'),
+        db.func.sum(PubLeagueResult.total_score).label('total_score'),
+        db.func.max(PubLeagueResult.total_score).label('best_score')
+    ).filter(PubLeagueResult.league_id == league.id).group_by(
+        PubLeagueResult.team_key
+    ).order_by(db.func.max(PubLeagueResult.total_score).desc()).limit(10).all()
+
+    return render_template(
+        'admin/league_results.html',
+        league=league,
+        seasons=seasons,
+        season=season,
+        season_table=season_table,
+        nights=nights,
+        hall=hall,
+        night_count=len(nights)
+    )

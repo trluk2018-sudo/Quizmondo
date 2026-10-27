@@ -564,3 +564,50 @@ class PubLeague(db.Model):
         state = self.get_state()
         state['teams'] = teams
         self.set_state(state)
+
+
+def pub_season_label(when=None) -> str:
+    """The season a quiz night belongs to.
+
+    A pub quiz season runs with the football year rather than the calendar
+    one, so an autumn night and the following spring stay in the same table.
+    """
+    when = when or datetime.utcnow()
+    start = when.year if when.month >= 8 else when.year - 1
+    return f"{start}/{str(start + 1)[-2:]}"
+
+
+class PubLeagueResult(db.Model):
+    """One team's finishing position on one quiz night.
+
+    The league itself only holds the night in progress, and a reset wipes it,
+    so a finalised tournament is copied in here. This is the only record of
+    what happened, and everything the league tables show is built from it.
+    """
+    __tablename__ = 'pub_league_results'
+
+    id = db.Column(db.Integer, primary_key=True)
+    league_id = db.Column(db.Integer, db.ForeignKey('pub_leagues.id'), index=True, nullable=False)
+    season = db.Column(db.String(20), index=True, default='')
+    played_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    team_name = db.Column(db.String(150), nullable=False)
+    # Normalised name, so a team is still itself when someone retypes it
+    team_key = db.Column(db.String(150), index=True, default='')
+    table_num = db.Column(db.String(20), default='')
+    position = db.Column(db.Integer, default=0)
+    total_score = db.Column(db.Integer, default=0)
+    rounds_played = db.Column(db.Integer, default=0)
+    round_scores_json = db.Column(db.Text, default='{}')
+    members = db.Column(db.Integer, default=1)
+
+    league = db.relationship('PubLeague', backref=db.backref('results', lazy='dynamic'))
+
+    def get_round_scores(self) -> dict:
+        try:
+            return json.loads(self.round_scores_json or '{}')
+        except Exception:
+            return {}
+
+    def league_points(self) -> int:
+        """Table points for the night: 3 for a win, 2 for second, 1 for third, 1 for turning up."""
+        return {1: 3, 2: 2, 3: 1}.get(self.position, 1)
