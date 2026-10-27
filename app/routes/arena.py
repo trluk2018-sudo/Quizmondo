@@ -54,16 +54,33 @@ VISUAL_PRIORITY_CATEGORIES = {
 }
 
 
+def playable_questions():
+    """Only moderated questions are ever put in front of a player."""
+    return QuizQuestion.query.filter(
+        db.or_(QuizQuestion.status == 'approved', QuizQuestion.status.is_(None))
+    )
+
+
 def get_random_questions(category_slug=None, count=3, exclude_ids=None, difficulty=None):
     """Fetch randomized questions for duels, pub leagues, and rounds.
     For visual categories (flags, badges, logos, country shapes), ALWAYS prioritize visual image matching questions first,
     and avoid Expert ('hard') text-only questions in standard rounds unless explicitly requested.
     """
-    base_query = QuizQuestion.query
+    base_query = playable_questions()
     if category_slug:
         base_query = base_query.filter_by(category_slug=category_slug)
     if exclude_ids:
         base_query = base_query.filter(~QuizQuestion.id.in_(exclude_ids))
+
+    # A thin category cannot afford to hold its Expert questions back: sitting on them
+    # means the same handful of easy/medium ones come round every single game.
+    spare_easy_medium = True
+    if category_slug:
+        easy_med_pool = playable_questions().filter(
+            QuizQuestion.category_slug == category_slug,
+            QuizQuestion.difficulty.in_(['easy', 'medium'])
+        ).count()
+        spare_easy_medium = easy_med_pool >= count * 3
 
     questions = []
     if category_slug in VISUAL_PRIORITY_CATEGORIES and difficulty != 'hard':
@@ -79,29 +96,32 @@ def get_random_questions(category_slug=None, count=3, exclude_ids=None, difficul
         if len(questions) < count:
             needed = count - len(questions)
             used_ids = [q.id for q in questions] + (exclude_ids or [])
-            non_expert = QuizQuestion.query.filter(
+            non_expert = playable_questions().filter(
                 QuizQuestion.category_slug == category_slug,
-                ~QuizQuestion.id.in_(used_ids),
-                QuizQuestion.difficulty.in_(['easy', 'medium'])
-            ).order_by(func.random()).limit(needed).all()
-            questions.extend(non_expert)
+                ~QuizQuestion.id.in_(used_ids)
+            )
+            if spare_easy_medium:
+                non_expert = non_expert.filter(QuizQuestion.difficulty.in_(['easy', 'medium']))
+            questions.extend(non_expert.order_by(func.random()).limit(needed).all())
 
     if len(questions) < count:
         needed = count - len(questions)
         used_ids = [q.id for q in questions] + (exclude_ids or [])
-        q_filter = QuizQuestion.query.filter(~QuizQuestion.id.in_(used_ids))
+        q_filter = playable_questions().filter(~QuizQuestion.id.in_(used_ids))
         if category_slug:
             q_filter = q_filter.filter_by(category_slug=category_slug)
         if difficulty:
             q_filter = q_filter.filter_by(difficulty=difficulty)
         else:
-            # Prefer easy/medium first for fun gameplay
-            easy_med = q_filter.filter(QuizQuestion.difficulty.in_(['easy', 'medium'])).order_by(func.random()).limit(needed).all()
-            questions.extend(easy_med)
+            # Prefer easy/medium for fun gameplay, but only where there are enough to pick from
+            pick = q_filter
+            if spare_easy_medium:
+                pick = pick.filter(QuizQuestion.difficulty.in_(['easy', 'medium']))
+            questions.extend(pick.order_by(func.random()).limit(needed).all())
             needed = count - len(questions)
             if needed > 0:
                 used_ids = [q.id for q in questions] + (exclude_ids or [])
-                q_filter2 = QuizQuestion.query.filter(~QuizQuestion.id.in_(used_ids))
+                q_filter2 = playable_questions().filter(~QuizQuestion.id.in_(used_ids))
                 if category_slug:
                     q_filter2 = q_filter2.filter_by(category_slug=category_slug)
                 questions.extend(q_filter2.order_by(func.random()).limit(needed).all())
@@ -111,8 +131,13 @@ def get_random_questions(category_slug=None, count=3, exclude_ids=None, difficul
     if len(questions) < count:
         needed = count - len(questions)
         exclude_existing = [q.id for q in questions] + (exclude_ids or [])
-        fallback = QuizQuestion.query.filter(~QuizQuestion.id.in_(exclude_existing)).order_by(func.random()).limit(needed).all()
+        fallback = playable_questions().filter(~QuizQuestion.id.in_(exclude_existing)).order_by(func.random()).limit(needed).all()
         questions = list(questions) + list(fallback)
+
+    # Shuffle, or the order gives the selection away: the visual picks would always lead
+    # and the fill-ins always trail, so every round opens the same shape.
+    questions = list(questions)
+    random.shuffle(questions)
     return questions
 
 
@@ -1690,7 +1715,7 @@ def get_next_weekly_pub_date():
 
 VIRTUAL_PUB_ROUNDS_CONFIG = {
     1: {'number': 1, 'name': 'Round 1: General Knowledge, Science & Lore', 'cat_slug': 'science-cosmos', 'icon': '🌍', 'desc': 'Warm up your neurons with world history, science, and general news.'},
-    2: {'number': 2, 'name': 'Round 2: Pop Culture, Cinema Titans & Music Legends', 'cat_slug': 'tv-cinema', 'icon': '🎬', 'desc': 'Blockbuster cinema, chart-topping records, and modern pop icons.'},
+    2: {'number': 2, 'name': 'Round 2: Pop Culture, Cinema Titans & Music Legends', 'cat_slug': 'cinema-film-tv-radio', 'icon': '🎬', 'desc': 'Blockbuster cinema, chart-topping records, and modern pop icons.'},
     3: {'number': 3, 'name': 'Round 3: Championship Wipeout Lightning Sprint', 'cat_slug': 'gaming-esports', 'icon': '⚡', 'desc': 'High stakes finale! 1.5x score multiplier on all correct answers.'},
     4: {'number': 4, 'name': 'Round 4: World Geography & Flags', 'cat_slug': 'match-flags', 'icon': '🏳️', 'desc': 'Visual flags and global geography challenge.'},
     5: {'number': 5, 'name': 'Round 5: The Grand Finale Speed Wipeout', 'cat_slug': 'brand-logos', 'icon': '🏆', 'desc': 'Double points finale round!'},
@@ -1698,8 +1723,8 @@ VIRTUAL_PUB_ROUNDS_CONFIG = {
 
 PUB_ROUNDS_CONFIG = {
     1: {'number': 1, 'name': 'General Knowledge & News', 'cat_slug': 'world-history', 'icon': '🧠', 'desc': 'Test your broad trivia knowledge across news, landmarks, and science.'},
-    2: {'number': 2, 'name': 'Music, Audio & Waveforms', 'cat_slug': 'pop-music', 'icon': '🎵', 'desc': 'Iconic number one records, synthesizers, chiptunes, and rock anthems.'},
-    3: {'number': 3, 'name': 'Cinema, Television & Blockbusters', 'cat_slug': 'tv-cinema', 'icon': '🎬', 'desc': 'Cult cinema classics, famous directors, Academy Awards, and TV quotes.'},
+    2: {'number': 2, 'name': 'Music, Audio & Waveforms', 'cat_slug': 'music-decades', 'icon': '🎵', 'desc': 'Iconic number one records, synthesizers, chiptunes, and rock anthems.'},
+    3: {'number': 3, 'name': 'Cinema, Television & Blockbusters', 'cat_slug': 'cinema-film-tv-radio', 'icon': '🎬', 'desc': 'Cult cinema classics, famous directors, Academy Awards, and TV quotes.'},
     4: {'number': 4, 'name': 'World Geography & Visual Flags', 'cat_slug': 'match-flags', 'icon': '🗺️', 'desc': 'Continental capitals, world flags, ancient ruins, and extreme landforms.'},
     5: {'number': 5, 'name': 'The Big Wipeout Speed Sprint', 'cat_slug': 'gaming-esports', 'icon': '⚡', 'desc': 'Double Points Wipeout Round! Faster buzzer answers award massive bonus points.'},
 }
