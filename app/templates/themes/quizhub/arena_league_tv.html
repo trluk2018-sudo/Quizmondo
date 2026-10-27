@@ -65,8 +65,8 @@
     </div>
   </div>
 
-  <!-- BAR PROMO BANNER (During intermission or enabled by Quizmaster) -->
-  {% if config.bar_promo_enabled or state.round_status == 'break' %}
+  <!-- BAR PROMO BANNER (Only while the Quizmaster has the bar break running) -->
+  {% if config.bar_promo_enabled and state.round_status == 'break' %}
   <div class="py-3 px-6 rounded-2xl bg-gradient-to-r from-amber-950 via-slate-950 to-amber-950 border-2 border-amber-400 shadow-2xl flex items-center justify-between text-xs text-slate-100 relative z-10 animate-pulse">
     <div class="flex items-center gap-4 font-mono">
       <span class="text-2xl">🍺</span>
@@ -221,7 +221,7 @@
         TOURNAMENT ROUNDS
       </span>
       <span class="text-slate-300 text-[11px]">
-        R1: General Knowledge &bull; R2: Music &bull; R3: Cinema &bull; R4: Geography &bull; R5: Wipeout Finale!
+        {% for r_num, r_name in round_ticker %}R{{ r_num }}: {{ r_name }}{% if not loop.last %} &bull; {% endif %}{% endfor %}
       </span>
     </div>
     <div class="text-cyan-400 font-bold text-[11px]">
@@ -229,5 +229,35 @@
     </div>
   </div>
 
+<script>
+// The venue screen has nobody to press refresh, so it watches the live state and reloads on a change
+(function () {
+  var slug = "{{ league.slug }}";
+  var seen = null;
+
+  function signature(d) {
+    return [d.current_round, d.round_status, d.answers_revealed, d.approved_teams_count,
+            (d.approved_teams || []).map(function (t) { return t.name + ':' + t.score; }).join('|')].join('~');
+  }
+
+  function poll() {
+    fetch('/arena/leagues/' + encodeURIComponent(slug) + '/state?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.success) return;
+        var sig = signature(d);
+        if (seen === null) {
+          seen = sig;
+        } else if (sig !== seen) {
+          window.location.reload();
+        }
+      })
+      .catch(function () {});
+  }
+
+  poll();
+  setInterval(poll, 3000);
+})();
+</script>
 </body>
 </html>

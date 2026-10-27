@@ -1976,6 +1976,12 @@ def leagues():
         if not name or not pin:
             flash('League name and PIN code are required.', 'error')
             return redirect(url_for('admin.leagues'))
+
+        # Players join by PIN, so two venues sharing one would send them to the wrong room
+        clash = PubLeague.query.filter_by(pin_code=pin).first()
+        if clash:
+            flash(f'PIN {pin} is already used by "{clash.name}". Pick another.', 'error')
+            return redirect(url_for('admin.leagues'))
             
         league = PubLeague(
             name=name,

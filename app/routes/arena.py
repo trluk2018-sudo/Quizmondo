@@ -1705,6 +1705,14 @@ PUB_ROUNDS_CONFIG = {
 }
 
 
+def is_pub_host():
+    """True for the accounts allowed to run a live pub quiz."""
+    return (
+        session.get('user_role') in ('super_admin', 'admin', 'quizmaster')
+        or bool(session.get('admin_logged_in'))
+    )
+
+
 def resolve_pub_team(state, player, table_num, team_name, is_virtual):
     """Find the squad row that belongs to this browser session.
 
@@ -1805,7 +1813,7 @@ def free_pub_squad_slot(teams, table_num, team_name):
 
 
 PUB_QUESTIONS_PER_ROUND = 5
-PUB_MIN_QUESTION_SECS = 10
+PUB_MIN_QUESTION_SECS = 15
 PUB_MAX_QUESTION_SECS = 30
 
 
@@ -1938,9 +1946,10 @@ def apply_pub_auto_progression(league, state):
 
     if status == 'active' and cfg.get('round_deadline_enabled', True) and expired(state.get('round_ends_at')):
         close_pub_round(state, curr_r)
-        state['answers_revealed'] = True
         state.pop('round_ends_at', None)
         if cfg.get('auto_advance_enabled'):
+            # Nobody is at the console, so the keys go up by themselves
+            state['answers_revealed'] = True
             mins = int(cfg.get('interval_duration_mins', 8))
             state['round_status'] = 'break'
             state['break_ends_at'] = (now + timedelta(minutes=mins)).isoformat()
@@ -2061,10 +2070,7 @@ def league_progress(slug):
 def league_manager(slug):
     """Host / Quizmaster Manager Console — STRICTLY gated to Super Admins, Admins, and Quizmasters (NEVER Room PIN!)."""
     league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
-    is_mgr = (
-        session.get('user_role') in ('super_admin', 'admin', 'quizmaster')
-        or bool(session.get('admin_logged_in'))
-    )
+    is_mgr = is_pub_host()
 
     if not is_mgr:
         if session.get('user_id'):
@@ -2114,10 +2120,7 @@ def league_manager(slug):
 def league_manager_action(slug):
     """Execute host commands: STRICTLY gated to Super Admins, Admins, and Quizmasters (NEVER Room PIN!)."""
     league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
-    is_authorized = (
-        session.get('user_role') in ('super_admin', 'admin', 'quizmaster')
-        or bool(session.get('admin_logged_in'))
-    )
+    is_authorized = is_pub_host()
     if not is_authorized:
         if 'text/html' in (request.headers.get('Accept') or ''):
             flash("Unauthorized: Only Quizmasters and Administrators may control live pub quizzes.", "error")
@@ -2242,12 +2245,17 @@ def league_manager_action(slug):
         completed_tables = [t for t in approved_teams if t.get(f'round_{curr_r}') is not None]
         if not approved_teams or (len(completed_tables) < len(approved_teams) and state.get('round_status') not in ('closed', 'break', 'finished')):
             return respond_error("Wait for all tables to submit answers or click 'Lock / Time's Up' before revealing answers!")
-        state['answers_revealed'] = True
-        state['round_status'] = 'closed' if state.get('round_status') == 'active' else state.get('round_status', 'closed')
-        state.pop('round_ends_at', None)
+        # A second click hides them again, so the host can put the keys up and take them down
+        revealing = not state.get('answers_revealed')
+        state['answers_revealed'] = revealing
+        if revealing:
+            state['round_status'] = 'closed' if state.get('round_status') == 'active' else state.get('round_status', 'closed')
+            state.pop('round_ends_at', None)
         league.set_state(state)
         db.session.commit()
-        return respond("Official answers revealed on big screen and player screens!")
+        if revealing:
+            return respond("Official answers revealed on big screen and player screens!")
+        return respond("Answer keys hidden again on all screens.")
 
     elif action == 'start_break':
         curr_r = state.get('current_round', 1)
@@ -2256,7 +2264,6 @@ def league_manager_action(slug):
         if not approved_teams or (len(completed_tables) < len(approved_teams) and state.get('round_status') not in ('closed', 'break', 'finished')):
             return respond_error("Wait for all tables to submit answers or click 'Lock / Time's Up' before starting the bar break!")
         state['round_status'] = 'break'
-        state['answers_revealed'] = True
         state.pop('round_ends_at', None)
         duration_mins = int(cfg.get('interval_duration_mins', 8))
         break_ends = (datetime.utcnow() + timedelta(minutes=duration_mins)).isoformat()
@@ -2294,6 +2301,18 @@ def league_manager_action(slug):
             league.set_state(state)
             db.session.commit()
             return respond("🏆 Tournament finalized! Champions crowned and final standings displayed on all screens.")
+
+    elif action == 'save_pin':
+        new_pin = (request.form.get('pin_code') or '').strip().upper()
+        if not (4 <= len(new_pin) <= 6) or not new_pin.isalnum():
+            return respond_error("Room PIN must be 4 to 6 letters or digits.")
+        clash = PubLeague.query.filter(PubLeague.pin_code == new_pin, PubLeague.id != league.id).first()
+        if clash:
+            return respond_error(f"Room PIN {new_pin} is already in use by {clash.name}. Pick another.")
+        league.pin_code = new_pin
+        # Approved tables hold the old PIN in their session; re-issue it on their next page load
+        db.session.commit()
+        return respond(f"Room PIN changed to {new_pin}. Announce it at the venue or show the big screen.")
 
     elif action == 'save_config':
         cfg['total_rounds'] = int(request.form.get('total_rounds', cfg.get('total_rounds', 5)))
@@ -2556,6 +2575,10 @@ def league_room(slug):
 def league_tv(slug):
     """Big-screen pub quiz display for TV projectors with live quizmaster host controls."""
     league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
+    # Host only: this screen prints the venue room PIN in full height for the room to read
+    if not is_pub_host():
+        flash("The Big Screen projector view is for the Quizmaster's venue screen only.", "error")
+        return redirect(url_for('arena.league_lounge', slug=slug))
     is_virtual = league.is_virtual_league()
     state = league.get_state()
     apply_pub_auto_progression(league, state)
@@ -2581,13 +2604,22 @@ def league_tv(slug):
             questions = list(questions) + list(extra_q)
 
     teams = [t for t in league.get_teams() if t.get('status') != 'pending']
+    cfg = state.get('config', {})
+    total_rounds = int(cfg.get('total_rounds', 3 if is_virtual else 5))
+    round_ticker = [
+        (r_num, (active_cfg.get(r_num, {}).get('name') or f'Round {r_num}').split(': ', 1)[-1])
+        for r_num in range(1, min(total_rounds, len(active_cfg)) + 1)
+    ]
     return render_template(
         'themes/quizhub/arena_league_tv.html',
         league=league,
         teams=teams,
         state=state,
+        config=cfg,
         current_round=current_round,
+        total_rounds=total_rounds,
         round_info=round_info,
+        round_ticker=round_ticker,
         questions=questions,
         is_virtual=is_virtual
     )

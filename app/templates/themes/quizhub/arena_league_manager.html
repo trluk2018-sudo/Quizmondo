@@ -180,9 +180,14 @@
           <!-- 3. Reveal Answers: Cyan Aqua -->
           <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="mgr-action-form">
             <input type="hidden" name="action" value="reveal_answers">
-            <button type="submit" id="btnRevealAnswers" {% if not can_advance %}disabled{% endif %} class="w-full py-4 px-3 rounded-2xl {% if can_advance %}bg-gradient-to-r from-cyan-500 via-sky-500 to-teal-400 hover:from-cyan-400 hover:to-sky-400 text-slate-950 shadow-lg shadow-cyan-950/40 cursor-pointer{% else %}bg-slate-900 border border-slate-800 text-slate-600 cursor-not-allowed{% endif %} font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition active:scale-95">
+            <button type="submit" id="btnRevealAnswers" {% if not can_advance and not state.answers_revealed %}disabled{% endif %} class="w-full py-4 px-3 rounded-2xl {% if can_advance or state.answers_revealed %}bg-gradient-to-r from-cyan-500 via-sky-500 to-teal-400 hover:from-cyan-400 hover:to-sky-400 text-slate-950 shadow-lg shadow-cyan-950/40 cursor-pointer{% else %}bg-slate-900 border border-slate-800 text-slate-600 cursor-not-allowed{% endif %} font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition active:scale-95">
+              {% if state.answers_revealed %}
+              <span>🙈 Hide Answers</span>
+              <span class="text-[9px] font-bold opacity-80">Take Keys Back Down</span>
+              {% else %}
               <span>📋 Reveal Answers</span>
               <span class="text-[9px] font-bold opacity-80">Show Keys on Phones &amp; TV</span>
+              {% endif %}
             </button>
           </form>
 
@@ -471,13 +476,13 @@
                 type="number"
                 name="question_time_limit"
                 value="{{ config.question_time_limit or 15 }}"
-                min="10"
+                min="15"
                 max="30"
                 step="1"
                 class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-purple-500/30 text-white focus:outline-none focus:border-cyan-400"
               >
               <span class="text-[10px] text-slate-500">
-                Anything from 10 to 30 seconds. 15 is a fast buzzer, 20 is standard paced, 30 gives a table time to discuss.
+                Anything from 15 to 30 seconds. 15 is a fast buzzer, 20 is standard paced, 30 gives a table time to discuss.
               </span>
             </div>
 
@@ -529,6 +534,30 @@
               💾 Save Tournament Parameters
             </button>
           </div>
+        </form>
+
+        <!-- Room PIN: the host owns this, it is never shown to players online -->
+        <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="mgr-action-form space-y-3 text-xs pt-5 border-t border-purple-500/20">
+          <input type="hidden" name="action" value="save_pin">
+          <label class="block font-bold text-slate-300 uppercase">Venue Room PIN</label>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <input
+              type="text"
+              name="pin_code"
+              value="{{ league.pin_code }}"
+              minlength="4"
+              maxlength="6"
+              required
+              class="flex-1 px-4 py-3 rounded-xl bg-slate-900 border border-amber-500/40 text-amber-300 font-black tracking-[0.3em] uppercase focus:outline-none focus:border-amber-400"
+            >
+            <button type="submit" class="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black uppercase tracking-wider transition active:scale-95 shadow-lg shrink-0">
+              🔑 Change PIN
+            </button>
+          </div>
+          <span class="text-[10px] text-slate-500 block">
+            4 to 6 letters or digits, and it cannot clash with another venue's PIN. Announce the new one at the
+            venue or show the big screen — tables already checked in keep playing.
+          </span>
         </form>
       </div>
     </div>

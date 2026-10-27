@@ -243,9 +243,9 @@
             </div>
           </div>
 
-          <!-- BAR PROMO SPECIAL BANNER (If Enabled by Quizmaster) -->
+          <!-- BAR PROMO SPECIAL BANNER (Only while the Quizmaster has the bar break running) -->
           {% if config.bar_promo_enabled %}
-          <div class="w-full bg-gradient-to-r from-amber-950/80 via-slate-950 to-amber-950/80 border-2 border-amber-400/60 rounded-2xl p-4 sm:p-5 text-left shadow-2xl space-y-2">
+          <div id="barPromoBanner" class="hidden w-full bg-gradient-to-r from-amber-950/80 via-slate-950 to-amber-950/80 border-2 border-amber-400/60 rounded-2xl p-4 sm:p-5 text-left shadow-2xl space-y-2">
             <div class="flex items-center justify-between border-b border-amber-400/30 pb-2">
               <div class="flex items-center gap-2">
                 <span class="text-lg">🍺</span>
@@ -269,8 +269,8 @@
           </div>
           {% endif %}
 
-          <!-- ANSWERS REVEALED ACCORDION (Revealed ONLY at end of round) -->
-          <div class="w-full text-left bg-slate-950/90 border border-purple-500/30 rounded-2xl p-4 sm:p-5 space-y-3 shadow-xl">
+          <!-- ANSWERS REVEALED ACCORDION (Only while the Quizmaster has the keys revealed) -->
+          <div id="revealedAnswersPanel" class="hidden w-full text-left bg-slate-950/90 border border-purple-500/30 rounded-2xl p-4 sm:p-5 space-y-3 shadow-xl">
             <div class="flex items-center justify-between border-b border-purple-500/20 pb-2">
               <div class="text-xs font-bold text-white flex items-center gap-2">
                 <span>📋</span> OFFICIAL ROUND ANSWERS REVEALED
@@ -362,7 +362,7 @@
             <div class="flex items-center justify-center gap-4 text-xs text-slate-400">
               <a href="{{ url_for('arena.leagues') }}" class="hover:text-cyan-400 transition">&larr; Return to Leagues</a>
               <span>&bull;</span>
-              <a href="{{ url_for('arena.league_tv', slug=league.slug) }}" target="_blank" class="hover:text-purple-300 transition">🖥️ Big Screen TV</a>
+              <a href="{{ url_for('arena.league_lounge', slug=league.slug) }}" class="hover:text-purple-300 transition">🏆 Live Standings</a>
             </div>
           </div>
 
@@ -390,6 +390,8 @@ var hasSubmittedRound = serverHasSubmittedRound;
 var submittedRoundScore = {{ submitted_round_score }};
 var initialRoundStatus = "{{ state.round_status }}";
 var initialAnswersRevealed = {{ 'true' if state.answers_revealed else 'false' }};
+var hostRoundStatus = initialRoundStatus;
+var hostAnswersRevealed = initialAnswersRevealed;
 var timeLimitPerQuestion = {{ config.question_time_limit or 15 }};
 var resetTs = "{{ state.get('reset_ts', 'v1') }}";
 
@@ -480,6 +482,12 @@ function pollVenueState() {
           quizScreen.classList.remove('hidden');
           loadQuestion();
         }
+      }
+
+      if (data.current_round === currentRound) {
+        hostRoundStatus = data.round_status;
+        hostAnswersRevealed = !!data.answers_revealed;
+        syncHostScreens();
       }
 
       // 3. Round closed, interval break started, or answers revealed by Quizmaster
@@ -826,6 +834,8 @@ function showIntermission(data) {
     });
   }
 
+  syncHostScreens();
+
   // 2. Handle next round progression or tournament completion
   var btnNext = document.getElementById('btnNextRound');
   var venueWaitBox = document.getElementById('venueWaitingNextRound');
@@ -854,10 +864,18 @@ function showIntermission(data) {
     if (venueWaitBox) venueWaitBox.classList.add('hidden');
     if (btnNext) {
       btnNext.classList.remove('hidden');
-      btnNext.textContent = '🏆 View Big-Screen TV Leaderboard →';
-      btnNext.href = '/arena/leagues/' + encodeURIComponent(leagueSlug) + '/tv';
+      btnNext.textContent = '🏆 View Final Standings →';
+      btnNext.href = '/arena/leagues/' + encodeURIComponent(leagueSlug);
     }
   }
+}
+
+// The Quizmaster owns both of these: the promo belongs to the bar break, the keys to the reveal button
+function syncHostScreens() {
+  var promo = document.getElementById('barPromoBanner');
+  if (promo) promo.classList.toggle('hidden', hostRoundStatus !== 'break');
+  var answers = document.getElementById('revealedAnswersPanel');
+  if (answers) answers.classList.toggle('hidden', !hostAnswersRevealed);
 }
 
 function escapeHtml(str) {
