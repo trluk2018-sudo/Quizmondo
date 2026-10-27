@@ -906,14 +906,24 @@ GUIDE_POSTS = [
     },
 ]
 
-# Stock covers for the trivia articles, which shipped with no image at all and so
-# every card in the feed fell back to the same esports photo.
-ARTICLE_COVERS = [
+# Covers for the older articles. Only where the packaged photo genuinely matches the
+# subject: quizhub_hero.jpg is retro computers and a Game Boy, which suits the chiptune
+# and speedrun pieces. Everything else is left blank on purpose and falls back to the
+# theme's default, because handing an article a photo of something it is not about is
+# worse than a generic one. An earlier pass assigned these by position, which is how a
+# piece about Saturn's moons ended up illustrated with a Ludo board.
+ARTICLE_COVERS = {
+    'chiptunes-waveforms-how-8-bit-audio-boosts-trivia-recall': '/static/img/quizhub_hero.jpg',
+    'evolution-of-speedruns-breaking-impossible-video-game-records': '/static/img/quizhub_arcade.jpg',
+}
+
+# Photos this seeder has handed out itself, so a wrong one can be taken back
+PACKAGED_PHOTOS = (
     '/static/img/quizhub_trivia.jpg',
     '/static/img/quizhub_arcade.jpg',
     '/static/img/quizhub_hero.jpg',
     '/static/img/quizhub_esports.jpg',
-]
+)
 
 
 SEED_POSTS = [
@@ -1295,10 +1305,15 @@ def seed_quizmondo_full_environment():
             guide.featured_image = p_item['featured_image']
     db.session.commit()
 
-    # Give the trivia articles a cover each, rather than all sharing one fallback
-    for idx, art in enumerate(Post.query.order_by(Post.id.asc()).all()):
-        if not art.featured_image:
-            art.featured_image = ARTICLE_COVERS[idx % len(ARTICLE_COVERS)]
+    # Put the right photo on the two articles a packaged photo actually suits, and take
+    # back any photo an earlier pass handed out by position rather than by subject.
+    for art in Post.query.all():
+        wanted = ARTICLE_COVERS.get(art.slug)
+        if wanted:
+            if not art.featured_image or art.featured_image in PACKAGED_PHOTOS:
+                art.featured_image = wanted
+        elif art.featured_image in PACKAGED_PHOTOS:
+            art.featured_image = ''
     db.session.commit()
 
     # One-off cleanup: earlier seeding runs created second copies of some articles under
