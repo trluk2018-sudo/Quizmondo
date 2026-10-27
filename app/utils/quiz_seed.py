@@ -918,6 +918,76 @@ ARTICLE_COVERS = [
 
 SEED_POSTS = [
     {
+        'title': 'Two Countries, One Flag: How Chad and Romania Ended Up Identical',
+        'slug': 'chad-romania-identical-flags',
+        'featured_image': '/static/img/guides/article-flags.svg',
+        'excerpt': 'Blue, yellow and red vertical stripes, in that order, flown by two nations 2,500 miles apart. One of them complained to the United Nations about it. Neither has budged.',
+        'content': """<p>Put the flags of Chad and Romania side by side and most people cannot tell them apart. Both are vertical tricolours of blue, yellow and red, in that order, in almost the same proportions. The only difference is a slightly deeper shade of blue on the Chadian flag, and even that is not reliable across manufacturers.</p>
+<h3>How it happened</h3>
+<p>Romania's colours go back to the 1860s, drawn from the arms of the historic principalities that united to form the country. Chad adopted its flag in 1959, on the eve of independence from France. The designers wanted the French blue, white and red but could not use white, because the neighbouring Mali had already taken the green, yellow and red of pan-Africanism and a white stripe would have clashed with another regional flag. Yellow went in instead, and the result was, by coincidence, Romania's flag.</p>
+<p>For three decades nobody much minded, because Romania under Ceausescu flew a version with the communist coat of arms in the middle. When that emblem was removed after the 1989 revolution, the two flags became effectively identical.</p>
+<h3>The complaint</h3>
+<p>In 2004, as Romania prepared to join the European Union, Chad raised the matter at the United Nations and asked for a review. Romania's president at the time replied that the flag had been Romanian since 1848 and would stay as it was. No ruling followed, because no international body has the authority to award a colour scheme to anyone. Both flags still fly.</p>
+<h3>They are not the only ones</h3>
+<p>Monaco and Indonesia have the same two horizontal bands of red over white, differing only in proportion. Haiti and Liechtenstein discovered at the 1936 Berlin Olympics that their flags matched; Liechtenstein added a gold crown the following year. Flag design has a limited vocabulary and a very long history, and collisions are inevitable.</p>
+<p>In the <strong>Match the Flags</strong> round, this pair catches almost everyone the first time.</p>""",
+        'category_name': 'World Trivia'
+    },
+    {
+        'title': 'Honey Never Spoils: The 3,000-Year-Old Jars That Are Still Edible',
+        'slug': 'why-honey-never-spoils',
+        'featured_image': '/static/img/guides/article-honey.svg',
+        'excerpt': 'Archaeologists have opened sealed pots of honey from Egyptian tombs and found the contents perfectly good. The reason is a neat piece of chemistry that has nothing to do with preservatives.',
+        'content': """<p>Honey is the only common food that does not go off. Sealed properly and kept dry, it will outlast the jar, the shelf and quite possibly the building. Pots recovered from Egyptian tombs, thousands of years old, have been found with their contents still recognisably honey.</p>
+<h3>Why bacteria cannot get a foothold</h3>
+<p>Three things work together. First, honey is extremely low in water. Bees fan nectar until most of the moisture has evaporated, leaving a syrup that is roughly 80 per cent sugar. Any bacterium that lands in it is dehydrated by osmosis before it can multiply.</p>
+<p>Second, honey is acidic, with a pH around 3.9, which is hostile to most spoilage organisms. Third, bees add an enzyme called glucose oxidase, which produces small amounts of hydrogen peroxide as the honey matures. Between the dryness, the acid and the peroxide, there is simply nowhere for anything to grow.</p>
+<h3>The catch</h3>
+<p>All of that depends on the honey staying sealed. Honey is hygroscopic, meaning it pulls water out of the air, and honey that has absorbed enough moisture can ferment. This is not a modern inconvenience but an ancient discovery: mead, one of the oldest alcoholic drinks known, is fermented honey.</p>
+<p>There is one genuine safety note. Raw honey can carry spores of <em>Clostridium botulinum</em>, which an adult gut handles without trouble but an infant's cannot. Honey is not recommended for children under one year old.</p>
+<h3>What happens when it crystallises</h3>
+<p>Honey turning cloudy and grainy in the cupboard has not gone bad. The glucose is simply coming out of solution. Stand the jar in warm water and it returns to liquid, unharmed.</p>""",
+        'category_name': 'World Food & Culinary Traditions'
+    },
+    {
+        'title': 'Why Pluto Was Demoted, and What It Takes to Count as a Planet',
+        'slug': 'why-pluto-is-not-a-planet',
+        'featured_image': '/static/img/guides/article-pluto.svg',
+        'excerpt': 'Pluto did not change in 2006. The definition did. The real culprit was a slightly larger object called Eris, and a question astronomers could no longer dodge.',
+        'content': """<p>Pluto was discovered in 1930 and taught as the ninth planet for three generations. In August 2006 it was reclassified as a dwarf planet, and a great many people took it personally. Pluto itself was unaffected. What changed was that astronomers finally had to write down what a planet is.</p>
+<h3>The problem was Eris</h3>
+<p>Through the 1990s and early 2000s, surveys of the outer Solar System began turning up more and more icy bodies beyond Neptune, in what is now called the Kuiper Belt. In 2005 a team found one, later named Eris, that was comparable to Pluto in size and more massive.</p>
+<p>That left two options. Either Eris became the tenth planet, and so did the next dozen objects of similar size that were clearly coming, or the definition had to be tightened. The International Astronomical Union chose the second.</p>
+<h3>The three tests</h3>
+<ol>
+<li>It must <strong>orbit the Sun</strong>. This rules out moons.</li>
+<li>It must have <strong>enough mass to be roughly round</strong>, pulled into a sphere by its own gravity.</li>
+<li>It must have <strong>cleared its orbital neighbourhood</strong> of other comparable bodies.</li>
+</ol>
+<p>Pluto passes the first two comfortably. It fails the third. Pluto shares its region with a great many Kuiper Belt objects, and it is not even gravitationally dominant among them; its orbit is shepherded by Neptune, which it crosses.</p>
+<h3>So what is it now?</h3>
+<p>Pluto is the best known of the dwarf planets, alongside Eris, Ceres, Haumea and Makemake. Ceres, incidentally, has been through this before: it was called a planet after its discovery in 1801, then reclassified as an asteroid when more of them turned up. Pluto is in good company.</p>
+<p>The New Horizons probe flew past in 2015 and sent back images of ice mountains and a vast nitrogen glacier shaped like a heart. Whatever we call it, it turned out to be far more interesting than a label.</p>""",
+        'category_name': 'Science & Cosmos'
+    },
+    {
+        'title': 'Where the Pub Quiz Came From: A 1970s Idea to Fill Empty Mondays',
+        'slug': 'history-of-the-pub-quiz',
+        'featured_image': '/static/img/guides/article-pubquiz.svg',
+        'excerpt': 'The British pub quiz is barely fifty years old. It was invented to get people into pubs on the quiet nights, and it worked so well that it became a national institution.',
+        'content': """<p>The pub quiz feels like something that has always existed, in the way that darts and dominoes do. It has not. It is a product of the 1970s, and it was invented as a commercial fix for a specific problem: pubs were empty from Monday to Wednesday.</p>
+<h3>The men who made it a business</h3>
+<p>In 1976 Sharon Burns and Tom Porter set up a company called Burns and Porter to run quiz leagues in pubs. The idea was straightforward. Supply a landlord with questions, a format and a league table, and the regulars would come in on a dead night to defend their position. Within a few years they were running leagues in thousands of pubs.</p>
+<p>It spread because the economics were irresistible. A quiz costs a pub almost nothing, needs no equipment beyond a microphone, and fills the slowest trading hours of the week with people buying drinks between rounds.</p>
+<h3>Why the format stuck</h3>
+<p>Several rounds of mixed questions, teams of four to six, answers written on paper and swapped with another table for marking, a halfway break, and a prize that is usually a bar tab. Almost every element exists for a practical reason. Teams mean nobody sits in silence. Swapping papers means the quizmaster is not marking for twenty minutes. The interval exists to sell another round.</p>
+<p>The handwritten answer sheet is the part that has finally started to go. Phones made cheating trivially easy, which pushed quizzes towards either strict no-phone rules or, increasingly, running the whole thing <em>through</em> the phones instead, with answers locked in and timed.</p>
+<h3>Still growing</h3>
+<p>Britain is estimated to host over 20,000 pub quizzes a week, and the format has been exported wherever there are pubs. The online version, which lockdowns turned from a novelty into a habit, is the first genuine change to the model since Burns and Porter printed their first question sheet.</p>
+<p>If you fancy running one yourself, <a href="/posts/how-to-play-pub-quiz-games">the guide to hosting is here</a>.</p>""",
+        'category_name': 'Pub Quiz Culture'
+    },
+    {
         'title': 'Which Planet Has the Most Moons? Saturn Overtakes Jupiter in Latest Astronomy Count',
         'slug': 'which-planet-has-the-most-moons-saturn-jupiter',
         'excerpt': 'In the great celestial moon race, astronomers have officially verified 146 satellites orbiting Saturn, settling one of astronomy\'s most fiercely contested trivia debates.',
@@ -1231,6 +1301,19 @@ def seed_quizmondo_full_environment():
             art.featured_image = ARTICLE_COVERS[idx % len(ARTICLE_COVERS)]
     db.session.commit()
 
+    # One-off cleanup: earlier seeding runs created second copies of some articles under
+    # different slugs, so the same piece appeared twice in the feed. Keep the original -
+    # the one whose slug still matches the seed - and drop the stray copy. Scoped to the
+    # seeded titles, so two posts an admin deliberately named the same are never touched.
+    for p_item in SEED_POSTS:
+        same_title = Post.query.filter_by(title=p_item['title']).order_by(Post.id.asc()).all()
+        if len(same_title) > 1:
+            keep = next((x for x in same_title if x.slug == p_item['slug']), same_title[0])
+            for stray in same_title:
+                if stray.id != keep.id and not stray.is_pinned:
+                    db.session.delete(stray)
+    db.session.commit()
+
     for p_item in SEED_POSTS:
         cat_name = p_item['category_name']
         cat = Category.query.filter_by(name=cat_name).first()
@@ -1256,6 +1339,11 @@ def seed_quizmondo_full_environment():
             post.excerpt = p_item['excerpt']
             post.content = p_item['content']
             post.status = 'publish'
+        # Give it the packaged cover, unless somebody has chosen their own
+        if p_item.get('featured_image') and (
+            not post.featured_image or post.featured_image.startswith('/static/img/')
+        ):
+            post.featured_image = p_item['featured_image']
 
     # 5. Synchronize Homepage PageModules for 'quizhub' theme
     PageModule.query.filter_by(is_home=True).delete()

@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-10-26T05:30:00Z",
+  "generated_at": "2026-10-27T11:39:09.210496",
   "total_categories": 19,
-  "total_questions": 3710,
+  "total_questions": 3815,
   "categories": {
     "music-decades": {
       "title": "Music of the Decades (1930s-2020s)",
@@ -53575,7 +53575,7 @@
       "title": "World Trivia",
       "icon": "🌍",
       "description": "General knowledge and world history, from the pyramids and the Silk Road to the space race.",
-      "question_count": 40,
+      "question_count": 75,
       "questions": [
         {
           "prompt": "Which ancient civilisation built the pyramids at Giza?",
@@ -54176,6 +54176,531 @@
           "type": "classic",
           "points": 100,
           "time_limit": 15
+        },
+        {
+          "prompt": "Which country gifted the Statue of Liberty to the United States?",
+          "options": {
+            "A": "France",
+            "B": "Spain",
+            "C": "Britain",
+            "D": "Italy"
+          },
+          "correct": "A",
+          "explanation": "The statue was a gift marking the centenary of American independence, unveiled in 1886.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which wall-building people ruled Peru before the Spanish arrived?",
+          "options": {
+            "A": "The Toltec",
+            "B": "The Inca",
+            "C": "The Aztec",
+            "D": "The Maya"
+          },
+          "correct": "B",
+          "explanation": "The Spanish under Pizarro conquered the Inca Empire in the 1530s.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In which country did the 1789 storming of the Bastille take place?",
+          "options": {
+            "A": "Belgium",
+            "B": "Spain",
+            "C": "Italy",
+            "D": "France"
+          },
+          "correct": "D",
+          "explanation": "The Bastille was a Paris prison and a symbol of royal authority.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Italian city was the centre of the Renaissance?",
+          "options": {
+            "A": "Palermo",
+            "B": "Turin",
+            "C": "Florence",
+            "D": "Naples"
+          },
+          "correct": "C",
+          "explanation": "The Medici family funded artists including Michelangelo and Botticelli.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which sea did Moses part according to the Book of Exodus?",
+          "options": {
+            "A": "The Black Sea",
+            "B": "The Caspian Sea",
+            "C": "The Dead Sea",
+            "D": "The Red Sea"
+          },
+          "correct": "D",
+          "explanation": "The crossing of the Red Sea is one of the best-known episodes in the Hebrew Bible.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What was the Aztec capital, built on a lake?",
+          "options": {
+            "A": "Tenochtitlan",
+            "B": "Teotihuacan",
+            "C": "Tikal",
+            "D": "Cusco"
+          },
+          "correct": "A",
+          "explanation": "Tenochtitlan stood where Mexico City is today, on an island in Lake Texcoco.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who was the first woman to fly solo across the Atlantic?",
+          "options": {
+            "A": "Amy Johnson",
+            "B": "Bessie Coleman",
+            "C": "Amelia Earhart",
+            "D": "Harriet Quimby"
+          },
+          "correct": "C",
+          "explanation": "Earhart made the crossing in 1932, five years after Lindbergh.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which country was ruled by the Shogunate until 1868?",
+          "options": {
+            "A": "Thailand",
+            "B": "Japan",
+            "C": "China",
+            "D": "Korea"
+          },
+          "correct": "B",
+          "explanation": "The Meiji Restoration returned power to the emperor and ended the shogunate.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What was the name of the first artificial satellite, launched in 1957?",
+          "options": {
+            "A": "Sputnik 1",
+            "B": "Telstar",
+            "C": "Explorer 1",
+            "D": "Vostok 1"
+          },
+          "correct": "A",
+          "explanation": "The Soviet Union's Sputnik 1 began the space race.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which empire did Hernan Cortes bring down in 1521?",
+          "options": {
+            "A": "The Olmec",
+            "B": "The Inca Empire",
+            "C": "The Aztec Empire",
+            "D": "The Maya city states"
+          },
+          "correct": "C",
+          "explanation": "Cortes exploited local rivalries and European disease to topple Tenochtitlan.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which ancient city had the Hanging Gardens, one of the seven wonders?",
+          "options": {
+            "A": "Babylon",
+            "B": "Persepolis",
+            "C": "Ur",
+            "D": "Nineveh"
+          },
+          "correct": "A",
+          "explanation": "The gardens were traditionally credited to Nebuchadnezzar II, though no trace has been found.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In which decade did the Second World War end?",
+          "options": {
+            "A": "The 1920s",
+            "B": "The 1930s",
+            "C": "The 1940s",
+            "D": "The 1950s"
+          },
+          "correct": "C",
+          "explanation": "The war in Europe ended in May 1945 and in the Pacific that August.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What was the Iron Curtain?",
+          "options": {
+            "A": "The divide between Soviet and Western Europe",
+            "B": "A Berlin railway",
+            "C": "A trade route",
+            "D": "A fortification in China"
+          },
+          "correct": "A",
+          "explanation": "Churchill popularised the phrase in a 1946 speech in Missouri.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Greek historian is often called the father of history?",
+          "options": {
+            "A": "Xenophon",
+            "B": "Herodotus",
+            "C": "Plutarch",
+            "D": "Thucydides"
+          },
+          "correct": "B",
+          "explanation": "Herodotus wrote an account of the Greco-Persian Wars in the 5th century BC.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which pharaoh's tomb did Howard Carter open in 1922?",
+          "options": {
+            "A": "Ramesses II",
+            "B": "Thutmose III",
+            "C": "Akhenaten",
+            "D": "Tutankhamun"
+          },
+          "correct": "D",
+          "explanation": "The tomb in the Valley of the Kings was found almost intact.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which two countries fought the Hundred Years' War?",
+          "options": {
+            "A": "Austria and Prussia",
+            "B": "Sweden and Denmark",
+            "C": "Spain and Portugal",
+            "D": "England and France"
+          },
+          "correct": "D",
+          "explanation": "The conflict actually ran from 1337 to 1453, so 116 years.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What was the name of Christopher Columbus's flagship in 1492?",
+          "options": {
+            "A": "The Victoria",
+            "B": "The Santa Maria",
+            "C": "The Nina",
+            "D": "The Pinta"
+          },
+          "correct": "B",
+          "explanation": "The Santa Maria ran aground off Hispaniola on Christmas Day 1492.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which city was divided by a wall for 28 years in the Cold War?",
+          "options": {
+            "A": "Prague",
+            "B": "Berlin",
+            "C": "Vienna",
+            "D": "Budapest"
+          },
+          "correct": "B",
+          "explanation": "The wall stood from 1961 until 1989.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which African country was never colonised by a European power?",
+          "options": {
+            "A": "Senegal",
+            "B": "Ghana",
+            "C": "Kenya",
+            "D": "Ethiopia"
+          },
+          "correct": "D",
+          "explanation": "Ethiopia defeated Italy at Adwa in 1896, though it was briefly occupied in the 1930s.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What ended in Russia with the revolutions of 1917?",
+          "options": {
+            "A": "Serfdom",
+            "B": "Tsarist rule",
+            "C": "The Napoleonic wars",
+            "D": "The Soviet Union"
+          },
+          "correct": "B",
+          "explanation": "Serfdom had been abolished in 1861; 1917 ended the monarchy.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which wonder of the ancient world still stands today?",
+          "options": {
+            "A": "The Great Pyramid of Giza",
+            "B": "The Mausoleum at Halicarnassus",
+            "C": "The Temple of Artemis",
+            "D": "The Colossus of Rhodes"
+          },
+          "correct": "A",
+          "explanation": "It is the oldest of the seven and the only survivor.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who was the first emperor of Rome?",
+          "options": {
+            "A": "Tiberius",
+            "B": "Nero",
+            "C": "Augustus",
+            "D": "Julius Caesar"
+          },
+          "correct": "C",
+          "explanation": "Caesar was never emperor; his adopted heir Octavian became Augustus in 27 BC.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which 1969 festival became a symbol of the counterculture?",
+          "options": {
+            "A": "Monterey Pop",
+            "B": "Altamont",
+            "C": "Woodstock",
+            "D": "Isle of Wight"
+          },
+          "correct": "C",
+          "explanation": "Around 400,000 people gathered on a dairy farm in New York State.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which country did the Soviet Union invade in 1979?",
+          "options": {
+            "A": "Turkey",
+            "B": "Iran",
+            "C": "Pakistan",
+            "D": "Afghanistan"
+          },
+          "correct": "D",
+          "explanation": "The nine-year war is often described as the Soviet Union's Vietnam.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What was apartheid?",
+          "options": {
+            "A": "Legal racial segregation in South Africa",
+            "B": "A Soviet farming policy",
+            "C": "A Chinese dynasty",
+            "D": "A trade embargo"
+          },
+          "correct": "A",
+          "explanation": "Apartheid was law from 1948 until the early 1990s.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which explorer reached the South Pole first, in 1911?",
+          "options": {
+            "A": "Roald Amundsen",
+            "B": "Robert Falcon Scott",
+            "C": "Douglas Mawson",
+            "D": "Ernest Shackleton"
+          },
+          "correct": "A",
+          "explanation": "Amundsen's Norwegian team beat Scott's by about five weeks.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which dynasty built most of the Great Wall as it stands today?",
+          "options": {
+            "A": "The Ming",
+            "B": "The Qin",
+            "C": "The Yuan",
+            "D": "The Han"
+          },
+          "correct": "A",
+          "explanation": "The Ming rebuilt it in brick and stone between the 14th and 17th centuries.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What did the Rosetta Stone make possible?",
+          "options": {
+            "A": "Mapping the Nile",
+            "B": "Reading Egyptian hieroglyphs",
+            "C": "Dating the pyramids",
+            "D": "Translating Sanskrit"
+          },
+          "correct": "B",
+          "explanation": "The same text in three scripts let Champollion crack hieroglyphs in 1822.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which city hosted the first modern Olympic Games in 1896?",
+          "options": {
+            "A": "Rome",
+            "B": "Athens",
+            "C": "London",
+            "D": "Paris"
+          },
+          "correct": "B",
+          "explanation": "Fourteen nations competed in the revival of the ancient games.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which country was led by Mao Zedong from 1949?",
+          "options": {
+            "A": "Vietnam",
+            "B": "China",
+            "C": "North Korea",
+            "D": "Mongolia"
+          },
+          "correct": "B",
+          "explanation": "Mao declared the People's Republic of China in October 1949.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What was the Underground Railroad?",
+          "options": {
+            "A": "An early subway",
+            "B": "A smuggling route for tea",
+            "C": "A mining system",
+            "D": "A network helping enslaved people escape"
+          },
+          "correct": "D",
+          "explanation": "It was a secret network of routes and safe houses in 19th-century America.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which island was Napoleon exiled to after Waterloo?",
+          "options": {
+            "A": "Saint Helena",
+            "B": "Corsica",
+            "C": "Elba",
+            "D": "Malta"
+          },
+          "correct": "A",
+          "explanation": "He was sent to Elba first, escaped, then was exiled to Saint Helena after Waterloo.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which year did the First World War begin?",
+          "options": {
+            "A": "1916",
+            "B": "1912",
+            "C": "1918",
+            "D": "1914"
+          },
+          "correct": "D",
+          "explanation": "The assassination of Archduke Franz Ferdinand in June 1914 triggered it.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which civilisation gave us the Olympic Games and democracy?",
+          "options": {
+            "A": "Ancient Egypt",
+            "B": "Ancient Rome",
+            "C": "Ancient Greece",
+            "D": "Ancient Persia"
+          },
+          "correct": "C",
+          "explanation": "Athens is credited with the earliest form of democratic government.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What was Prohibition in 1920s America?",
+          "options": {
+            "A": "A ban on immigration",
+            "B": "A ban on cars",
+            "C": "A ban on alcohol",
+            "D": "A ban on jazz"
+          },
+          "correct": "C",
+          "explanation": "The 18th Amendment banned alcohol from 1920 until its repeal in 1933.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
         }
       ]
     },
@@ -54183,7 +54708,7 @@
       "title": "Science & Cosmos",
       "icon": "🔬",
       "description": "Planets, physics, chemistry and the human body, for the opening round of a quiz night.",
-      "question_count": 40,
+      "question_count": 75,
       "questions": [
         {
           "prompt": "Which planet is closest to the Sun?",
@@ -54784,6 +55309,531 @@
           "type": "classic",
           "points": 100,
           "time_limit": 15
+        },
+        {
+          "prompt": "How many planets are in the Solar System?",
+          "options": {
+            "A": "Ten",
+            "B": "Eight",
+            "C": "Nine",
+            "D": "Seven"
+          },
+          "correct": "B",
+          "explanation": "Pluto was reclassified as a dwarf planet in 2006.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the chemical symbol for gold?",
+          "options": {
+            "A": "Go",
+            "B": "Ag",
+            "C": "Gd",
+            "D": "Au"
+          },
+          "correct": "D",
+          "explanation": "Au comes from the Latin aurum; Ag is silver.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What do bees collect to make honey?",
+          "options": {
+            "A": "Sap",
+            "B": "Dew",
+            "C": "Nectar",
+            "D": "Pollen only"
+          },
+          "correct": "C",
+          "explanation": "Bees gather nectar and reduce its water content to make honey.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which organ pumps blood around the body?",
+          "options": {
+            "A": "The liver",
+            "B": "The lungs",
+            "C": "The kidneys",
+            "D": "The heart"
+          },
+          "correct": "D",
+          "explanation": "An adult heart beats around 100,000 times a day.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the freezing point of water in Celsius?",
+          "options": {
+            "A": "32",
+            "B": "10",
+            "C": "0",
+            "D": "-10"
+          },
+          "correct": "C",
+          "explanation": "Water freezes at 0C, which is 32F.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the largest animal on Earth?",
+          "options": {
+            "A": "The whale shark",
+            "B": "The African elephant",
+            "C": "The blue whale",
+            "D": "The giraffe"
+          },
+          "correct": "C",
+          "explanation": "A blue whale can reach 30 metres and weigh up to 150 tonnes.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which gas do humans breathe in to survive?",
+          "options": {
+            "A": "Carbon dioxide",
+            "B": "Helium",
+            "C": "Oxygen",
+            "D": "Nitrogen"
+          },
+          "correct": "C",
+          "explanation": "We inhale oxygen and exhale carbon dioxide.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What natural satellite orbits the Earth?",
+          "options": {
+            "A": "Europa",
+            "B": "The Moon",
+            "C": "Titan",
+            "D": "Phobos"
+          },
+          "correct": "B",
+          "explanation": "The Moon is about 384,000 km away and shows us the same face.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the study of living things called?",
+          "options": {
+            "A": "Biology",
+            "B": "Geology",
+            "C": "Chemistry",
+            "D": "Physics"
+          },
+          "correct": "A",
+          "explanation": "Biology comes from the Greek for the study of life.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which is the smallest planet in the Solar System?",
+          "options": {
+            "A": "Pluto",
+            "B": "Venus",
+            "C": "Mars",
+            "D": "Mercury"
+          },
+          "correct": "D",
+          "explanation": "Mercury is only slightly larger than Earth's Moon.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What makes up most of the human body by weight?",
+          "options": {
+            "A": "Bone",
+            "B": "Water",
+            "C": "Fat",
+            "D": "Protein"
+          },
+          "correct": "B",
+          "explanation": "Around 60 per cent of an adult body is water.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What do we call the push or pull on an object?",
+          "options": {
+            "A": "Power",
+            "B": "A force",
+            "C": "Energy",
+            "D": "Mass"
+          },
+          "correct": "B",
+          "explanation": "Forces are measured in newtons.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which planet is famous for its Great Red Spot?",
+          "options": {
+            "A": "Mars",
+            "B": "Jupiter",
+            "C": "Neptune",
+            "D": "Saturn"
+          },
+          "correct": "B",
+          "explanation": "The Great Red Spot is a storm that has raged for centuries.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What do we call molten rock below the Earth's surface?",
+          "options": {
+            "A": "Basalt",
+            "B": "Magma",
+            "C": "Obsidian",
+            "D": "Lava"
+          },
+          "correct": "B",
+          "explanation": "It becomes lava once it reaches the surface.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which part of the eye controls how much light enters?",
+          "options": {
+            "A": "The retina",
+            "B": "The iris",
+            "C": "The cornea",
+            "D": "The lens"
+          },
+          "correct": "B",
+          "explanation": "The iris adjusts the size of the pupil.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the most common blood type worldwide?",
+          "options": {
+            "A": "AB positive",
+            "B": "O positive",
+            "C": "B negative",
+            "D": "A negative"
+          },
+          "correct": "B",
+          "explanation": "O positive is the most frequently occurring type globally.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "How long does light from the Sun take to reach Earth?",
+          "options": {
+            "A": "About 8 hours",
+            "B": "About 1 minute",
+            "C": "About 8 minutes",
+            "D": "About 8 seconds"
+          },
+          "correct": "C",
+          "explanation": "Sunlight takes roughly 8 minutes and 20 seconds to cross 93 million miles.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What instrument measures temperature?",
+          "options": {
+            "A": "An anemometer",
+            "B": "A hygrometer",
+            "C": "A thermometer",
+            "D": "A barometer"
+          },
+          "correct": "C",
+          "explanation": "A barometer measures air pressure, an anemometer wind speed.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which animal group do frogs belong to?",
+          "options": {
+            "A": "Mammals",
+            "B": "Reptiles",
+            "C": "Fish",
+            "D": "Amphibians"
+          },
+          "correct": "D",
+          "explanation": "Amphibians typically begin life in water and breathe through skin as well as lungs.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the hardest part of the human body?",
+          "options": {
+            "A": "Tooth enamel",
+            "B": "Bone",
+            "C": "Cartilage",
+            "D": "Fingernail"
+          },
+          "correct": "A",
+          "explanation": "Enamel is harder than bone and cannot regenerate.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What causes the tides on Earth?",
+          "options": {
+            "A": "Ocean currents",
+            "B": "The Earth's rotation alone",
+            "C": "The Moon's gravity",
+            "D": "Wind"
+          },
+          "correct": "C",
+          "explanation": "The Sun contributes too, but the Moon's pull dominates.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is a baby frog called?",
+          "options": {
+            "A": "A fry",
+            "B": "A larva",
+            "C": "A nymph",
+            "D": "A tadpole"
+          },
+          "correct": "D",
+          "explanation": "Tadpoles have tails and gills before metamorphosing.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which scientist is famous for the theory of gravity and an apple?",
+          "options": {
+            "A": "Johannes Kepler",
+            "B": "Isaac Newton",
+            "C": "Albert Einstein",
+            "D": "Galileo Galilei"
+          },
+          "correct": "B",
+          "explanation": "The apple story comes from Newton's own later recollections.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the main gas that causes the greenhouse effect to intensify?",
+          "options": {
+            "A": "Oxygen",
+            "B": "Argon",
+            "C": "Nitrogen",
+            "D": "Carbon dioxide"
+          },
+          "correct": "D",
+          "explanation": "Methane is more potent per molecule but carbon dioxide is far more abundant.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "How many chambers does the human heart have?",
+          "options": {
+            "A": "Four",
+            "B": "Two",
+            "C": "Six",
+            "D": "Three"
+          },
+          "correct": "A",
+          "explanation": "Two atria and two ventricles.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which planet is nearest to Earth on average?",
+          "options": {
+            "A": "Mars",
+            "B": "Mercury",
+            "C": "Jupiter",
+            "D": "Venus"
+          },
+          "correct": "D",
+          "explanation": "Venus comes closest at its nearest approach, though Mercury is on average nearer over time.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What does a botanist study?",
+          "options": {
+            "A": "Rocks",
+            "B": "Insects",
+            "C": "Plants",
+            "D": "Weather"
+          },
+          "correct": "C",
+          "explanation": "Botany is the branch of biology dealing with plant life.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the process of a solid turning straight into a gas?",
+          "options": {
+            "A": "Sublimation",
+            "B": "Evaporation",
+            "C": "Condensation",
+            "D": "Melting"
+          },
+          "correct": "A",
+          "explanation": "Dry ice sublimes from solid carbon dioxide directly to gas.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which blood vessels carry blood away from the heart?",
+          "options": {
+            "A": "Capillaries",
+            "B": "Venules",
+            "C": "Veins",
+            "D": "Arteries"
+          },
+          "correct": "D",
+          "explanation": "Veins return blood to the heart; capillaries exchange gases in tissue.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the Earth's only natural source of light at night, besides stars?",
+          "options": {
+            "A": "Mars",
+            "B": "The aurora",
+            "C": "Lightning",
+            "D": "The Moon"
+          },
+          "correct": "D",
+          "explanation": "The Moon reflects sunlight rather than producing light of its own.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name of the force that opposes motion between surfaces?",
+          "options": {
+            "A": "Inertia",
+            "B": "Tension",
+            "C": "Friction",
+            "D": "Gravity"
+          },
+          "correct": "C",
+          "explanation": "Friction converts movement into heat.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which element makes up almost all of a diamond?",
+          "options": {
+            "A": "Silicon",
+            "B": "Calcium",
+            "C": "Carbon",
+            "D": "Quartz"
+          },
+          "correct": "C",
+          "explanation": "Diamond is carbon arranged in a rigid crystal lattice.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "How many teeth does a typical adult human have?",
+          "options": {
+            "A": "24",
+            "B": "32",
+            "C": "36",
+            "D": "28"
+          },
+          "correct": "B",
+          "explanation": "That includes four wisdom teeth, which many people have removed.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name for an animal's natural home?",
+          "options": {
+            "A": "Its biome",
+            "B": "Its habitat",
+            "C": "Its niche",
+            "D": "Its territory"
+          },
+          "correct": "B",
+          "explanation": "A niche is its role in that habitat; a biome is a larger region.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which two gases make up most of the air we breathe?",
+          "options": {
+            "A": "Hydrogen and helium",
+            "B": "Nitrogen and argon",
+            "C": "Oxygen and carbon dioxide",
+            "D": "Nitrogen and oxygen"
+          },
+          "correct": "D",
+          "explanation": "Nitrogen is about 78 per cent and oxygen about 21 per cent.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
         }
       ]
     },
@@ -54791,7 +55841,7 @@
       "title": "Gaming & Esports",
       "icon": "🎮",
       "description": "Arcade classics, consoles, open worlds and the competitive scene.",
-      "question_count": 40,
+      "question_count": 75,
       "questions": [
         {
           "prompt": "Which Nintendo plumber first appeared in Donkey Kong in 1981?",
@@ -55389,6 +56439,531 @@
           "correct": "B",
           "explanation": "Ralph Baer's Odyssey predated Atari's Pong by a few months.",
           "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Nintendo character is Mario's brother?",
+          "options": {
+            "A": "Yoshi",
+            "B": "Toad",
+            "C": "Wario",
+            "D": "Luigi"
+          },
+          "correct": "D",
+          "explanation": "Luigi debuted in Mario Bros in 1983 as the second player.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What colour is Sonic the Hedgehog?",
+          "options": {
+            "A": "Yellow",
+            "B": "Blue",
+            "C": "Red",
+            "D": "Green"
+          },
+          "correct": "B",
+          "explanation": "Sega designed Sonic blue to match their logo.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In Pac-Man, what do the ghosts do when you eat a power pellet?",
+          "options": {
+            "A": "They multiply",
+            "B": "They turn blue and flee",
+            "C": "They speed up",
+            "D": "They disappear"
+          },
+          "correct": "B",
+          "explanation": "The ghosts become vulnerable for a few seconds.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which company makes the Nintendo Switch?",
+          "options": {
+            "A": "Sega",
+            "B": "Valve",
+            "C": "Sony",
+            "D": "Nintendo"
+          },
+          "correct": "D",
+          "explanation": "The Switch launched in March 2017.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In Minecraft, what do you mine to make a diamond pickaxe?",
+          "options": {
+            "A": "Redstone",
+            "B": "Diamonds",
+            "C": "Gold",
+            "D": "Iron"
+          },
+          "correct": "B",
+          "explanation": "Diamonds need an iron pickaxe or better to mine.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name of the princess Mario usually rescues?",
+          "options": {
+            "A": "Rosalina",
+            "B": "Princess Daisy",
+            "C": "Princess Peach",
+            "D": "Princess Zelda"
+          },
+          "correct": "C",
+          "explanation": "Peach was called Princess Toadstool in early Western releases.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which game features Creepers that explode?",
+          "options": {
+            "A": "Roblox",
+            "B": "Terraria",
+            "C": "Fortnite",
+            "D": "Minecraft"
+          },
+          "correct": "D",
+          "explanation": "The Creeper was reportedly the result of a coding mistake on a pig model.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What does the D-pad on a controller do?",
+          "options": {
+            "A": "Adjusts volume",
+            "B": "Controls direction",
+            "C": "Pauses",
+            "D": "Saves the game"
+          },
+          "correct": "B",
+          "explanation": "Nintendo popularised the cross-shaped directional pad in 1983.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Pokemon is the series mascot?",
+          "options": {
+            "A": "Charizard",
+            "B": "Eevee",
+            "C": "Mewtwo",
+            "D": "Pikachu"
+          },
+          "correct": "D",
+          "explanation": "Pikachu was promoted to mascot for the anime.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In Tetris, what happens when you complete a horizontal line?",
+          "options": {
+            "A": "It freezes",
+            "B": "It clears",
+            "C": "It turns gold",
+            "D": "It doubles"
+          },
+          "correct": "B",
+          "explanation": "Clearing four lines at once is called a Tetris.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which game series features a character called Master Chief?",
+          "options": {
+            "A": "Doom",
+            "B": "Gears of War",
+            "C": "Destiny",
+            "D": "Halo"
+          },
+          "correct": "D",
+          "explanation": "Halo launched with the original Xbox in 2001.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What kind of animal is Donkey Kong?",
+          "options": {
+            "A": "An ape-like robot",
+            "B": "A monkey",
+            "C": "A gorilla",
+            "D": "A bear"
+          },
+          "correct": "C",
+          "explanation": "Donkey Kong first appeared as Mario's adversary in 1981.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which game has you building and managing a theme park?",
+          "options": {
+            "A": "RollerCoaster Tycoon",
+            "B": "The Sims",
+            "C": "Cities Skylines",
+            "D": "SimCity"
+          },
+          "correct": "A",
+          "explanation": "Chris Sawyer wrote most of the original in assembly language.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What does the acronym NPC stand for?",
+          "options": {
+            "A": "Next playable chapter",
+            "B": "New player class",
+            "C": "Non-player character",
+            "D": "Network play code"
+          },
+          "correct": "C",
+          "explanation": "NPCs are controlled by the game rather than a person.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which life-simulation series lets you build houses and families?",
+          "options": {
+            "A": "Animal Crossing",
+            "B": "Stardew Valley",
+            "C": "Second Life",
+            "D": "The Sims"
+          },
+          "correct": "D",
+          "explanation": "Will Wright created The Sims, released in 2000.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In Among Us, what are the two roles?",
+          "options": {
+            "A": "Builder and raider",
+            "B": "Guard and thief",
+            "C": "Crewmate and impostor",
+            "D": "Hunter and prey"
+          },
+          "correct": "C",
+          "explanation": "The game became a worldwide hit in 2020.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Nintendo series features a pink puffball who swallows enemies?",
+          "options": {
+            "A": "Splatoon",
+            "B": "Pikmin",
+            "C": "Kirby",
+            "D": "Yoshi"
+          },
+          "correct": "C",
+          "explanation": "Kirby debuted on the Game Boy in 1992.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the top-selling console of all time?",
+          "options": {
+            "A": "The PlayStation 2",
+            "B": "The Nintendo Switch",
+            "C": "The Wii",
+            "D": "The Xbox 360"
+          },
+          "correct": "A",
+          "explanation": "The PS2 sold over 155 million units.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which game involves placing coloured pieces to make matching rows of three?",
+          "options": {
+            "A": "Tetris",
+            "B": "Solitaire",
+            "C": "Candy Crush Saga",
+            "D": "Minesweeper"
+          },
+          "correct": "C",
+          "explanation": "King launched Candy Crush Saga in 2012.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name of Link's horse in The Legend of Zelda?",
+          "options": {
+            "A": "Agro",
+            "B": "Epona",
+            "C": "Shadowmere",
+            "D": "Roach"
+          },
+          "correct": "B",
+          "explanation": "Epona first appeared in Ocarina of Time in 1998.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which game popularised the phrase 'the cake is a lie'?",
+          "options": {
+            "A": "BioShock",
+            "B": "Portal",
+            "C": "Half-Life",
+            "D": "Braid"
+          },
+          "correct": "B",
+          "explanation": "GLaDOS promises cake throughout Portal's test chambers.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is a speedrun?",
+          "options": {
+            "A": "Playing on hard mode",
+            "B": "Finishing a game as fast as possible",
+            "C": "A racing game genre",
+            "D": "A timed multiplayer match"
+          },
+          "correct": "B",
+          "explanation": "Speedrunners often use glitches to skip large sections.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which company developed Grand Theft Auto?",
+          "options": {
+            "A": "Activision",
+            "B": "EA",
+            "C": "Ubisoft",
+            "D": "Rockstar Games"
+          },
+          "correct": "D",
+          "explanation": "Rockstar grew out of the Dundee studio DMA Design.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In football video games, what does FIFA's rival series from Konami used to be called?",
+          "options": {
+            "A": "Pro Evolution Soccer",
+            "B": "Kick Off",
+            "C": "Sensible Soccer",
+            "D": "Football Manager"
+          },
+          "correct": "A",
+          "explanation": "Pro Evolution Soccer was rebranded as eFootball in 2021.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which handheld console introduced two screens and a stylus?",
+          "options": {
+            "A": "The Nintendo DS",
+            "B": "The PSP",
+            "C": "The Game Boy Advance",
+            "D": "The Vita"
+          },
+          "correct": "A",
+          "explanation": "The DS launched in 2004 and sold over 150 million units.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What does VR stand for in gaming?",
+          "options": {
+            "A": "Vector raster",
+            "B": "Visual range",
+            "C": "Variable rendering",
+            "D": "Virtual reality"
+          },
+          "correct": "D",
+          "explanation": "VR headsets track head movement to place you inside the game.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which game features the Nook family of raccoon shopkeepers?",
+          "options": {
+            "A": "Stardew Valley",
+            "B": "Harvest Moon",
+            "C": "Animal Crossing",
+            "D": "Spiritfarer"
+          },
+          "correct": "C",
+          "explanation": "Tom Nook runs the shop and, famously, your mortgage.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the best-selling single console game of all time?",
+          "options": {
+            "A": "Tetris",
+            "B": "Mario Kart 8",
+            "C": "Super Mario Bros",
+            "D": "Wii Sports"
+          },
+          "correct": "D",
+          "explanation": "Wii Sports sold over 82 million copies, mostly bundled with the Wii.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which card game by Blizzard is set in the Warcraft universe?",
+          "options": {
+            "A": "Legends of Runeterra",
+            "B": "Hearthstone",
+            "C": "Magic Arena",
+            "D": "Gwent"
+          },
+          "correct": "B",
+          "explanation": "Hearthstone launched in 2014 and became a major esport.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In racing games, what does a 'time trial' involve?",
+          "options": {
+            "A": "Racing the clock alone",
+            "B": "A knockout tournament",
+            "C": "Racing eight rivals",
+            "D": "A relay"
+          },
+          "correct": "A",
+          "explanation": "Time trials remove opponents so only your lap time matters.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Japanese company created Street Fighter and Resident Evil?",
+          "options": {
+            "A": "Namco",
+            "B": "Square Enix",
+            "C": "Capcom",
+            "D": "Konami"
+          },
+          "correct": "C",
+          "explanation": "Capcom was founded in Osaka in 1979.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name of the gold rings Sonic collects?",
+          "options": {
+            "A": "Tokens",
+            "B": "Rings",
+            "C": "Orbs",
+            "D": "Coins"
+          },
+          "correct": "B",
+          "explanation": "Losing all your rings when hit is what keeps Sonic alive.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which game genre does Civilization belong to?",
+          "options": {
+            "A": "Turn-based strategy",
+            "B": "Platformer",
+            "C": "First-person shooter",
+            "D": "Fighting"
+          },
+          "correct": "A",
+          "explanation": "Sid Meier's Civilization began in 1991.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What does 'co-op' mean in gaming?",
+          "options": {
+            "A": "A single-player story",
+            "B": "Competing one on one",
+            "C": "A ranked ladder",
+            "D": "Players working together"
+          },
+          "correct": "D",
+          "explanation": "Short for cooperative play, against the game rather than each other.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which 2020 Nintendo game became a lockdown phenomenon?",
+          "options": {
+            "A": "Ring Fit Adventure",
+            "B": "Animal Crossing: New Horizons",
+            "C": "Splatoon 2",
+            "D": "Clubhouse Games"
+          },
+          "correct": "B",
+          "explanation": "It sold over 13 million copies in its first six weeks.",
+          "difficulty": "medium",
           "type": "classic",
           "points": 100,
           "time_limit": 15
