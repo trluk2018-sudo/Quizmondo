@@ -1,0 +1,271 @@
+{% extends "themes/quizhub/base.html" %}
+
+{% block title %}Group Challenge {{ game.code }} • Quizmondo{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#090317] text-slate-100 font-sans py-8 sm:py-12 relative overflow-hidden">
+  <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 w-full space-y-5 relative z-10">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-purple-500/20 pb-4 font-mono">
+      <div class="flex items-center gap-3 flex-wrap">
+        <a href="{{ url_for('arena.group_new') }}" class="text-xs text-cyan-400 hover:text-cyan-300">&larr; Lobbies</a>
+        <span class="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-bold border border-purple-500/30">
+          {{ game.category_name }}
+        </span>
+        <span id="qCounter" class="text-xs text-amber-400 font-bold"></span>
+      </div>
+      <div class="flex items-center gap-2 text-xs">
+        <span class="text-slate-400">ROOM</span>
+        <strong class="text-amber-400 tracking-[0.25em] font-black">{{ game.code }}</strong>
+        <button type="button" onclick="shareRoom()" class="px-2.5 py-1 rounded-lg bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 font-bold hover:bg-emerald-600/30 transition">
+          Share
+        </button>
+      </div>
+    </div>
+
+    <div class="p-6 sm:p-8 rounded-3xl bg-slate-950/95 border-2 border-purple-500/40 shadow-2xl space-y-6 relative">
+
+      <!-- LOBBY -->
+      <div id="lobbyView" class="space-y-6 text-center">
+        <div class="w-20 h-20 rounded-3xl bg-cyan-500/20 border-2 border-cyan-400/50 flex items-center justify-center text-4xl mx-auto animate-pulse">🎮</div>
+        <div class="space-y-1.5 font-mono">
+          <h2 id="lobbyHeadline" class="text-2xl sm:text-3xl font-black text-white">Waiting for players</h2>
+          <p id="lobbySub" class="text-xs text-slate-400"></p>
+        </div>
+        <div id="countdownBox" class="hidden inline-flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-emerald-950/70 border border-emerald-400/50 font-mono">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+          <span class="text-emerald-300 text-sm font-black">Starting in <span id="countdownNum">12</span>s</span>
+        </div>
+        {% if game.host_key == seat.player_key %}
+        <div>
+          <button type="button" id="btnAddBot" onclick="addBot()" class="px-5 py-2.5 rounded-xl bg-purple-600/25 border border-purple-400/40 text-purple-200 font-mono text-xs font-bold hover:bg-purple-600/40 transition">
+            🤖 Add a bot to fill a seat
+          </button>
+          <p class="text-[10px] text-slate-500 mt-2 font-mono">Bots play this game only. They never appear on the leaderboard.</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- QUESTION -->
+      <div id="questionView" class="hidden space-y-7">
+        <div class="flex items-start justify-between gap-4">
+          <h2 id="qPrompt" class="text-lg sm:text-2xl font-black font-mono text-white leading-snug flex-1"></h2>
+          <div class="relative w-16 h-16 shrink-0 flex items-center justify-center font-mono font-black text-xl text-white">
+            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="42" fill="none" stroke="#1e1045" stroke-width="8"/>
+              <circle id="timerRing" cx="50" cy="50" r="42" fill="none" stroke="#06b6d4" stroke-width="8"
+                      stroke-dasharray="264" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-500 ease-linear"/>
+            </svg>
+            <span id="timerText" class="absolute"></span>
+          </div>
+        </div>
+        <div id="qMedia" class="hidden rounded-2xl overflow-hidden border border-purple-500/30 bg-black/60"></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5" id="optionGrid"></div>
+        <p id="lockedNote" class="hidden text-center text-xs font-mono text-cyan-300"></p>
+      </div>
+
+      <!-- REVEAL -->
+      <div id="revealView" class="hidden space-y-5">
+        <div class="text-center space-y-2 font-mono">
+          <div id="revealVerdict" class="text-3xl"></div>
+          <h3 id="revealHeadline" class="text-xl sm:text-2xl font-black text-white"></h3>
+          <p id="revealAnswer" class="text-xs text-cyan-300"></p>
+          <p id="revealWhy" class="text-[11px] text-slate-400 max-w-lg mx-auto leading-relaxed"></p>
+        </div>
+        <div id="revealBoard" class="space-y-2"></div>
+      </div>
+
+      <!-- FINISHED -->
+      <div id="finishedView" class="hidden space-y-5 text-center">
+        <div class="text-5xl">🏆</div>
+        <h2 class="text-2xl sm:text-3xl font-black font-mono text-white">Final Standings</h2>
+        <div id="finalBoard" class="space-y-2 text-left"></div>
+        <div class="flex items-center justify-center gap-4 text-xs font-mono pt-2">
+          <a href="{{ url_for('arena.group_new') }}" class="px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-black uppercase tracking-wider">Play Again</a>
+          <a href="{{ url_for('arena.dashboard') }}" class="text-slate-400 hover:text-cyan-400 transition">Back to Arena</a>
+        </div>
+      </div>
+
+      <!-- Who is in -->
+      <div class="pt-4 border-t border-purple-500/20">
+        <div class="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider mb-2.5">In the room</div>
+        <div id="playerStrip" class="flex flex-wrap gap-2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/quiz-audio.js"></script>
+<script>
+var roomCode = "{{ game.code }}";
+var secondsPerQuestion = {{ game.seconds_per_question }};
+var CIRC = 264;
+var lastStatus = null;
+var lastIndex = -1;
+var answered = false;
+
+function el(id) { return document.getElementById(id); }
+function show(id) { el(id).classList.remove('hidden'); }
+function hide(id) { el(id).classList.add('hidden'); }
+
+function shareRoom() {
+  var url = window.location.href;
+  var text = 'Join my Quizmondo group challenge! Room ' + roomCode + ' ' + url;
+  if (navigator.share) { navigator.share({ text: text, url: url }).catch(function(){}); }
+  else { window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank'); }
+}
+
+function addBot() {
+  var b = el('btnAddBot');
+  if (b) b.disabled = true;
+  fetch('/arena/group/' + roomCode + '/add-bot', { method: 'POST' })
+    .then(function(r){ return r.json(); })
+    .finally(function(){ if (b) b.disabled = false; });
+}
+
+function avatarChip(p) {
+  var bot = p.is_bot
+    ? '<span class="px-1.5 py-0.5 rounded bg-purple-500/30 text-purple-200 text-[9px] font-black">BOT</span>'
+    : '';
+  var tick = p.answered ? '<span class="text-emerald-400">✓</span>' : '';
+  return '<div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-purple-500/25 font-mono text-[11px]">' +
+           '<span class="font-bold text-white">' + escapeHtml(p.name) + '</span>' + bot + tick +
+           '<span class="text-amber-400 font-black">' + p.score + '</span>' +
+         '</div>';
+}
+
+function boardRow(row, highlight) {
+  var medal = row.position === 1 ? '🥇' : (row.position === 2 ? '🥈' : (row.position === 3 ? '🥉' : '#' + row.position));
+  var gained = row.last ? '<span class="text-emerald-400 font-bold">+' + row.last + '</span>' : '<span class="text-slate-600">+0</span>';
+  var bot = row.is_bot ? '<span class="px-1.5 py-0.5 rounded bg-purple-500/30 text-purple-200 text-[9px] font-black ml-1">BOT</span>' : '';
+  return '<div class="flex items-center justify-between gap-3 p-3 rounded-xl ' +
+    (row.position === 1 ? 'bg-amber-950/40 border border-amber-400/50' : 'bg-slate-900/80 border border-purple-500/20') +
+    ' font-mono text-xs">' +
+      '<div class="flex items-center gap-2.5 min-w-0">' +
+        '<span class="w-7 text-center font-black">' + medal + '</span>' +
+        '<span class="font-bold text-white truncate">' + escapeHtml(row.name) + '</span>' + bot +
+      '</div>' +
+      '<div class="flex items-center gap-3 shrink-0">' + gained +
+        '<span class="text-cyan-300 font-black text-sm">' + row.score + '</span>' +
+      '</div>' +
+    '</div>';
+}
+
+function escapeHtml(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function choose(letter, btn) {
+  if (answered) return;
+  answered = true;
+  document.querySelectorAll('#optionGrid button').forEach(function(b){ b.disabled = true; });
+  btn.className = btn.className.replace('border-purple-500/30', 'border-cyan-400') + ' bg-cyan-950/80';
+  var fd = new FormData(); fd.append('choice', letter);
+  fetch('/arena/group/' + roomCode + '/answer', { method: 'POST', body: fd })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      el('lockedNote').textContent = d.success ? 'Locked in ' + letter + ' — waiting for the others…' : (d.error || 'Could not lock that in');
+      show('lockedNote');
+    });
+  if (window.quizAudio) window.quizAudio.playTick();
+}
+
+function drawQuestion(d) {
+  el('qPrompt').textContent = d.question.prompt;
+  el('qCounter').textContent = 'Q ' + d.question_number + ' / ' + d.total_questions;
+  var media = el('qMedia');
+  media.innerHTML = '';
+  media.classList.add('hidden');
+  if (d.question.question_type === 'image' && d.question.media_url) {
+    media.classList.remove('hidden');
+    media.innerHTML = '<div class="p-3 flex justify-center"><img src="' + escapeHtml(d.question.media_url) + '" alt="Clue" class="max-h-52 rounded-xl object-contain"></div>';
+  }
+  var grid = el('optionGrid');
+  grid.innerHTML = '';
+  ['A','B','C','D'].forEach(function(letter){
+    var text = (d.question.options || {})[letter];
+    if (!text) return;
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'p-4 rounded-2xl border-2 border-purple-500/30 bg-slate-900/90 hover:border-cyan-400 text-left flex items-center gap-3 transition';
+    b.innerHTML = '<span class="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center font-mono font-bold text-xs text-cyan-300 shrink-0">' + letter + '</span>' +
+                  '<span class="text-sm font-mono text-slate-200">' + escapeHtml(text) + '</span>';
+    b.onclick = function(){ choose(letter, b); };
+    grid.appendChild(b);
+  });
+  answered = false;
+  hide('lockedNote');
+}
+
+function drawReveal(d) {
+  var mine = (d.reveal.your_answer || {});
+  var right = mine.choice && mine.choice === d.reveal.correct_option;
+  el('revealVerdict').textContent = right ? '✅' : (mine.choice ? '❌' : '⏱️');
+  el('revealHeadline').textContent = right ? ('Correct, +' + (mine.points || 0)) : (mine.choice ? 'Not this time' : 'Ran out of clock');
+  el('revealAnswer').textContent = 'Answer: ' + d.reveal.correct_option + ' — ' + (d.reveal.prompt || '');
+  el('revealWhy').textContent = d.reveal.explanation || '';
+  el('revealBoard').innerHTML = (d.standings || []).map(function(r){ return boardRow(r); }).join('');
+}
+
+function tickTimer(seconds) {
+  if (seconds === null || seconds === undefined) return;
+  el('timerText').textContent = Math.ceil(seconds);
+  var ratio = Math.max(0, Math.min(1, seconds / secondsPerQuestion));
+  el('timerRing').style.strokeDashoffset = CIRC - (ratio * CIRC);
+}
+
+function poll() {
+  fetch('/arena/group/' + roomCode + '/state?t=' + Date.now(), { cache: 'no-store' })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d.success) return;
+
+      el('playerStrip').innerHTML = d.players.map(avatarChip).join('');
+
+      if (d.status === 'lobby') {
+        show('lobbyView'); hide('questionView'); hide('revealView'); hide('finishedView');
+        el('lobbyHeadline').textContent = d.player_count + ' of ' + d.max_players + ' in the room';
+        el('lobbySub').textContent = d.player_count < d.min_players
+          ? ('Needs ' + (d.min_players - d.player_count) + ' more to get going')
+          : 'Enough to start — latecomers can still grab a seat';
+        if (d.starts_in !== null && d.starts_in !== undefined) {
+          show('countdownBox');
+          el('countdownNum').textContent = Math.ceil(d.starts_in);
+        } else { hide('countdownBox'); }
+      }
+
+      if (d.status === 'active') {
+        hide('lobbyView'); hide('revealView'); hide('finishedView'); show('questionView');
+        if (d.question_number !== lastIndex) { drawQuestion(d); lastIndex = d.question_number; }
+        if (d.you_answered && !answered) {
+          answered = true;
+          document.querySelectorAll('#optionGrid button').forEach(function(b){ b.disabled = true; });
+          el('lockedNote').textContent = 'Locked in — waiting for the others…';
+          show('lockedNote');
+        }
+        tickTimer(d.question_ends_in);
+      }
+
+      if (d.status === 'reveal') {
+        hide('lobbyView'); hide('questionView'); hide('finishedView'); show('revealView');
+        if (lastStatus !== 'reveal') { drawReveal(d); }
+      }
+
+      if (d.status === 'finished') {
+        hide('lobbyView'); hide('questionView'); hide('revealView'); show('finishedView');
+        el('finalBoard').innerHTML = (d.standings || []).map(function(r){ return boardRow(r); }).join('');
+        el('qCounter').textContent = '';
+      }
+
+      lastStatus = d.status;
+    })
+    .catch(function(){});
+}
+
+poll();
+setInterval(poll, 1000);
+</script>
+{% endblock %}

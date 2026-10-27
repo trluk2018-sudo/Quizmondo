@@ -149,6 +149,90 @@ class Media(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+class GroupGame(db.Model):
+    """A live group quiz: several players answering the same question at the same time.
+
+    Deliberately separate from ArenaMatch, which is hard-wired to two players through
+    its player1_/player2_ columns and cannot hold six. The timing model is borrowed from
+    the pub league instead: a deadline per question, applied whenever anybody polls, so
+    the game runs itself without a host.
+    """
+    __tablename__ = 'group_games'
+
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(12), unique=True, index=True, nullable=False)
+    # lobby -> active -> reveal -> (active ...) -> finished
+    status = db.Column(db.String(20), default='lobby', index=True)
+    category_slug = db.Column(db.String(80), default='')
+    category_name = db.Column(db.String(120), default='')
+
+    min_players = db.Column(db.Integer, default=3)
+    max_players = db.Column(db.Integer, default=6)
+    total_questions = db.Column(db.Integer, default=8)
+    seconds_per_question = db.Column(db.Integer, default=15)
+    reveal_seconds = db.Column(db.Integer, default=4)
+
+    question_ids_json = db.Column(db.Text, default='[]')
+    current_index = db.Column(db.Integer, default=0)
+    # Set once the minimum is met: the lobby countdown everyone can see
+    starts_at = db.Column(db.DateTime, nullable=True)
+    question_ends_at = db.Column(db.DateTime, nullable=True)
+    reveal_ends_at = db.Column(db.DateTime, nullable=True)
+
+    host_key = db.Column(db.String(120), default='')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    def get_question_ids(self) -> list:
+        try:
+            return json.loads(self.question_ids_json or '[]')
+        except Exception:
+            return []
+
+    def set_question_ids(self, ids):
+        self.question_ids_json = json.dumps(list(ids or []))
+
+    def humans(self):
+        return [p for p in self.players if not p.is_bot]
+
+    def is_full(self) -> bool:
+        return self.players.count() >= (self.max_players or 6)
+
+
+class GroupPlayer(db.Model):
+    """A seat in a group game.
+
+    Bots live here and nowhere else: no PlayerProfile row, no session key, no XP. Because
+    nothing outside a group game reads this table, a bot cannot turn up on the leaderboard,
+    in a friends roster or in the open challenge list. It stops existing with the game.
+    """
+    __tablename__ = 'group_players'
+
+    id = db.Column(db.Integer, primary_key=True)
+    game_id = db.Column(db.Integer, db.ForeignKey('group_games.id'), index=True, nullable=False)
+    # Null for a bot; otherwise the PlayerProfile session key
+    player_key = db.Column(db.String(120), index=True, default=None)
+    display_name = db.Column(db.String(80), default='Player')
+    avatar_key = db.Column(db.String(40), default='quizzy')
+    is_bot = db.Column(db.Boolean, default=False)
+    score = db.Column(db.Integer, default=0)
+    answers_json = db.Column(db.Text, default='{}')
+    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    game = db.relationship('GroupGame', backref=db.backref('players', lazy='dynamic', cascade='all, delete-orphan'))
+
+    def get_answers(self) -> dict:
+        try:
+            return json.loads(self.answers_json or '{}')
+        except Exception:
+            return {}
+
+    def set_answers(self, data):
+        self.answers_json = json.dumps(data or {})
+
+    def answer_for(self, index):
+        return self.get_answers().get(str(index))
+
+
 class FeaturedGame(db.Model):
     """A slide in the hero's featured game gallery.
 

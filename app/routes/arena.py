@@ -4,7 +4,7 @@ import secrets
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, flash, current_app, Response
 from sqlalchemy.sql.expression import func
-from ..models import db, User, PlayerProfile, ArenaMatch, ArenaRound, QuizQuestion, QuizPack, PubLeague, PubLeagueResult, pub_season_label, SiteSetting, slugify
+from ..models import db, User, PlayerProfile, ArenaMatch, ArenaRound, QuizQuestion, QuizPack, PubLeague, PubLeagueResult, pub_season_label, SiteSetting, slugify, GroupGame, GroupPlayer
 from ..utils.share_card import generate_duel_card_png, generate_pub_card_png
 
 arena_bp = Blueprint('arena', __name__, url_prefix='/arena')
@@ -551,6 +551,8 @@ def dashboard():
         else:
             incoming_challenges.append(m)
 
+    open_group_lobbies = GroupGame.query.filter_by(status='lobby').count()
+
     # Friends Roster & Open Group Challenges
     friends_roster, open_group_challenges = _get_friends_and_group_challenges(player)
 
@@ -570,6 +572,7 @@ def dashboard():
         history_matches=history_matches,
         friends_roster=friends_roster,
         open_group_challenges=open_group_challenges,
+        open_group_lobbies=open_group_lobbies,
         top_players=top_players,
         packs=packs,
         avatars=AVATAR_PRESETS
@@ -636,7 +639,10 @@ def create_match():
         player1_session=player.session_key,
         player1_name=player.display_name,
         player1_avatar=player.avatar_key,
-        player2_name=friend_invite_name if friend_invite_name else ('Searching Online Player...' if opponent_mode == 'online' else 'Invited Friend'),
+        player2_name=friend_invite_name if friend_invite_name else (
+            'Searching Online Player...' if opponent_mode == 'online'
+            else ('Awaiting Challenger...' if opponent_mode in ('open', 'random') else 'Invited Friend')
+        ),
         status='waiting',
         current_round=1,
         current_turn=1,
@@ -2685,6 +2691,362 @@ def league_tv(slug):
         questions=questions,
         is_virtual=is_virtual
     )
+
+
+# =========================================================================
+# Group Challenge: several players, one question at a time, no host
+#
+# The pub league proved the timing model - a deadline per round, applied by
+# whoever happens to poll - so the same idea runs a question at a time here.
+# Nobody hosts it: the lobby starts itself once enough people are in, and
+# each question closes on its own clock.
+# =========================================================================
+
+GROUP_CODE_ALPHABET = 'ACDEFGHJKLMNPQRTUVWXY34679'
+
+# Bots exist only to fill a lobby so a game can start. They are rows in
+# group_players and nothing else, so they cannot reach a leaderboard.
+GROUP_BOT_NAMES = [
+    'Quiz Gremlin', 'Trivia Tortoise', 'Captain Cortex', 'The Quizzard',
+    'Nimble Noggin', 'Factoid Fox', 'Buzzer Badger', 'Professor Pub',
+    'Cranium Carol', 'Swotty Sid', 'Mastermind Mo', 'Quick Draw Quinn',
+]
+GROUP_BOT_ACCURACY = 0.6
+
+
+def new_group_code():
+    for _ in range(40):
+        code = ''.join(random.choice(GROUP_CODE_ALPHABET) for _ in range(5))
+        if not GroupGame.query.filter_by(code=code).first():
+            return code
+    return ''.join(random.choice(GROUP_CODE_ALPHABET) for _ in range(8))
+
+
+def group_seat(game, player):
+    """This player's seat in the game, if they have one."""
+    if not player:
+        return None
+    return game.players.filter_by(player_key=player.session_key, is_bot=False).first()
+
+
+def add_group_bot(game):
+    """Drop a throwaway bot into a free seat."""
+    taken = {p.display_name for p in game.players}
+    pool = [n for n in GROUP_BOT_NAMES if n not in taken]
+    if not pool or game.is_full():
+        return None
+    bot = GroupPlayer(
+        game_id=game.id,
+        player_key=None,
+        display_name=random.choice(pool),
+        avatar_key=random.choice([a['key'] for a in AVATAR_PRESETS if a['key'] != 'nova']),
+        is_bot=True
+    )
+    db.session.add(bot)
+    return bot
+
+
+def group_questions(game):
+    ids = game.get_question_ids()
+    found = []
+    for qid in ids:
+        q = QuizQuestion.query.get(qid)
+        if q:
+            found.append(q)
+    return found
+
+
+def score_group_answer(question, choice, seconds_left, limit):
+    """Same shape as the pub quiz: right answer plus whatever clock is left."""
+    if not question or not choice or choice != question.correct_option:
+        return 0
+    seconds_left = max(0, min(int(limit), int(seconds_left or 0)))
+    return 100 + seconds_left * 2
+
+
+def settle_group_question(game):
+    """Close the current question: score every seat, including the bots."""
+    questions = group_questions(game)
+    idx = game.current_index
+    if idx >= len(questions):
+        return
+    question = questions[idx]
+    limit = game.seconds_per_question or 15
+
+    for seat in game.players:
+        answers = seat.get_answers()
+        key = str(idx)
+        if key in answers:
+            continue  # a human who answered in time is already recorded
+        if seat.is_bot:
+            correct = random.random() < GROUP_BOT_ACCURACY
+            # Bots never look superhuman: they use up a believable slice of the clock
+            left = random.randint(1, max(1, int(limit * 0.6)))
+            choice = question.correct_option if correct else next(
+                (o for o in ('A', 'B', 'C', 'D') if o != question.correct_option), 'A'
+            )
+            points = score_group_answer(question, choice, left, limit)
+        else:
+            choice, left, points = None, 0, 0  # ran out of clock
+        answers[key] = {'choice': choice, 'left': left, 'points': points}
+        seat.set_answers(answers)
+        seat.score = int(seat.score or 0) + points
+
+
+def advance_group_game(game):
+    """Move the game along if a deadline has passed. Safe to call from any request."""
+    now = datetime.utcnow()
+    changed = False
+
+    if game.status == 'lobby':
+        count = game.players.count()
+        if count >= (game.min_players or 3) and not game.starts_at:
+            # Enough people: put a countdown on the board rather than waiting for a full house
+            game.starts_at = now + timedelta(seconds=12)
+            changed = True
+        if game.starts_at and (now >= game.starts_at or game.is_full()):
+            game.status = 'active'
+            game.current_index = 0
+            game.question_ends_at = now + timedelta(seconds=game.seconds_per_question or 15)
+            changed = True
+
+    if game.status == 'active' and game.question_ends_at and now >= game.question_ends_at:
+        settle_group_question(game)
+        game.status = 'reveal'
+        game.reveal_ends_at = now + timedelta(seconds=game.reveal_seconds or 4)
+        changed = True
+
+    if game.status == 'reveal' and game.reveal_ends_at and now >= game.reveal_ends_at:
+        if game.current_index + 1 >= len(game.get_question_ids()):
+            game.status = 'finished'
+            game.question_ends_at = None
+            game.reveal_ends_at = None
+        else:
+            game.current_index += 1
+            game.status = 'active'
+            game.question_ends_at = now + timedelta(seconds=game.seconds_per_question or 15)
+            game.reveal_ends_at = None
+        changed = True
+
+    if changed:
+        db.session.commit()
+    return changed
+
+
+def group_standings(game):
+    seats = sorted(game.players, key=lambda s: (-(s.score or 0), s.display_name.lower()))
+    out = []
+    for pos, seat in enumerate(seats, 1):
+        out.append({
+            'position': pos,
+            'name': seat.display_name,
+            'avatar': seat.avatar_key,
+            'is_bot': seat.is_bot,
+            'score': seat.score or 0,
+            'last': (seat.get_answers().get(str(game.current_index)) or {}).get('points', 0)
+        })
+    return out
+
+
+@arena_bp.route('/group/new', methods=['GET', 'POST'])
+def group_new():
+    """Open a lobby. Whoever opens it picks the size and the subject."""
+    player = get_current_player()
+    categories = db.session.query(QuizQuestion.category_slug, QuizQuestion.category_name).distinct().all()
+
+    if request.method == 'POST':
+        try:
+            min_players = max(2, min(6, int(request.form.get('min_players') or 3)))
+            max_players = max(min_players, min(6, int(request.form.get('max_players') or 6)))
+            total_questions = max(3, min(15, int(request.form.get('total_questions') or 8)))
+            seconds = max(10, min(30, int(request.form.get('seconds_per_question') or 15)))
+        except (TypeError, ValueError):
+            flash('Those game settings did not look right.', 'error')
+            return redirect(url_for('arena.group_new'))
+
+        slug = (request.form.get('category_slug') or '').strip()
+        match = next((c for c in categories if c[0] == slug), None)
+        if not match:
+            match = random.choice(categories) if categories else ('world-history', 'World Trivia')
+
+        questions = get_random_questions(category_slug=match[0], count=total_questions)
+        if len(questions) < total_questions:
+            questions = get_random_questions(count=total_questions)
+        if not questions:
+            flash('There are not enough questions to start a game right now.', 'error')
+            return redirect(url_for('arena.dashboard'))
+
+        game = GroupGame(
+            code=new_group_code(),
+            status='lobby',
+            category_slug=match[0],
+            category_name=match[1],
+            min_players=min_players,
+            max_players=max_players,
+            total_questions=len(questions),
+            seconds_per_question=seconds,
+            host_key=player.session_key
+        )
+        game.set_question_ids([q.id for q in questions])
+        db.session.add(game)
+        db.session.flush()
+
+        db.session.add(GroupPlayer(
+            game_id=game.id, player_key=player.session_key,
+            display_name=player.display_name, avatar_key=player.avatar_key, is_bot=False
+        ))
+        db.session.commit()
+        return redirect(url_for('arena.group_lobby', code=game.code))
+
+    open_games = GroupGame.query.filter_by(status='lobby').order_by(GroupGame.created_at.desc()).limit(10).all()
+    return render_template('themes/quizhub/arena_group_new.html',
+                           player=player, categories=sorted(categories, key=lambda c: c[1]),
+                           open_games=open_games)
+
+
+@arena_bp.route('/group/<code>')
+def group_lobby(code):
+    """The lobby and the game itself; one page, driven by the live state."""
+    player = get_current_player()
+    game = GroupGame.query.filter_by(code=code.upper()).first_or_404()
+    advance_group_game(game)
+
+    seat = group_seat(game, player)
+    if not seat and game.status == 'lobby' and not game.is_full():
+        seat = GroupPlayer(game_id=game.id, player_key=player.session_key,
+                           display_name=player.display_name, avatar_key=player.avatar_key, is_bot=False)
+        db.session.add(seat)
+        db.session.commit()
+        advance_group_game(game)
+    elif not seat:
+        flash('That game is already under way, or full. Start your own!', 'error')
+        return redirect(url_for('arena.group_new'))
+
+    questions = group_questions(game)
+    return render_template('themes/quizhub/arena_group_play.html',
+                           player=player, game=game, seat=seat,
+                           questions_json=[q.to_dict(include_answer=False) for q in questions],
+                           total_questions=len(questions))
+
+
+@arena_bp.route('/group/<code>/state')
+def group_state(code):
+    """Everything a phone needs to draw the current moment."""
+    player = get_current_player(persist=False)
+    game = GroupGame.query.filter_by(code=code.upper()).first_or_404()
+    advance_group_game(game)
+
+    seat = group_seat(game, player)
+    now = datetime.utcnow()
+    questions = group_questions(game)
+    idx = game.current_index
+    question = questions[idx] if idx < len(questions) else None
+
+    def seconds_until(when):
+        return max(0, round((when - now).total_seconds(), 1)) if when else None
+
+    payload = {
+        'success': True,
+        'status': game.status,
+        'code': game.code,
+        'category': game.category_name,
+        'question_number': idx + 1,
+        'total_questions': len(questions),
+        'players': [{
+            'name': p.display_name, 'avatar': p.avatar_key, 'is_bot': p.is_bot,
+            'score': p.score or 0, 'answered': str(idx) in p.get_answers()
+        } for p in sorted(game.players, key=lambda x: x.joined_at or now)],
+        'player_count': game.players.count(),
+        'min_players': game.min_players,
+        'max_players': game.max_players,
+        'starts_in': seconds_until(game.starts_at),
+        'question_ends_in': seconds_until(game.question_ends_at),
+        'reveal_ends_in': seconds_until(game.reveal_ends_at),
+        'you_answered': bool(seat and str(idx) in seat.get_answers()),
+        'your_score': seat.score if seat else 0,
+    }
+
+    if game.status == 'active' and question:
+        payload['question'] = {
+            'id': question.id, 'prompt': question.prompt,
+            'options': question.get_options(),
+            'media_url': question.media_url, 'question_type': question.question_type
+        }
+    if game.status in ('reveal', 'finished') and question:
+        payload['reveal'] = {
+            'correct_option': question.correct_option,
+            'explanation': question.explanation,
+            'prompt': question.prompt,
+            'your_answer': (seat.get_answers().get(str(idx)) or {}) if seat else {}
+        }
+    if game.status in ('reveal', 'finished'):
+        payload['standings'] = group_standings(game)
+
+    return jsonify(payload)
+
+
+@arena_bp.route('/group/<code>/answer', methods=['POST'])
+def group_answer(code):
+    """Lock in an answer. The clock is the server's, not the phone's."""
+    player = get_current_player(persist=False)
+    game = GroupGame.query.filter_by(code=code.upper()).first_or_404()
+    advance_group_game(game)
+
+    seat = group_seat(game, player)
+    if not seat:
+        return jsonify({'success': False, 'error': 'You are not in this game'}), 403
+    if game.status != 'active':
+        return jsonify({'success': False, 'error': 'No question is open'}), 400
+
+    idx = game.current_index
+    answers = seat.get_answers()
+    if str(idx) in answers:
+        return jsonify({'success': False, 'error': 'Already answered'}), 400
+
+    questions = group_questions(game)
+    if idx >= len(questions):
+        return jsonify({'success': False, 'error': 'No question is open'}), 400
+    question = questions[idx]
+
+    choice = (request.form.get('choice') or '').strip().upper()
+    if choice not in ('A', 'B', 'C', 'D'):
+        return jsonify({'success': False, 'error': 'Pick one of the four options'}), 400
+
+    # The remaining clock comes from the server's own deadline, so a phone cannot claim more
+    left = 0
+    if game.question_ends_at:
+        left = max(0, int((game.question_ends_at - datetime.utcnow()).total_seconds()))
+    points = score_group_answer(question, choice, left, game.seconds_per_question or 15)
+
+    answers[str(idx)] = {'choice': choice, 'left': left, 'points': points}
+    seat.set_answers(answers)
+    seat.score = int(seat.score or 0) + points
+
+    # Everyone is in: no reason to make them watch the clock run down
+    if all(str(idx) in p.get_answers() for p in game.players if not p.is_bot):
+        settle_group_question(game)
+        game.status = 'reveal'
+        game.reveal_ends_at = datetime.utcnow() + timedelta(seconds=game.reveal_seconds or 4)
+
+    db.session.commit()
+    return jsonify({'success': True, 'locked': choice})
+
+
+@arena_bp.route('/group/<code>/add-bot', methods=['POST'])
+def group_add_bot(code):
+    """Fill a seat so a quiet lobby can still get going."""
+    player = get_current_player(persist=False)
+    game = GroupGame.query.filter_by(code=code.upper()).first_or_404()
+    if game.status != 'lobby':
+        return jsonify({'success': False, 'error': 'The game has already started'}), 400
+    if game.host_key and game.host_key != player.session_key:
+        return jsonify({'success': False, 'error': 'Only whoever opened the lobby can add a bot'}), 403
+    bot = add_group_bot(game)
+    if not bot:
+        return jsonify({'success': False, 'error': 'The lobby is full'}), 400
+    db.session.commit()
+    advance_group_game(game)
+    return jsonify({'success': True, 'name': bot.display_name})
 
 
 @arena_bp.route('/api/daily')
