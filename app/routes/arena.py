@@ -1714,7 +1714,7 @@ def get_next_weekly_pub_date():
 
 
 VIRTUAL_PUB_ROUNDS_CONFIG = {
-    1: {'number': 1, 'name': 'Round 1: General Knowledge, Science & Lore', 'cat_slug': 'science-cosmos', 'icon': '🌍', 'desc': 'Warm up your neurons with world history, science, and general news.'},
+    1: {'number': 1, 'name': 'Round 1: General Knowledge, Science & Lore', 'cat_slug': 'world-history', 'icon': '🌍', 'desc': 'Warm up your neurons with world history, science, and general news.'},
     2: {'number': 2, 'name': 'Round 2: Pop Culture, Cinema Titans & Music Legends', 'cat_slug': 'cinema-film-tv-radio', 'icon': '🎬', 'desc': 'Blockbuster cinema, chart-topping records, and modern pop icons.'},
     3: {'number': 3, 'name': 'Round 3: Championship Wipeout Lightning Sprint', 'cat_slug': 'gaming-esports', 'icon': '⚡', 'desc': 'High stakes finale! 1.5x score multiplier on all correct answers.'},
     4: {'number': 4, 'name': 'Round 4: World Geography & Flags', 'cat_slug': 'match-flags', 'icon': '🏳️', 'desc': 'Visual flags and global geography challenge.'},
@@ -1722,7 +1722,7 @@ VIRTUAL_PUB_ROUNDS_CONFIG = {
 }
 
 PUB_ROUNDS_CONFIG = {
-    1: {'number': 1, 'name': 'General Knowledge & News', 'cat_slug': 'world-history', 'icon': '🧠', 'desc': 'Test your broad trivia knowledge across news, landmarks, and science.'},
+    1: {'number': 1, 'name': 'General Knowledge & News', 'cat_slug': 'uk-british', 'icon': '🧠', 'desc': 'Britain and beyond: monarchy, counties, telly, the pub and general knowledge.'},
     2: {'number': 2, 'name': 'Music, Audio & Waveforms', 'cat_slug': 'music-decades', 'icon': '🎵', 'desc': 'Iconic number one records, synthesizers, chiptunes, and rock anthems.'},
     3: {'number': 3, 'name': 'Cinema, Television & Blockbusters', 'cat_slug': 'cinema-film-tv-radio', 'icon': '🎬', 'desc': 'Cult cinema classics, famous directors, Academy Awards, and TV quotes.'},
     4: {'number': 4, 'name': 'World Geography & Visual Flags', 'cat_slug': 'match-flags', 'icon': '🗺️', 'desc': 'Continental capitals, world flags, ancient ruins, and extreme landforms.'},

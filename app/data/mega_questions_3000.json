@@ -1,7 +1,7 @@
 {
   "generated_at": "2026-10-26T05:30:00Z",
-  "total_categories": 15,
-  "total_questions": 3320,
+  "total_categories": 19,
+  "total_questions": 3710,
   "categories": {
     "music-decades": {
       "title": "Music of the Decades (1930s-2020s)",
@@ -49926,6 +49926,5468 @@
           },
           "correct": "A",
           "explanation": "Nantes adopted bright canary yellow and green shirts in 1943, inspired by the racing silks of successful horse-breeding stable owner Jean Le Guillou.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        }
+      ]
+    },
+    "uk-british": {
+      "title": "UK & British Trivia",
+      "icon": "🇬🇧",
+      "description": "Monarchy, Parliament, counties and coastlines, telly and radio, British bands, the pub, sport, writers, slang and the inventions that came out of these islands.",
+      "question_count": 242,
+      "questions": [
+        {
+          "prompt": "Which king was on the throne when the Magna Carta was sealed at Runnymede in 1215?",
+          "options": {
+            "A": "Henry III",
+            "B": "Edward I",
+            "C": "Richard I",
+            "D": "King John"
+          },
+          "correct": "D",
+          "explanation": "John sealed Magna Carta under pressure from rebel barons; it limited royal power and underpins English common law.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who was the last monarch of the House of Tudor?",
+          "options": {
+            "A": "Elizabeth I",
+            "B": "Mary I",
+            "C": "Henry VIII",
+            "D": "Edward VI"
+          },
+          "correct": "A",
+          "explanation": "Elizabeth I died childless in 1603, passing the crown to James VI of Scotland and beginning the Stuart line.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "How many wives did Henry VIII have?",
+          "options": {
+            "A": "Six",
+            "B": "Four",
+            "C": "Seven",
+            "D": "Five"
+          },
+          "correct": "A",
+          "explanation": "Catherine of Aragon, Anne Boleyn, Jane Seymour, Anne of Cleves, Catherine Howard and Catherine Parr - divorced, beheaded, died, divorced, beheaded, survived.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which queen reigned for just nine days in 1553?",
+          "options": {
+            "A": "Anne Boleyn",
+            "B": "Matilda",
+            "C": "Lady Jane Grey",
+            "D": "Mary I"
+          },
+          "correct": "C",
+          "explanation": "Lady Jane Grey was proclaimed queen on 10 July 1553 and deposed by Mary I nine days later.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which battle in 1066 led to the Norman conquest of England?",
+          "options": {
+            "A": "The Battle of Agincourt",
+            "B": "The Battle of Stamford Bridge",
+            "C": "The Battle of Bosworth Field",
+            "D": "The Battle of Hastings"
+          },
+          "correct": "D",
+          "explanation": "William of Normandy defeated Harold Godwinson near Hastings on 14 October 1066.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who was the first monarch to rule both England and Scotland?",
+          "options": {
+            "A": "Charles I",
+            "B": "Edward I",
+            "C": "Henry VII",
+            "D": "James I of England"
+          },
+          "correct": "D",
+          "explanation": "James VI of Scotland became James I of England in 1603 in the Union of the Crowns.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which English king was executed in 1649 at the end of the Civil War?",
+          "options": {
+            "A": "Charles I",
+            "B": "James II",
+            "C": "Richard III",
+            "D": "Charles II"
+          },
+          "correct": "A",
+          "explanation": "Charles I was beheaded outside the Banqueting House in Whitehall on 30 January 1649.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who ruled England as Lord Protector during the Commonwealth?",
+          "options": {
+            "A": "Thomas Cromwell",
+            "B": "Thomas Fairfax",
+            "C": "Oliver Cromwell",
+            "D": "John Pym"
+          },
+          "correct": "C",
+          "explanation": "Cromwell led the republic from 1653 until his death in 1658; the monarchy was restored in 1660.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which monarch gave her name to a 63-year reign that ended in 1901?",
+          "options": {
+            "A": "Queen Anne",
+            "B": "Elizabeth I",
+            "C": "Queen Mary",
+            "D": "Queen Victoria"
+          },
+          "correct": "D",
+          "explanation": "Victoria reigned from 1837 to 1901, the longest reign until Elizabeth II surpassed it in 2015.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which king abdicated in 1936 to marry Wallis Simpson?",
+          "options": {
+            "A": "Edward VII",
+            "B": "George V",
+            "C": "George VI",
+            "D": "Edward VIII"
+          },
+          "correct": "D",
+          "explanation": "Edward VIII abdicated after less than a year, and his brother became George VI.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What was the name of Elizabeth II's Platinum Jubilee year?",
+          "options": {
+            "A": "2012",
+            "B": "2002",
+            "C": "2022",
+            "D": "2020"
+          },
+          "correct": "C",
+          "explanation": "The Platinum Jubilee in 2022 marked 70 years on the throne, a first for a British monarch.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which royal residence is the monarch's official London home?",
+          "options": {
+            "A": "Balmoral Castle",
+            "B": "Buckingham Palace",
+            "C": "Sandringham House",
+            "D": "Windsor Castle"
+          },
+          "correct": "B",
+          "explanation": "Buckingham Palace has been the official London residence of British monarchs since 1837.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Where are English and British monarchs traditionally crowned?",
+          "options": {
+            "A": "Canterbury Cathedral",
+            "B": "York Minster",
+            "C": "St Paul's Cathedral",
+            "D": "Westminster Abbey"
+          },
+          "correct": "D",
+          "explanation": "Every coronation since 1066 has taken place at Westminster Abbey.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Scottish castle is the monarch's private Highland retreat?",
+          "options": {
+            "A": "Balmoral Castle",
+            "B": "Edinburgh Castle",
+            "C": "Stirling Castle",
+            "D": "Glamis Castle"
+          },
+          "correct": "A",
+          "explanation": "Balmoral in Aberdeenshire was bought by Prince Albert in 1852 and remains privately owned by the Royal Family.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name of the stone traditionally used in coronations, returned to Scotland in 1996?",
+          "options": {
+            "A": "The Stone of Scone",
+            "B": "The Stone of Iona",
+            "C": "The Lia Fail",
+            "D": "The Coronation Marble"
+          },
+          "correct": "A",
+          "explanation": "Also called the Stone of Destiny, it sits in Edinburgh Castle and travels to Westminster for coronations.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which king united much of England and is traditionally said to have burnt the cakes?",
+          "options": {
+            "A": "Edward the Confessor",
+            "B": "Canute",
+            "C": "Alfred the Great",
+            "D": "Athelstan"
+          },
+          "correct": "C",
+          "explanation": "Alfred of Wessex defended England against the Vikings; the cake-burning tale is a later legend.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which monarch was the last to be crowned in the 20th century?",
+          "options": {
+            "A": "Elizabeth II",
+            "B": "George VI",
+            "C": "Edward VIII",
+            "D": "George V"
+          },
+          "correct": "A",
+          "explanation": "Elizabeth II was crowned on 2 June 1953, the first coronation to be televised.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who was known as the 'Virgin Queen'?",
+          "options": {
+            "A": "Queen Anne",
+            "B": "Victoria",
+            "C": "Elizabeth I",
+            "D": "Mary I"
+          },
+          "correct": "C",
+          "explanation": "Elizabeth I never married, and the colony of Virginia was named in her honour.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which king lost the Battle of Bosworth Field in 1485?",
+          "options": {
+            "A": "Richard III",
+            "B": "Henry VII",
+            "C": "Henry VI",
+            "D": "Edward IV"
+          },
+          "correct": "A",
+          "explanation": "Richard III's death ended the Wars of the Roses and the Plantagenet line; Henry Tudor took the crown.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In which city was Richard III's body rediscovered in 2012?",
+          "options": {
+            "A": "York",
+            "B": "Leicester",
+            "C": "Nottingham",
+            "D": "Lincoln"
+          },
+          "correct": "B",
+          "explanation": "His remains were found under a council car park and reburied in Leicester Cathedral in 2015.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the official residence of the Prince and Princess of Wales in London?",
+          "options": {
+            "A": "Clarence House",
+            "B": "Hampton Court",
+            "C": "St James's Palace",
+            "D": "Kensington Palace"
+          },
+          "correct": "D",
+          "explanation": "Kensington Palace has housed royals since the 17th century and is partly open to the public.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which queen was the mother of Elizabeth I?",
+          "options": {
+            "A": "Catherine Parr",
+            "B": "Anne Boleyn",
+            "C": "Catherine of Aragon",
+            "D": "Jane Seymour"
+          },
+          "correct": "B",
+          "explanation": "Anne Boleyn was executed in 1536 when Elizabeth was two years old.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What title is given to the monarch's eldest son as heir apparent?",
+          "options": {
+            "A": "Duke of Edinburgh",
+            "B": "Earl of Wessex",
+            "C": "Prince of Wales",
+            "D": "Duke of York"
+          },
+          "correct": "C",
+          "explanation": "The title has been given to the heir apparent since Edward I invested his son in 1301.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which royal house ruled Britain from 1714 to 1901?",
+          "options": {
+            "A": "The House of Hanover",
+            "B": "The House of Saxe-Coburg",
+            "C": "The House of Stuart",
+            "D": "The House of Windsor"
+          },
+          "correct": "A",
+          "explanation": "The Hanoverians began with George I and ended with Victoria.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In which year did the Royal Family adopt the surname Windsor?",
+          "options": {
+            "A": "1947",
+            "B": "1901",
+            "C": "1936",
+            "D": "1917"
+          },
+          "correct": "D",
+          "explanation": "George V changed the family name from Saxe-Coburg and Gotha during the First World War.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the official residence of the UK Prime Minister?",
+          "options": {
+            "A": "Chequers",
+            "B": "Admiralty House",
+            "C": "10 Downing Street",
+            "D": "11 Downing Street"
+          },
+          "correct": "C",
+          "explanation": "Number 10 has been the Prime Minister's London home since Robert Walpole accepted it in 1735.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who was Britain's first female Prime Minister?",
+          "options": {
+            "A": "Barbara Castle",
+            "B": "Margaret Thatcher",
+            "C": "Liz Truss",
+            "D": "Theresa May"
+          },
+          "correct": "B",
+          "explanation": "Margaret Thatcher led the country from 1979 to 1990, the longest-serving PM of the 20th century.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Prime Minister led Britain through most of the Second World War?",
+          "options": {
+            "A": "Neville Chamberlain",
+            "B": "Clement Attlee",
+            "C": "Anthony Eden",
+            "D": "Winston Churchill"
+          },
+          "correct": "D",
+          "explanation": "Churchill became Prime Minister in May 1940 and led the wartime coalition until 1945.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What are the two Houses of the UK Parliament?",
+          "options": {
+            "A": "The Commons and the Convocation",
+            "B": "The Commons and the Lords",
+            "C": "The Commons and the Senate",
+            "D": "The Lords and the Assembly"
+          },
+          "correct": "B",
+          "explanation": "The House of Commons is elected; the House of Lords is appointed and hereditary.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "How many members sit in the House of Commons?",
+          "options": {
+            "A": "600",
+            "B": "550",
+            "C": "700",
+            "D": "650"
+          },
+          "correct": "D",
+          "explanation": "Each of the 650 Members of Parliament represents one constituency.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name of the bell in the Elizabeth Tower at Parliament?",
+          "options": {
+            "A": "Great Tom",
+            "B": "Big Ben",
+            "C": "Great Paul",
+            "D": "The Westminster Bell"
+          },
+          "correct": "B",
+          "explanation": "Big Ben is the nickname of the Great Bell; the tower was renamed the Elizabeth Tower in 2012.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which ceremony formally opens each parliamentary session?",
+          "options": {
+            "A": "The State Opening of Parliament",
+            "B": "The Lord Mayor's Show",
+            "C": "The Trooping of the Mace",
+            "D": "The Speaker's Procession"
+          },
+          "correct": "A",
+          "explanation": "The monarch delivers the King's or Queen's Speech setting out the government's programme.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the title of the MP who chairs debates in the House of Commons?",
+          "options": {
+            "A": "The Chancellor",
+            "B": "The Chief Whip",
+            "C": "The Leader of the House",
+            "D": "The Speaker"
+          },
+          "correct": "D",
+          "explanation": "The Speaker keeps order and is expected to set aside party allegiance.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which minister is responsible for the UK's finances and delivers the Budget?",
+          "options": {
+            "A": "The Chancellor of the Exchequer",
+            "B": "The Home Secretary",
+            "C": "The Chief Secretary",
+            "D": "The Foreign Secretary"
+          },
+          "correct": "A",
+          "explanation": "The Chancellor traditionally carries the Budget in a red briefcase known as the Budget box.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In which year did the UK formally leave the European Union?",
+          "options": {
+            "A": "2019",
+            "B": "2016",
+            "C": "2020",
+            "D": "2021"
+          },
+          "correct": "C",
+          "explanation": "The referendum was in June 2016 and the UK left on 31 January 2020, with a transition period to year end.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Where does the Scottish Parliament sit?",
+          "options": {
+            "A": "Glasgow City Chambers",
+            "B": "Stirling",
+            "C": "Perth",
+            "D": "Holyrood, Edinburgh"
+          },
+          "correct": "D",
+          "explanation": "The Scottish Parliament building at Holyrood opened in 2004 and was designed by Enric Miralles.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the Welsh Parliament called in Welsh?",
+          "options": {
+            "A": "Senedd Cymru",
+            "B": "Dail Cymru",
+            "C": "Ty Cymru",
+            "D": "Cynulliad Mawr"
+          },
+          "correct": "A",
+          "explanation": "The Senedd sits in Cardiff Bay and took its current name in 2020.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which city is home to the Northern Ireland Assembly?",
+          "options": {
+            "A": "Londonderry",
+            "B": "Lisburn",
+            "C": "Armagh",
+            "D": "Belfast"
+          },
+          "correct": "D",
+          "explanation": "The Assembly sits at Parliament Buildings, Stormont, in east Belfast.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What colour are the benches in the House of Lords?",
+          "options": {
+            "A": "Red",
+            "B": "Brown",
+            "C": "Green",
+            "D": "Blue"
+          },
+          "correct": "A",
+          "explanation": "The Lords has red benches; the Commons has green ones.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which document, signed in 1707, joined the kingdoms of England and Scotland?",
+          "options": {
+            "A": "The Acts of Union",
+            "B": "The Treaty of Edinburgh",
+            "C": "The Act of Settlement",
+            "D": "The Declaration of Arbroath"
+          },
+          "correct": "A",
+          "explanation": "The Acts of Union created the Kingdom of Great Britain with a single parliament at Westminster.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the maximum length of a UK Parliament before a general election must be held?",
+          "options": {
+            "A": "Four years",
+            "B": "Six years",
+            "C": "Seven years",
+            "D": "Five years"
+          },
+          "correct": "D",
+          "explanation": "Parliament must be dissolved within five years of first meeting.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who was Prime Minister when the NHS was founded in 1948?",
+          "options": {
+            "A": "Harold Wilson",
+            "B": "Winston Churchill",
+            "C": "Ramsay MacDonald",
+            "D": "Clement Attlee"
+          },
+          "correct": "D",
+          "explanation": "Attlee's Labour government created the NHS, with Aneurin Bevan as Health Minister.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Prime Minister resigned after the shortest term in British history?",
+          "options": {
+            "A": "Alec Douglas-Home",
+            "B": "Liz Truss",
+            "C": "Anthony Eden",
+            "D": "George Canning"
+          },
+          "correct": "B",
+          "explanation": "Liz Truss served 49 days in 2022, the shortest tenure of any UK Prime Minister.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name of the Prime Minister's official country residence?",
+          "options": {
+            "A": "Chevening",
+            "B": "Dorneywood",
+            "C": "Chequers",
+            "D": "Highgrove"
+          },
+          "correct": "C",
+          "explanation": "Chequers in Buckinghamshire was given to the nation for the PM's use in 1917.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which royal ceremony sees a crown-wearing figure's representative check the cellars of Parliament?",
+          "options": {
+            "A": "Trooping the Colour",
+            "B": "The search before the State Opening",
+            "C": "The Ceremony of the Keys",
+            "D": "The Changing of the Guard"
+          },
+          "correct": "B",
+          "explanation": "Yeomen of the Guard search the cellars, a tradition dating from the Gunpowder Plot of 1605.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who led the Gunpowder Plot's attempt to blow up Parliament in 1605?",
+          "options": {
+            "A": "Robert Catesby",
+            "B": "Thomas Percy",
+            "C": "Guy Fawkes",
+            "D": "Francis Tresham"
+          },
+          "correct": "A",
+          "explanation": "Catesby led the conspiracy; Guy Fawkes was caught guarding the barrels and became the best-remembered plotter.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the official name of the UK's national flag?",
+          "options": {
+            "A": "The Royal Standard",
+            "B": "The St George Cross",
+            "C": "The Britannia Banner",
+            "D": "The Union Flag"
+          },
+          "correct": "D",
+          "explanation": "Often called the Union Jack, strictly a term for when it is flown at sea.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the longest river in the United Kingdom?",
+          "options": {
+            "A": "The River Thames",
+            "B": "The River Trent",
+            "C": "The River Severn",
+            "D": "The River Tay"
+          },
+          "correct": "C",
+          "explanation": "The Severn runs about 220 miles from mid-Wales to the Bristol Channel.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the highest mountain in the British Isles?",
+          "options": {
+            "A": "Slieve Donard",
+            "B": "Scafell Pike",
+            "C": "Ben Nevis",
+            "D": "Snowdon"
+          },
+          "correct": "C",
+          "explanation": "Ben Nevis in the Scottish Highlands rises to 1,345 metres.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the highest mountain in Wales?",
+          "options": {
+            "A": "Pen y Fan",
+            "B": "Cadair Idris",
+            "C": "Tryfan",
+            "D": "Snowdon"
+          },
+          "correct": "D",
+          "explanation": "Snowdon, or Yr Wyddfa, reaches 1,085 metres in Snowdonia.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the highest mountain in England?",
+          "options": {
+            "A": "Cross Fell",
+            "B": "Skiddaw",
+            "C": "Helvellyn",
+            "D": "Scafell Pike"
+          },
+          "correct": "D",
+          "explanation": "Scafell Pike in the Lake District stands 978 metres high.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which is the largest lake by surface area in Great Britain?",
+          "options": {
+            "A": "Windermere",
+            "B": "Lough Neagh",
+            "C": "Loch Lomond",
+            "D": "Loch Ness"
+          },
+          "correct": "C",
+          "explanation": "Loch Lomond has the largest surface area in Great Britain; Lough Neagh in Northern Ireland is larger still in the UK.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which English county is known as the Garden of England?",
+          "options": {
+            "A": "Surrey",
+            "B": "Devon",
+            "C": "Kent",
+            "D": "Sussex"
+          },
+          "correct": "C",
+          "explanation": "Kent earned the name for its orchards, hop gardens and fruit farms.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the capital of Northern Ireland?",
+          "options": {
+            "A": "Armagh",
+            "B": "Belfast",
+            "C": "Londonderry",
+            "D": "Bangor"
+          },
+          "correct": "B",
+          "explanation": "Belfast sits at the mouth of the River Lagan and is Northern Ireland's largest city.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which city is known as the Granite City?",
+          "options": {
+            "A": "Dundee",
+            "B": "Inverness",
+            "C": "Aberdeen",
+            "D": "Edinburgh"
+          },
+          "correct": "C",
+          "explanation": "Aberdeen's buildings were largely constructed from locally quarried grey granite.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which strait separates Great Britain from the island of Ireland at its narrowest?",
+          "options": {
+            "A": "The Irish Sea",
+            "B": "St George's Channel",
+            "C": "The Minch",
+            "D": "The North Channel"
+          },
+          "correct": "D",
+          "explanation": "The North Channel between Scotland and Northern Ireland narrows to about 12 miles.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which English city has the postcode area 'B'?",
+          "options": {
+            "A": "Bristol",
+            "B": "Birmingham",
+            "C": "Bolton",
+            "D": "Bradford"
+          },
+          "correct": "B",
+          "explanation": "Birmingham, the UK's second-largest city, uses the B postcode area.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the southernmost point of mainland Great Britain?",
+          "options": {
+            "A": "Portland Bill",
+            "B": "Lizard Point",
+            "C": "Land's End",
+            "D": "Start Point"
+          },
+          "correct": "B",
+          "explanation": "Lizard Point in Cornwall is the mainland's most southerly spot; Land's End is the most westerly.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which range of hills is known as the backbone of England?",
+          "options": {
+            "A": "The Cheviots",
+            "B": "The Chilterns",
+            "C": "The Cotswolds",
+            "D": "The Pennines"
+          },
+          "correct": "D",
+          "explanation": "The Pennines run roughly from the Peak District to the Scottish border.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which UK national park is the largest?",
+          "options": {
+            "A": "The Yorkshire Dales",
+            "B": "The Lake District",
+            "C": "Snowdonia",
+            "D": "The Cairngorms"
+          },
+          "correct": "D",
+          "explanation": "The Cairngorms National Park in Scotland covers around 4,500 square kilometres.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which island group lies furthest north in the UK?",
+          "options": {
+            "A": "The Hebrides",
+            "B": "Shetland",
+            "C": "Orkney",
+            "D": "The Isles of Scilly"
+          },
+          "correct": "B",
+          "explanation": "Shetland lies roughly 110 miles north of the Scottish mainland.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the only English city with a cathedral but no city walls that is also an island?",
+          "options": {
+            "A": "Plymouth",
+            "B": "Southampton",
+            "C": "Hull",
+            "D": "Portsmouth"
+          },
+          "correct": "D",
+          "explanation": "Portsmouth sits largely on Portsea Island, making it unusual among English cities.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Welsh town has the longest place name in Britain?",
+          "options": {
+            "A": "Betws-y-Coed",
+            "B": "Llanfairpwllgwyngyll",
+            "C": "Aberystwyth",
+            "D": "Machynlleth"
+          },
+          "correct": "B",
+          "explanation": "The full 58-letter name on Anglesey was coined in the 19th century to attract visitors.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "The Giant's Causeway is in which part of the UK?",
+          "options": {
+            "A": "Scotland",
+            "B": "Cornwall",
+            "C": "Northern Ireland",
+            "D": "Wales"
+          },
+          "correct": "C",
+          "explanation": "The basalt columns on the County Antrim coast formed from cooling lava around 60 million years ago.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which is the largest county in England by area?",
+          "options": {
+            "A": "North Yorkshire",
+            "B": "Cumbria",
+            "C": "Devon",
+            "D": "Lincolnshire"
+          },
+          "correct": "A",
+          "explanation": "North Yorkshire is the largest ceremonial county in England.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which river flows through the city of York?",
+          "options": {
+            "A": "The Wharfe",
+            "B": "The Aire",
+            "C": "The Ouse",
+            "D": "The Tees"
+          },
+          "correct": "C",
+          "explanation": "The River Ouse runs through the heart of York and has often flooded the city.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Scottish loch is famous for its supposed monster?",
+          "options": {
+            "A": "Loch Lomond",
+            "B": "Loch Ness",
+            "C": "Loch Morar",
+            "D": "Loch Awe"
+          },
+          "correct": "B",
+          "explanation": "Loch Ness holds more fresh water than all the lakes of England and Wales combined.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the largest island in the Inner Hebrides?",
+          "options": {
+            "A": "Mull",
+            "B": "Jura",
+            "C": "Islay",
+            "D": "Skye"
+          },
+          "correct": "D",
+          "explanation": "Skye is linked to the mainland by the Skye Bridge, opened in 1995.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which English seaside town has the UK's oldest surviving pleasure pier?",
+          "options": {
+            "A": "Southend-on-Sea",
+            "B": "Blackpool",
+            "C": "Weston-super-Mare",
+            "D": "Brighton"
+          },
+          "correct": "A",
+          "explanation": "Southend Pier is also the longest pleasure pier in the world at 1.33 miles.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "The Cotswolds are famous for buildings made from which material?",
+          "options": {
+            "A": "Red brick",
+            "B": "Flint",
+            "C": "Granite",
+            "D": "Honey-coloured limestone"
+          },
+          "correct": "D",
+          "explanation": "Cotswold stone gives the villages their distinctive golden appearance.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which city is the most northerly in England?",
+          "options": {
+            "A": "Berwick",
+            "B": "Durham",
+            "C": "Carlisle",
+            "D": "Newcastle upon Tyne"
+          },
+          "correct": "C",
+          "explanation": "Carlisle in Cumbria is England's most northerly city; Berwick-upon-Tweed is a town, not a city.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "How many counties are there in Northern Ireland?",
+          "options": {
+            "A": "Nine",
+            "B": "Eight",
+            "C": "Four",
+            "D": "Six"
+          },
+          "correct": "D",
+          "explanation": "Antrim, Armagh, Down, Fermanagh, Londonderry and Tyrone.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which London landmark is a 135-metre observation wheel on the South Bank?",
+          "options": {
+            "A": "The Shard",
+            "B": "The Monument",
+            "C": "The London Eye",
+            "D": "The Orbit"
+          },
+          "correct": "C",
+          "explanation": "Opened for the millennium, it was the world's tallest observation wheel at the time.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name of the tallest building in the UK?",
+          "options": {
+            "A": "22 Bishopsgate",
+            "B": "The Gherkin",
+            "C": "One Canada Square",
+            "D": "The Shard"
+          },
+          "correct": "D",
+          "explanation": "The Shard at London Bridge stands 310 metres tall and opened in 2012.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which London bridge has two towers and a lifting roadway?",
+          "options": {
+            "A": "Tower Bridge",
+            "B": "London Bridge",
+            "C": "Blackfriars Bridge",
+            "D": "Westminster Bridge"
+          },
+          "correct": "A",
+          "explanation": "Tower Bridge opened in 1894; its bascules still lift for tall vessels around 800 times a year.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which royal park is the largest in central London?",
+          "options": {
+            "A": "St James's Park",
+            "B": "Green Park",
+            "C": "Regent's Park",
+            "D": "Hyde Park"
+          },
+          "correct": "D",
+          "explanation": "Hyde Park covers around 350 acres and contains the Serpentine lake.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the oldest section of the London Underground, opened in 1863?",
+          "options": {
+            "A": "The Circle line",
+            "B": "The Northern line",
+            "C": "The Metropolitan line",
+            "D": "The District line"
+          },
+          "correct": "C",
+          "explanation": "The Metropolitan Railway between Paddington and Farringdon was the world's first underground railway.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which London street is traditionally home to tailoring?",
+          "options": {
+            "A": "Jermyn Street",
+            "B": "Bond Street",
+            "C": "Carnaby Street",
+            "D": "Savile Row"
+          },
+          "correct": "D",
+          "explanation": "Savile Row in Mayfair has been the centre of bespoke tailoring since the 19th century.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name of the famous clock tower at the Palace of Westminster?",
+          "options": {
+            "A": "The Victoria Tower",
+            "B": "The Jubilee Tower",
+            "C": "The Albert Tower",
+            "D": "The Elizabeth Tower"
+          },
+          "correct": "D",
+          "explanation": "Renamed in 2012 for Elizabeth II's Diamond Jubilee; it houses the bell known as Big Ben.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which cathedral, designed by Christopher Wren, dominates the City of London skyline?",
+          "options": {
+            "A": "Westminster Abbey",
+            "B": "Westminster Cathedral",
+            "C": "St Paul's Cathedral",
+            "D": "Southwark Cathedral"
+          },
+          "correct": "C",
+          "explanation": "Wren rebuilt St Paul's after the Great Fire of 1666; its dome was completed in 1710.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In which year was the Great Fire of London?",
+          "options": {
+            "A": "1600",
+            "B": "1665",
+            "C": "1688",
+            "D": "1666"
+          },
+          "correct": "D",
+          "explanation": "The fire began in a bakery on Pudding Lane and burned for four days.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which market in London is famous for antiques and sits in Notting Hill?",
+          "options": {
+            "A": "Borough Market",
+            "B": "Camden Market",
+            "C": "Portobello Road Market",
+            "D": "Spitalfields Market"
+          },
+          "correct": "C",
+          "explanation": "Portobello Road hosts the world's largest antiques market on Saturdays.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name of the official residence of the Lord Mayor of London?",
+          "options": {
+            "A": "City Hall",
+            "B": "The Mansion",
+            "C": "Guildhall",
+            "D": "Mansion House"
+          },
+          "correct": "D",
+          "explanation": "Mansion House has been the Lord Mayor's official home since the 1750s.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which London railway station is the terminus for Eurostar services?",
+          "options": {
+            "A": "St Pancras International",
+            "B": "King's Cross",
+            "C": "Victoria",
+            "D": "Waterloo"
+          },
+          "correct": "A",
+          "explanation": "Eurostar moved from Waterloo to St Pancras in 2007.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "The Tower of London is guarded by soldiers known by what nickname?",
+          "options": {
+            "A": "Grenadiers",
+            "B": "Life Guards",
+            "C": "Redcoats",
+            "D": "Beefeaters"
+          },
+          "correct": "D",
+          "explanation": "Officially Yeomen Warders, they have guarded the Tower since Tudor times.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which birds are famously kept at the Tower of London?",
+          "options": {
+            "A": "Peacocks",
+            "B": "Falcons",
+            "C": "Ravens",
+            "D": "Crows"
+          },
+          "correct": "C",
+          "explanation": "Legend says the kingdom will fall if the ravens leave the Tower.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which square in London contains Nelson's Column?",
+          "options": {
+            "A": "Parliament Square",
+            "B": "Trafalgar Square",
+            "C": "Russell Square",
+            "D": "Leicester Square"
+          },
+          "correct": "B",
+          "explanation": "The column commemorates Admiral Nelson's victory at Trafalgar in 1805.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name of London's financial district often called the Square Mile?",
+          "options": {
+            "A": "Westminster",
+            "B": "Canary Wharf",
+            "C": "Southwark",
+            "D": "The City of London"
+          },
+          "correct": "D",
+          "explanation": "The City of London covers roughly one square mile and has its own Lord Mayor and police force.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which London museum houses the Rosetta Stone?",
+          "options": {
+            "A": "The British Museum",
+            "B": "The V&A",
+            "C": "The Natural History Museum",
+            "D": "The Science Museum"
+          },
+          "correct": "A",
+          "explanation": "The Rosetta Stone has been in the British Museum since 1802 and unlocked Egyptian hieroglyphs.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which London theatre district is known as Theatreland?",
+          "options": {
+            "A": "Southbank",
+            "B": "Shoreditch",
+            "C": "The West End",
+            "D": "The East End"
+          },
+          "correct": "C",
+          "explanation": "The West End contains around 40 major theatres around Shaftesbury Avenue and the Strand.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which long-running BBC soap opera is set in Albert Square?",
+          "options": {
+            "A": "Hollyoaks",
+            "B": "Emmerdale",
+            "C": "EastEnders",
+            "D": "Coronation Street"
+          },
+          "correct": "C",
+          "explanation": "EastEnders first aired in February 1985 and is set in the fictional borough of Walford.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which is the longest-running television soap opera in the world?",
+          "options": {
+            "A": "Emmerdale",
+            "B": "EastEnders",
+            "C": "Coronation Street",
+            "D": "Neighbours"
+          },
+          "correct": "C",
+          "explanation": "Coronation Street began on ITV in December 1960 and is set in Weatherfield.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which BBC motoring show was presented by Clarkson, Hammond and May?",
+          "options": {
+            "A": "Top Gear",
+            "B": "Car SOS",
+            "C": "Fifth Gear",
+            "D": "Wheeler Dealers"
+          },
+          "correct": "A",
+          "explanation": "The trio presented Top Gear from 2003 until 2015, when they moved to a rival streaming show.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name of the time-travelling BBC science fiction series begun in 1963?",
+          "options": {
+            "A": "Blake's 7",
+            "B": "Doctor Who",
+            "C": "Quantum Leap",
+            "D": "Red Dwarf"
+          },
+          "correct": "B",
+          "explanation": "Doctor Who first aired the day after the Kennedy assassination and features a time machine called the TARDIS.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which British sitcom featured the Trotter family and a three-wheeled van?",
+          "options": {
+            "A": "Only Fools and Horses",
+            "B": "Porridge",
+            "C": "Open All Hours",
+            "D": "Steptoe and Son"
+          },
+          "correct": "A",
+          "explanation": "Del Boy and Rodney traded from Nelson Mandela House in Peckham in their Reliant Regal.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In 'Fawlty Towers', what nationality is the waiter Manuel?",
+          "options": {
+            "A": "Portuguese",
+            "B": "Spanish",
+            "C": "Italian",
+            "D": "Greek"
+          },
+          "correct": "B",
+          "explanation": "Manuel is from Barcelona, as Basil Fawlty repeatedly explains to guests.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which quiz show features a black leather chair and the phrase 'Starter for ten'?",
+          "options": {
+            "A": "Mastermind",
+            "B": "Only Connect",
+            "C": "University Challenge",
+            "D": "The Chase"
+          },
+          "correct": "C",
+          "explanation": "Mastermind has the black chair; University Challenge uses 'Starter for ten'. The chair belongs to Mastermind.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which BBC baking competition moved to Channel 4 in 2017?",
+          "options": {
+            "A": "Saturday Kitchen",
+            "B": "Great British Menu",
+            "C": "MasterChef",
+            "D": "The Great British Bake Off"
+          },
+          "correct": "D",
+          "explanation": "Bake Off moved networks after Love Productions and the BBC failed to agree terms.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which British sitcom was set in a Slough paper merchants?",
+          "options": {
+            "A": "The IT Crowd",
+            "B": "W1A",
+            "C": "The Office",
+            "D": "Peep Show"
+          },
+          "correct": "C",
+          "explanation": "Ricky Gervais and Stephen Merchant's mockumentary followed Wernham Hogg in Slough.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name of the BBC's long-running radio soap set in Ambridge?",
+          "options": {
+            "A": "The Grove Family",
+            "B": "Mrs Dale's Diary",
+            "C": "Brookside",
+            "D": "The Archers"
+          },
+          "correct": "D",
+          "explanation": "The Archers began in 1951 and is the world's longest-running radio drama.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which BBC programme has broadcast the shipping forecast for decades?",
+          "options": {
+            "A": "Radio 2",
+            "B": "The World Service",
+            "C": "Radio 5 Live",
+            "D": "Radio 4"
+          },
+          "correct": "D",
+          "explanation": "The shipping forecast is read on BBC Radio 4 and has become a national institution.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In 'Blackadder', which actor played Edmund Blackadder?",
+          "options": {
+            "A": "Hugh Laurie",
+            "B": "Tony Robinson",
+            "C": "Stephen Fry",
+            "D": "Rowan Atkinson"
+          },
+          "correct": "D",
+          "explanation": "Rowan Atkinson played Blackadder across four series spanning five centuries.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which detective series is set in Oxford and features a classic Jaguar?",
+          "options": {
+            "A": "Vera",
+            "B": "Midsomer Murders",
+            "C": "Inspector Morse",
+            "D": "A Touch of Frost"
+          },
+          "correct": "C",
+          "explanation": "John Thaw played Morse, who drove a maroon Jaguar Mark 2.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which children's BBC programme is the longest-running of its kind in the world?",
+          "options": {
+            "A": "Grange Hill",
+            "B": "Newsround",
+            "C": "Play School",
+            "D": "Blue Peter"
+          },
+          "correct": "D",
+          "explanation": "Blue Peter has aired since 1958 and awards its famous badges to young viewers.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which period drama about a Yorkshire estate was created by Julian Fellowes?",
+          "options": {
+            "A": "Brideshead Revisited",
+            "B": "Poldark",
+            "C": "Upstairs Downstairs",
+            "D": "Downton Abbey"
+          },
+          "correct": "D",
+          "explanation": "Downton Abbey ran from 2010 to 2015 and was filmed largely at Highclere Castle.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name of the BBC crime drama set in Birmingham in the 1920s?",
+          "options": {
+            "A": "Peaky Blinders",
+            "B": "Ripper Street",
+            "C": "Taboo",
+            "D": "Boardwalk Empire"
+          },
+          "correct": "A",
+          "explanation": "Peaky Blinders follows the Shelby family and takes its name from a real Birmingham gang.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which panel show has been hosted by Sandi Toksvig and Stephen Fry?",
+          "options": {
+            "A": "Have I Got News for You",
+            "B": "8 Out of 10 Cats",
+            "C": "Mock the Week",
+            "D": "QI"
+          },
+          "correct": "D",
+          "explanation": "Stephen Fry hosted QI from 2003, with Sandi Toksvig taking over in 2016.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Welsh town provided the setting for the sitcom 'Gavin & Stacey'?",
+          "options": {
+            "A": "Swansea",
+            "B": "Porthcawl",
+            "C": "Barry",
+            "D": "Newport"
+          },
+          "correct": "C",
+          "explanation": "The Welsh half of the show is set in Barry Island, the English half in Billericay, Essex.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which BBC drama follows an anti-corruption police unit known as AC-12?",
+          "options": {
+            "A": "Broadchurch",
+            "B": "Happy Valley",
+            "C": "Line of Duty",
+            "D": "Bodyguard"
+          },
+          "correct": "C",
+          "explanation": "Jed Mercurio's series made 'bent coppers' and the phrase 'mother of God' into catchphrases.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What was the first programme broadcast on British colour television in 1967?",
+          "options": {
+            "A": "Wimbledon tennis",
+            "B": "Match of the Day",
+            "C": "Doctor Who",
+            "D": "The Queen's Speech"
+          },
+          "correct": "A",
+          "explanation": "BBC Two launched colour broadcasts with coverage of Wimbledon on 1 July 1967.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which sitcom was set in a Peckham corner shop and starred Ronnie Barker?",
+          "options": {
+            "A": "Are You Being Served?",
+            "B": "Open All Hours",
+            "C": "Porridge",
+            "D": "Only Fools and Horses"
+          },
+          "correct": "B",
+          "explanation": "Open All Hours was actually set in Doncaster; Barker played the stuttering shopkeeper Arkwright.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which long-running ITV talent show was created by Simon Cowell in 2004?",
+          "options": {
+            "A": "The Voice UK",
+            "B": "Pop Idol",
+            "C": "The X Factor",
+            "D": "Britain's Got Talent"
+          },
+          "correct": "C",
+          "explanation": "The X Factor replaced Pop Idol and ran on ITV until 2018.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Liverpool band released 'Hey Jude' in 1968?",
+          "options": {
+            "A": "The Beatles",
+            "B": "The Kinks",
+            "C": "The Rolling Stones",
+            "D": "The Hollies"
+          },
+          "correct": "A",
+          "explanation": "'Hey Jude' was the Beatles' longest single at over seven minutes and topped charts worldwide.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who was the lead singer of Queen?",
+          "options": {
+            "A": "Roger Taylor",
+            "B": "Robert Plant",
+            "C": "Brian May",
+            "D": "Freddie Mercury"
+          },
+          "correct": "D",
+          "explanation": "Born Farrokh Bulsara, Mercury fronted Queen from 1970 until his death in 1991.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Manchester band were led by the Gallagher brothers?",
+          "options": {
+            "A": "The Smiths",
+            "B": "Blur",
+            "C": "The Stone Roses",
+            "D": "Oasis"
+          },
+          "correct": "D",
+          "explanation": "Noel and Liam Gallagher led Oasis to huge success with 'Definitely Maybe' and '(What's the Story) Morning Glory?'.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which 1960s Birmingham band is widely credited with inventing heavy metal?",
+          "options": {
+            "A": "Judas Priest",
+            "B": "Led Zeppelin",
+            "C": "Black Sabbath",
+            "D": "Deep Purple"
+          },
+          "correct": "C",
+          "explanation": "Black Sabbath's 1970 debut is often cited as the first true heavy metal album.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who released the album 'Back to Black' in 2006?",
+          "options": {
+            "A": "Duffy",
+            "B": "Lily Allen",
+            "C": "Adele",
+            "D": "Amy Winehouse"
+          },
+          "correct": "D",
+          "explanation": "'Back to Black' won five Grammy Awards and became one of the UK's best-selling albums.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Welsh singer is known as 'The Voice' and sang 'Delilah'?",
+          "options": {
+            "A": "Harry Secombe",
+            "B": "Aled Jones",
+            "C": "Tom Jones",
+            "D": "Shirley Bassey"
+          },
+          "correct": "C",
+          "explanation": "Sir Tom Jones, born in Pontypridd, has had hits across seven decades.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which band's album 'The Dark Side of the Moon' spent over 900 weeks on the US chart?",
+          "options": {
+            "A": "Yes",
+            "B": "King Crimson",
+            "C": "Genesis",
+            "D": "Pink Floyd"
+          },
+          "correct": "D",
+          "explanation": "Released in 1973, it remains one of the best-selling albums of all time.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who wrote and performed 'Your Song' in 1970?",
+          "options": {
+            "A": "Rod Stewart",
+            "B": "David Bowie",
+            "C": "Elton John",
+            "D": "Cat Stevens"
+          },
+          "correct": "C",
+          "explanation": "Elton John composed the music to Bernie Taupin's lyrics; it was his first major hit.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which David Bowie alter ego appeared on a 1972 album?",
+          "options": {
+            "A": "Aladdin Sane",
+            "B": "Ziggy Stardust",
+            "C": "Major Tom",
+            "D": "The Thin White Duke"
+          },
+          "correct": "B",
+          "explanation": "'The Rise and Fall of Ziggy Stardust and the Spiders from Mars' made Bowie a global star.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Sheffield band had a 2006 debut album that broke UK sales records?",
+          "options": {
+            "A": "Pulp",
+            "B": "Def Leppard",
+            "C": "The Human League",
+            "D": "Arctic Monkeys"
+          },
+          "correct": "D",
+          "explanation": "'Whatever People Say I Am, That's What I'm Not' was the fastest-selling debut album in UK history at the time.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which British festival is held at Worthy Farm in Somerset?",
+          "options": {
+            "A": "Isle of Wight",
+            "B": "Glastonbury",
+            "C": "Leeds",
+            "D": "Reading"
+          },
+          "correct": "B",
+          "explanation": "Michael Eavis has hosted the festival on his dairy farm at Pilton since 1970.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which singer released the record-breaking album '21' in 2011?",
+          "options": {
+            "A": "Jessie J",
+            "B": "Adele",
+            "C": "Amy Winehouse",
+            "D": "Florence Welch"
+          },
+          "correct": "B",
+          "explanation": "'21' sold over 30 million copies and won six Grammy Awards.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which band recorded 'A Design for Life' and 'If You Tolerate This'?",
+          "options": {
+            "A": "Manic Street Preachers",
+            "B": "Stereophonics",
+            "C": "Catatonia",
+            "D": "Super Furry Animals"
+          },
+          "correct": "A",
+          "explanation": "The Welsh band have been one of Britain's most enduring rock acts since the early 1990s.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which 1985 charity concert was held at Wembley Stadium and Philadelphia?",
+          "options": {
+            "A": "Live Aid",
+            "B": "Live 8",
+            "C": "Band Aid",
+            "D": "The Secret Policeman's Ball"
+          },
+          "correct": "A",
+          "explanation": "Bob Geldof and Midge Ure organised Live Aid to raise money for the Ethiopian famine.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What instrument is Jacqueline du Pre famous for playing?",
+          "options": {
+            "A": "The cello",
+            "B": "The piano",
+            "C": "The harp",
+            "D": "The violin"
+          },
+          "correct": "A",
+          "explanation": "Her 1965 recording of Elgar's Cello Concerto remains a benchmark performance.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which British composer wrote 'The Planets' suite?",
+          "options": {
+            "A": "Ralph Vaughan Williams",
+            "B": "Benjamin Britten",
+            "C": "Edward Elgar",
+            "D": "Gustav Holst"
+          },
+          "correct": "D",
+          "explanation": "Holst composed 'The Planets' between 1914 and 1917; 'Jupiter' supplied the tune for 'I Vow to Thee, My Country'.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Elgar work provides the music for 'Land of Hope and Glory'?",
+          "options": {
+            "A": "The Enigma Variations",
+            "B": "Cockaigne",
+            "C": "The Dream of Gerontius",
+            "D": "Pomp and Circumstance March No. 1"
+          },
+          "correct": "D",
+          "explanation": "The trio section of the first Pomp and Circumstance march became the famous anthem.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Scottish band recorded 'Don't You (Forget About Me)'?",
+          "options": {
+            "A": "Big Country",
+            "B": "Deacon Blue",
+            "C": "Travis",
+            "D": "Simple Minds"
+          },
+          "correct": "D",
+          "explanation": "The 1985 single featured on 'The Breakfast Club' soundtrack and became their biggest hit.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which girl group had hits with 'Wannabe' and 'Spice Up Your Life'?",
+          "options": {
+            "A": "The Spice Girls",
+            "B": "Sugababes",
+            "C": "All Saints",
+            "D": "Girls Aloud"
+          },
+          "correct": "A",
+          "explanation": "The Spice Girls became the biggest-selling female group of all time after 'Wannabe' in 1996.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which annual UK chart event traditionally crowns a Christmas number one?",
+          "options": {
+            "A": "The Brit Awards",
+            "B": "The Ivor Novello Awards",
+            "C": "The UK Singles Chart",
+            "D": "The Mercury Prize"
+          },
+          "correct": "C",
+          "explanation": "The Christmas number one has been a national talking point since the 1950s.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What are the two main ingredients of the dish 'bangers and mash'?",
+          "options": {
+            "A": "Bacon and mushrooms",
+            "B": "Sausages and mashed potato",
+            "C": "Beef and mashed swede",
+            "D": "Black pudding and mash"
+          },
+          "correct": "B",
+          "explanation": "The nickname 'bangers' comes from wartime sausages bursting in the pan.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is traditionally served with roast beef in a British Sunday roast?",
+          "options": {
+            "A": "Scotch pancake",
+            "B": "Soda bread",
+            "C": "Dumplings",
+            "D": "Yorkshire pudding"
+          },
+          "correct": "D",
+          "explanation": "Yorkshire pudding is a baked batter dish, first recorded in print in 1747.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is a 'full English breakfast' usually built around?",
+          "options": {
+            "A": "Porridge and cream",
+            "B": "Pancakes and syrup",
+            "C": "Kippers and toast",
+            "D": "Bacon, eggs and sausage"
+          },
+          "correct": "D",
+          "explanation": "The fry-up typically adds beans, tomato, mushrooms, black pudding and fried bread.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which savoury pastry is associated with Cornwall and has protected status?",
+          "options": {
+            "A": "The Bedfordshire clanger",
+            "B": "The Melton Mowbray pie",
+            "C": "The Forfar bridie",
+            "D": "The Cornish pasty"
+          },
+          "correct": "D",
+          "explanation": "A genuine Cornish pasty must be made in Cornwall and crimped on the side.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is haggis traditionally served with in Scotland?",
+          "options": {
+            "A": "Rice and gravy",
+            "B": "Peas and chips",
+            "C": "Beans and toast",
+            "D": "Neeps and tatties"
+          },
+          "correct": "D",
+          "explanation": "Neeps are swede or turnip and tatties are potatoes; the dish is central to Burns Night.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the main ingredient of black pudding?",
+          "options": {
+            "A": "Liver",
+            "B": "Blood",
+            "C": "Treacle",
+            "D": "Barley"
+          },
+          "correct": "B",
+          "explanation": "Black pudding is a blood sausage, usually pig's blood with oatmeal or barley.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which drink is made from malted barley, hops, water and yeast?",
+          "options": {
+            "A": "Beer",
+            "B": "Perry",
+            "C": "Mead",
+            "D": "Cider"
+          },
+          "correct": "A",
+          "explanation": "Cider is made from apples, perry from pears and mead from honey.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is a 'pint' in UK measure, in millilitres?",
+          "options": {
+            "A": "473 ml",
+            "B": "568 ml",
+            "C": "600 ml",
+            "D": "500 ml"
+          },
+          "correct": "B",
+          "explanation": "An imperial pint is 568 millilitres, larger than the US pint of 473 ml.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is cider traditionally made from?",
+          "options": {
+            "A": "Pears",
+            "B": "Apples",
+            "C": "Grapes",
+            "D": "Plums"
+          },
+          "correct": "B",
+          "explanation": "Pear cider is properly called perry; the West Country is Britain's cider heartland.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which spirit must be matured in oak casks in Scotland for at least three years to be called Scotch?",
+          "options": {
+            "A": "Gin",
+            "B": "Whisky",
+            "C": "Rum",
+            "D": "Brandy"
+          },
+          "correct": "B",
+          "explanation": "Scotch whisky is protected by law and must be matured in Scotland for a minimum of three years.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the dish 'toad in the hole'?",
+          "options": {
+            "A": "Sausages baked in batter",
+            "B": "Stuffed marrow",
+            "C": "Poached eggs on toast",
+            "D": "A pie with a hole in the lid"
+          },
+          "correct": "A",
+          "explanation": "Sausages are baked in Yorkshire pudding batter, usually served with onion gravy.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which cheese takes its name from a Somerset village?",
+          "options": {
+            "A": "Caerphilly",
+            "B": "Cheddar",
+            "C": "Wensleydale",
+            "D": "Stilton"
+          },
+          "correct": "B",
+          "explanation": "Cheddar is named after the Somerset gorge where the cheese was once matured in caves.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which blue cheese is known as the king of English cheeses?",
+          "options": {
+            "A": "Cheshire",
+            "B": "Double Gloucester",
+            "C": "Stilton",
+            "D": "Red Leicester"
+          },
+          "correct": "C",
+          "explanation": "Stilton has protected status and may only be made in Derbyshire, Leicestershire and Nottinghamshire.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is traditionally eaten on Shrove Tuesday in Britain?",
+          "options": {
+            "A": "Hot cross buns",
+            "B": "Simnel cake",
+            "C": "Pancakes",
+            "D": "Mince pies"
+          },
+          "correct": "C",
+          "explanation": "Pancakes used up eggs, milk and fat before the fasting of Lent.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is a 'cream tea' made up of?",
+          "options": {
+            "A": "Scones, jam and clotted cream",
+            "B": "Cake and custard",
+            "C": "Crumpets and butter",
+            "D": "Shortbread and cream"
+          },
+          "correct": "A",
+          "explanation": "Devon puts cream first, Cornwall puts jam first - a debate with no end.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which fortified pudding is traditionally steamed and set alight at Christmas?",
+          "options": {
+            "A": "Christmas pudding",
+            "B": "Eton mess",
+            "C": "Spotted dick",
+            "D": "Bakewell tart"
+          },
+          "correct": "A",
+          "explanation": "Also called plum pudding, it is usually doused in brandy and flamed at the table.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which pudding is made from meringue, cream and strawberries and named after a school?",
+          "options": {
+            "A": "Eton mess",
+            "B": "Bakewell pudding",
+            "C": "Knickerbocker glory",
+            "D": "Banoffee pie"
+          },
+          "correct": "A",
+          "explanation": "Eton mess is traditionally served at the school's annual cricket match against Harrow.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What does 'bitter' describe in a British pub?",
+          "options": {
+            "A": "A stout",
+            "B": "A cider",
+            "C": "A strong lager",
+            "D": "A style of pale ale"
+          },
+          "correct": "D",
+          "explanation": "Bitter is a hop-forward British pale ale, usually served cask-conditioned.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name for a pub with no music, games or food, serving only drinks?",
+          "options": {
+            "A": "A gastropub",
+            "B": "A free house",
+            "C": "A tied house",
+            "D": "A spit-and-sawdust pub"
+          },
+          "correct": "D",
+          "explanation": "A 'free house' is one not tied to a brewery; spit-and-sawdust describes a basic drinking pub.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is a 'tied house' in British pub terms?",
+          "options": {
+            "A": "A members-only pub",
+            "B": "A pub that must buy beer from one brewery",
+            "C": "A pub with rooms",
+            "D": "A pub with no licence"
+          },
+          "correct": "B",
+          "explanation": "Tied houses contrast with free houses, which can buy from any supplier.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which London tennis tournament is the oldest in the world?",
+          "options": {
+            "A": "Wimbledon",
+            "B": "Queen's Club",
+            "C": "The Eastbourne International",
+            "D": "The Surbiton Trophy"
+          },
+          "correct": "A",
+          "explanation": "The Championships have been held at the All England Club since 1877.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What colour must players mostly wear at Wimbledon?",
+          "options": {
+            "A": "Navy",
+            "B": "Cream",
+            "C": "White",
+            "D": "Light grey"
+          },
+          "correct": "C",
+          "explanation": "The all-white rule has governed Wimbledon clothing since the 19th century.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which stadium is the home of the England football team?",
+          "options": {
+            "A": "The Emirates",
+            "B": "Twickenham",
+            "C": "Wembley Stadium",
+            "D": "Old Trafford"
+          },
+          "correct": "C",
+          "explanation": "The rebuilt Wembley opened in 2007 with its 133-metre arch.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which stadium is the home of English rugby union?",
+          "options": {
+            "A": "Twickenham",
+            "B": "The Millennium Stadium",
+            "C": "Murrayfield",
+            "D": "Wembley"
+          },
+          "correct": "A",
+          "explanation": "Twickenham in south-west London has hosted England rugby since 1909.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In which year did England win the FIFA World Cup?",
+          "options": {
+            "A": "1966",
+            "B": "1970",
+            "C": "1962",
+            "D": "1958"
+          },
+          "correct": "A",
+          "explanation": "England beat West Germany 4-2 at Wembley, with a hat-trick from Geoff Hurst.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which annual horse race is run at Aintree?",
+          "options": {
+            "A": "The Derby",
+            "B": "The St Leger",
+            "C": "The Grand National",
+            "D": "The Gold Cup"
+          },
+          "correct": "C",
+          "explanation": "The Grand National is a gruelling steeplechase over 30 fences near Liverpool.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Where is the Epsom Derby run?",
+          "options": {
+            "A": "Epsom Downs, Surrey",
+            "B": "Ascot",
+            "C": "Doncaster",
+            "D": "Newmarket"
+          },
+          "correct": "A",
+          "explanation": "The Derby has been run at Epsom since 1780 and is Britain's premier flat race.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which cricket ground is known as the home of cricket?",
+          "options": {
+            "A": "Lord's",
+            "B": "Edgbaston",
+            "C": "Headingley",
+            "D": "The Oval"
+          },
+          "correct": "A",
+          "explanation": "Lord's in St John's Wood is home to Marylebone Cricket Club and the Ashes urn.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What trophy do England and Australia contest in Test cricket?",
+          "options": {
+            "A": "The Basil D'Oliveira Trophy",
+            "B": "The Ashes",
+            "C": "The Wisden Trophy",
+            "D": "The Border-Gavaskar Trophy"
+          },
+          "correct": "B",
+          "explanation": "The Ashes began in 1882 after a mock obituary for English cricket.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which sport is played in the Six Nations Championship?",
+          "options": {
+            "A": "Rugby union",
+            "B": "Football",
+            "C": "Rugby league",
+            "D": "Cricket"
+          },
+          "correct": "A",
+          "explanation": "England, Scotland, Wales, Ireland, France and Italy contest it each spring.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which golf tournament is the oldest of the four majors?",
+          "options": {
+            "A": "The US Open",
+            "B": "The Open Championship",
+            "C": "The PGA Championship",
+            "D": "The Masters"
+          },
+          "correct": "B",
+          "explanation": "The Open, first played at Prestwick in 1860, is the only major held outside the United States.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Scottish course is known as the home of golf?",
+          "options": {
+            "A": "Carnoustie",
+            "B": "Troon",
+            "C": "St Andrews",
+            "D": "Muirfield"
+          },
+          "correct": "C",
+          "explanation": "The Old Course at St Andrews has been played since the 15th century.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which city hosted the 2012 Summer Olympics?",
+          "options": {
+            "A": "Birmingham",
+            "B": "Glasgow",
+            "C": "Manchester",
+            "D": "London"
+          },
+          "correct": "D",
+          "explanation": "London became the first city to host the modern Olympics three times.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Welsh city hosts the Principality Stadium?",
+          "options": {
+            "A": "Swansea",
+            "B": "Wrexham",
+            "C": "Cardiff",
+            "D": "Newport"
+          },
+          "correct": "C",
+          "explanation": "Formerly the Millennium Stadium, it opened in 1999 and has a retractable roof.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "How many players are on a rugby league team?",
+          "options": {
+            "A": "Eleven",
+            "B": "Fifteen",
+            "C": "Thirteen",
+            "D": "Twelve"
+          },
+          "correct": "C",
+          "explanation": "Rugby league fields 13 players; rugby union fields 15.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which English football club is nicknamed the Red Devils?",
+          "options": {
+            "A": "Manchester United",
+            "B": "Arsenal",
+            "C": "Liverpool",
+            "D": "Nottingham Forest"
+          },
+          "correct": "A",
+          "explanation": "United adopted the nickname in the 1960s under Matt Busby.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which football club plays at Anfield?",
+          "options": {
+            "A": "Liverpool",
+            "B": "Everton",
+            "C": "Newcastle United",
+            "D": "Manchester City"
+          },
+          "correct": "A",
+          "explanation": "Anfield has been Liverpool's home since 1892 and is famous for the Kop.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name of the knockout football competition that is the oldest in the world?",
+          "options": {
+            "A": "The FA Cup",
+            "B": "The Scottish Cup",
+            "C": "The League Cup",
+            "D": "The Community Shield"
+          },
+          "correct": "A",
+          "explanation": "The FA Cup was first contested in the 1871-72 season.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which snooker tournament is held at the Crucible Theatre?",
+          "options": {
+            "A": "The World Championship",
+            "B": "The Masters",
+            "C": "The Welsh Open",
+            "D": "The UK Championship"
+          },
+          "correct": "A",
+          "explanation": "The World Snooker Championship has been at Sheffield's Crucible since 1977.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which British driver won seven Formula One world titles?",
+          "options": {
+            "A": "Nigel Mansell",
+            "B": "Jenson Button",
+            "C": "Lewis Hamilton",
+            "D": "Jackie Stewart"
+          },
+          "correct": "C",
+          "explanation": "Hamilton equalled Michael Schumacher's record of seven championships in 2020.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which race takes place between Oxford and Cambridge on the Thames?",
+          "options": {
+            "A": "The Thames Marathon",
+            "B": "The Boat Race",
+            "C": "The Henley Regatta",
+            "D": "The Head of the River"
+          },
+          "correct": "B",
+          "explanation": "The Boat Race has been rowed on the Championship Course at Putney since 1845.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which sport features the terms 'googly', 'silly point' and 'maiden over'?",
+          "options": {
+            "A": "Bowls",
+            "B": "Croquet",
+            "C": "Cricket",
+            "D": "Rounders"
+          },
+          "correct": "C",
+          "explanation": "A googly is a deceptive leg-spin delivery; a maiden over concedes no runs.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who wrote 'Pride and Prejudice'?",
+          "options": {
+            "A": "Elizabeth Gaskell",
+            "B": "Jane Austen",
+            "C": "George Eliot",
+            "D": "Charlotte Bronte"
+          },
+          "correct": "B",
+          "explanation": "Austen's novel was published in 1813 and opens with one of literature's most quoted lines.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Yorkshire sisters wrote 'Jane Eyre' and 'Wuthering Heights'?",
+          "options": {
+            "A": "The Brontes",
+            "B": "The Sitwells",
+            "C": "The Mitfords",
+            "D": "The Stracheys"
+          },
+          "correct": "A",
+          "explanation": "Charlotte wrote 'Jane Eyre' and Emily 'Wuthering Heights', both published in 1847.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who created the detective Sherlock Holmes?",
+          "options": {
+            "A": "Agatha Christie",
+            "B": "Arthur Conan Doyle",
+            "C": "Wilkie Collins",
+            "D": "G. K. Chesterton"
+          },
+          "correct": "B",
+          "explanation": "Holmes first appeared in 'A Study in Scarlet' in 1887.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Victorian novelist wrote 'Oliver Twist' and 'Great Expectations'?",
+          "options": {
+            "A": "William Thackeray",
+            "B": "Thomas Hardy",
+            "C": "Anthony Trollope",
+            "D": "Charles Dickens"
+          },
+          "correct": "D",
+          "explanation": "Dickens published most of his novels in monthly instalments.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who wrote the 'Harry Potter' series?",
+          "options": {
+            "A": "Philip Pullman",
+            "B": "J. K. Rowling",
+            "C": "Diana Wynne Jones",
+            "D": "Enid Blyton"
+          },
+          "correct": "B",
+          "explanation": "The first book appeared in 1997 and the series has sold over 500 million copies.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Stratford-upon-Avon playwright wrote 'Hamlet'?",
+          "options": {
+            "A": "William Shakespeare",
+            "B": "Ben Jonson",
+            "C": "John Webster",
+            "D": "Christopher Marlowe"
+          },
+          "correct": "A",
+          "explanation": "Shakespeare wrote around 39 plays and 154 sonnets.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "How many lines does a Shakespearean sonnet have?",
+          "options": {
+            "A": "Fourteen",
+            "B": "Ten",
+            "C": "Sixteen",
+            "D": "Twelve"
+          },
+          "correct": "A",
+          "explanation": "Three quatrains and a closing couplet, in iambic pentameter.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which author created the Discworld series?",
+          "options": {
+            "A": "Douglas Adams",
+            "B": "Terry Pratchett",
+            "C": "Neil Gaiman",
+            "D": "Michael Moorcock"
+          },
+          "correct": "B",
+          "explanation": "Pratchett wrote 41 Discworld novels between 1983 and 2015.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who wrote 'The Hobbit' and 'The Lord of the Rings'?",
+          "options": {
+            "A": "T. H. White",
+            "B": "Mervyn Peake",
+            "C": "C. S. Lewis",
+            "D": "J. R. R. Tolkien"
+          },
+          "correct": "D",
+          "explanation": "Tolkien was Professor of Anglo-Saxon at Oxford while writing Middle-earth.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Welsh author wrote 'Charlie and the Chocolate Factory'?",
+          "options": {
+            "A": "Dick King-Smith",
+            "B": "Michael Morpurgo",
+            "C": "Roald Dahl",
+            "D": "Richmal Crompton"
+          },
+          "correct": "C",
+          "explanation": "Dahl was born in Cardiff to Norwegian parents and wrote in a garden hut in Buckinghamshire.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who wrote 'Nineteen Eighty-Four'?",
+          "options": {
+            "A": "H. G. Wells",
+            "B": "Aldous Huxley",
+            "C": "Anthony Burgess",
+            "D": "George Orwell"
+          },
+          "correct": "D",
+          "explanation": "Orwell, real name Eric Blair, published the novel in 1949.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which crime writer created Hercule Poirot and Miss Marple?",
+          "options": {
+            "A": "Ngaio Marsh",
+            "B": "P. D. James",
+            "C": "Dorothy L. Sayers",
+            "D": "Agatha Christie"
+          },
+          "correct": "D",
+          "explanation": "Christie is the best-selling novelist of all time with around two billion copies sold.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which poet wrote 'Daffodils', beginning 'I wandered lonely as a cloud'?",
+          "options": {
+            "A": "William Wordsworth",
+            "B": "Samuel Taylor Coleridge",
+            "C": "Lord Byron",
+            "D": "John Keats"
+          },
+          "correct": "A",
+          "explanation": "Wordsworth lived at Dove Cottage in Grasmere in the Lake District.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Scottish poet wrote 'Auld Lang Syne'?",
+          "options": {
+            "A": "Robert Louis Stevenson",
+            "B": "Robert Burns",
+            "C": "Hugh MacDiarmid",
+            "D": "Walter Scott"
+          },
+          "correct": "B",
+          "explanation": "Burns Night on 25 January celebrates the poet with haggis and recitations.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which novel by Mary Shelley is often called the first science fiction novel?",
+          "options": {
+            "A": "Dracula",
+            "B": "Frankenstein",
+            "C": "The Island of Doctor Moreau",
+            "D": "The Time Machine"
+          },
+          "correct": "B",
+          "explanation": "Shelley began it in 1816 during a wet summer by Lake Geneva, aged just 18.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who wrote 'Brave New World'?",
+          "options": {
+            "A": "George Orwell",
+            "B": "Evelyn Waugh",
+            "C": "Aldous Huxley",
+            "D": "E. M. Forster"
+          },
+          "correct": "C",
+          "explanation": "Published in 1932, it imagines a society built on conditioning and the drug soma.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which annual prize is Britain's best-known award for fiction?",
+          "options": {
+            "A": "The Orange Prize",
+            "B": "The Booker Prize",
+            "C": "The Baillie Gifford Prize",
+            "D": "The Costa Award"
+          },
+          "correct": "B",
+          "explanation": "First awarded in 1969, it now covers fiction in English published in the UK and Ireland.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which poet became famous for war poems including 'Dulce et Decorum Est'?",
+          "options": {
+            "A": "Rupert Brooke",
+            "B": "Wilfred Owen",
+            "C": "Siegfried Sassoon",
+            "D": "Edward Thomas"
+          },
+          "correct": "B",
+          "explanation": "Owen was killed in action one week before the Armistice in 1918.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In British slang, what is a 'quid'?",
+          "options": {
+            "A": "One penny",
+            "B": "One pound",
+            "C": "Fifty pence",
+            "D": "Five pounds"
+          },
+          "correct": "B",
+          "explanation": "A quid is a pound sterling; the term dates from the late 17th century.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What does the British slang 'knackered' mean?",
+          "options": {
+            "A": "Angry",
+            "B": "Confused",
+            "C": "Drunk",
+            "D": "Exhausted"
+          },
+          "correct": "D",
+          "explanation": "Originally from the knacker's yard, where worn-out horses were sent.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "If something is 'chuffed' in Britain, how do you feel?",
+          "options": {
+            "A": "Very pleased",
+            "B": "Annoyed",
+            "C": "Cold",
+            "D": "Nervous"
+          },
+          "correct": "A",
+          "explanation": "Confusingly, 'chuff' once meant displeased in some dialects.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What does 'taking the biscuit' mean?",
+          "options": {
+            "A": "Being the most annoying example",
+            "B": "Stealing something",
+            "C": "Leaving early",
+            "D": "Winning a prize"
+          },
+          "correct": "A",
+          "explanation": "Often used as 'that really takes the biscuit' for something outrageous.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In Cockney rhyming slang, what are your 'plates of meat'?",
+          "options": {
+            "A": "Eyes",
+            "B": "Feet",
+            "C": "Teeth",
+            "D": "Hands"
+          },
+          "correct": "B",
+          "explanation": "Other examples include 'dog and bone' for phone and 'apples and pears' for stairs.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In Cockney rhyming slang, what is a 'dog and bone'?",
+          "options": {
+            "A": "A policeman",
+            "B": "A dinner",
+            "C": "A telephone",
+            "D": "A home"
+          },
+          "correct": "C",
+          "explanation": "Rhyming slang grew in the East End of London in the 19th century.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is a 'cuppa'?",
+          "options": {
+            "A": "A cup of tea",
+            "B": "A cupboard",
+            "C": "A biscuit",
+            "D": "A small beer"
+          },
+          "correct": "A",
+          "explanation": "Britons drink an estimated 100 million cups of tea a day.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What does the Scottish word 'wee' mean?",
+          "options": {
+            "A": "Tired",
+            "B": "Wet",
+            "C": "Small",
+            "D": "Clever"
+          },
+          "correct": "C",
+          "explanation": "Used across Scotland and Northern Ireland for anything little.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What does the Geordie word 'canny' usually mean in the North East?",
+          "options": {
+            "A": "Good or pleasant",
+            "B": "Slow",
+            "C": "Careful",
+            "D": "Expensive"
+          },
+          "correct": "A",
+          "explanation": "In Scotland canny means shrewd; in Tyneside it is a general term of approval.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is a 'barm cake' in parts of northern England?",
+          "options": {
+            "A": "A pancake",
+            "B": "A fruit loaf",
+            "C": "A soft bread roll",
+            "D": "A sponge cake"
+          },
+          "correct": "C",
+          "explanation": "The same roll is a bap, bun, batch, stottie or roll depending on the region.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In Britain, what is the boot of a car?",
+          "options": {
+            "A": "The luggage compartment",
+            "B": "The glovebox",
+            "C": "The bonnet",
+            "D": "The windscreen"
+          },
+          "correct": "A",
+          "explanation": "Americans call it the trunk; the bonnet is the hood.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What do the British call the pavement that Americans call the sidewalk?",
+          "options": {
+            "A": "The verge",
+            "B": "The curb",
+            "C": "The pavement",
+            "D": "The footing"
+          },
+          "correct": "C",
+          "explanation": "In the US, pavement usually means the road surface itself.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What does 'Bob's your uncle' mean?",
+          "options": {
+            "A": "And there you have it",
+            "B": "It is expensive",
+            "C": "You are in trouble",
+            "D": "Ask a relative"
+          },
+          "correct": "A",
+          "explanation": "Used to end an explanation of something simple.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is a 'gaff' in British slang?",
+          "options": {
+            "A": "A home or flat",
+            "B": "A party",
+            "C": "A pub",
+            "D": "A mistake"
+          },
+          "correct": "A",
+          "explanation": "Separately, 'to blow the gaff' means to reveal a secret.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which word describes the Liverpool accent and its speakers?",
+          "options": {
+            "A": "Geordie",
+            "B": "Scouse",
+            "C": "Brummie",
+            "D": "Mackem"
+          },
+          "correct": "B",
+          "explanation": "Brummie is Birmingham, Geordie is Newcastle and Mackem is Sunderland.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What does the Welsh word 'cwtch' mean?",
+          "options": {
+            "A": "A hill",
+            "B": "A cupboard",
+            "C": "A cuddle",
+            "D": "A stream"
+          },
+          "correct": "C",
+          "explanation": "Cwtch can mean both a hug and a small cosy space.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which British scientist proposed the theory of evolution by natural selection?",
+          "options": {
+            "A": "Gregor Mendel",
+            "B": "Alfred Russel Wallace",
+            "C": "Thomas Huxley",
+            "D": "Charles Darwin"
+          },
+          "correct": "D",
+          "explanation": "Darwin published 'On the Origin of Species' in 1859 after his voyage on HMS Beagle.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who formulated the laws of motion and universal gravitation at Cambridge?",
+          "options": {
+            "A": "Edmond Halley",
+            "B": "Robert Hooke",
+            "C": "Michael Faraday",
+            "D": "Isaac Newton"
+          },
+          "correct": "D",
+          "explanation": "Newton's 'Principia' of 1687 is one of the most important works in science.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Scottish inventor is credited with the first working television system?",
+          "options": {
+            "A": "Alexander Graham Bell",
+            "B": "John Logie Baird",
+            "C": "Charles Macintosh",
+            "D": "James Watt"
+          },
+          "correct": "B",
+          "explanation": "Baird demonstrated a working televisor in London in 1926.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who discovered penicillin in 1928?",
+          "options": {
+            "A": "Alexander Fleming",
+            "B": "Edward Jenner",
+            "C": "Joseph Lister",
+            "D": "Howard Florey"
+          },
+          "correct": "A",
+          "explanation": "Fleming noticed mould killing bacteria in a petri dish at St Mary's Hospital, London.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which English doctor pioneered the smallpox vaccine in 1796?",
+          "options": {
+            "A": "Joseph Lister",
+            "B": "Edward Jenner",
+            "C": "Alexander Fleming",
+            "D": "John Snow"
+          },
+          "correct": "B",
+          "explanation": "Jenner used cowpox material, giving us the word vaccine from the Latin for cow.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Scot improved the steam engine and gave his name to a unit of power?",
+          "options": {
+            "A": "Richard Trevithick",
+            "B": "George Stephenson",
+            "C": "James Watt",
+            "D": "Humphry Davy"
+          },
+          "correct": "C",
+          "explanation": "The watt is named in his honour; his separate condenser transformed engine efficiency.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who invented the World Wide Web?",
+          "options": {
+            "A": "Charles Babbage",
+            "B": "Tim Berners-Lee",
+            "C": "Alan Turing",
+            "D": "Clive Sinclair"
+          },
+          "correct": "B",
+          "explanation": "Berners-Lee wrote the first web browser and server at CERN in 1989-90.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which mathematician helped break the Enigma code at Bletchley Park?",
+          "options": {
+            "A": "John von Neumann",
+            "B": "Bertrand Russell",
+            "C": "Alan Turing",
+            "D": "Tommy Flowers"
+          },
+          "correct": "C",
+          "explanation": "Turing's work on the Bombe machine is credited with shortening the Second World War.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which 19th-century Englishman designed a mechanical 'Analytical Engine'?",
+          "options": {
+            "A": "William Thomson",
+            "B": "Charles Babbage",
+            "C": "Alan Turing",
+            "D": "Michael Faraday"
+          },
+          "correct": "B",
+          "explanation": "Babbage is often called the father of the computer; Ada Lovelace wrote notes on programming it.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who is regarded as the first computer programmer, working on Babbage's engine?",
+          "options": {
+            "A": "Dorothy Hodgkin",
+            "B": "Grace Hopper",
+            "C": "Mary Somerville",
+            "D": "Ada Lovelace"
+          },
+          "correct": "D",
+          "explanation": "Lovelace's 1843 notes described an algorithm for computing Bernoulli numbers.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which engineer built the Clifton Suspension Bridge and the SS Great Britain?",
+          "options": {
+            "A": "Joseph Bazalgette",
+            "B": "Robert Stephenson",
+            "C": "Thomas Telford",
+            "D": "Isambard Kingdom Brunel"
+          },
+          "correct": "D",
+          "explanation": "Brunel also built the Great Western Railway and Paddington station.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who designed London's Victorian sewer network after the Great Stink?",
+          "options": {
+            "A": "John Nash",
+            "B": "Joseph Bazalgette",
+            "C": "Isambard Kingdom Brunel",
+            "D": "Christopher Wren"
+          },
+          "correct": "B",
+          "explanation": "Bazalgette's 1860s sewers ended cholera outbreaks and still serve the capital.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which British physicist discovered the electron in 1897?",
+          "options": {
+            "A": "James Chadwick",
+            "B": "Ernest Rutherford",
+            "C": "J. J. Thomson",
+            "D": "Paul Dirac"
+          },
+          "correct": "C",
+          "explanation": "Thomson worked at the Cavendish Laboratory in Cambridge.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who co-discovered the structure of DNA at Cambridge in 1953?",
+          "options": {
+            "A": "Peter Medawar",
+            "B": "Archibald Garrod",
+            "C": "Francis Crick",
+            "D": "Fred Hoyle"
+          },
+          "correct": "C",
+          "explanation": "Crick and James Watson built on X-ray work by Rosalind Franklin and Maurice Wilkins.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which scientist's X-ray images were crucial to solving the structure of DNA?",
+          "options": {
+            "A": "Barbara McClintock",
+            "B": "Dorothy Hodgkin",
+            "C": "Marie Curie",
+            "D": "Rosalind Franklin"
+          },
+          "correct": "D",
+          "explanation": "Franklin's Photo 51 revealed the double helix; she died before the Nobel was awarded.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which British locomotive set the world steam speed record in 1938?",
+          "options": {
+            "A": "Mallard",
+            "B": "Flying Scotsman",
+            "C": "Rocket",
+            "D": "Evening Star"
+          },
+          "correct": "A",
+          "explanation": "Mallard reached 126 mph on Stoke Bank, a record that still stands.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who built the locomotive 'Rocket', winner of the 1829 Rainhill Trials?",
+          "options": {
+            "A": "Richard Trevithick",
+            "B": "Isambard Kingdom Brunel",
+            "C": "Timothy Hackworth",
+            "D": "George and Robert Stephenson"
+          },
+          "correct": "D",
+          "explanation": "Rocket set the template for steam locomotives for the next century.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which British astronomer discovered the planet Uranus in 1781?",
+          "options": {
+            "A": "William Herschel",
+            "B": "Edmond Halley",
+            "C": "James Bradley",
+            "D": "John Flamsteed"
+          },
+          "correct": "A",
+          "explanation": "Herschel spotted it from his garden in Bath and first took it for a comet.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is celebrated in Britain on 5 November?",
+          "options": {
+            "A": "Remembrance Day",
+            "B": "Bonfire Night",
+            "C": "St Crispin's Day",
+            "D": "May Day"
+          },
+          "correct": "B",
+          "explanation": "Bonfire Night marks the failure of the Gunpowder Plot of 1605.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is traditionally worn to mark Remembrance Day?",
+          "options": {
+            "A": "A daffodil",
+            "B": "A poppy",
+            "C": "A thistle",
+            "D": "A rose"
+          },
+          "correct": "B",
+          "explanation": "The red poppy recalls the flowers of the Flanders battlefields.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which day of Christmas is Boxing Day?",
+          "options": {
+            "A": "1 January",
+            "B": "24 December",
+            "C": "27 December",
+            "D": "26 December"
+          },
+          "correct": "D",
+          "explanation": "The name may come from alms boxes opened for the poor the day after Christmas.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the patron saint's day of England?",
+          "options": {
+            "A": "St David's Day",
+            "B": "St Andrew's Day",
+            "C": "St George's Day",
+            "D": "St Patrick's Day"
+          },
+          "correct": "C",
+          "explanation": "St George's Day falls on 23 April, also Shakespeare's traditional birthday.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "On which date is St Andrew's Day, Scotland's national day?",
+          "options": {
+            "A": "17 March",
+            "B": "30 November",
+            "C": "1 March",
+            "D": "23 April"
+          },
+          "correct": "B",
+          "explanation": "St David's Day is 1 March for Wales and St Patrick's 17 March for Ireland.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What flower is the national emblem of Wales alongside the leek?",
+          "options": {
+            "A": "The daffodil",
+            "B": "The shamrock",
+            "C": "The rose",
+            "D": "The thistle"
+          },
+          "correct": "A",
+          "explanation": "England has the rose, Scotland the thistle and Ireland the shamrock.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the Trooping the Colour ceremony held to mark?",
+          "options": {
+            "A": "The opening of Parliament",
+            "B": "Armistice Day",
+            "C": "The Commonwealth Games",
+            "D": "The monarch's official birthday"
+          },
+          "correct": "D",
+          "explanation": "Held each June on Horse Guards Parade, regardless of the monarch's actual birthday.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which annual event sees people chase a wheel of cheese down a hill in Gloucestershire?",
+          "options": {
+            "A": "Bog Snorkelling",
+            "B": "The Haxey Hood",
+            "C": "Cooper's Hill Cheese-Rolling",
+            "D": "The Tetbury Woolsack Races"
+          },
+          "correct": "C",
+          "explanation": "Competitors tumble down a 1-in-2 slope after a 7 lb Double Gloucester.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the traditional British term for a public holiday?",
+          "options": {
+            "A": "A rest day",
+            "B": "A bank holiday",
+            "C": "A fair day",
+            "D": "A feast day"
+          },
+          "correct": "B",
+          "explanation": "The name comes from the Bank Holidays Act 1871, when banks were legally closed.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which sport is played on a village green with a jack and bowls?",
+          "options": {
+            "A": "Petanque",
+            "B": "Croquet",
+            "C": "Shinty",
+            "D": "Lawn bowls"
+          },
+          "correct": "D",
+          "explanation": "Bowls has been played in Britain since at least the 13th century.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is Morris dancing traditionally accompanied by?",
+          "options": {
+            "A": "Fiddles and clogs only",
+            "B": "Drums and masks",
+            "C": "Bells and handkerchiefs or sticks",
+            "D": "Bagpipes and swords"
+          },
+          "correct": "C",
+          "explanation": "English Morris dancing dates to at least the 15th century and varies by region.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What does a British pub sign traditionally show?",
+          "options": {
+            "A": "Only opening hours",
+            "B": "Only the licensee's name",
+            "C": "Only the brewery crest",
+            "D": "A picture as well as a name"
+          },
+          "correct": "D",
+          "explanation": "Pictorial signs date from a time when much of the population could not read.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What time does the pub tradition of 'last orders' signal?",
+          "options": {
+            "A": "Happy hour",
+            "B": "Opening time",
+            "C": "The end of serving",
+            "D": "A lock-in"
+          },
+          "correct": "C",
+          "explanation": "Traditionally followed by drinking-up time before the pub closes.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Scottish celebration takes place at New Year?",
+          "options": {
+            "A": "Hogmanay",
+            "B": "Up Helly Aa",
+            "C": "Samhain",
+            "D": "Beltane"
+          },
+          "correct": "A",
+          "explanation": "Hogmanay customs include first-footing, when the first visitor brings coal or whisky.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the Shetland fire festival held each January called?",
+          "options": {
+            "A": "The Burryman",
+            "B": "Up Helly Aa",
+            "C": "Beltane",
+            "D": "Hogmanay"
+          },
+          "correct": "B",
+          "explanation": "The festival ends with a replica Viking galley being set alight in Lerwick.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In the ceremony of the keys at the Tower of London, what is locked each night?",
+          "options": {
+            "A": "The Tower gates",
+            "B": "The Traitors' Gate only",
+            "C": "The Crown Jewels vault",
+            "D": "The White Tower door"
+          },
+          "correct": "A",
+          "explanation": "The ceremony has taken place nightly for around 700 years.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        }
+      ]
+    },
+    "world-history": {
+      "title": "World Trivia",
+      "icon": "🌍",
+      "description": "General knowledge and world history, from the pyramids and the Silk Road to the space race.",
+      "question_count": 40,
+      "questions": [
+        {
+          "prompt": "Which ancient civilisation built the pyramids at Giza?",
+          "options": {
+            "A": "The Persians",
+            "B": "The Babylonians",
+            "C": "The Romans",
+            "D": "The Egyptians"
+          },
+          "correct": "D",
+          "explanation": "The Great Pyramid was built for the pharaoh Khufu around 2560 BC.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which empire was ruled from Rome and reached Britain in AD 43?",
+          "options": {
+            "A": "The Roman Empire",
+            "B": "The Byzantine Empire",
+            "C": "The Mongol Empire",
+            "D": "The Ottoman Empire"
+          },
+          "correct": "A",
+          "explanation": "Emperor Claudius launched the invasion of Britain in AD 43.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who led the Mongol Empire to become the largest contiguous land empire in history?",
+          "options": {
+            "A": "Kublai Khan",
+            "B": "Tamerlane",
+            "C": "Attila",
+            "D": "Genghis Khan"
+          },
+          "correct": "D",
+          "explanation": "Genghis Khan unified the Mongol tribes in 1206 and his successors extended the empire into Europe and Asia.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which wall was built across northern England by the Romans?",
+          "options": {
+            "A": "Offa's Dyke",
+            "B": "The Antonine Wall",
+            "C": "The Great Wall",
+            "D": "Hadrian's Wall"
+          },
+          "correct": "D",
+          "explanation": "Begun in AD 122 on the orders of Emperor Hadrian, it ran 73 miles coast to coast.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Egyptian queen was the last active ruler of the Ptolemaic kingdom?",
+          "options": {
+            "A": "Nefertari",
+            "B": "Hatshepsut",
+            "C": "Cleopatra",
+            "D": "Nefertiti"
+          },
+          "correct": "C",
+          "explanation": "Cleopatra VII died in 30 BC, after which Egypt became a Roman province.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which city was buried by the eruption of Mount Vesuvius in AD 79?",
+          "options": {
+            "A": "Troy",
+            "B": "Carthage",
+            "C": "Ephesus",
+            "D": "Pompeii"
+          },
+          "correct": "D",
+          "explanation": "Ash preserved the Roman town in extraordinary detail until excavations began in 1748.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In which year did the Berlin Wall fall?",
+          "options": {
+            "A": "1985",
+            "B": "1979",
+            "C": "1991",
+            "D": "1989"
+          },
+          "correct": "D",
+          "explanation": "The wall opened on 9 November 1989 and Germany reunified the following year.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which ship sank on its maiden voyage in April 1912?",
+          "options": {
+            "A": "The Mauretania",
+            "B": "The Lusitania",
+            "C": "The Britannic",
+            "D": "The Titanic"
+          },
+          "correct": "D",
+          "explanation": "Titanic struck an iceberg in the North Atlantic with the loss of more than 1,500 lives.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who was the first person to walk on the Moon?",
+          "options": {
+            "A": "Michael Collins",
+            "B": "Yuri Gagarin",
+            "C": "Buzz Aldrin",
+            "D": "Neil Armstrong"
+          },
+          "correct": "D",
+          "explanation": "Armstrong stepped onto the surface on 20 July 1969 during Apollo 11.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which war was fought between 1914 and 1918?",
+          "options": {
+            "A": "The Boer War",
+            "B": "The Crimean War",
+            "C": "The First World War",
+            "D": "The Second World War"
+          },
+          "correct": "C",
+          "explanation": "Often called the Great War, it ended with the Armistice on 11 November 1918.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who was the first President of the United States?",
+          "options": {
+            "A": "John Adams",
+            "B": "Thomas Jefferson",
+            "C": "Benjamin Franklin",
+            "D": "George Washington"
+          },
+          "correct": "D",
+          "explanation": "Washington took office in 1789 and served two terms.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Indian independence leader championed non-violent resistance?",
+          "options": {
+            "A": "Mahatma Gandhi",
+            "B": "Subhas Chandra Bose",
+            "C": "Jawaharlal Nehru",
+            "D": "B. R. Ambedkar"
+          },
+          "correct": "A",
+          "explanation": "Gandhi's campaigns of satyagraha helped end British rule in 1947.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who became South Africa's first democratically elected president in 1994?",
+          "options": {
+            "A": "Jacob Zuma",
+            "B": "Desmond Tutu",
+            "C": "Thabo Mbeki",
+            "D": "Nelson Mandela"
+          },
+          "correct": "D",
+          "explanation": "Mandela had spent 27 years in prison before leading the end of apartheid.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which ancient Greek city state is famous for its warrior society?",
+          "options": {
+            "A": "Corinth",
+            "B": "Athens",
+            "C": "Sparta",
+            "D": "Thebes"
+          },
+          "correct": "C",
+          "explanation": "Spartan boys entered military training, the agoge, from around the age of seven.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which explorer's expedition first circumnavigated the globe, completed in 1522?",
+          "options": {
+            "A": "Vasco da Gama",
+            "B": "Christopher Columbus",
+            "C": "Ferdinand Magellan",
+            "D": "Francis Drake"
+          },
+          "correct": "C",
+          "explanation": "Magellan died in the Philippines; Juan Sebastian Elcano completed the voyage.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which empire was centred on Constantinople after the fall of Rome?",
+          "options": {
+            "A": "The Persian Empire",
+            "B": "The Holy Roman Empire",
+            "C": "The Ottoman Empire",
+            "D": "The Byzantine Empire"
+          },
+          "correct": "D",
+          "explanation": "The Byzantine Empire survived until Constantinople fell to the Ottomans in 1453.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Central American civilisation built Chichen Itza?",
+          "options": {
+            "A": "The Aztecs",
+            "B": "The Olmec",
+            "C": "The Maya",
+            "D": "The Inca"
+          },
+          "correct": "C",
+          "explanation": "The Maya built Chichen Itza in the Yucatan; its pyramid is known as El Castillo.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which South American empire was centred on Cusco and built Machu Picchu?",
+          "options": {
+            "A": "The Aztec",
+            "B": "The Nazca",
+            "C": "The Inca",
+            "D": "The Maya"
+          },
+          "correct": "C",
+          "explanation": "The Inca Empire stretched along the Andes until the Spanish conquest in the 1530s.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which document did the American colonies adopt on 4 July 1776?",
+          "options": {
+            "A": "The Declaration of Independence",
+            "B": "The Bill of Rights",
+            "C": "The Constitution",
+            "D": "The Articles of Confederation"
+          },
+          "correct": "A",
+          "explanation": "Largely drafted by Thomas Jefferson and adopted in Philadelphia.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which French emperor was defeated at Waterloo in 1815?",
+          "options": {
+            "A": "Napoleon III",
+            "B": "Charles X",
+            "C": "Napoleon Bonaparte",
+            "D": "Louis XVI"
+          },
+          "correct": "C",
+          "explanation": "The battle in modern Belgium ended his Hundred Days and his rule.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which revolution began in France in 1789?",
+          "options": {
+            "A": "The July Revolution",
+            "B": "The Russian Revolution",
+            "C": "The Industrial Revolution",
+            "D": "The French Revolution"
+          },
+          "correct": "D",
+          "explanation": "The storming of the Bastille on 14 July 1789 is its symbolic start.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which plague killed a large share of Europe's population in the 14th century?",
+          "options": {
+            "A": "Smallpox",
+            "B": "Cholera",
+            "C": "The Black Death",
+            "D": "The Spanish flu"
+          },
+          "correct": "C",
+          "explanation": "The pandemic reached Europe in 1347 and killed perhaps a third of the population.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which wall-like structure stretches thousands of miles across northern China?",
+          "options": {
+            "A": "The Berlin Wall",
+            "B": "The Walls of Babylon",
+            "C": "Hadrian's Wall",
+            "D": "The Great Wall of China"
+          },
+          "correct": "D",
+          "explanation": "Built and rebuilt over centuries, most surviving sections are Ming dynasty.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who was the ancient Macedonian king who conquered as far as India?",
+          "options": {
+            "A": "Philip II",
+            "B": "Alexander the Great",
+            "C": "Darius III",
+            "D": "Ptolemy I"
+          },
+          "correct": "B",
+          "explanation": "Alexander created one of the largest empires of the ancient world before dying at 32.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which West African empire grew rich on gold and salt, ruled by Mansa Musa?",
+          "options": {
+            "A": "The Songhai Empire",
+            "B": "The Mali Empire",
+            "C": "The Kingdom of Kush",
+            "D": "The Zulu Kingdom"
+          },
+          "correct": "B",
+          "explanation": "Mansa Musa's 14th-century pilgrimage to Mecca was famous for its lavish spending.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Japanese warrior class served the daimyo and followed bushido?",
+          "options": {
+            "A": "The samurai",
+            "B": "The ninja",
+            "C": "The ronin",
+            "D": "The shogun"
+          },
+          "correct": "A",
+          "explanation": "The samurai were Japan's hereditary military nobility until the Meiji reforms.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which treaty formally ended the First World War in 1919?",
+          "options": {
+            "A": "The Treaty of Versailles",
+            "B": "The Treaty of Utrecht",
+            "C": "The Treaty of Ghent",
+            "D": "The Treaty of Trianon"
+          },
+          "correct": "A",
+          "explanation": "Signed at the Palace of Versailles, it imposed heavy reparations on Germany.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which 1944 operation landed Allied troops in Normandy?",
+          "options": {
+            "A": "D-Day",
+            "B": "Operation Torch",
+            "C": "Operation Market Garden",
+            "D": "Operation Barbarossa"
+          },
+          "correct": "A",
+          "explanation": "Operation Overlord began on 6 June 1944 with the largest seaborne invasion in history.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which two cities were struck by atomic bombs in 1945?",
+          "options": {
+            "A": "Tokyo and Osaka",
+            "B": "Kyoto and Kobe",
+            "C": "Hiroshima and Nagasaki",
+            "D": "Nagoya and Sendai"
+          },
+          "correct": "C",
+          "explanation": "The bombings on 6 and 9 August 1945 preceded Japan's surrender.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which wall divided a European capital from 1961 to 1989?",
+          "options": {
+            "A": "The Berlin Wall",
+            "B": "The Iron Curtain",
+            "C": "The Peace Line",
+            "D": "The Maginot Line"
+          },
+          "correct": "A",
+          "explanation": "The wall separated East and West Berlin for 28 years.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who was the first woman to win a Nobel Prize?",
+          "options": {
+            "A": "Marie Curie",
+            "B": "Dorothy Hodgkin",
+            "C": "Lise Meitner",
+            "D": "Rosalind Franklin"
+          },
+          "correct": "A",
+          "explanation": "Curie won the physics prize in 1903 and the chemistry prize in 1911.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Chinese dynasty built the Terracotta Army?",
+          "options": {
+            "A": "The Ming dynasty",
+            "B": "The Han dynasty",
+            "C": "The Tang dynasty",
+            "D": "The Qin dynasty"
+          },
+          "correct": "D",
+          "explanation": "The army was buried with Qin Shi Huang, the first emperor, around 210 BC.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which ancient wonder stood at Alexandria to guide ships?",
+          "options": {
+            "A": "The Lighthouse of Alexandria",
+            "B": "The Temple of Artemis",
+            "C": "The Hanging Gardens",
+            "D": "The Colossus of Rhodes"
+          },
+          "correct": "A",
+          "explanation": "The Pharos of Alexandria stood for over 1,500 years before earthquakes destroyed it.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Russian royal family was overthrown in 1917?",
+          "options": {
+            "A": "The Romanovs",
+            "B": "The Bourbons",
+            "C": "The Hohenzollerns",
+            "D": "The Habsburgs"
+          },
+          "correct": "A",
+          "explanation": "Tsar Nicholas II abdicated in March 1917 during the February Revolution.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which ocean did the Vikings cross to reach Newfoundland around AD 1000?",
+          "options": {
+            "A": "The Indian",
+            "B": "The Pacific",
+            "C": "The Atlantic",
+            "D": "The Arctic"
+          },
+          "correct": "C",
+          "explanation": "Leif Erikson's settlement at L'Anse aux Meadows predates Columbus by five centuries.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which empire ruled Turkey and much of the Middle East until 1922?",
+          "options": {
+            "A": "The Safavid Empire",
+            "B": "The Mughal Empire",
+            "C": "The Abbasid Caliphate",
+            "D": "The Ottoman Empire"
+          },
+          "correct": "D",
+          "explanation": "The empire lasted over 600 years before the Republic of Turkey was founded in 1923.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Indian dynasty built the Taj Mahal?",
+          "options": {
+            "A": "The Chola",
+            "B": "The Gupta",
+            "C": "The Mughals",
+            "D": "The Maurya"
+          },
+          "correct": "C",
+          "explanation": "Shah Jahan built it between 1632 and 1653 as a tomb for Mumtaz Mahal.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What was the name of the trade route linking China to the Mediterranean?",
+          "options": {
+            "A": "The Spice Route",
+            "B": "The Amber Road",
+            "C": "The Incense Route",
+            "D": "The Silk Road"
+          },
+          "correct": "D",
+          "explanation": "Goods, religions and diseases all travelled the Silk Road for centuries.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which civilisation invented cuneiform, among the earliest writing systems?",
+          "options": {
+            "A": "The Phoenicians",
+            "B": "The Hittites",
+            "C": "The Minoans",
+            "D": "The Sumerians"
+          },
+          "correct": "D",
+          "explanation": "Cuneiform was pressed into clay tablets in Mesopotamia from around 3400 BC.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which 1960s crisis brought the USA and USSR closest to nuclear war?",
+          "options": {
+            "A": "The Cuban Missile Crisis",
+            "B": "The Berlin Blockade",
+            "C": "The Suez Crisis",
+            "D": "The Korean War"
+          },
+          "correct": "A",
+          "explanation": "The 13-day standoff in October 1962 ended with the removal of Soviet missiles from Cuba.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        }
+      ]
+    },
+    "science-cosmos": {
+      "title": "Science & Cosmos",
+      "icon": "🔬",
+      "description": "Planets, physics, chemistry and the human body, for the opening round of a quiz night.",
+      "question_count": 40,
+      "questions": [
+        {
+          "prompt": "Which planet is closest to the Sun?",
+          "options": {
+            "A": "Earth",
+            "B": "Mercury",
+            "C": "Mars",
+            "D": "Venus"
+          },
+          "correct": "B",
+          "explanation": "Mercury orbits the Sun in just 88 Earth days.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which is the largest planet in the Solar System?",
+          "options": {
+            "A": "Uranus",
+            "B": "Neptune",
+            "C": "Saturn",
+            "D": "Jupiter"
+          },
+          "correct": "D",
+          "explanation": "Jupiter is so massive that all the other planets would fit inside it.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which planet is known as the Red Planet?",
+          "options": {
+            "A": "Venus",
+            "B": "Mars",
+            "C": "Jupiter",
+            "D": "Mercury"
+          },
+          "correct": "B",
+          "explanation": "Iron oxide dust gives the Martian surface its rusty colour.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What force keeps the planets in orbit around the Sun?",
+          "options": {
+            "A": "Friction",
+            "B": "Magnetism",
+            "C": "Static electricity",
+            "D": "Gravity"
+          },
+          "correct": "D",
+          "explanation": "Gravity is the attraction between masses, described by Newton and later Einstein.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the chemical symbol for water?",
+          "options": {
+            "A": "NaCl",
+            "B": "CO2",
+            "C": "H2O",
+            "D": "O2"
+          },
+          "correct": "C",
+          "explanation": "Two hydrogen atoms bonded to one oxygen atom.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What gas do plants absorb from the air for photosynthesis?",
+          "options": {
+            "A": "Hydrogen",
+            "B": "Nitrogen",
+            "C": "Carbon dioxide",
+            "D": "Oxygen"
+          },
+          "correct": "C",
+          "explanation": "Plants take in carbon dioxide and release oxygen as a by-product.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the hardest naturally occurring substance?",
+          "options": {
+            "A": "Steel",
+            "B": "Diamond",
+            "C": "Granite",
+            "D": "Quartz"
+          },
+          "correct": "B",
+          "explanation": "Diamond scores 10, the maximum, on the Mohs hardness scale.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "How many bones are in the adult human body?",
+          "options": {
+            "A": "206",
+            "B": "180",
+            "C": "230",
+            "D": "150"
+          },
+          "correct": "A",
+          "explanation": "Babies are born with around 270 bones, many of which fuse as they grow.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the centre of an atom called?",
+          "options": {
+            "A": "The isotope",
+            "B": "The orbital",
+            "C": "The electron",
+            "D": "The nucleus"
+          },
+          "correct": "D",
+          "explanation": "The nucleus holds protons and neutrons; electrons orbit around it.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which planet has the most prominent ring system?",
+          "options": {
+            "A": "Neptune",
+            "B": "Jupiter",
+            "C": "Uranus",
+            "D": "Saturn"
+          },
+          "correct": "D",
+          "explanation": "Saturn's rings are made mostly of water ice and span up to 280,000 km.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the closest star to Earth?",
+          "options": {
+            "A": "Alpha Centauri A",
+            "B": "Sirius",
+            "C": "The Sun",
+            "D": "Proxima Centauri"
+          },
+          "correct": "C",
+          "explanation": "The Sun is about 93 million miles away; Proxima Centauri is the next nearest.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name of the galaxy containing our Solar System?",
+          "options": {
+            "A": "Andromeda",
+            "B": "Sombrero",
+            "C": "Triangulum",
+            "D": "The Milky Way"
+          },
+          "correct": "D",
+          "explanation": "The Milky Way is a barred spiral galaxy with a few hundred billion stars.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What do we call a star that suddenly explodes at the end of its life?",
+          "options": {
+            "A": "A quasar",
+            "B": "A pulsar",
+            "C": "A nova",
+            "D": "A supernova"
+          },
+          "correct": "D",
+          "explanation": "A supernova can briefly outshine an entire galaxy.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the speed of light, approximately?",
+          "options": {
+            "A": "3 million km per second",
+            "B": "300,000 km per second",
+            "C": "3,000 km per second",
+            "D": "30,000 km per second"
+          },
+          "correct": "B",
+          "explanation": "Light travels at 299,792 kilometres per second in a vacuum.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What does DNA stand for?",
+          "options": {
+            "A": "Double nuclear acid",
+            "B": "Deoxyribonucleic acid",
+            "C": "Dinucleic acid",
+            "D": "Deoxyribose nucleotide"
+          },
+          "correct": "B",
+          "explanation": "DNA carries the genetic instructions for nearly all living organisms.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the most abundant gas in Earth's atmosphere?",
+          "options": {
+            "A": "Carbon dioxide",
+            "B": "Argon",
+            "C": "Oxygen",
+            "D": "Nitrogen"
+          },
+          "correct": "D",
+          "explanation": "Nitrogen makes up about 78 per cent of the air; oxygen about 21 per cent.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the process by which a liquid becomes a gas?",
+          "options": {
+            "A": "Sublimation",
+            "B": "Condensation",
+            "C": "Precipitation",
+            "D": "Evaporation"
+          },
+          "correct": "D",
+          "explanation": "Condensation is the reverse; sublimation goes straight from solid to gas.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which blood cells carry oxygen around the body?",
+          "options": {
+            "A": "Red blood cells",
+            "B": "White blood cells",
+            "C": "Plasma cells",
+            "D": "Platelets"
+          },
+          "correct": "A",
+          "explanation": "Haemoglobin in red blood cells binds oxygen in the lungs.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the largest organ of the human body?",
+          "options": {
+            "A": "The liver",
+            "B": "The skin",
+            "C": "The brain",
+            "D": "The lungs"
+          },
+          "correct": "B",
+          "explanation": "An adult's skin covers around two square metres.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which scientist proposed the theory of general relativity?",
+          "options": {
+            "A": "Isaac Newton",
+            "B": "Max Planck",
+            "C": "Niels Bohr",
+            "D": "Albert Einstein"
+          },
+          "correct": "D",
+          "explanation": "Einstein published general relativity in 1915, describing gravity as curved spacetime.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the only metal that is liquid at room temperature?",
+          "options": {
+            "A": "Lead",
+            "B": "Sodium",
+            "C": "Mercury",
+            "D": "Gallium"
+          },
+          "correct": "C",
+          "explanation": "Gallium melts at about 30C, just above room temperature; mercury is liquid at 20C.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What does a seismometer measure?",
+          "options": {
+            "A": "Air pressure",
+            "B": "Wind speed",
+            "C": "Rainfall",
+            "D": "Earthquakes"
+          },
+          "correct": "D",
+          "explanation": "Seismometers record ground motion, allowing earthquakes to be located and measured.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the pH of a neutral solution?",
+          "options": {
+            "A": "7",
+            "B": "10",
+            "C": "14",
+            "D": "0"
+          },
+          "correct": "A",
+          "explanation": "Below 7 is acidic and above 7 is alkaline.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which element has the atomic number 1?",
+          "options": {
+            "A": "Helium",
+            "B": "Oxygen",
+            "C": "Carbon",
+            "D": "Hydrogen"
+          },
+          "correct": "D",
+          "explanation": "Hydrogen is the lightest and most abundant element in the universe.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What do we call animals that are active at night?",
+          "options": {
+            "A": "Hibernal",
+            "B": "Crepuscular",
+            "C": "Nocturnal",
+            "D": "Diurnal"
+          },
+          "correct": "C",
+          "explanation": "Diurnal animals are active by day; crepuscular ones at dawn and dusk.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which part of a plant conducts photosynthesis?",
+          "options": {
+            "A": "The stem",
+            "B": "The leaf",
+            "C": "The flower",
+            "D": "The root"
+          },
+          "correct": "B",
+          "explanation": "Chloroplasts in leaf cells contain the chlorophyll that captures sunlight.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the Earth's outermost solid layer called?",
+          "options": {
+            "A": "The lithosphere",
+            "B": "The mantle",
+            "C": "The core",
+            "D": "The crust"
+          },
+          "correct": "D",
+          "explanation": "The crust is thin compared with the mantle beneath it.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What force slows an object moving through air?",
+          "options": {
+            "A": "Lift",
+            "B": "Torque",
+            "C": "Thrust",
+            "D": "Drag"
+          },
+          "correct": "D",
+          "explanation": "Drag is a form of air resistance that increases with speed.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What unit measures electrical resistance?",
+          "options": {
+            "A": "The watt",
+            "B": "The volt",
+            "C": "The ohm",
+            "D": "The ampere"
+          },
+          "correct": "C",
+          "explanation": "Resistance in ohms relates voltage and current through Ohm's law.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which vitamin does the body make from sunlight?",
+          "options": {
+            "A": "Vitamin A",
+            "B": "Vitamin B12",
+            "C": "Vitamin C",
+            "D": "Vitamin D"
+          },
+          "correct": "D",
+          "explanation": "Sunlight on skin triggers vitamin D synthesis, important for bone health.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is a group of stars forming a recognisable pattern called?",
+          "options": {
+            "A": "A nebula",
+            "B": "A constellation",
+            "C": "A galaxy",
+            "D": "A cluster"
+          },
+          "correct": "B",
+          "explanation": "There are 88 officially recognised constellations.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name for an animal that eats only plants?",
+          "options": {
+            "A": "A carnivore",
+            "B": "A herbivore",
+            "C": "An omnivore",
+            "D": "A detritivore"
+          },
+          "correct": "B",
+          "explanation": "Carnivores eat meat and omnivores eat both.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which spacecraft carried the first humans to the Moon?",
+          "options": {
+            "A": "Vostok 1",
+            "B": "Apollo 11",
+            "C": "Gemini 7",
+            "D": "Apollo 13"
+          },
+          "correct": "B",
+          "explanation": "Apollo 11 launched on 16 July 1969 with Armstrong, Aldrin and Collins.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Who was the first human in space?",
+          "options": {
+            "A": "John Glenn",
+            "B": "Alan Shepard",
+            "C": "Yuri Gagarin",
+            "D": "Neil Armstrong"
+          },
+          "correct": "C",
+          "explanation": "Gagarin orbited Earth aboard Vostok 1 on 12 April 1961.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is a light year a measure of?",
+          "options": {
+            "A": "Time",
+            "B": "Brightness",
+            "C": "Mass",
+            "D": "Distance"
+          },
+          "correct": "D",
+          "explanation": "A light year is the distance light travels in one year, about 9.46 trillion km.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which gas makes up most of the Sun?",
+          "options": {
+            "A": "Hydrogen",
+            "B": "Oxygen",
+            "C": "Carbon",
+            "D": "Helium"
+          },
+          "correct": "A",
+          "explanation": "The Sun is roughly 73 per cent hydrogen, fusing it into helium in its core.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the boiling point of water at sea level in Celsius?",
+          "options": {
+            "A": "90",
+            "B": "100",
+            "C": "120",
+            "D": "80"
+          },
+          "correct": "B",
+          "explanation": "Water boils at 100C at standard atmospheric pressure, and lower up a mountain.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the study of fossils called?",
+          "options": {
+            "A": "Archaeology",
+            "B": "Geology",
+            "C": "Anthropology",
+            "D": "Palaeontology"
+          },
+          "correct": "D",
+          "explanation": "Palaeontologists study ancient life through fossil remains.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which planet spins on its side, with an axial tilt of about 98 degrees?",
+          "options": {
+            "A": "Venus",
+            "B": "Saturn",
+            "C": "Neptune",
+            "D": "Uranus"
+          },
+          "correct": "D",
+          "explanation": "Uranus probably took a massive impact early in its history.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name of the boundary around a black hole beyond which nothing escapes?",
+          "options": {
+            "A": "The singularity",
+            "B": "The photon sphere",
+            "C": "The event horizon",
+            "D": "The accretion disc"
+          },
+          "correct": "C",
+          "explanation": "Once past the event horizon, not even light can escape.",
+          "difficulty": "hard",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        }
+      ]
+    },
+    "gaming-esports": {
+      "title": "Gaming & Esports",
+      "icon": "🎮",
+      "description": "Arcade classics, consoles, open worlds and the competitive scene.",
+      "question_count": 40,
+      "questions": [
+        {
+          "prompt": "Which Nintendo plumber first appeared in Donkey Kong in 1981?",
+          "options": {
+            "A": "Toad",
+            "B": "Luigi",
+            "C": "Mario",
+            "D": "Wario"
+          },
+          "correct": "C",
+          "explanation": "Mario was originally called Jumpman before being renamed.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What shape are the falling blocks in Tetris made of?",
+          "options": {
+            "A": "Four squares",
+            "B": "Three squares",
+            "C": "Five squares",
+            "D": "Six squares"
+          },
+          "correct": "A",
+          "explanation": "Each tetromino is made of four squares; there are seven shapes.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which company makes the PlayStation console?",
+          "options": {
+            "A": "Nintendo",
+            "B": "Sega",
+            "C": "Microsoft",
+            "D": "Sony"
+          },
+          "correct": "D",
+          "explanation": "The first PlayStation launched in Japan in 1994.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which company makes the Xbox console?",
+          "options": {
+            "A": "Nintendo",
+            "B": "Atari",
+            "C": "Sony",
+            "D": "Microsoft"
+          },
+          "correct": "D",
+          "explanation": "The original Xbox launched in 2001.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the best-selling video game of all time?",
+          "options": {
+            "A": "Wii Sports",
+            "B": "Minecraft",
+            "C": "Grand Theft Auto V",
+            "D": "Tetris"
+          },
+          "correct": "B",
+          "explanation": "Minecraft has sold over 300 million copies since 2011.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In which game do you build and explore a world made of blocks?",
+          "options": {
+            "A": "Minecraft",
+            "B": "Roblox",
+            "C": "Terraria",
+            "D": "Fortnite"
+          },
+          "correct": "A",
+          "explanation": "Markus Persson created Minecraft before Microsoft bought it for $2.5 billion.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which yellow character eats dots while avoiding ghosts?",
+          "options": {
+            "A": "Pac-Man",
+            "B": "Sonic",
+            "C": "Q*bert",
+            "D": "Kirby"
+          },
+          "correct": "A",
+          "explanation": "Pac-Man was released by Namco in 1980 and became a global phenomenon.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which blue hedgehog is Sega's mascot?",
+          "options": {
+            "A": "Shadow",
+            "B": "Tails",
+            "C": "Knuckles",
+            "D": "Sonic"
+          },
+          "correct": "D",
+          "explanation": "Sonic the Hedgehog launched on the Mega Drive in 1991.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "In Pokemon, what type is Pikachu?",
+          "options": {
+            "A": "Fire",
+            "B": "Water",
+            "C": "Electric",
+            "D": "Grass"
+          },
+          "correct": "C",
+          "explanation": "Pikachu is the franchise's mascot and an Electric-type Pokemon.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which battle royale game popularised building mechanics in 2017?",
+          "options": {
+            "A": "Warzone",
+            "B": "Apex Legends",
+            "C": "PUBG",
+            "D": "Fortnite"
+          },
+          "correct": "D",
+          "explanation": "Epic Games added Battle Royale to Fortnite in September 2017.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What does the acronym RPG stand for in gaming?",
+          "options": {
+            "A": "Real-time player game",
+            "B": "Role-playing game",
+            "C": "Random puzzle game",
+            "D": "Rapid play game"
+          },
+          "correct": "B",
+          "explanation": "RPGs let players take on characters with developing abilities.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which game series features the character Lara Croft?",
+          "options": {
+            "A": "Uncharted",
+            "B": "Far Cry",
+            "C": "Tomb Raider",
+            "D": "Resident Evil"
+          },
+          "correct": "C",
+          "explanation": "Lara Croft debuted in 1996 in a game made by Core Design in Derby.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Japanese company created The Legend of Zelda?",
+          "options": {
+            "A": "Sony",
+            "B": "Konami",
+            "C": "Nintendo",
+            "D": "Capcom"
+          },
+          "correct": "C",
+          "explanation": "Shigeru Miyamoto created the series, which began in 1986.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name of the hero in The Legend of Zelda games?",
+          "options": {
+            "A": "Link",
+            "B": "Zelda",
+            "C": "Navi",
+            "D": "Ganon"
+          },
+          "correct": "A",
+          "explanation": "Zelda is the princess; Link is the player character.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which game involves placing coloured bricks to clear lines?",
+          "options": {
+            "A": "Columns",
+            "B": "Bejeweled",
+            "C": "Tetris",
+            "D": "Candy Crush"
+          },
+          "correct": "C",
+          "explanation": "Alexey Pajitnov created Tetris in the Soviet Union in 1984.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which racing series is Nintendo's best known?",
+          "options": {
+            "A": "Gran Turismo",
+            "B": "Need for Speed",
+            "C": "Mario Kart",
+            "D": "Forza"
+          },
+          "correct": "C",
+          "explanation": "Super Mario Kart launched on the SNES in 1992.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is an 'esport'?",
+          "options": {
+            "A": "Competitive video gaming",
+            "B": "An electric sport",
+            "C": "A fitness game",
+            "D": "A sports simulator"
+          },
+          "correct": "A",
+          "explanation": "Major esports tournaments fill arenas and award millions in prize money.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which game's world championship is called The International?",
+          "options": {
+            "A": "League of Legends",
+            "B": "Counter-Strike",
+            "C": "Dota 2",
+            "D": "Overwatch"
+          },
+          "correct": "C",
+          "explanation": "The International has featured some of the largest prize pools in esports.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which five-a-side game is published by Riot Games?",
+          "options": {
+            "A": "League of Legends",
+            "B": "Heroes of the Storm",
+            "C": "Smite",
+            "D": "Dota 2"
+          },
+          "correct": "A",
+          "explanation": "League of Legends launched in 2009 and became the biggest esport of the 2010s.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What does FPS stand for in gaming?",
+          "options": {
+            "A": "Fast play system",
+            "B": "First-person shooter",
+            "C": "Full party setup",
+            "D": "Frames per screen"
+          },
+          "correct": "B",
+          "explanation": "FPS also abbreviates frames per second, a measure of smoothness.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which 1990s shooter was made by id Software and is famous for its demons?",
+          "options": {
+            "A": "Quake",
+            "B": "Half-Life",
+            "C": "Wolfenstein",
+            "D": "Doom"
+          },
+          "correct": "D",
+          "explanation": "Doom was released in 1993 and helped define the first-person shooter.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Valve game features a crowbar-wielding scientist named Gordon Freeman?",
+          "options": {
+            "A": "Team Fortress",
+            "B": "Portal",
+            "C": "Half-Life",
+            "D": "Left 4 Dead"
+          },
+          "correct": "C",
+          "explanation": "Half-Life was released in 1998 and is celebrated for its storytelling.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which puzzle game has you firing portals to solve test chambers?",
+          "options": {
+            "A": "Portal",
+            "B": "Antichamber",
+            "C": "Braid",
+            "D": "The Witness"
+          },
+          "correct": "A",
+          "explanation": "Portal was released by Valve in 2007, famous for GLaDOS and the cake.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Japanese fighting game series features Ryu and Ken?",
+          "options": {
+            "A": "Mortal Kombat",
+            "B": "Soulcalibur",
+            "C": "Tekken",
+            "D": "Street Fighter"
+          },
+          "correct": "D",
+          "explanation": "Capcom's Street Fighter II made competitive fighting games mainstream in 1991.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which handheld console did Nintendo release in 1989?",
+          "options": {
+            "A": "The Game Gear",
+            "B": "The Lynx",
+            "C": "The Game Boy",
+            "D": "The PSP"
+          },
+          "correct": "C",
+          "explanation": "The Game Boy sold over 118 million units with its green-tinted screen.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Swedish studio created Minecraft?",
+          "options": {
+            "A": "Paradox",
+            "B": "Mojang",
+            "C": "DICE",
+            "D": "Avalanche"
+          },
+          "correct": "B",
+          "explanation": "Mojang was founded by Markus Persson and sold to Microsoft in 2014.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the name of the open-world crime series set in Los Santos?",
+          "options": {
+            "A": "Grand Theft Auto",
+            "B": "Mafia",
+            "C": "Saints Row",
+            "D": "Watch Dogs"
+          },
+          "correct": "A",
+          "explanation": "Rockstar's GTA V, set in Los Santos, is one of the best-selling games ever.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Scottish city is the home of Rockstar North, developer of Grand Theft Auto?",
+          "options": {
+            "A": "Glasgow",
+            "B": "Edinburgh",
+            "C": "Aberdeen",
+            "D": "Dundee"
+          },
+          "correct": "B",
+          "explanation": "The studio began as DMA Design in Dundee before moving to Edinburgh.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Dundee-developed game featured suicidal green-haired creatures?",
+          "options": {
+            "A": "Lemmings",
+            "B": "Overlord",
+            "C": "Worms",
+            "D": "Pikmin"
+          },
+          "correct": "A",
+          "explanation": "DMA Design released Lemmings in 1991 to huge acclaim.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which farming simulator was made almost single-handedly by Eric Barone?",
+          "options": {
+            "A": "Harvest Moon",
+            "B": "Stardew Valley",
+            "C": "Animal Crossing",
+            "D": "Farming Simulator"
+          },
+          "correct": "B",
+          "explanation": "Barone spent around four years building it alone, releasing it in 2016.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which 2017 Nintendo console can be used both docked and handheld?",
+          "options": {
+            "A": "The Wii U",
+            "B": "The GameCube",
+            "C": "The 3DS",
+            "D": "The Switch"
+          },
+          "correct": "D",
+          "explanation": "The Switch's hybrid design made it one of Nintendo's best-selling consoles.",
+          "difficulty": "easy",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which game features the phrase 'Finish Him!' and a brutal finishing move?",
+          "options": {
+            "A": "Mortal Kombat",
+            "B": "Street Fighter",
+            "C": "Virtua Fighter",
+            "D": "Killer Instinct"
+          },
+          "correct": "A",
+          "explanation": "Mortal Kombat's fatalities prompted the creation of the ESRB rating system.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What does MMO stand for?",
+          "options": {
+            "A": "Massively multiplayer online",
+            "B": "Managed multiplayer operation",
+            "C": "Massive map objective",
+            "D": "Multi-mode online"
+          },
+          "correct": "A",
+          "explanation": "World of Warcraft is the best-known MMORPG.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which Blizzard MMO launched in 2004 and reached millions of subscribers?",
+          "options": {
+            "A": "Runescape",
+            "B": "EverQuest",
+            "C": "Guild Wars",
+            "D": "World of Warcraft"
+          },
+          "correct": "D",
+          "explanation": "World of Warcraft peaked at over 12 million subscribers.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which British-made online RPG, launched in 2001, runs in a browser?",
+          "options": {
+            "A": "Ultima Online",
+            "B": "Club Penguin",
+            "C": "Tibia",
+            "D": "RuneScape"
+          },
+          "correct": "D",
+          "explanation": "Jagex developed RuneScape in Cambridge.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which rhythm game series uses a plastic guitar controller?",
+          "options": {
+            "A": "Guitar Hero",
+            "B": "Dance Dance Revolution",
+            "C": "Beat Saber",
+            "D": "Just Dance"
+          },
+          "correct": "A",
+          "explanation": "Guitar Hero launched in 2005 and spawned a wave of music games.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which company developed the Souls series known for its difficulty?",
+          "options": {
+            "A": "Platinum Games",
+            "B": "Capcom",
+            "C": "FromSoftware",
+            "D": "Square Enix"
+          },
+          "correct": "C",
+          "explanation": "Hidetaka Miyazaki directed Demon's Souls, Dark Souls and Elden Ring.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which 2022 FromSoftware game won numerous Game of the Year awards?",
+          "options": {
+            "A": "Sekiro",
+            "B": "Elden Ring",
+            "C": "Dark Souls III",
+            "D": "Bloodborne"
+          },
+          "correct": "B",
+          "explanation": "Elden Ring was co-written with the novelist George R. R. Martin.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "What is the term for an unofficial player-made modification to a game?",
+          "options": {
+            "A": "A build",
+            "B": "A patch",
+            "C": "A port",
+            "D": "A mod"
+          },
+          "correct": "D",
+          "explanation": "Counter-Strike and Dota both began life as mods of other games.",
+          "difficulty": "medium",
+          "type": "classic",
+          "points": 100,
+          "time_limit": 15
+        },
+        {
+          "prompt": "Which 1972 console is widely considered the first home games console?",
+          "options": {
+            "A": "The Intellivision",
+            "B": "The Magnavox Odyssey",
+            "C": "The ColecoVision",
+            "D": "The Atari 2600"
+          },
+          "correct": "B",
+          "explanation": "Ralph Baer's Odyssey predated Atari's Pong by a few months.",
           "difficulty": "hard",
           "type": "classic",
           "points": 100,
