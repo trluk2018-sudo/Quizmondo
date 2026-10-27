@@ -44,6 +44,17 @@
           <textarea name="description" rows="2" placeholder="Weekly venue showdown with live screen scoreboards." class="w-full p-2.5 border rounded-lg text-slate-800"></textarea>
         </div>
 
+        <label class="flex items-start gap-2.5 p-3 rounded-lg bg-slate-50 border border-slate-200 cursor-pointer">
+          <input type="checkbox" name="is_virtual" value="1" class="mt-0.5 w-4 h-4 rounded accent-blue-600">
+          <span>
+            <span class="font-bold text-slate-700 block">Run as a virtual league</span>
+            <span class="text-[11px] text-slate-500">
+              Players check in as their own online squad and the room PIN is issued on host approval.
+              Leave unticked for a physical venue where a table of players shares one scorecard.
+            </span>
+          </span>
+        </label>
+
         <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm">
           Create Pub League
         </button>
@@ -67,10 +78,19 @@
             {% endif %}
           </div>
 
-          <div class="text-right shrink-0">
+          <div class="flex items-center gap-2 shrink-0">
             <span class="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 font-mono font-bold text-xs">
               PIN: {{ lg.pin_code }}
             </span>
+            <form method="POST" class="inline">
+              <input type="hidden" name="action" value="toggle_virtual">
+              <input type="hidden" name="league_id" value="{{ lg.id }}">
+              <button type="submit"
+                class="px-3 py-1.5 rounded-lg border font-bold text-xs transition {% if lg.is_virtual_league() %}bg-cyan-50 border-cyan-200 text-cyan-700 hover:bg-cyan-100{% else %}bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100{% endif %}"
+                title="Click to switch this league between virtual and in-house">
+                {% if lg.is_virtual_league() %}🌐 Virtual{% else %}🍻 In-House{% endif %}
+              </button>
+            </form>
           </div>
         </div>
         {% else %}

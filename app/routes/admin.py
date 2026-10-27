@@ -1954,6 +1954,19 @@ def player_toggle_ban(id):
 @login_required
 def leagues():
     if request.method == 'POST':
+        action = (request.form.get('action') or 'create').strip()
+
+        if action == 'toggle_virtual':
+            league = db.session.get(PubLeague, int(request.form.get('league_id') or 0))
+            if not league:
+                flash('League not found.', 'error')
+                return redirect(url_for('admin.leagues'))
+            league.is_virtual = not league.is_virtual_league()
+            db.session.commit()
+            mode = 'Virtual (online squads)' if league.is_virtual else 'In-house (physical venue)'
+            flash(f'"{league.name}" is now run as {mode}.', 'success')
+            return redirect(url_for('admin.leagues'))
+
         name = (request.form.get('name') or '').strip()
         venue = (request.form.get('venue_name') or '').strip()
         pin = (request.form.get('pin_code') or '').strip()
@@ -1971,7 +1984,8 @@ def leagues():
             pin_code=pin,
             schedule_day=schedule or 'Every Thursday at 20:00',
             description=desc,
-            is_active=True
+            is_active=True,
+            is_virtual=bool(request.form.get('is_virtual'))
         )
         db.session.add(league)
         db.session.commit()

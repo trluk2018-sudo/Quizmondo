@@ -486,21 +486,34 @@ class PubLeague(db.Model):
     description = db.Column(db.Text, default='')
     schedule_day = db.Column(db.String(50), default='Every Thursday 20:00')
     is_active = db.Column(db.Boolean, default=True)
+    is_virtual = db.Column(db.Boolean, default=False)
     teams_json = db.Column(db.Text, default='[]')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def is_virtual_league(self) -> bool:
+    def looks_virtual(self) -> bool:
+        """Guess the mode from the naming, used to seed the flag and as a legacy fallback."""
         s = (self.slug or '').lower()
         n = (self.name or '').lower()
         v = (self.venue_name or '').lower()
         return 'online' in s or 'cyber' in s or 'virtual' in n or 'virtual' in v
 
+    def is_virtual_league(self) -> bool:
+        # The explicit admin toggle wins; leagues from before the column fall back to the naming
+        if self.is_virtual is None:
+            return self.looks_virtual()
+        return bool(self.is_virtual)
+
     def get_state(self) -> dict:
+        virtual = self.is_virtual_league()
         default_config = {
-            'total_rounds': 3 if self.is_virtual_league() else 5,
+            'total_rounds': 3 if virtual else 5,
             'max_tables': 20,
             'question_time_limit': 15,
             'interval_duration_mins': 8,
+            # Lock a round by itself once the clock has run out for every table
+            'round_deadline_enabled': True,
+            # A virtual league has no host in the room, so it rolls on to the next round by itself
+            'auto_advance_enabled': virtual,
             'bar_promo_enabled': True,
             'promo_title': 'Half-Time Bar Special: 10% Off All Drinks!',
             'promo_desc': 'Show this screen at the main bar during the interval for 10% off all draught pints, wine & bar snacks.',

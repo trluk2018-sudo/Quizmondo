@@ -144,14 +144,22 @@
             </div>
             {% endif %}
 
+            {% if is_virtual %}
+            <div class="space-y-1.5">
+              <label class="block font-bold text-slate-300 uppercase">Squad Join Code <span class="text-slate-500 font-normal">(Optional)</span></label>
+              <input type="text" name="squad_code" maxlength="6" placeholder="Got a code from your squad? Enter it to share their scorecard" class="w-full bg-slate-950 border border-emerald-500/30 rounded-xl p-3 text-white uppercase tracking-widest focus:outline-none focus:border-emerald-400">
+              <span class="text-[10px] text-slate-400 block">Leave blank to start your own squad — your code is shown once you are in.</span>
+            </div>
+            {% endif %}
+
             <div class="grid grid-cols-3 gap-3">
               <div class="space-y-1.5 col-span-1">
                 <label class="block font-bold text-slate-300 uppercase">{% if is_virtual %}Squad #{% else %}Table #{% endif %}</label>
-                <input type="text" name="table" required placeholder="e.g. 1" value="{{ session.get('pub_table_num') or '' }}" class="w-full bg-slate-950 border border-purple-500/30 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400">
+                <input type="text" name="table" {% if not is_virtual %}required{% endif %} placeholder="e.g. 1" value="{{ session.get('pub_table_num') or '' }}" class="w-full bg-slate-950 border border-purple-500/30 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400">
               </div>
               <div class="space-y-1.5 col-span-2">
                 <label class="block font-bold text-slate-300 uppercase">Squad / Team Name</label>
-                <input type="text" name="team" required placeholder="e.g. The Brainiacs" value="{{ session.get('pub_team_name') or '' }}" class="w-full bg-slate-950 border border-purple-500/30 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400">
+                <input type="text" name="team" {% if not is_virtual %}required{% endif %} placeholder="e.g. The Brainiacs" value="{{ session.get('pub_team_name') or '' }}" class="w-full bg-slate-950 border border-purple-500/30 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400">
               </div>
             </div>
 

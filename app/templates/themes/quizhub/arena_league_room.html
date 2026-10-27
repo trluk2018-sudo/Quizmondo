@@ -68,6 +68,13 @@
           <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
           <span>Awaiting Quizmaster 1-click approval... (Auto-syncing)</span>
         </div>
+        {% if is_virtual and join_code %}
+        <div class="inline-flex flex-col items-center gap-1 px-5 py-3 rounded-2xl bg-slate-900 border border-emerald-500/40 font-mono shadow-inner">
+          <span class="text-[10px] text-slate-400 uppercase tracking-wider">Squad join code &bull; share with your mates</span>
+          <span class="text-2xl font-black text-emerald-300 tracking-[0.3em]">{{ join_code }}</span>
+          <span class="text-[10px] text-slate-500">They enter this on the lounge to play on this same scorecard</span>
+        </div>
+        {% endif %}
         <p class="text-[11px] text-slate-500 font-mono">
           No need to refresh — this screen unlocks automatically within 2 seconds of approval!
         </p>
@@ -94,6 +101,13 @@
             Grab a drink and get your squad ready! As soon as the Quizmaster clicks <strong>Start Round {{ current_round }} ({{ round_info.name }})</strong>, questions will launch here automatically.
           </p>
         </div>
+        {% if is_virtual and join_code %}
+        <div class="inline-flex flex-col items-center gap-1 px-5 py-3 rounded-2xl bg-slate-900 border border-emerald-500/40 font-mono shadow-inner">
+          <span class="text-[10px] text-slate-400 uppercase tracking-wider">Squad join code &bull; share with your mates</span>
+          <span class="text-2xl font-black text-emerald-300 tracking-[0.3em]">{{ join_code }}</span>
+          <span class="text-[10px] text-slate-500">They enter this on the lounge to play on this same scorecard</span>
+        </div>
+        {% endif %}
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-950/60 border border-purple-500/30 text-cyan-300 font-mono text-xs">
           <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
           <span>Connected to Quizmaster Live Console...</span>
@@ -642,6 +656,8 @@ function choosePubAnswer(choice) {
   // Record for the end-of-round answer reveal!
   recordedAnswers.push({
     num: currentIndex + 1,
+    id: q.id,
+    remaining: (choice === 'TIMEOUT' ? 0 : Math.max(0, timer)),
     prompt: q.prompt,
     choice: choice,
     correct_option: q.correct_option,
@@ -668,6 +684,7 @@ function choosePubAnswer(choice) {
     progData.append('round', currentRound);
     progData.append('question_index', currentIndex + 1);
     progData.append('partial_score', totalScore);
+    progData.append('answers', JSON.stringify(answerPayload()));
     if (currentIndex + 1 >= rawQuestions.length) {
       progData.append('is_final', '1');
     }
@@ -683,6 +700,13 @@ function choosePubAnswer(choice) {
     currentIndex++;
     loadQuestion();
   }, 1000);
+}
+
+// The server scores the round from these, so the phone no longer decides its own points
+function answerPayload() {
+  return recordedAnswers.map(function(a) {
+    return { id: a.id, choice: a.choice, remaining: a.remaining };
+  });
 }
 
 function finishRound() {
@@ -701,6 +725,7 @@ function finishRound() {
   // Submit score via fetch POST
   var formData = new FormData();
   formData.append('score', totalScore);
+  formData.append('answers', JSON.stringify(answerPayload()));
   formData.append('table', tableNum);
   formData.append('team', teamName);
   formData.append('round', currentRound);
@@ -713,6 +738,9 @@ function finishRound() {
   })
   .then(function(res) { return res.json(); })
   .then(function(data) {
+    if (data && typeof data.round_score === 'number') {
+      totalScore = data.round_score;
+    }
     document.getElementById('activeQuizScreen').classList.add('hidden');
     if (data && data.all_tables_finished) {
       showIntermission(data);

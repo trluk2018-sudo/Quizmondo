@@ -214,6 +214,14 @@ def _ensure_schema():
         if cols_leagues and 'teams_json' not in cols_leagues:
             db.session.execute(text("ALTER TABLE pub_leagues ADD COLUMN teams_json TEXT DEFAULT '[]'"))
             db.session.commit()
+        if cols_leagues and 'is_virtual' not in cols_leagues:
+            db.session.execute(text("ALTER TABLE pub_leagues ADD COLUMN is_virtual BOOLEAN"))
+            db.session.commit()
+            # Seed the new flag from the old naming heuristic so every league keeps the mode it has today
+            from .models import PubLeague
+            for lg in PubLeague.query.all():
+                lg.is_virtual = lg.looks_virtual()
+            db.session.commit()
 
         cols_questions = [row[1] for row in db.session.execute(text("PRAGMA table_info(quiz_questions)")).fetchall()]
         if cols_questions:

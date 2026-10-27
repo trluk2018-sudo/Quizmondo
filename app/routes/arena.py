@@ -1629,6 +1629,7 @@ def league_lounge(slug):
     player = get_current_player(persist=False)
     league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
     state = league.get_state()
+    apply_pub_auto_progression(league, state)
     is_virtual = league.is_virtual_league()
     is_started = (state.get('current_round', 1) > 1 or state.get('round_status') in ('active', 'break', 'closed', 'finished'))
     # Only display approved real teams on lounge scoreboard (no mock demo teams!)
@@ -1719,7 +1720,12 @@ def resolve_pub_team(state, player, table_num, team_name, is_virtual):
     def owned():
         if not owner_key:
             return None
-        return next((t for t in teams if t.get('owner') and t.get('owner') == owner_key), None)
+        for t in teams:
+            if t.get('owner') and t.get('owner') == owner_key:
+                return t
+            if owner_key in (t.get('member_keys') or []):
+                return t
+        return None
 
     if is_virtual:
         # A virtual squad belongs to the device that checked it in; table numbers are not shared
@@ -1749,6 +1755,34 @@ def resolve_pub_team(state, player, table_num, team_name, is_virtual):
     return None
 
 
+PUB_CODE_ALPHABET = 'ACDEFGHJKLMNPQRTUVWXY34679'
+
+
+def new_pub_join_code(teams):
+    """Short code a virtual squad shares so mates on other phones join the same scorecard."""
+    taken = {(t.get('join_code') or '').upper() for t in teams}
+    for _ in range(50):
+        code = ''.join(random.choice(PUB_CODE_ALPHABET) for _ in range(4))
+        if code not in taken:
+            return code
+    return ''.join(random.choice(PUB_CODE_ALPHABET) for _ in range(6))
+
+
+def join_pub_squad_by_code(state, player, code):
+    """Attach this player to an existing squad from its join code."""
+    code = (code or '').strip().upper()
+    if not code:
+        return None
+    for t in state.get('teams', []):
+        if (t.get('join_code') or '').upper() == code:
+            keys = t.setdefault('member_keys', [])
+            if player.session_key not in keys and t.get('owner') != player.session_key:
+                keys.append(player.session_key)
+                t['members'] = max(int(t.get('members', 1)), len(keys) + 1)
+            return t
+    return None
+
+
 def free_pub_squad_slot(teams, table_num, team_name):
     """Pick a squad number and squad name that no other virtual squad is already using."""
     taken_tables = {str(t.get('table', '')).strip() for t in teams}
@@ -1770,11 +1804,181 @@ def free_pub_squad_slot(teams, table_num, team_name):
     return table_num, team_name
 
 
+PUB_QUESTIONS_PER_ROUND = 5
+PUB_MIN_QUESTION_SECS = 10
+PUB_MAX_QUESTION_SECS = 30
+
+
+def pub_question_secs(cfg):
+    """Seconds per question the host has configured, held inside the supported range."""
+    try:
+        secs = int(cfg.get('question_time_limit', 15))
+    except (TypeError, ValueError):
+        secs = 15
+    return max(PUB_MIN_QUESTION_SECS, min(PUB_MAX_QUESTION_SECS, secs))
+
+
+def pub_max_round_score(cfg, round_num, total_rounds):
+    """Highest score a round can possibly be worth, used to cap a legacy client total."""
+    per_q = 100 + pub_question_secs(cfg) * 2
+    if round_num >= total_rounds:
+        per_q = round(per_q * 1.5)
+    return per_q * PUB_QUESTIONS_PER_ROUND
+
+
+def score_pub_answers(state, round_num, raw_answers, cfg, total_rounds):
+    """Score a squad's answers against the questions pinned for this round.
+
+    The phone used to work out its own round total and post it, which meant the
+    score was whatever the browser said it was. The answers are scored here now,
+    against the pinned question set, so a tampered payload cannot invent points.
+    """
+    if not raw_answers:
+        return None
+    try:
+        submitted = json.loads(raw_answers) if isinstance(raw_answers, str) else raw_answers
+    except Exception:
+        return None
+    if not isinstance(submitted, list):
+        return None
+
+    pinned = (state.get('round_questions') or {}).get(str(round_num)) or []
+    if not pinned:
+        return None
+
+    time_limit = pub_question_secs(cfg)
+    is_final_round = round_num >= total_rounds
+    total = 0
+    counted = set()
+    for item in submitted:
+        if not isinstance(item, dict):
+            continue
+        try:
+            qid = int(item.get('id'))
+        except (TypeError, ValueError):
+            continue
+        if qid not in pinned or qid in counted:
+            continue
+        counted.add(qid)
+        q = QuizQuestion.query.get(qid)
+        if not q or not item.get('choice') or item.get('choice') != q.correct_option:
+            continue
+        try:
+            remaining = int(item.get('remaining') or 0)
+        except (TypeError, ValueError):
+            remaining = 0
+        remaining = max(0, min(time_limit, remaining))
+        pts = 100 + remaining * 2
+        if is_final_round:
+            pts = round(pts * 1.5)
+        total += pts
+    return total
+
+
+def recompute_pub_score(team):
+    """Total a squad from its banked round scores.
+
+    Deriving the total rather than adding to it keeps the books straight when the
+    same round gets banked twice — two phones polling at the instant a round
+    deadline passes both try to close it.
+    """
+    total = 0
+    for key, value in team.items():
+        if key.startswith('round_') and value is not None:
+            try:
+                total += int(value)
+            except (TypeError, ValueError):
+                continue
+    team['score'] = total
+    return total
+
+
+def rerank_pub_teams(teams):
+    """Sort the standings by total score and stamp each squad's rank."""
+    teams.sort(key=lambda x: x.get('score', 0), reverse=True)
+    for idx, t in enumerate(teams, 1):
+        t['rank'] = idx
+
+
+def close_pub_round(state, round_num):
+    """Lock a round: bank a partial score for every approved squad still unfinished."""
+    teams = state.get('teams', [])
+    for t in teams:
+        if t.get('status') != 'pending' and t.get(f'round_{round_num}') is None:
+            partial = int(t.get(f'partial_round_{round_num}', t.get(f'partial_score_{round_num}', 0)))
+            t[f'round_{round_num}'] = partial
+            recompute_pub_score(t)
+    rerank_pub_teams(teams)
+    state['teams'] = teams
+    state['round_status'] = 'closed'
+
+
+def apply_pub_auto_progression(league, state):
+    """Run the clock for a live pub quiz without the host having to click.
+
+    Players already watch a per-question countdown, so a round has a natural
+    deadline; past it the round locks itself and the answers are revealed. A
+    virtual league also rolls on to the next round when the break is over, since
+    there is no quizmaster standing in the room to press the button.
+    """
+    cfg = state.get('config', {})
+    curr_r = int(state.get('current_round', 1))
+    status = state.get('round_status', 'waiting')
+    total_rounds = int(cfg.get('total_rounds', 3 if league.is_virtual_league() else 5))
+    now = datetime.utcnow()
+    changed = False
+
+    def expired(iso_ts):
+        if not iso_ts:
+            return False
+        try:
+            return datetime.fromisoformat(iso_ts) <= now
+        except Exception:
+            return False
+
+    if status == 'active' and cfg.get('round_deadline_enabled', True) and expired(state.get('round_ends_at')):
+        close_pub_round(state, curr_r)
+        state['answers_revealed'] = True
+        state.pop('round_ends_at', None)
+        if cfg.get('auto_advance_enabled'):
+            mins = int(cfg.get('interval_duration_mins', 8))
+            state['round_status'] = 'break'
+            state['break_ends_at'] = (now + timedelta(minutes=mins)).isoformat()
+        changed = True
+        status = state['round_status']
+
+    if cfg.get('auto_advance_enabled') and status in ('closed', 'break') and expired(state.get('break_ends_at')):
+        state.pop('break_ends_at', None)
+        if curr_r < total_rounds:
+            state['current_round'] = curr_r + 1
+            state['round_status'] = 'active'
+            state['answers_revealed'] = False
+            state['round_ends_at'] = pub_round_deadline(cfg, now)
+        else:
+            state['round_status'] = 'finished'
+            state['answers_revealed'] = True
+            state['tournament_completed'] = True
+        changed = True
+
+    if changed:
+        league.set_state(state)
+        db.session.commit()
+    return changed
+
+
+def pub_round_deadline(cfg, now=None):
+    """When the current round runs out: every question's clock plus a little slack."""
+    now = now or datetime.utcnow()
+    secs = pub_question_secs(cfg) * PUB_QUESTIONS_PER_ROUND + 20
+    return (now + timedelta(seconds=secs)).isoformat()
+
+
 @arena_bp.route('/leagues/<slug>/state')
 def league_state(slug):
     """Real-time pub quiz state polling endpoint for Quizmaster console, TV projectors, and player buzzer phones."""
     league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
     state = league.get_state()
+    apply_pub_auto_progression(league, state)
     current_round = state.get('current_round', 1)
     cfg = state.get('config', {})
     teams = state.get('teams', [])
@@ -1792,6 +1996,7 @@ def league_state(slug):
         'round_title': active_cfg.get(current_round, {}).get('name', 'Round ' + str(current_round)),
         'config': cfg,
         'break_ends_at': state.get('break_ends_at'),
+        'round_ends_at': state.get('round_ends_at'),
         'approved_teams_count': len(approved_teams),
         'pending_teams_count': len(pending_teams),
         'completed_tables_count': len(completed_tables),
@@ -1813,8 +2018,15 @@ def league_progress(slug):
     tname = (request.form.get('team') or session.get('pub_team_name') or '').strip()
     curr_r = int(state.get('current_round', 1))
     q_idx = int(request.form.get('question_index') or 0)
-    partial_score = int(request.form.get('partial_score') or 0)
-    is_final_q = (q_idx >= 5 or request.form.get('is_final') == '1')
+    cfg = state.get('config', {})
+    total_rounds = int(cfg.get('total_rounds', 3 if is_virtual else 5))
+    scored = score_pub_answers(state, curr_r, request.form.get('answers'), cfg, total_rounds)
+    if scored is None:
+        # Older phone still posting only its own total: accept it, but never above what the round can pay
+        scored = min(int(request.form.get('partial_score') or 0),
+                     pub_max_round_score(cfg, curr_r, total_rounds))
+    partial_score = scored
+    is_final_q = (q_idx >= PUB_QUESTIONS_PER_ROUND or request.form.get('is_final') == '1')
 
     target_team = resolve_pub_team(state, player, tbl, tname, is_virtual)
 
@@ -1829,11 +2041,9 @@ def league_progress(slug):
 
         # If table just answered the 5th (final) question of the round, immediately lock in their round score!
         if is_final_q and target_team.get(f'round_{curr_r}') is None:
-            target_team['score'] = int(target_team.get('score', 0)) + partial_score
             target_team[f'round_{curr_r}'] = partial_score
-            teams.sort(key=lambda x: x.get('score', 0), reverse=True)
-            for idx, t in enumerate(teams, 1):
-                t['rank'] = idx
+            recompute_pub_score(target_team)
+            rerank_pub_teams(teams)
 
             approved_teams = [t for t in teams if t.get('status') != 'pending']
             completed_tables = [t for t in approved_teams if t.get(f'round_{curr_r}') is not None]
@@ -1864,6 +2074,7 @@ def league_manager(slug):
         return redirect(url_for('arena.player_login', next=request.path))
 
     state = league.get_state()
+    apply_pub_auto_progression(league, state)
     config = state.get('config', {})
     teams = state.get('teams', [])
     pending_teams = [t for t in teams if t.get('status') == 'pending']
@@ -2006,6 +2217,8 @@ def league_manager_action(slug):
         state['current_round'] = r
         state['round_status'] = 'active'
         state['answers_revealed'] = False
+        state['round_ends_at'] = pub_round_deadline(cfg)
+        state.pop('break_ends_at', None)
         league.set_state(state)
         db.session.commit()
         return respond(f"Round {r} launched! Questions broadcast to all {len(approved_teams)} approved table phones.")
@@ -2014,18 +2227,9 @@ def league_manager_action(slug):
         curr_r = state.get('current_round', 1)
         if state.get('round_status') != 'active':
             return respond_error(f"Round {curr_r} is not currently active.")
-        state['round_status'] = 'closed'
         # Record partial scores for any approved table that hasn't finished all questions yet
-        for t in teams:
-            if t.get('status') != 'pending' and t.get(f'round_{curr_r}') is None:
-                partial = int(t.get(f'partial_round_{curr_r}', t.get(f'partial_score_{curr_r}', 0)))
-                t[f'round_{curr_r}'] = partial
-                t['score'] = int(t.get('score', 0)) + partial
-        # Re-sort standings
-        teams.sort(key=lambda x: x.get('score', 0), reverse=True)
-        for idx, t in enumerate(teams, 1):
-            t['rank'] = idx
-        state['teams'] = teams
+        close_pub_round(state, curr_r)
+        state.pop('round_ends_at', None)
         league.set_state(state)
         db.session.commit()
         max_r = int(cfg.get('total_rounds', 5 if not league.is_virtual_league() else 3))
@@ -2040,6 +2244,7 @@ def league_manager_action(slug):
             return respond_error("Wait for all tables to submit answers or click 'Lock / Time's Up' before revealing answers!")
         state['answers_revealed'] = True
         state['round_status'] = 'closed' if state.get('round_status') == 'active' else state.get('round_status', 'closed')
+        state.pop('round_ends_at', None)
         league.set_state(state)
         db.session.commit()
         return respond("Official answers revealed on big screen and player screens!")
@@ -2052,6 +2257,7 @@ def league_manager_action(slug):
             return respond_error("Wait for all tables to submit answers or click 'Lock / Time's Up' before starting the bar break!")
         state['round_status'] = 'break'
         state['answers_revealed'] = True
+        state.pop('round_ends_at', None)
         duration_mins = int(cfg.get('interval_duration_mins', 8))
         break_ends = (datetime.utcnow() + timedelta(minutes=duration_mins)).isoformat()
         state['break_ends_at'] = break_ends
@@ -2074,6 +2280,8 @@ def league_manager_action(slug):
             state['current_round'] = curr + 1
             state['round_status'] = 'active'
             state['answers_revealed'] = False
+            state['round_ends_at'] = pub_round_deadline(cfg)
+            state.pop('break_ends_at', None)
             league.set_state(state)
             db.session.commit()
             return respond(f"Round {state['current_round']} launched! Questions broadcast to all phones.")
@@ -2081,6 +2289,8 @@ def league_manager_action(slug):
             state['round_status'] = 'finished'
             state['answers_revealed'] = True
             state['tournament_completed'] = True
+            state.pop('round_ends_at', None)
+            state.pop('break_ends_at', None)
             league.set_state(state)
             db.session.commit()
             return respond("🏆 Tournament finalized! Champions crowned and final standings displayed on all screens.")
@@ -2088,9 +2298,13 @@ def league_manager_action(slug):
     elif action == 'save_config':
         cfg['total_rounds'] = int(request.form.get('total_rounds', cfg.get('total_rounds', 5)))
         cfg['max_tables'] = int(request.form.get('max_tables', cfg.get('max_tables', 20)))
-        cfg['question_time_limit'] = int(request.form.get('question_time_limit', cfg.get('question_time_limit', 15)))
+        cfg['question_time_limit'] = pub_question_secs(
+            {'question_time_limit': request.form.get('question_time_limit', cfg.get('question_time_limit', 15))}
+        )
         cfg['interval_duration_mins'] = int(request.form.get('interval_duration_mins', cfg.get('interval_duration_mins', 8)))
         cfg['bar_promo_enabled'] = bool(request.form.get('bar_promo_enabled'))
+        cfg['round_deadline_enabled'] = bool(request.form.get('round_deadline_enabled'))
+        cfg['auto_advance_enabled'] = bool(request.form.get('auto_advance_enabled'))
         if request.form.get('promo_title'): cfg['promo_title'] = request.form.get('promo_title').strip()
         if request.form.get('promo_desc'): cfg['promo_desc'] = request.form.get('promo_desc').strip()
         if request.form.get('promo_code'): cfg['promo_code'] = request.form.get('promo_code').strip()
@@ -2107,6 +2321,8 @@ def league_manager_action(slug):
         state['answers_revealed'] = False
         state['teams'] = []
         state['round_questions'] = {}
+        state.pop('round_ends_at', None)
+        state.pop('break_ends_at', None)
         state['reset_ts'] = datetime.utcnow().isoformat()
         league.set_state(state)
         db.session.commit()
@@ -2117,6 +2333,8 @@ def league_manager_action(slug):
         # Clearing every table ends the live round too, or nobody could ever check in again
         state['round_status'] = 'waiting'
         state['answers_revealed'] = False
+        state.pop('round_ends_at', None)
+        state.pop('break_ends_at', None)
         state['reset_ts'] = datetime.utcnow().isoformat()
         league.set_state(state)
         db.session.commit()
@@ -2134,6 +2352,7 @@ def league_room(slug):
     league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
     is_virtual = league.is_virtual_league()
     state = league.get_state()
+    apply_pub_auto_progression(league, state)
     cfg = state.get('config', {})
 
     total_rounds = int(cfg.get('total_rounds', 3 if is_virtual else 5))
@@ -2146,8 +2365,12 @@ def league_room(slug):
 
     # Handle POST round score submission FIRST so it never hits GET redirects or race conditions!
     if request.method == 'POST':
-        round_score = int(request.form.get('score', 0))
         teams = state.get('teams', [])
+        round_score = score_pub_answers(state, current_round, request.form.get('answers'), cfg, total_rounds)
+        if round_score is None:
+            # Older phone still posting only its own total: accept it, but never above what the round can pay
+            round_score = min(int(request.form.get('score', 0)),
+                              pub_max_round_score(cfg, current_round, total_rounds))
         team_entry = resolve_pub_team(state, player, table_num, team_name, is_virtual)
 
         # Only an approved squad may bank a score, and only while the host has the round open.
@@ -2160,13 +2383,14 @@ def league_room(slug):
         table_num = str(team_entry.get('table', table_num))
         team_name = team_entry.get('name', team_name)
         if team_entry.get(f'round_{current_round}') is None:
-            team_entry['score'] = int(team_entry.get('score', 0)) + round_score
             team_entry[f'round_{current_round}'] = round_score
-            team_entry[f'progress_q_{current_round}'] = 5
+            team_entry[f'progress_q_{current_round}'] = PUB_QUESTIONS_PER_ROUND
+            recompute_pub_score(team_entry)
+        else:
+            # Already banked (a squad mate on another phone got there first): report what counted
+            round_score = int(team_entry[f'round_{current_round}'])
 
-        teams.sort(key=lambda x: x.get('score', 0), reverse=True)
-        for idx, t in enumerate(teams, 1):
-            t['rank'] = idx
+        rerank_pub_teams(teams)
 
         # Check if ALL approved tables have now completed this round!
         approved_teams = [t for t in teams if t.get('status') != 'pending']
@@ -2213,6 +2437,17 @@ def league_room(slug):
     max_tables = int(cfg.get('max_tables', 20))
     team_entry = resolve_pub_team(state, player, table_num, team_name, is_virtual)
 
+    # A squad mate on another phone joins the same scorecard with the squad's join code
+    squad_code = (request.args.get('squad_code') or request.form.get('squad_code') or '').strip()
+    if not team_entry and squad_code:
+        team_entry = join_pub_squad_by_code(state, player, squad_code)
+        if team_entry:
+            league.set_state(state)
+            db.session.commit()
+        else:
+            flash(f'Squad join code "{squad_code.upper()}" was not recognised for this league.', 'error')
+            return redirect(url_for('arena.league_lounge', slug=slug))
+
     if not team_entry:
         # Strictly prevent new teams from joining a pub quiz tournament that has already started.
         # With no squads registered at all there is no tournament in progress to protect.
@@ -2233,12 +2468,14 @@ def league_room(slug):
         team_entry = {
             'name': team_name,
             'table': str(table_num),
-            'members': 4,
+            'members': 1 if is_virtual else 4,
             'score': 0,
             'rank': len(teams) + 1,
             'status': 'pending',  # Held in bouncer queue until Quizmaster approves
             'owner': player.session_key
         }
+        if is_virtual:
+            team_entry['join_code'] = new_pub_join_code(teams)
         teams.append(team_entry)
         state['teams'] = teams
         league.set_state(state)
@@ -2306,6 +2543,7 @@ def league_room(slug):
         questions_json=questions_json,
         is_virtual=is_virtual,
         is_approved=is_approved,
+        join_code=team_entry.get('join_code') if team_entry else None,
         has_submitted_round=has_submitted_round,
         submitted_round_score=submitted_round_score,
         config=cfg,
@@ -2320,6 +2558,7 @@ def league_tv(slug):
     league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
     is_virtual = league.is_virtual_league()
     state = league.get_state()
+    apply_pub_auto_progression(league, state)
     current_round = state.get('current_round', 1)
     active_cfg = VIRTUAL_PUB_ROUNDS_CONFIG if is_virtual else PUB_ROUNDS_CONFIG
     round_info = active_cfg.get(current_round, active_cfg[1])

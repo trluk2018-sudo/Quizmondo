@@ -429,6 +429,7 @@
 
         <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="mgr-action-form space-y-5 text-xs">
           <input type="hidden" name="action" value="save_config">
+          {% if config.bar_promo_enabled %}<input type="hidden" name="bar_promo_enabled" value="true">{% endif %}
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
@@ -466,11 +467,18 @@
               <label class="block font-bold text-slate-300 uppercase">
                 Time Per Question (Seconds)
               </label>
-              <select name="question_time_limit" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-purple-500/30 text-white focus:outline-none focus:border-cyan-400">
-                <option value="15" {% if config.question_time_limit == 15 %}selected{% endif %}>15 Seconds (Fast Buzzer)</option>
-                <option value="20" {% if config.question_time_limit == 20 %}selected{% endif %}>20 Seconds (Standard Paced)</option>
-                <option value="30" {% if config.question_time_limit == 30 %}selected{% endif %}>30 Seconds (Relaxed Discussion)</option>
-              </select>
+              <input
+                type="number"
+                name="question_time_limit"
+                value="{{ config.question_time_limit or 15 }}"
+                min="10"
+                max="30"
+                step="1"
+                class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-purple-500/30 text-white focus:outline-none focus:border-cyan-400"
+              >
+              <span class="text-[10px] text-slate-500">
+                Anything from 10 to 30 seconds. 15 is a fast buzzer, 20 is standard paced, 30 gives a table time to discuss.
+              </span>
             </div>
 
             <!-- Interval Duration -->
@@ -486,6 +494,34 @@
               </select>
             </div>
 
+          </div>
+
+          <div class="space-y-3 pt-3 border-t border-purple-500/20">
+            <label class="flex items-start justify-between gap-4 p-4 rounded-2xl bg-slate-900 border border-purple-500/30 cursor-pointer">
+              <span>
+                <span class="font-bold text-cyan-300 block">Lock each round on the clock</span>
+                <span class="text-[10px] text-slate-400 block">
+                  Once every question's timer has run out the round locks itself and the answers are revealed,
+                  so one table walking off mid-round never holds up the rest. You can still hit Lock / Time's Up early.
+                </span>
+              </span>
+              <input type="checkbox" name="round_deadline_enabled" value="true"
+                {% if config.round_deadline_enabled %}checked{% endif %}
+                class="mt-0.5 w-5 h-5 rounded accent-cyan-500 cursor-pointer shrink-0">
+            </label>
+
+            <label class="flex items-start justify-between gap-4 p-4 rounded-2xl bg-slate-900 border border-purple-500/30 cursor-pointer">
+              <span>
+                <span class="font-bold text-cyan-300 block">Roll on to the next round by itself</span>
+                <span class="text-[10px] text-slate-400 block">
+                  After the interval the next round launches without anyone pressing a button — the whole quiz
+                  runs unattended. Leave this off for an in-venue quiz where you call each round from the mic.
+                </span>
+              </span>
+              <input type="checkbox" name="auto_advance_enabled" value="true"
+                {% if config.auto_advance_enabled %}checked{% endif %}
+                class="mt-0.5 w-5 h-5 rounded accent-cyan-500 cursor-pointer shrink-0">
+            </label>
           </div>
 
           <div class="pt-3 border-t border-purple-500/20 flex justify-end">
@@ -520,6 +556,8 @@
           <input type="hidden" name="max_tables" value="{{ config.max_tables or 20 }}">
           <input type="hidden" name="question_time_limit" value="{{ config.question_time_limit or 15 }}">
           <input type="hidden" name="interval_duration_mins" value="{{ config.interval_duration_mins or 8 }}">
+          {% if config.round_deadline_enabled %}<input type="hidden" name="round_deadline_enabled" value="true">{% endif %}
+          {% if config.auto_advance_enabled %}<input type="hidden" name="auto_advance_enabled" value="true">{% endif %}
 
           <!-- Half-time Break Promo Toggle -->
           <div class="p-4 rounded-2xl bg-amber-950/20 border border-amber-500/30 space-y-3">
