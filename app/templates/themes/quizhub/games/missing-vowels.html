@@ -1,0 +1,176 @@
+{% extends "themes/quizhub/games/_shell.html" %}
+
+{% block game_stage %}
+<div class="space-y-3">
+  <div class="p-5 sm:p-7 rounded-3xl bg-slate-950/95 border-2 border-fuchsia-500/35 shadow-2xl space-y-5 text-center relative overflow-hidden">
+    <div class="absolute -top-16 left-1/2 -translate-x-1/2 w-64 h-32 bg-fuchsia-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="relative space-y-4">
+      <div class="space-y-1 font-mono">
+        <div class="text-[9px] text-slate-500 uppercase tracking-wider">Category</div>
+        <div id="mvCategory" class="text-sm font-black text-fuchsia-300">—</div>
+      </div>
+
+      <div id="mvPuzzle" class="qmg-nosel py-3 font-mono font-black text-xl sm:text-3xl text-white tracking-[0.15em] leading-relaxed break-words">
+        —
+      </div>
+
+      <form id="mvForm" autocomplete="off" class="space-y-2.5">
+        <input id="mvInput" type="text" autocomplete="off" autocorrect="off" autocapitalize="characters"
+               spellcheck="false" maxlength="40" placeholder="Type the answer"
+               class="w-full px-4 py-3.5 rounded-2xl bg-slate-900/95 border-2 border-purple-500/30 text-white text-center font-mono font-black text-base uppercase placeholder:text-sm placeholder:font-normal placeholder:normal-case placeholder-slate-500 focus:outline-none focus:border-cyan-400">
+        <div class="grid grid-cols-2 gap-2">
+          <button type="submit" class="py-3 rounded-2xl bg-gradient-to-r from-fuchsia-500 to-purple-600 hover:from-fuchsia-400 hover:to-purple-500 text-slate-950 font-mono font-black text-[11px] uppercase tracking-wider shadow-lg transition">
+            Answer
+          </button>
+          <button type="button" id="mvPass" class="py-3 rounded-2xl bg-slate-900 border border-purple-500/30 text-rose-300 font-mono font-bold text-[11px] uppercase hover:border-rose-400 transition">
+            Pass ⏭
+          </button>
+        </div>
+      </form>
+
+      <div id="mvFeedback" class="min-h-[18px] font-mono text-xs font-bold"></div>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-slate-950/80 border border-purple-500/20 font-mono text-[11px]">
+    <span class="text-slate-400">Clue <strong id="mvProgress" class="text-cyan-300">1</strong> of <strong id="mvTotal" class="text-cyan-300">0</strong></span>
+    <span class="text-slate-400">Got: <strong id="mvGot" class="text-emerald-300">0</strong></span>
+  </div>
+</div>
+{% endblock %}
+
+{% block how_extra %}
+<p class="mt-2">Vowels are stripped out and the remaining letters are re-grouped, so the word breaks land in the wrong place on purpose.</p>
+{% endblock %}
+
+{% block game_js %}
+<script>
+(function () {
+  var SETS = {{ sets|tojson }};
+  var ROUND_SECONDS = 150;
+
+  var catEl = document.getElementById('mvCategory');
+  var puzzleEl = document.getElementById('mvPuzzle');
+  var inputEl = document.getElementById('mvInput');
+  var feedbackEl = document.getElementById('mvFeedback');
+  var progressEl = document.getElementById('mvProgress');
+  var totalEl = document.getElementById('mvTotal');
+  var gotEl = document.getElementById('mvGot');
+
+  var queue = [];
+  var current = null;
+  var got = 0;
+  var done = 0;
+  var total = 0;
+  var running = false;
+
+  // Strip the vowels, then re-chunk the consonants so the spacing misleads.
+  function mangle(text) {
+    var bare = text.toUpperCase().replace(/[AEIOU]/g, '').replace(/[^A-Z0-9]/g, '');
+    var chunks = [];
+    var i = 0;
+    while (i < bare.length) {
+      var size = 2 + Math.floor(Math.random() * 3); // 2-4 letters
+      if (bare.length - i - size === 1) size += 1;  // never leave a lone letter
+      chunks.push(bare.substr(i, size));
+      i += size;
+    }
+    return chunks.join(' ');
+  }
+
+  function buildQueue() {
+    var items = [];
+    SETS.forEach(function (set) {
+      set.items.forEach(function (item) {
+        items.push({ category: set.category, answer: item.toUpperCase() });
+      });
+    });
+    return QMG.shuffle(items);
+  }
+
+  function say(text, good) {
+    feedbackEl.textContent = text;
+    feedbackEl.className = 'min-h-[18px] font-mono text-xs font-bold ' + (good ? 'text-emerald-300' : 'text-rose-300');
+    setTimeout(function () {
+      if (feedbackEl.textContent === text) feedbackEl.textContent = '';
+    }, 1600);
+  }
+
+  function nextClue() {
+    if (!queue.length) { finishUp(true); return; }
+    current = queue.shift();
+    current.shown = mangle(current.answer);
+    catEl.textContent = current.category;
+    puzzleEl.textContent = current.shown;
+    puzzleEl.classList.remove('qmg-grow');
+    void puzzleEl.offsetWidth;
+    puzzleEl.classList.add('qmg-grow');
+    inputEl.value = '';
+    progressEl.textContent = Math.min(done + 1, total);
+    inputEl.focus({ preventScroll: true });
+  }
+
+  document.getElementById('mvForm').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    if (!running || !current) return;
+    var guess = QMG.normalise(inputEl.value);
+    if (!guess) return;
+
+    if (guess === QMG.normalise(current.answer)) {
+      got += 1; done += 1;
+      gotEl.textContent = got;
+      QMG.bumpCombo();
+      var points = Math.round((60 + current.answer.replace(/[^A-Za-z]/g, '').length * 5) * QMG.comboMultiplier());
+      QMG.addScore(points, puzzleEl);
+      QMG.audio.correct();
+      QMG.haptic(25);
+      QMG.addTime(4);
+      say('✅ ' + current.answer + ' — +' + points, true);
+      nextClue();
+    } else {
+      QMG.resetCombo();
+      QMG.audio.wrong();
+      QMG.shake(inputEl);
+      say('Not it — say the letters out loud', false);
+      inputEl.select();
+    }
+  });
+
+  document.getElementById('mvPass').addEventListener('click', function () {
+    if (!running || !current) return;
+    done += 1;
+    QMG.resetCombo();
+    QMG.audio.switchTurn();
+    say('It was ' + current.answer, false);
+    nextClue();
+  });
+
+  function finishUp(cleared) {
+    running = false;
+    inputEl.blur();
+    QMG.finish({
+      win: got > 0,
+      icon: cleared ? '🏆' : (got > 0 ? '✂️' : '⏱️'),
+      title: cleared ? 'All Clues Cracked!' : (got > 0 ? 'Time! Nicely done' : 'Time Up'),
+      sub: got + ' of ' + total + ' answers found.',
+    });
+  }
+
+  function start() {
+    queue = buildQueue();
+    total = queue.length;
+    totalEl.textContent = total;
+    got = 0; done = 0;
+    gotEl.textContent = '0';
+    feedbackEl.textContent = '';
+    running = true;
+    nextClue();
+    QMG.startTimer(ROUND_SECONDS, function () { finishUp(false); });
+  }
+
+  QMG.onReplay(start);
+  start();
+})();
+</script>
+{% endblock %}

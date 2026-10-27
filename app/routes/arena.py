@@ -551,7 +551,21 @@ def dashboard():
         else:
             incoming_challenges.append(m)
 
-    open_group_lobbies = GroupGame.query.filter_by(status='lobby').count()
+    # Live group lobbies, with enough detail for the dashboard to draw the seats
+    group_lobbies = []
+    for g in GroupGame.query.filter_by(status='lobby').order_by(GroupGame.created_at.desc()).limit(4).all():
+        seats = list(g.players)
+        group_lobbies.append({
+            'code': g.code,
+            'category_name': g.category_name,
+            'filled': len(seats),
+            'max_players': g.max_players or 6,
+            'min_players': g.min_players or 3,
+            'questions': g.total_questions,
+            'seconds': g.seconds_per_question,
+            'names': [p.display_name for p in seats][:6],
+            'starting': bool(g.starts_at)
+        })
 
     # Friends Roster & Open Group Challenges
     friends_roster, open_group_challenges = _get_friends_and_group_challenges(player)
@@ -572,7 +586,7 @@ def dashboard():
         history_matches=history_matches,
         friends_roster=friends_roster,
         open_group_challenges=open_group_challenges,
-        open_group_lobbies=open_group_lobbies,
+        group_lobbies=group_lobbies,
         top_players=top_players,
         packs=packs,
         avatars=AVATAR_PRESETS

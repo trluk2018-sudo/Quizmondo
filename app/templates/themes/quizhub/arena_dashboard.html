@@ -370,24 +370,102 @@
       </div>
 
       <!-- GROUP CHALLENGE: up to six players, same question at the same time -->
-      <div class="p-6 rounded-3xl bg-gradient-to-br from-cyan-950/40 via-slate-950/90 to-purple-950/40 border border-cyan-500/40 shadow-xl space-y-4 font-mono">
-        <div class="flex items-center justify-between border-b border-cyan-500/20 pb-3 gap-3">
+      <div class="relative p-6 rounded-3xl bg-slate-950/90 border-2 border-cyan-400/50 shadow-2xl shadow-cyan-500/10 space-y-5 font-mono overflow-hidden">
+        <!-- arena glow -->
+        <div class="absolute -top-20 -right-16 w-56 h-56 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-16 w-56 h-56 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="relative flex items-start justify-between gap-3">
           <div class="min-w-0">
-            <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
-              <span>🎮</span> GROUP CHALLENGE
-            </h3>
-            <p class="text-[11px] text-slate-400 mt-0.5">
-              Up to 6 players, same question at the same time, scores between every round.
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-2xl drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]">🎮</span>
+              <h3 class="text-base sm:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-purple-300 tracking-tight">
+                GROUP CHALLENGE
+              </h3>
+              <span class="px-2 py-0.5 rounded bg-pink-600/30 border border-pink-400/50 text-pink-200 text-[9px] font-black tracking-widest">NEW</span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">
+              Up to <strong class="text-cyan-300">6 players</strong>, the same question at the same time.
+              Fastest right answer scores most. Standings after every question.
             </p>
           </div>
-          {% if open_group_lobbies %}
-          <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black whitespace-nowrap shrink-0">
-            {{ open_group_lobbies }} WAITING
+          {% if group_lobbies %}
+          <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 text-[10px] font-black whitespace-nowrap shrink-0">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+            {{ group_lobbies|length }} LIVE
           </span>
           {% endif %}
         </div>
-        <a href="{{ url_for('arena.group_new') }}" class="block w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-slate-950 font-black text-xs uppercase tracking-wider text-center shadow-lg shadow-cyan-500/20 transition transform hover:-translate-y-0.5 active:scale-95">
-          {% if open_group_lobbies %}Join a Lobby{% else %}Open a Lobby{% endif %} &rarr;
+
+        {% if group_lobbies %}
+        <!-- lobbies you can drop straight into -->
+        <div class="relative space-y-2.5">
+          {% for lob in group_lobbies %}
+          <a href="{{ url_for('arena.group_lobby', code=lob.code) }}"
+             class="group block p-3.5 rounded-2xl bg-gradient-to-r from-cyan-950/50 via-slate-900 to-purple-950/50 border border-cyan-500/40 hover:border-cyan-300 transition">
+            <div class="flex items-center justify-between gap-3">
+              <div class="min-w-0 space-y-1.5">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs sm:text-sm font-black text-white truncate">{{ lob.category_name }}</span>
+                  {% if lob.starting %}
+                  <span class="px-1.5 py-0.5 rounded bg-emerald-500/25 text-emerald-300 text-[9px] font-black animate-pulse">STARTING</span>
+                  {% endif %}
+                </div>
+                <!-- seats -->
+                <div class="flex items-center gap-1.5">
+                  {% for i in range(lob.max_players) %}
+                    {% if i < lob.filled %}
+                    <span class="w-5 h-5 rounded-md bg-gradient-to-br from-cyan-400 to-blue-500 border border-cyan-200/60 shadow-[0_0_6px_rgba(34,211,238,0.6)] flex items-center justify-center text-[9px] text-slate-950 font-black">
+                      {{ (lob.names[i] or '?')[0]|upper }}
+                    </span>
+                    {% else %}
+                    <span class="w-5 h-5 rounded-md border border-dashed border-slate-600 bg-slate-900/60"></span>
+                    {% endif %}
+                  {% endfor %}
+                  <span class="text-[10px] text-slate-400 ml-1">{{ lob.filled }}/{{ lob.max_players }}</span>
+                </div>
+                <div class="text-[10px] text-slate-500">{{ lob.questions }} questions &bull; {{ lob.seconds }}s each</div>
+              </div>
+              <span class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 group-hover:from-cyan-300 group-hover:to-blue-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-cyan-500/30 shrink-0 transition transform group-hover:scale-105">
+                Take a Seat
+              </span>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+        {% else %}
+        <!-- nothing live: show the format itself as the draw -->
+        <div class="relative p-4 rounded-2xl bg-slate-900/70 border border-purple-500/25 space-y-3">
+          <div class="flex items-center justify-center gap-1.5">
+            {% for i in range(6) %}
+            <span class="w-7 h-7 rounded-lg border border-dashed border-cyan-500/40 bg-slate-950/80 flex items-center justify-center text-[11px] text-cyan-500/60">?</span>
+            {% endfor %}
+          </div>
+          <p class="text-[11px] text-slate-400 text-center leading-relaxed">
+            Six empty seats. Open a lobby, share the link, and it starts itself the moment
+            enough players are in &mdash; or fill the gaps with bots.
+          </p>
+        </div>
+        {% endif %}
+
+        <div class="relative grid grid-cols-3 gap-2 text-center">
+          <div class="p-2.5 rounded-xl bg-slate-900/80 border border-purple-500/25">
+            <div class="text-base font-black text-cyan-300">6</div>
+            <div class="text-[9px] text-slate-500 uppercase tracking-wider">Players Max</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-900/80 border border-purple-500/25">
+            <div class="text-base font-black text-amber-400">⚡</div>
+            <div class="text-[9px] text-slate-500 uppercase tracking-wider">Speed Scored</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-900/80 border border-purple-500/25">
+            <div class="text-base font-black text-pink-400">🤖</div>
+            <div class="text-[9px] text-slate-500 uppercase tracking-wider">Bots Fill In</div>
+          </div>
+        </div>
+
+        <a href="{{ url_for('arena.group_new') }}"
+           class="relative block w-full py-4 px-5 rounded-2xl bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 hover:from-cyan-300 hover:via-blue-400 hover:to-purple-500 text-slate-950 font-black text-sm uppercase tracking-wider text-center shadow-lg shadow-cyan-500/30 transition transform hover:-translate-y-0.5 active:scale-95">
+          {% if group_lobbies %}⚔️ Open Your Own Lobby{% else %}⚔️ Open a Lobby{% endif %} &rarr;
         </a>
       </div>
 

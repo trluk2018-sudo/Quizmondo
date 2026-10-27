@@ -1,0 +1,322 @@
+{% extends "themes/quizhub/games/_shell.html" %}
+
+{% block game_stage %}
+<div class="space-y-3">
+  <!-- Theme header -->
+  <div class="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-950/90 border border-purple-500/25 font-mono">
+    <div class="flex items-center gap-2 min-w-0">
+      <span class="text-xl shrink-0" id="wsIcon">🔍</span>
+      <div class="min-w-0">
+        <div class="text-[9px] text-slate-500 uppercase tracking-wider">Theme</div>
+        <div id="wsTheme" class="text-xs font-black text-white truncate">—</div>
+      </div>
+    </div>
+    <div class="text-right shrink-0">
+      <div class="text-[9px] text-slate-500 uppercase tracking-wider">Found</div>
+      <div class="text-xs font-black text-cyan-300"><span id="wsFound">0</span>/<span id="wsTotal">8</span></div>
+    </div>
+  </div>
+
+  <!-- Letter grid -->
+  <div id="wsGrid" class="qmg-nosel grid gap-[3px] p-2 rounded-2xl bg-slate-950/90 border-2 border-purple-500/30 shadow-xl select-none"
+       style="grid-template-columns: repeat(10, minmax(0, 1fr));"></div>
+
+  <!-- Word list -->
+  <div id="wsWords" class="flex flex-wrap gap-1.5 justify-center"></div>
+</div>
+{% endblock %}
+
+{% block how_extra %}
+<p class="mt-2">Words run in all eight directions. Tap the first letter, then the last — or drag across them in one go.</p>
+{% endblock %}
+
+{% block game_js %}
+<script>
+(function () {
+  var THEMES = {{ themes|tojson }};
+  var SIZE = 10;
+  var ROUND_SECONDS = 180;
+
+  var gridEl = document.getElementById('wsGrid');
+  var wordsEl = document.getElementById('wsWords');
+  var foundEl = document.getElementById('wsFound');
+  var totalEl = document.getElementById('wsTotal');
+
+  var grid = [];        // letters
+  var cells = [];       // DOM nodes, row-major
+  var placements = [];  // { word, path: [index,...] }
+  var foundWords = {};
+  var anchor = null;    // index of first tapped cell
+  var dragging = false;
+  var highlighted = [];
+  var theme = null;
+  var running = false;
+
+  var DIRS = [[0, 1], [1, 0], [1, 1], [1, -1], [0, -1], [-1, 0], [-1, -1], [-1, 1]];
+  var ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+  function idx(r, c) { return r * SIZE + c; }
+
+  function buildGrid(words) {
+    var g = [];
+    for (var r = 0; r < SIZE; r++) { g.push(new Array(SIZE).fill(null)); }
+    var placed = [];
+
+    words.forEach(function (word) {
+      var w = word.replace(/[^A-Za-z]/g, '').toUpperCase();
+      if (!w || w.length > SIZE) return;
+      for (var attempt = 0; attempt < 400; attempt++) {
+        var dir = DIRS[Math.floor(Math.random() * DIRS.length)];
+        var r0 = Math.floor(Math.random() * SIZE);
+        var c0 = Math.floor(Math.random() * SIZE);
+        var rEnd = r0 + dir[0] * (w.length - 1);
+        var cEnd = c0 + dir[1] * (w.length - 1);
+        if (rEnd < 0 || rEnd >= SIZE || cEnd < 0 || cEnd >= SIZE) continue;
+        var ok = true;
+        var path = [];
+        for (var i = 0; i < w.length; i++) {
+          var rr = r0 + dir[0] * i, cc = c0 + dir[1] * i;
+          var existing = g[rr][cc];
+          if (existing !== null && existing !== w[i]) { ok = false; break; }
+          path.push(idx(rr, cc));
+        }
+        if (!ok) continue;
+        for (var j = 0; j < w.length; j++) {
+          g[r0 + dir[0] * j][c0 + dir[1] * j] = w[j];
+        }
+        placed.push({ word: w, path: path });
+        break;
+      }
+    });
+
+    for (var r2 = 0; r2 < SIZE; r2++) {
+      for (var c2 = 0; c2 < SIZE; c2++) {
+        if (g[r2][c2] === null) g[r2][c2] = ALPHABET[Math.floor(Math.random() * 26)];
+      }
+    }
+    return { grid: g, placed: placed };
+  }
+
+  function cellClass(state) {
+    var base = 'aspect-square flex items-center justify-center rounded-md font-mono font-black text-[12px] sm:text-sm transition-colors duration-100 ';
+    if (state === 'found') return base + 'bg-emerald-500/90 text-slate-950';
+    if (state === 'live') return base + 'bg-cyan-400 text-slate-950';
+    if (state === 'anchor') return base + 'bg-purple-500 text-white';
+    return base + 'bg-slate-900/90 text-slate-200 border border-purple-500/15';
+  }
+
+  function render() {
+    gridEl.innerHTML = '';
+    cells = [];
+    for (var r = 0; r < SIZE; r++) {
+      for (var c = 0; c < SIZE; c++) {
+        var i = idx(r, c);
+        var cell = document.createElement('div');
+        cell.className = cellClass('idle');
+        cell.textContent = grid[r][c];
+        cell.dataset.i = i;
+        gridEl.appendChild(cell);
+        cells.push(cell);
+      }
+    }
+    renderWordList();
+  }
+
+  function renderWordList() {
+    wordsEl.innerHTML = '';
+    placements.forEach(function (p) {
+      var pill = document.createElement('span');
+      var done = !!foundWords[p.word];
+      pill.className = 'px-2.5 py-1 rounded-full font-mono text-[10px] sm:text-[11px] font-black border transition ' +
+        (done ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40 line-through opacity-60'
+              : 'bg-slate-900/90 text-slate-300 border-purple-500/25');
+      pill.textContent = p.word;
+      wordsEl.appendChild(pill);
+    });
+    foundEl.textContent = Object.keys(foundWords).length;
+    totalEl.textContent = placements.length;
+  }
+
+  function markFound(path) {
+    path.forEach(function (i) { cells[i].className = cellClass('found'); });
+  }
+
+  function repaintFound() {
+    placements.forEach(function (p) { if (foundWords[p.word]) markFound(p.path); });
+  }
+
+  function clearHighlight() {
+    highlighted.forEach(function (i) {
+      cells[i].className = cellClass('idle');
+    });
+    highlighted = [];
+    repaintFound();
+  }
+
+  function lineBetween(a, b) {
+    var r1 = Math.floor(a / SIZE), c1 = a % SIZE;
+    var r2 = Math.floor(b / SIZE), c2 = b % SIZE;
+    var dr = r2 - r1, dc = c2 - c1;
+    if (dr === 0 && dc === 0) return [a];
+    var steps = Math.max(Math.abs(dr), Math.abs(dc));
+    // Only straight lines: horizontal, vertical or exact diagonal
+    if (!(dr === 0 || dc === 0 || Math.abs(dr) === Math.abs(dc))) return null;
+    var sr = dr === 0 ? 0 : dr / Math.abs(dr);
+    var sc = dc === 0 ? 0 : dc / Math.abs(dc);
+    var path = [];
+    for (var i = 0; i <= steps; i++) { path.push(idx(r1 + sr * i, c1 + sc * i)); }
+    return path;
+  }
+
+  function showLine(path) {
+    clearHighlight();
+    if (!path) return;
+    path.forEach(function (i) {
+      if (!isFoundCell(i)) { cells[i].className = cellClass('live'); }
+    });
+    highlighted = path.slice();
+  }
+
+  function isFoundCell(i) {
+    for (var k = 0; k < placements.length; k++) {
+      if (foundWords[placements[k].word] && placements[k].path.indexOf(i) !== -1) return true;
+    }
+    return false;
+  }
+
+  function pathWord(path) {
+    return path.map(function (i) { return grid[Math.floor(i / SIZE)][i % SIZE]; }).join('');
+  }
+
+  function tryPath(path) {
+    if (!path || path.length < 2) return false;
+    var forward = pathWord(path);
+    var backward = forward.split('').reverse().join('');
+    for (var i = 0; i < placements.length; i++) {
+      var p = placements[i];
+      if (foundWords[p.word]) continue;
+      if (p.word === forward || p.word === backward) {
+        foundWords[p.word] = true;
+        markFound(p.path);
+        QMG.bumpCombo();
+        var gained = Math.round(100 * QMG.comboMultiplier());
+        QMG.addScore(gained, cells[path[Math.floor(path.length / 2)]]);
+        QMG.audio.correct();
+        QMG.haptic(25);
+        QMG.flashOk(gridEl);
+        renderWordList();
+        if (Object.keys(foundWords).length >= placements.length) { win(); }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function resolve(path) {
+    if (!tryPath(path)) {
+      QMG.resetCombo();
+      if (path && path.length > 1) { QMG.audio.wrong(); QMG.shake(gridEl); }
+      clearHighlight();
+    } else {
+      highlighted = [];
+    }
+  }
+
+  // --- input: works for both a drag and a tap-then-tap --------------------
+  function cellIndexFromEvent(ev) {
+    var t = ev.touches ? ev.touches[0] : ev;
+    var node = document.elementFromPoint(t.clientX, t.clientY);
+    if (!node || node.dataset === undefined || node.dataset.i === undefined) return null;
+    return parseInt(node.dataset.i, 10);
+  }
+
+  gridEl.addEventListener('pointerdown', function (ev) {
+    if (!running) return;
+    var i = cellIndexFromEvent(ev);
+    if (i === null) return;
+    ev.preventDefault();
+    if (anchor !== null && anchor !== i) {
+      // second tap of a tap-tap selection
+      resolve(lineBetween(anchor, i));
+      anchor = null;
+      return;
+    }
+    anchor = i;
+    dragging = true;
+    clearHighlight();
+    if (!isFoundCell(i)) cells[i].className = cellClass('anchor');
+    highlighted = [i];
+    QMG.audio.tick();
+  });
+
+  gridEl.addEventListener('pointermove', function (ev) {
+    if (!running || !dragging || anchor === null) return;
+    var i = cellIndexFromEvent(ev);
+    if (i === null) return;
+    ev.preventDefault();
+    var path = lineBetween(anchor, i);
+    if (path) showLine(path);
+  });
+
+  function endDrag(ev) {
+    if (!running || !dragging) return;
+    dragging = false;
+    var i = cellIndexFromEvent(ev);
+    if (i === null || i === anchor) {
+      // a plain tap: leave the anchor armed for a second tap
+      return;
+    }
+    resolve(lineBetween(anchor, i));
+    anchor = null;
+  }
+
+  gridEl.addEventListener('pointerup', endDrag);
+  gridEl.addEventListener('pointercancel', function () { dragging = false; });
+
+  // --- round flow --------------------------------------------------------
+  function win() {
+    running = false;
+    var secondsLeft = Math.round(QMG.timeLeft() / 1000);
+    var bonus = secondsLeft * 5;
+    QMG.addScore(bonus);
+    QMG.finish({
+      icon: '🔍',
+      title: 'Grid Cleared!',
+      sub: 'All ' + placements.length + ' ' + theme.title.toLowerCase() + ' words found.',
+      detail: ['Time bonus: +' + bonus + ' (' + secondsLeft + 's left)']
+    });
+  }
+
+  function timeUp() {
+    running = false;
+    var got = Object.keys(foundWords).length;
+    QMG.finish({
+      win: false,
+      icon: '⏱️',
+      title: 'Time Up',
+      sub: 'You found ' + got + ' of ' + placements.length + ' words.',
+    });
+  }
+
+  function start() {
+    theme = QMG.pick(THEMES);
+    document.getElementById('wsIcon').textContent = theme.icon || '🔍';
+    document.getElementById('wsTheme').textContent = theme.title;
+
+    var built = buildGrid(QMG.shuffle(theme.words));
+    grid = built.grid;
+    placements = built.placed;
+    foundWords = {};
+    anchor = null;
+    dragging = false;
+    highlighted = [];
+    render();
+    running = true;
+    QMG.startTimer(ROUND_SECONDS, timeUp);
+  }
+
+  QMG.onReplay(start);
+  start();
+})();
+</script>
+{% endblock %}

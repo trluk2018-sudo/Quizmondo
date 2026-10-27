@@ -1,0 +1,178 @@
+{% extends "themes/quizhub/base.html" %}
+
+{% block title %}{{ game.title }} • Quizmondo Mini Games{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#090317] text-slate-100 font-sans py-5 sm:py-10 relative overflow-x-hidden">
+  <!-- Ambient glow, same as the Arena screens -->
+  <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[320px] bg-purple-600/15 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute top-1/2 -right-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-xl mx-auto px-4 sm:px-6 space-y-5 relative z-10">
+
+    <!-- Top bar -->
+    <div class="flex items-center justify-between gap-3 border-b border-purple-500/20 pb-3">
+      <a href="{{ url_for('games.hub') }}" class="flex items-center gap-2 text-xs font-mono font-bold text-slate-400 hover:text-cyan-300 transition shrink-0">
+        <span class="text-base">&larr;</span> <span class="hidden sm:inline">All Games</span><span class="sm:hidden">Back</span>
+      </a>
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="text-xl shrink-0">{{ game.icon }}</span>
+        <h1 class="text-base sm:text-xl font-black font-mono text-white truncate">{{ game.title }}</h1>
+      </div>
+      <button type="button" onclick="QMG.toggleMute()" id="qmgSoundBtn" class="px-2.5 py-1.5 rounded-xl border border-purple-500/30 bg-slate-900/80 hover:border-cyan-400 text-xs font-mono text-cyan-300 transition shrink-0">
+        🔊
+      </button>
+    </div>
+
+    <!-- Score HUD -->
+    <div class="grid grid-cols-3 gap-2 font-mono">
+      <div class="p-2.5 rounded-2xl bg-slate-950/90 border border-purple-500/25 text-center">
+        <div class="text-[10px] text-slate-400 uppercase tracking-wider">Score</div>
+        <div id="qmgScore" class="text-lg sm:text-xl font-black text-cyan-300 tabular-nums">0</div>
+      </div>
+      <div class="p-2.5 rounded-2xl bg-slate-950/90 border border-purple-500/25 text-center relative overflow-hidden">
+        <div class="text-[10px] text-slate-400 uppercase tracking-wider">{% block hud_mid_label %}Time{% endblock %}</div>
+        <div id="qmgMid" class="text-lg sm:text-xl font-black text-amber-300 tabular-nums">{% block hud_mid_value %}--{% endblock %}</div>
+        <div id="qmgMidBar" class="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-cyan-400 to-purple-500 transition-all duration-200" style="width:100%"></div>
+      </div>
+      <div class="p-2.5 rounded-2xl bg-slate-950/90 border border-purple-500/25 text-center">
+        <div class="text-[10px] text-slate-400 uppercase tracking-wider">Your Best</div>
+        <div id="qmgBest" class="text-lg sm:text-xl font-black text-emerald-300 tabular-nums">{{ best }}</div>
+      </div>
+    </div>
+
+    <!-- Combo / streak pill -->
+    <div class="flex items-center justify-center min-h-[26px]">
+      <div id="qmgCombo" class="hidden px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-mono text-xs font-black animate-pulse">
+        🔥 <span id="qmgComboCount">0</span>x STREAK
+      </div>
+    </div>
+
+    <!-- The game itself -->
+    <div id="qmgStage" class="relative">
+      {% block game_stage %}{% endblock %}
+    </div>
+
+    <!-- How to play -->
+    <details class="rounded-2xl bg-slate-950/80 border border-purple-500/25 overflow-hidden">
+      <summary class="px-4 py-3 cursor-pointer font-mono text-xs font-bold text-cyan-300 flex items-center gap-2 select-none">
+        <span>❓</span> How to play
+      </summary>
+      <div class="px-4 pb-4 text-xs font-mono text-slate-400 leading-relaxed">
+        {{ game.how }}
+        {% block how_extra %}{% endblock %}
+      </div>
+    </details>
+
+    <!-- Leaderboard -->
+    <div class="rounded-3xl bg-slate-950/90 border border-amber-500/25 p-4 sm:p-5 space-y-3 font-mono">
+      <div class="flex items-center justify-between border-b border-amber-500/20 pb-2">
+        <h3 class="text-sm font-black text-white flex items-center gap-2"><span>🏆</span> TOP SCORES</h3>
+        <span class="text-[10px] text-slate-500">{{ game.title }}</span>
+      </div>
+      {% if leaderboard %}
+      <ol id="qmgBoard" class="space-y-1.5">
+        {% for row in leaderboard %}
+        <li class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-900/70 border border-purple-500/15 {% if player and row.player_session == player.session_key %}border-cyan-400/60 bg-cyan-950/25{% endif %}">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="w-5 text-[11px] font-black {% if loop.index == 1 %}text-amber-300{% elif loop.index == 2 %}text-slate-300{% elif loop.index == 3 %}text-orange-400{% else %}text-slate-500{% endif %}">{{ loop.index }}</span>
+            <span class="text-sm shrink-0">{{ avatar_lookup.get(row.avatar_key, {}).get('emoji', '🎮') }}</span>
+            <span class="text-xs font-bold text-white truncate">{{ row.display_name }}</span>
+          </div>
+          <span class="text-xs font-black text-emerald-300 tabular-nums shrink-0">{{ row.best_score }}</span>
+        </li>
+        {% endfor %}
+      </ol>
+      {% else %}
+      <p id="qmgBoardEmpty" class="text-xs text-slate-500 text-center py-3">No scores yet — the first one on the board is yours.</p>
+      {% endif %}
+    </div>
+
+    <!-- More games -->
+    <div class="pt-2 space-y-2">
+      <div class="text-[11px] font-mono text-slate-500 uppercase tracking-wider">Try another</div>
+      <div class="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1" style="scrollbar-width:none">
+        {% for g in games %}{% if g.key != game.key %}
+        <a href="{{ url_for('games.' ~ g.key|replace('-', '_')) }}" class="shrink-0 px-3 py-2 rounded-xl bg-slate-950/90 border border-purple-500/25 hover:border-cyan-400 transition flex items-center gap-1.5 font-mono text-[11px] font-bold text-slate-300 whitespace-nowrap">
+          <span>{{ g.icon }}</span> {{ g.title }}
+        </a>
+        {% endif %}{% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Shared round-over / game-over overlay -->
+<div id="qmgOverlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
+  <div id="qmgOverlayCard" class="bg-slate-950 border-2 border-purple-500/50 rounded-3xl p-6 sm:p-8 max-w-sm w-full space-y-4 shadow-2xl text-center font-mono relative overflow-hidden">
+    <div id="qmgOverlayGlow" class="absolute -top-20 left-1/2 -translate-x-1/2 w-72 h-40 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="relative space-y-4">
+      <div id="qmgOverlayIcon" class="text-5xl">🏆</div>
+      <h2 id="qmgOverlayTitle" class="text-2xl font-black text-white">Round Over</h2>
+      <p id="qmgOverlaySub" class="text-xs text-slate-400 leading-relaxed"></p>
+
+      <div class="py-3 space-y-1">
+        <div class="text-[10px] text-slate-400 uppercase tracking-wider">Final Score</div>
+        <div id="qmgOverlayScore" class="text-5xl font-black bg-gradient-to-r from-cyan-300 via-purple-300 to-pink-300 bg-clip-text text-transparent tabular-nums">0</div>
+        <div id="qmgOverlayBest" class="text-[11px] font-bold text-emerald-300"></div>
+      </div>
+
+      <div id="qmgOverlayRewards" class="hidden grid grid-cols-3 gap-2">
+        <div class="p-2 rounded-xl bg-slate-900/90 border border-purple-500/20">
+          <div class="text-[9px] text-slate-400">XP</div>
+          <div id="qmgOverlayXp" class="text-sm font-black text-cyan-300">+0</div>
+        </div>
+        <div class="p-2 rounded-xl bg-slate-900/90 border border-purple-500/20">
+          <div class="text-[9px] text-slate-400">COINS</div>
+          <div id="qmgOverlayCoins" class="text-sm font-black text-amber-400">+0</div>
+        </div>
+        <div class="p-2 rounded-xl bg-slate-900/90 border border-purple-500/20">
+          <div class="text-[9px] text-slate-400">RANK</div>
+          <div id="qmgOverlayRank" class="text-sm font-black text-purple-300">—</div>
+        </div>
+      </div>
+
+      <div id="qmgOverlayDetail" class="text-[11px] text-slate-400 space-y-1"></div>
+
+      <div class="flex gap-2 pt-1">
+        <button type="button" onclick="QMG.replay()" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-xl transition transform hover:-translate-y-0.5">
+          Play Again 🔁
+        </button>
+        <a href="{{ url_for('games.hub') }}" class="px-4 py-3 rounded-2xl border border-purple-500/40 text-slate-300 hover:text-white hover:border-cyan-400 font-bold text-xs transition flex items-center">
+          Games
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="qmgPopLayer" class="fixed inset-0 z-40 pointer-events-none overflow-hidden"></div>
+
+<style>
+  .qmg-pop { position: fixed; transform: translate(-50%, -50%); font-weight: 900; font-family: ui-monospace, monospace;
+             animation: qmgPop 900ms cubic-bezier(.2,.8,.3,1) forwards; text-shadow: 0 2px 12px rgba(0,0,0,.8); }
+  @keyframes qmgPop { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.6); }
+                      25% { opacity: 1; transform: translate(-50%, -80%) scale(1.15); }
+                      100% { opacity: 0; transform: translate(-50%, -190%) scale(1); } }
+  .qmg-confetti { position: fixed; width: 9px; height: 9px; border-radius: 2px; animation: qmgFall linear forwards; }
+  @keyframes qmgFall { 0% { opacity: 1; transform: translateY(-10vh) rotate(0deg); }
+                       100% { opacity: 0; transform: translateY(105vh) rotate(720deg); } }
+  .qmg-shake { animation: qmgShake 320ms ease-in-out; }
+  @keyframes qmgShake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-7px); }
+                        40% { transform: translateX(7px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+  .qmg-flash-ok { animation: qmgFlashOk 520ms ease-out; }
+  @keyframes qmgFlashOk { 0% { box-shadow: 0 0 0 0 rgba(16,185,129,.9); } 100% { box-shadow: 0 0 0 22px rgba(16,185,129,0); } }
+  .qmg-grow { animation: qmgGrow 260ms cubic-bezier(.2,1.3,.4,1); }
+  @keyframes qmgGrow { 0% { transform: scale(.82); } 100% { transform: scale(1); } }
+  #qmgStage, #qmgStage * { -webkit-tap-highlight-color: transparent; }
+  .qmg-nosel { user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+</style>
+
+<script src="/static/js/quiz-audio.js"></script>
+<script src="/static/js/games-fx.js"></script>
+<script>
+  QMG.init({ gameKey: "{{ game.key }}", best: {{ best or 0 }} });
+</script>
+{% block game_js %}{% endblock %}
+{% endblock %}

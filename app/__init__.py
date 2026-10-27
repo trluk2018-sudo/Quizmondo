@@ -108,11 +108,13 @@ def create_app(test_config=None):
     from .routes.admin import admin_bp
     from .routes.public import public_bp
     from .routes.arena import arena_bp
+    from .routes.games import games_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(public_bp)
     app.register_blueprint(arena_bp)
+    app.register_blueprint(games_bp)
 
     import re
     @app.template_filter('youtube_id')
