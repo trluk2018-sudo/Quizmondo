@@ -1,6 +1,6 @@
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify, session
 from werkzeug.utils import secure_filename
 from ..models import db, User, Post, Category, Page, Media, MenuItem, SidebarWidget, SiteSetting, PageModule, slugify, QuizQuestion, QuizPack, PlayerProfile, ArenaMatch, ArenaRound, PubLeague
@@ -1609,6 +1609,39 @@ def system_clear():
             p.matches_won = 0
         db.session.commit()
         flash(f'Cleared all {match_cnt} Arena Duels ({round_cnt} rounds) and reset win/loss counters.', 'success')
+
+    elif target == 'stale_duels':
+        # Abandoned duels only: never past Round 1, nobody has scored a point, and
+        # older than the chosen cut-off. Covers bot duels too, which are marked
+        # in_progress the moment they are created and so never sit in 'waiting'.
+        # A player who answered Round 1 badly still advances past Round 1, so a
+        # genuinely played duel can never match this.
+        try:
+            days = int(request.form.get('stale_days') or 7)
+        except ValueError:
+            days = 7
+        days = max(1, min(days, 365))
+        cutoff = datetime.utcnow() - timedelta(days=days)
+
+        candidates = ArenaMatch.query.filter(
+            ArenaMatch.status.in_(['waiting', 'in_progress']),
+            ArenaMatch.current_round <= 1,
+            ArenaMatch.created_at < cutoff
+        ).all()
+        stale_ids = [
+            m.id for m in candidates
+            if not (m.p1_total_score or 0) and not (m.p2_total_score or 0)
+        ]
+
+        if stale_ids:
+            ArenaRound.query.filter(ArenaRound.match_id.in_(stale_ids)).delete(synchronize_session=False)
+            ArenaMatch.query.filter(ArenaMatch.id.in_(stale_ids)).delete(synchronize_session=False)
+            db.session.commit()
+        flash(
+            f'Cleared {len(stale_ids)} abandoned duel(s) older than {days} day(s) '
+            f'(stuck on Round 1 with no score on either side). Played and completed duels untouched.',
+            'success' if stale_ids else 'info'
+        )
 
     elif target == 'guest_players':
         guests = PlayerProfile.query.filter(PlayerProfile.user_id.is_(None)).all()

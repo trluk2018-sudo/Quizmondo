@@ -47,6 +47,33 @@
     </div>
   </form>
 
+  <!-- Clear Abandoned Duels (Password Protected) -->
+  <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <div>
+      <h3 class="text-sm font-black text-amber-950 uppercase flex items-center gap-2">
+        <span>🧹 Clear Abandoned Duels</span>
+      </h3>
+      <p class="text-xs text-amber-900 mt-0.5">
+        Removes duels still stuck on Round 1 with no score on either side — started and walked away from, including
+        abandoned Bot duels. Anything where a round was actually played, or that is completed, is left alone.
+      </p>
+    </div>
+    <form action="{{ url_for('admin.system_clear') }}" method="POST" class="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0"
+          onsubmit="return confirm('Clear abandoned duels older than the selected age?');">
+      <input type="hidden" name="clear_target" value="stale_duels">
+      <select name="stale_days" class="px-3 py-2 rounded-lg border-2 border-amber-400 text-xs text-slate-900 font-bold bg-white">
+        <option value="1">Older than 1 day</option>
+        <option value="7" selected>Older than 7 days</option>
+        <option value="30">Older than 30 days</option>
+        <option value="90">Older than 90 days</option>
+      </select>
+      <input type="password" name="admin_password" required placeholder="Admin Password / PIN" class="px-3 py-2 rounded-lg border-2 border-amber-400 text-xs text-slate-900 font-bold bg-white w-44">
+      <button type="submit" class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-black text-xs uppercase whitespace-nowrap shadow">
+        Clear Abandoned
+      </button>
+    </form>
+  </div>
+
   <div class="bg-white rounded-2xl border-2 border-slate-300 shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-left text-xs">

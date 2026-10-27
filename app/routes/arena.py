@@ -159,8 +159,32 @@ def api_check_username():
     return jsonify({'available': True, 'name': u})
 
 
-def get_current_player():
-    """Retrieve or initialize the active player profile using session cookie or user_id."""
+def generate_guest_name(seed_key: str) -> str:
+    """Build a collision-proof guest name, derived from the visitor's session key.
+
+    Deriving it from the key keeps the name stable across page views for a
+    visitor who has no saved profile yet, and the 16.7M name space stops two
+    guests sharing a name — which the self-duel guard in match_lobby() would
+    otherwise mistake for one person duelling themselves.
+    """
+    rng = random.Random(seed_key)
+    for _ in range(40):
+        candidate = f"Challenger_{rng.randrange(16 ** 6):06x}"
+        taken_profile = PlayerProfile.query.filter(func.lower(PlayerProfile.display_name) == candidate.lower()).first()
+        taken_user = User.query.filter(func.lower(User.username) == candidate.lower()).first()
+        if not taken_profile and not taken_user:
+            return candidate
+    return f"Challenger_{secrets.token_hex(5)}"
+
+
+def get_current_player(persist=True):
+    """Retrieve or initialize the active player profile using session cookie or user_id.
+
+    With persist=False a visitor who has no profile yet gets a throwaway
+    in-memory profile instead of a saved row, so simply browsing the Arena no
+    longer leaves a guest account behind. Routes that actually start or change
+    something keep the default, which saves the profile as before.
+    """
     session.permanent = True
     user_id = session.get('user_id')
     profile = None
@@ -189,10 +213,13 @@ def get_current_player():
         profile = PlayerProfile.query.filter_by(session_key=player_key).first()
 
     if not profile:
-        new_key = secrets.token_urlsafe(16)
+        # Reuse the key already in the cookie where there is one, so a visitor who
+        # browsed first keeps the same identity once their profile is finally saved.
+        new_key = player_key or secrets.token_urlsafe(16)
         session['qm_player_key'] = new_key
-        rand_avatar = random.choice(AVATAR_PRESETS)['key']
-        rand_name = session.get('username') or f"Challenger_{random.randint(100, 999)}"
+        # Seeded from the key so a browsing guest sees the same avatar and name on every page.
+        rand_avatar = random.Random(new_key).choice(AVATAR_PRESETS)['key']
+        rand_name = session.get('username') or generate_guest_name(new_key)
         profile = PlayerProfile(
             user_id=user_id,
             session_key=new_key,
@@ -205,8 +232,9 @@ def get_current_player():
             matches_played=0,
             matches_won=0
         )
-        db.session.add(profile)
-        db.session.commit()
+        if persist:
+            db.session.add(profile)
+            db.session.commit()
     elif user_id and not profile.user_id:
         profile.user_id = user_id
         if session.get('username'):
@@ -337,7 +365,7 @@ def _get_friends_and_group_challenges(player: PlayerProfile) -> tuple:
 @arena_bp.route('/api/notifications')
 def api_notifications():
     """Lightweight live notification endpoint for mobile & desktop: alerts when it's your turn, a friend challenged you, or a duel completed."""
-    player = get_current_player()
+    player = get_current_player(persist=False)
     active_matches = ArenaMatch.query.filter(
         (ArenaMatch.player1_session == player.session_key) | (ArenaMatch.player2_session == player.session_key),
         ArenaMatch.status.in_(['waiting', 'in_progress'])
@@ -426,7 +454,7 @@ def api_notifications():
 @arena_bp.route('/')
 def dashboard():
     """Arena Hub: Active duels, Completed Duels ready for Rematch, Friends & Group Challenges, leaderboards preview, and quick play."""
-    player = get_current_player()
+    player = get_current_player(persist=False)
     
     # Active matches where player is participant
     raw_active = ArenaMatch.query.filter(
@@ -746,7 +774,7 @@ def _build_whatsapp_messages(match: ArenaMatch, player: PlayerProfile, is_player
 @arena_bp.route('/match/<match_code>')
 def match_lobby(match_code):
     """Lobby, turn sync controller, and stage-gated round answer comparison for a match."""
-    player = get_current_player()
+    player = get_current_player(persist=False)
     match = ArenaMatch.query.filter_by(match_code=match_code).first_or_404()
     has_account = bool(session.get('user_id'))
 
@@ -898,7 +926,7 @@ def convert_to_whatsapp(match_code):
 @arena_bp.route('/match/<match_code>/status')
 def match_status_poll(match_code):
     """Lightweight JSON status endpoint so waiting players auto-refresh when an opponent joins, completes a round, or starts a rematch."""
-    player = get_current_player()
+    player = get_current_player(persist=False)
     match = ArenaMatch.query.filter_by(match_code=match_code).first_or_404()
     if match.status in ('waiting', 'in_progress'):
         exp_t = match.expected_turn()
@@ -972,7 +1000,7 @@ def match_nudge_redirect(match_code):
 @arena_bp.route('/match/<match_code>/play')
 def play_round(match_code):
     """Live interactive round play screen with timer and mascot reaction."""
-    player = get_current_player()
+    player = get_current_player(persist=False)
     match = ArenaMatch.query.filter_by(match_code=match_code).first_or_404()
     has_account = bool(session.get('user_id'))
 
@@ -1539,7 +1567,7 @@ def player_login():
         else:
             flash("Invalid player name/email or 6-digit PIN.", "error")
 
-    player = get_current_player()
+    player = get_current_player(persist=False)
     return render_template('themes/quizhub/arena_login.html', player=player)
 
 
@@ -1557,7 +1585,7 @@ def player_logout():
 @arena_bp.route('/leaderboard')
 def leaderboard():
     """Full global leaderboard ranking table."""
-    player = get_current_player()
+    player = get_current_player(persist=False)
     top_players = PlayerProfile.query.order_by(PlayerProfile.xp.desc()).limit(50).all()
     return render_template(
         'themes/quizhub/arena_leaderboard.html',
@@ -1569,7 +1597,7 @@ def leaderboard():
 @arena_bp.route('/leagues')
 def leagues():
     """Virtual & Pub Quiz Leagues directory."""
-    player = get_current_player()
+    player = get_current_player(persist=False)
     all_leagues = PubLeague.query.filter_by(is_active=True).order_by(PubLeague.created_at.desc()).all()
     return render_template(
         'themes/quizhub/arena_leagues.html',
@@ -1598,7 +1626,7 @@ def league_join():
 @arena_bp.route('/leagues/<slug>')
 def league_lounge(slug):
     """Pub League Venue Lounge: Squad registration, schedule, and TV mode."""
-    player = get_current_player()
+    player = get_current_player(persist=False)
     league = PubLeague.query.filter_by(slug=slug, is_active=True).first_or_404()
     state = league.get_state()
     is_virtual = league.is_virtual_league()
@@ -2470,7 +2498,7 @@ def challenge_fresh(target_session):
 @arena_bp.route('/packs')
 def packs_directory():
     """Browse all Core and Community Trivia Packs."""
-    player = get_current_player()
+    player = get_current_player(persist=False)
     all_packs = QuizPack.query.order_by(QuizPack.is_community.asc(), QuizPack.created_at.desc()).all()
     return render_template(
         'themes/quizhub/arena_packs.html',
