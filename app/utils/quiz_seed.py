@@ -913,11 +913,12 @@ GUIDE_POSTS = [
 # worse than a generic one. An earlier pass assigned these by position, which is how a
 # piece about Saturn's moons ended up illustrated with a Ludo board.
 ARTICLE_COVERS = {
-    'which-planet-has-the-most-moons-saturn-jupiter': '/static/img/articles/moons.jpg',
+    # Drawn rather than photographed: a photograph of one moon does not say 146 of them
+    'which-planet-has-the-most-moons-saturn-jupiter': '/static/img/articles/moons-drawn.svg',
     'ancient-enigmas-7-historical-trivia-facts-that-sound-fake': '/static/img/articles/pyramids.jpg',
     'the-10-commandments-of-running-a-legend-tier-pub-quiz-night': '/static/img/articles/pub.jpg',
     'chiptunes-waveforms-how-8-bit-audio-boosts-trivia-recall': '/static/img/quizhub_hero.jpg',
-    'evolution-of-speedruns-breaking-impossible-video-game-records': '/static/img/quizhub_arcade.jpg',
+    'evolution-of-speedruns-breaking-impossible-video-game-records': '/static/img/articles/speedrun.jpg',
     'why-turn-based-quiz-duels-are-the-future': '/static/img/articles/chess.jpg',
 }
 

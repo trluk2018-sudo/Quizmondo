@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <radialGradient id="space" cx="38%" cy="34%" r="86%">
+      <stop offset="0%" stop-color="#1b1247"/>
+      <stop offset="52%" stop-color="#0c0726"/>
+      <stop offset="100%" stop-color="#05030f"/>
+    </radialGradient>
+
+    <linearGradient id="giant" x1="12%" y1="4%" x2="88%" y2="96%">
+      <stop offset="0%" stop-color="#fde8c3"/>
+      <stop offset="28%" stop-color="#e8bf86"/>
+      <stop offset="58%" stop-color="#c98f52"/>
+      <stop offset="100%" stop-color="#6b4320"/>
+    </linearGradient>
+
+    <linearGradient id="ringband" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#d9c7a3" stop-opacity=".15"/>
+      <stop offset="22%" stop-color="#f3e4c4" stop-opacity=".85"/>
+      <stop offset="50%" stop-color="#cbb48c" stop-opacity=".55"/>
+      <stop offset="78%" stop-color="#f3e4c4" stop-opacity=".85"/>
+      <stop offset="100%" stop-color="#d9c7a3" stop-opacity=".15"/>
+    </linearGradient>
+
+    <radialGradient id="moonLit" cx="34%" cy="30%" r="72%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="45%" stop-color="#d7dbe4"/>
+      <stop offset="78%" stop-color="#9aa3b2"/>
+      <stop offset="100%" stop-color="#4d5464"/>
+    </radialGradient>
+
+    <radialGradient id="moonCool" cx="34%" cy="30%" r="72%">
+      <stop offset="0%" stop-color="#e8f3ff"/>
+      <stop offset="45%" stop-color="#b9cde0"/>
+      <stop offset="80%" stop-color="#7c93ab"/>
+      <stop offset="100%" stop-color="#3c4a5c"/>
+    </radialGradient>
+
+    <radialGradient id="moonWarm" cx="34%" cy="30%" r="72%">
+      <stop offset="0%" stop-color="#ffeedc"/>
+      <stop offset="45%" stop-color="#e4c49c"/>
+      <stop offset="80%" stop-color="#a8824f"/>
+      <stop offset="100%" stop-color="#4f3a20"/>
+    </radialGradient>
+
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#8ab4ff" stop-opacity=".35"/>
+      <stop offset="100%" stop-color="#8ab4ff" stop-opacity="0"/>
+    </radialGradient>
+
+    <clipPath id="giantClip"><circle cx="268" cy="236" r="132"/></clipPath>
+    <clipPath id="ringFront"><rect x="36" y="236" width="464" height="150"/></clipPath>
+  </defs>
+
+  <rect width="800" height="450" fill="url(#space)"/>
+
+  <g fill="#ffffff">
+    <circle cx="62" cy="48" r="1.6" opacity=".9"/><circle cx="148" cy="92" r="1.1" opacity=".6"/>
+    <circle cx="214" cy="38" r="1.4" opacity=".75"/><circle cx="330" cy="70" r="1" opacity=".5"/>
+    <circle cx="412" cy="30" r="1.7" opacity=".85"/><circle cx="498" cy="86" r="1.2" opacity=".6"/>
+    <circle cx="566" cy="42" r="1.5" opacity=".8"/><circle cx="668" cy="96" r="1.1" opacity=".55"/>
+    <circle cx="742" cy="54" r="1.8" opacity=".9"/><circle cx="96" cy="188" r="1.2" opacity=".55"/>
+    <circle cx="44" cy="298" r="1.5" opacity=".7"/><circle cx="118" cy="392" r="1.1" opacity=".5"/>
+    <circle cx="256" cy="418" r="1.4" opacity=".65"/><circle cx="392" cy="402" r="1" opacity=".45"/>
+    <circle cx="612" cy="356" r="1.3" opacity=".6"/><circle cx="716" cy="300" r="1.6" opacity=".8"/>
+    <circle cx="762" cy="408" r="1.2" opacity=".55"/><circle cx="534" cy="414" r="1.5" opacity=".7"/>
+    <circle cx="690" cy="176" r="1.1" opacity=".5"/><circle cx="596" cy="248" r="1.3" opacity=".6"/>
+  </g>
+
+  <ellipse cx="268" cy="236" rx="250" ry="180" fill="url(#glow)"/>
+
+  <!-- ring behind the planet -->
+  <g transform="rotate(-18 268 236)">
+    <ellipse cx="268" cy="236" rx="218" ry="52" fill="none" stroke="url(#ringband)" stroke-width="26"/>
+  </g>
+
+  <!-- the gas giant, with its banding -->
+  <circle cx="268" cy="236" r="132" fill="url(#giant)"/>
+  <g clip-path="url(#giantClip)" opacity=".5">
+    <path d="M136 182 Q268 160 400 186 L400 200 Q268 176 136 198 Z" fill="#8a5a2b"/>
+    <path d="M136 216 Q268 200 400 222 L400 240 Q268 216 136 238 Z" fill="#a9743c" opacity=".8"/>
+    <path d="M136 262 Q268 244 400 268 L400 288 Q268 264 136 286 Z" fill="#7d4f24"/>
+    <path d="M136 310 Q268 294 400 316 L400 332 Q268 310 136 330 Z" fill="#935f2c" opacity=".75"/>
+    <ellipse cx="206" cy="272" rx="34" ry="17" fill="#c0692f" opacity=".65"/>
+  </g>
+  <circle cx="268" cy="236" r="132" fill="none" stroke="#2a1708" stroke-opacity=".45" stroke-width="2"/>
+
+  <!-- ring in front of the planet -->
+  <g transform="rotate(-18 268 236)" clip-path="url(#ringFront)">
+    <ellipse cx="268" cy="236" rx="218" ry="52" fill="none" stroke="url(#ringband)" stroke-width="26"/>
+  </g>
+
+  <!-- the moons -->
+  <g>
+    <circle cx="612" cy="146" r="54" fill="url(#moonLit)"/>
+    <g fill="#8e97a6" opacity=".55">
+      <circle cx="596" cy="128" r="11"/><circle cx="628" cy="160" r="8"/>
+      <circle cx="600" cy="168" r="5.5"/><circle cx="636" cy="122" r="4.5"/>
+      <circle cx="574" cy="152" r="4"/>
+    </g>
+    <circle cx="612" cy="146" r="54" fill="none" stroke="#0b0a16" stroke-opacity=".35" stroke-width="1.5"/>
+
+    <circle cx="688" cy="268" r="33" fill="url(#moonCool)"/>
+    <g fill="#6f839a" opacity=".55">
+      <circle cx="678" cy="256" r="7"/><circle cx="700" cy="278" r="5"/><circle cx="676" cy="282" r="3.5"/>
+    </g>
+
+    <circle cx="520" cy="314" r="24" fill="url(#moonWarm)"/>
+    <g fill="#9b7544" opacity=".5">
+      <circle cx="513" cy="306" r="5"/><circle cx="529" cy="321" r="3.6"/>
+    </g>
+
+    <circle cx="470" cy="112" r="17" fill="url(#moonCool)"/>
+    <circle cx="465" cy="106" r="3.6" fill="#6f839a" opacity=".55"/>
+
+    <circle cx="726" cy="384" r="13" fill="url(#moonLit)"/>
+    <circle cx="722" cy="380" r="3" fill="#8e97a6" opacity=".5"/>
+
+    <circle cx="398" cy="372" r="10" fill="url(#moonWarm)"/>
+    <circle cx="560" cy="212" r="7.5" fill="url(#moonLit)"/>
+    <circle cx="754" cy="196" r="6" fill="url(#moonCool)"/>
+    <circle cx="452" cy="256" r="5" fill="url(#moonLit)" opacity=".9"/>
+    <circle cx="640" cy="330" r="4.5" fill="url(#moonWarm)" opacity=".9"/>
+    <circle cx="500" cy="392" r="4" fill="url(#moonCool)" opacity=".85"/>
+    <circle cx="340" cy="92" r="3.5" fill="url(#moonLit)" opacity=".8"/>
+    <circle cx="668" cy="60" r="3" fill="url(#moonCool)" opacity=".75"/>
+  </g>
+</svg>
