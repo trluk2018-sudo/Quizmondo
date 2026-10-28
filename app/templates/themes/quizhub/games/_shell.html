@@ -149,22 +149,71 @@
 
 <div id="qmgPopLayer" class="fixed inset-0 z-40 pointer-events-none overflow-hidden"></div>
 
-<!-- Rotate hint. These games are laid out for a portrait phone, so it is
-     landscape that squashes them, not the other way round. Pure CSS, so it
-     can never get out of step with the real orientation. -->
+<!-- Rotate hint. These games are laid out for an upright screen. The real
+     problem is not the screen size but the on-screen keyboard: in landscape it
+     can take half the height, which on a tablet leaves almost nothing of the
+     game showing. So we watch the space actually left to us rather than
+     guessing from the device. -->
 <div id="qmgRotate" class="qmg-rotate">
   <div class="text-center space-y-4 px-8">
     <div class="text-5xl qmg-rotate-icon">📱</div>
-    <h2 class="text-xl font-black font-mono text-white">Turn your phone upright</h2>
-    <p class="text-xs font-mono text-slate-400 leading-relaxed max-w-xs mx-auto">
+    <h2 class="text-xl font-black font-mono text-white">Turn your device upright</h2>
+    <p id="qmgRotateWhy" class="text-xs font-mono text-slate-400 leading-relaxed max-w-xs mx-auto">
       {{ game.title }} is laid out for a portrait screen — sideways leaves too little room to play it properly.
     </p>
-    <button type="button" onclick="document.getElementById('qmgRotate').classList.add('qmg-rotate-off')"
+    <button type="button" id="qmgRotateDismiss"
             class="px-5 py-2.5 rounded-2xl border border-purple-500/40 text-slate-300 hover:text-white hover:border-cyan-400 font-mono font-bold text-[11px] uppercase tracking-wider transition">
       Carry on anyway
     </button>
   </div>
 </div>
+<script>
+(function () {
+  var panel = document.getElementById('qmgRotate');
+  var why = document.getElementById('qmgRotateWhy');
+  var dismissed = false;
+
+  document.getElementById('qmgRotateDismiss').addEventListener('click', function () {
+    dismissed = true;
+    panel.classList.add('qmg-rotate-off');
+  });
+
+  var vv = window.visualViewport;
+  if (!vv) {
+    // Old browser: fall back to the plain short-landscape media query
+    panel.classList.add('qmg-rotate-fallback');
+    return;
+  }
+
+  // Below this there is not enough height left for a game plus its controls.
+  var MIN_HEIGHT = 480;
+
+  function review() {
+    if (dismissed) return;
+    var landscape = vv.width > vv.height;
+    var cramped = vv.height < MIN_HEIGHT;
+    // A keyboard is up when the visual viewport is a good deal shorter than
+    // the window itself.
+    var keyboardUp = (window.innerHeight - vv.height) > 120;
+
+    if (landscape && cramped) {
+      why.textContent = keyboardUp
+        ? 'The keyboard is covering most of the board. Turning upright gives ' +
+          '{{ game.title }} room for both.'
+        : '{{ game.title }} is laid out for a portrait screen — sideways leaves ' +
+          'too little room to play it properly.';
+      panel.classList.add('qmg-rotate-on');
+    } else {
+      panel.classList.remove('qmg-rotate-on');
+    }
+  }
+
+  vv.addEventListener('resize', review);
+  vv.addEventListener('scroll', review);
+  window.addEventListener('orientationchange', function () { setTimeout(review, 250); });
+  review();
+})();
+</script>
 
 <style>
   .qmg-pop { position: fixed; transform: translate(-50%, -50%); font-weight: 900; font-family: ui-monospace, monospace;
@@ -186,14 +235,16 @@
   .qmg-nosel { user-select: none; -webkit-user-select: none; touch-action: manipulation; }
 
   .qmg-rotate { display: none; }
-  /* Only a short landscape viewport, so it never fires on a laptop or tablet */
+  .qmg-rotate.qmg-rotate-on {
+    display: flex; align-items: center; justify-content: center;
+    position: fixed; inset: 0; z-index: 60;
+    background: rgba(9, 3, 23, .97); backdrop-filter: blur(6px);
+  }
+  .qmg-rotate.qmg-rotate-off { display: none !important; }
+  /* Fallback for anything without visualViewport: a short landscape screen */
   @media (orientation: landscape) and (max-height: 500px) {
-    .qmg-rotate {
-      display: flex; align-items: center; justify-content: center;
-      position: fixed; inset: 0; z-index: 60;
-      background: rgba(9, 3, 23, .97); backdrop-filter: blur(6px);
-    }
-    .qmg-rotate.qmg-rotate-off { display: none; }
+    .qmg-rotate.qmg-rotate-fallback { display: flex; align-items: center; justify-content: center;
+      position: fixed; inset: 0; z-index: 60; background: rgba(9, 3, 23, .97); }
   }
   .qmg-rotate-icon { animation: qmgTip 1.8s ease-in-out infinite; }
   @keyframes qmgTip {
