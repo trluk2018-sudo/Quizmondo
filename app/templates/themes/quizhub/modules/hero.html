@@ -27,11 +27,29 @@
           <a href="{{ cfg.get('primary_btn_url') or '#quiz-arena' }}" class="px-8 py-4 rounded-xl bg-gradient-to-r from-amber-400 via-orange-500 to-pink-500 hover:from-amber-300 hover:to-pink-400 text-slate-950 font-black text-sm uppercase tracking-wider shadow-lg shadow-orange-500/30 transition transform hover:-translate-y-0.5">
             {{ cfg.get('primary_btn_text') or 'Play Daily Quiz ⚡' }}
           </a>
-          {% if cfg.get('secondary_btn_text') %}
-          <a href="{{ cfg.get('secondary_btn_url') or '/contact' }}" class="px-7 py-3.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-cyan-300 font-bold text-xs uppercase tracking-wider border border-cyan-500/40 transition">
-            {{ cfg.get('secondary_btn_text') }}
-          </a>
+          {# Rolling secondary CTA: one button shell, the label rolls through
+             each part of the site and the link follows whatever is showing. #}
+          {% set roll_items = [
+            {'icon': '🎮', 'text': 'Play Mini Games', 'url': url_for('games.hub')},
+            {'icon': '⚔️', 'text': 'Start a Duel', 'url': url_for('arena.dashboard')},
+            {'icon': '📦', 'text': 'Browse Trivia Decks', 'url': url_for('arena.packs_directory')},
+            {'icon': '🍻', 'text': 'Join a Pub Quiz', 'url': url_for('arena.leagues')},
+            {'icon': '🏆', 'text': 'See the Leaderboard', 'url': url_for('arena.leaderboard')}
+          ] %}
+          {% set roll_urls = roll_items|map(attribute='url')|list %}
+          {% if cfg.get('secondary_btn_text') and cfg.get('secondary_btn_url') not in roll_urls %}
+            {% set _ = roll_items.append({'icon': '✨', 'text': cfg.get('secondary_btn_text'), 'url': cfg.get('secondary_btn_url')}) %}
           {% endif %}
+
+          <a href="{{ roll_items[0].url }}" id="qmRollCta"
+             class="qm-roll group px-7 py-3.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-cyan-300 font-bold text-xs uppercase tracking-wider border border-cyan-500/40 hover:border-cyan-300 transition">
+            {% for item in roll_items %}
+            <span class="qm-roll-item{% if loop.first %} is-active{% endif %}"
+                  data-url="{{ item.url }}">
+              <span class="qm-roll-icon">{{ item.icon }}</span>{{ item.text }}
+            </span>
+            {% endfor %}
+          </a>
         </div>
 
         <!-- Trivia Game Stats Strip -->
@@ -114,6 +132,72 @@
     </div>
   </div>
 </section>
+
+<style>
+  /* Rolling CTA. Every label sits in the same grid cell, so the button is as
+     wide as its longest label and never jumps as the text changes. */
+  .qm-roll { display: inline-grid; align-items: center; justify-items: center; overflow: hidden; line-height: 1.2; }
+  .qm-roll-item {
+    grid-area: 1 / 1;
+    display: flex; align-items: center; gap: 0.5rem; white-space: nowrap;
+    transform: translateY(115%);
+    opacity: 0;
+    transition: transform 520ms cubic-bezier(.22,.9,.28,1), opacity 320ms ease;
+    pointer-events: none;
+  }
+  .qm-roll-item.is-active { transform: translateY(0); opacity: 1; }
+  .qm-roll-item.is-exit { transform: translateY(-115%); opacity: 0; }
+  .qm-roll-icon { font-size: 1rem; line-height: 1; }
+  @media (prefers-reduced-motion: reduce) {
+    .qm-roll-item { transition: opacity 200ms ease; transform: none; }
+    .qm-roll-item.is-exit { transform: none; }
+  }
+</style>
+
+<script>
+(function () {
+  var cta = document.getElementById('qmRollCta');
+  if (!cta) return;
+  var items = cta.querySelectorAll('.qm-roll-item');
+  if (items.length < 2) return;
+
+  var at = 0;
+  var timer = null;
+  var HOLD = 2600;
+
+  function show(next) {
+    var current = items[at];
+    var incoming = items[next];
+    current.classList.remove('is-active');
+    current.classList.add('is-exit');
+    incoming.classList.remove('is-exit');
+    // Force a reflow so the incoming label starts from below rather than
+    // jumping straight to its resting position.
+    void incoming.offsetWidth;
+    incoming.classList.add('is-active');
+    // The link follows whatever is arriving, so a click always goes where the
+    // button says it will.
+    cta.setAttribute('href', incoming.dataset.url);
+    at = next;
+  }
+
+  function roll() { show((at + 1) % items.length); }
+
+  function play() { if (!timer) timer = setInterval(roll, HOLD); }
+  function pause() { if (timer) { clearInterval(timer); timer = null; } }
+
+  // Hold still while someone is actually aiming at it
+  cta.addEventListener('mouseenter', pause);
+  cta.addEventListener('mouseleave', play);
+  cta.addEventListener('focus', pause);
+  cta.addEventListener('blur', play);
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { pause(); } else { play(); }
+  });
+
+  play();
+})();
+</script>
 
 {% if featured_games and featured_games|length > 1 %}
 <script>
