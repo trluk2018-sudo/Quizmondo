@@ -1,0 +1,43 @@
+{% extends "themes/quizhub/base.html" %}
+
+{% block title %}{{ heading }} • Quizmondo{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#090317] text-slate-100 font-sans py-12 sm:py-20 relative overflow-x-hidden">
+  <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[350px] {% if ok %}bg-emerald-500/15{% else %}bg-rose-600/15{% endif %} rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-xl mx-auto px-4 sm:px-6 relative z-10">
+    <div class="p-6 sm:p-8 rounded-3xl bg-slate-950/90 border-2 {% if ok %}border-emerald-500/45{% else %}border-rose-500/40{% endif %} shadow-2xl space-y-5 text-center">
+
+      <div class="text-5xl">{% if ok %}✅{% else %}⌛{% endif %}</div>
+
+      <div class="space-y-2">
+        <h1 class="text-2xl sm:text-3xl font-black font-mono text-white tracking-tight">{{ heading }}</h1>
+        <p class="text-xs sm:text-sm font-mono text-slate-400 leading-relaxed">{{ detail }}</p>
+      </div>
+
+      {% if ok %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+        <a href="{{ url_for('games.hub') }}"
+           class="px-5 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-xl transition transform hover:-translate-y-0.5">
+          🎮 Mini Games
+        </a>
+        <a href="{{ url_for('arena.dashboard') }}"
+           class="px-5 py-3 rounded-2xl bg-slate-900 border border-purple-500/40 hover:border-cyan-400 text-slate-100 font-black text-xs uppercase tracking-wider transition">
+          ⚔️ Open the Arena
+        </a>
+      </div>
+      {% else %}
+      <form method="POST" action="{{ url_for('account.confirm_send') }}" class="pt-2">
+        <button type="submit"
+                class="w-full px-5 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-xl transition">
+          Send me a new link
+        </button>
+        <p class="text-[10px] font-mono text-slate-500 mt-2">You will need to be signed in for this.</p>
+      </form>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

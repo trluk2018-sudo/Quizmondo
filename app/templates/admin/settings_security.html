@@ -1,0 +1,157 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Security{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl space-y-6">
+
+  <div class="border-b border-slate-200 pb-4">
+    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Security</h1>
+    <p class="text-xs text-slate-500 mt-1">
+      Who has to prove who they are, and what a guest is allowed to do without an account.
+    </p>
+  </div>
+
+  <!-- Confirmation at a glance -->
+  <div class="grid grid-cols-3 gap-3">
+    <div class="bg-white border border-slate-200 p-4">
+      <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Accounts</div>
+      <div class="text-2xl font-bold text-slate-900 tabular-nums">{{ accounts }}</div>
+    </div>
+    <div class="bg-white border border-emerald-200 p-4">
+      <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Confirmed</div>
+      <div class="text-2xl font-bold text-emerald-700 tabular-nums">{{ confirmed }}</div>
+    </div>
+    <div class="bg-white border border-amber-200 p-4">
+      <div class="text-[10px] font-bold uppercase tracking-wider text-amber-700">Unconfirmed</div>
+      <div class="text-2xl font-bold text-amber-700 tabular-nums">{{ unconfirmed }}</div>
+    </div>
+  </div>
+
+  {% if not mail_ready %}
+  <div class="p-4 bg-amber-50 border border-amber-300 rounded text-xs text-amber-900">
+    <span class="font-bold">Email is not set up,</span>
+    so no confirmation link can be sent and requiring confirmation would lock everybody out.
+    Set up <a href="{{ url_for('admin.settings_email') }}" class="underline font-semibold">Email / SMTP</a> first.
+  </div>
+  {% endif %}
+
+  <form method="POST" class="space-y-6">
+
+    <div class="bg-white border border-slate-200 p-6 space-y-4">
+      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-2">
+        Accounts
+      </h2>
+
+      <label class="flex items-start gap-3">
+        <input type="checkbox" name="require_email_confirm" value="1"
+               {% if settings.get('require_email_confirm') == '1' %}checked{% endif %}
+               class="mt-0.5 rounded border-slate-300">
+        <span class="text-xs">
+          <span class="font-bold text-slate-900 block">Require a confirmed email for duels and the daily crossword</span>
+          <span class="text-slate-500">
+            Mini games stay open either way. Leave this off until a test email has actually arrived.
+          </span>
+        </span>
+      </label>
+
+      <label class="flex items-start gap-3">
+        <input type="checkbox" name="guest_scores_saved" value="1"
+               {% if settings.get('guest_scores_saved') == '1' %}checked{% endif %}
+               class="mt-0.5 rounded border-slate-300">
+        <span class="text-xs">
+          <span class="font-bold text-slate-900 block">Save guest scores to the database</span>
+          <span class="text-slate-500">
+            Off (recommended) means a guest's score lives in their browser session only: they can
+            see it while they play, it is never written to a table, and it is offered to them to
+            keep when they create an account. On brings back a saved row per guest.
+          </span>
+        </span>
+      </label>
+    </div>
+
+    <div class="bg-white border border-slate-200 p-6 space-y-4">
+      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-2">
+        Sign In Protection
+      </h2>
+
+      <div class="p-3 bg-blue-50 border border-blue-200 rounded text-[11px] text-blue-900">
+        <span class="font-bold">Why this matters more than two factor here.</span>
+        Players sign in with a six digit PIN, which is a million combinations &mdash; minutes of
+        work for a script against an endpoint that accepts unlimited guesses. Throttling closes
+        that; a second factor bolted onto a six digit PIN does not.
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+            Failed attempts allowed
+          </label>
+          <input type="number" name="login_max_attempts" min="3" max="50"
+                 value="{{ settings.get('login_max_attempts', '8') }}"
+                 class="w-full text-sm px-3 py-2 border border-slate-300 rounded font-mono">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+            Then locked out for (minutes)
+          </label>
+          <input type="number" name="login_lockout_minutes" min="1" max="1440"
+                 value="{{ settings.get('login_lockout_minutes', '15') }}"
+                 class="w-full text-sm px-3 py-2 border border-slate-300 rounded font-mono">
+        </div>
+      </div>
+
+      <label class="flex items-start gap-3">
+        <input type="checkbox" name="staff_require_password" value="1"
+               {% if settings.get('staff_require_password') == '1' %}checked{% endif %}
+               class="mt-0.5 rounded border-slate-300">
+        <span class="text-xs">
+          <span class="font-bold text-slate-900 block">Staff accounts must use a real password, not a PIN</span>
+          <span class="text-slate-500">
+            A player's PIN protects a score. An admin's protects the whole site. Applied when
+            a staff password is next changed: at least 10 characters, and not all digits.
+          </span>
+        </span>
+      </label>
+
+      <div class="p-3 bg-slate-50 border border-slate-200 rounded text-[11px] text-slate-600">
+        <span class="font-bold text-slate-800">Where these apply right now.</span>
+        Throttling is live on the admin sign in. The player PIN sign in is part of the Arena
+        and needs the same three lines added there before it is covered too &mdash; worth doing,
+        because that is the endpoint facing the public.
+      </div>
+    </div>
+
+    <button type="submit" class="px-5 py-2.5 bg-slate-900 text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-slate-800">
+      Save Security Settings
+    </button>
+  </form>
+
+  <!-- Staff accounts -->
+  <div class="bg-white border border-slate-200 p-6 space-y-3">
+    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-2">
+      Accounts With Elevated Roles ({{ staff|length }})
+    </h2>
+    <p class="text-xs text-slate-500">
+      Everyone here can reach something a player cannot. Worth knowing the list by heart.
+    </p>
+    <div class="divide-y divide-slate-100">
+      {% for u in staff %}
+      <div class="py-2 flex items-center justify-between gap-3 text-xs">
+        <div class="min-w-0">
+          <span class="font-bold text-slate-900">{{ u.username }}</span>
+          <span class="text-slate-400 font-mono ml-2 truncate">{{ u.email }}</span>
+        </div>
+        <span class="px-2 py-0.5 rounded font-bold uppercase tracking-wide text-[10px] shrink-0
+                     {% if u.role in ('admin', 'super_admin') %}bg-rose-100 text-rose-800{% else %}bg-slate-100 text-slate-700{% endif %}">
+          {{ u.role }}
+        </span>
+      </div>
+      {% else %}
+      <p class="py-2 text-xs text-slate-400">No elevated accounts found.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

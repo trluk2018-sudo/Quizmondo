@@ -9,6 +9,18 @@ from ..models import User, db
 auth_bp = Blueprint('auth', __name__, url_prefix='/admin')
 
 
+@auth_bp.context_processor
+def inject_admin_chrome():
+    """Pages here render admin/base.html, which the Admin blueprint feeds.
+
+    Its sidebar reads admin_quick_pages. A context processor only runs for its
+    own blueprint, so without this the profile page raises an undefined
+    variable and returns a 500 instead of a form.
+    """
+    from .admin import inject_admin_quick_pages
+    return inject_admin_quick_pages()
+
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -102,9 +114,21 @@ def login():
     if request.method == 'POST':
         username = (request.form.get('username') or '').strip()
         password = request.form.get('password') or ''
+
+        # Repeated wrong guesses are made expensive. See utils/throttle.py for
+        # why this is worth more here than a second factor would be.
+        from ..utils import throttle
+        guard = throttle.key_for(username, request.remote_addr)
+        waiting = throttle.locked_for(guard)
+        if waiting:
+            flash('Too many failed attempts. Try again in %s.' % throttle.describe(waiting),
+                  'error')
+            return render_template('auth/login.html')
+
         user = User.query.filter((User.username == username) | (User.email == username)).first()
 
         if user and user.check_password(password) and user.is_active:
+            throttle.clear(guard)
             session.permanent = True
             session['user_id'] = user.id
             session['username'] = user.username
@@ -118,6 +142,7 @@ def login():
                 return redirect(url_for('admin.dashboard'))
             return redirect(url_for('arena.dashboard'))
         else:
+            throttle.record_failure(guard)
             flash('Invalid username or password.', 'error')
 
     return render_template('auth/login.html')
@@ -166,10 +191,32 @@ def profile():
         new_password = request.form.get('new_password') or ''
         confirm_password = request.form.get('confirm_password') or ''
 
-        if email:
+        if email and email.lower() != (user.email or '').lower():
+            user.email = email
+            # A new address has not been proved, whatever the old one managed.
+            try:
+                from ..models_mail import AccountEmail
+                row = AccountEmail.query.filter_by(user_id=user.id).first()
+                if row:
+                    row.email = email.lower()
+                    row.confirmed_at = None
+                    row.last_sent_at = None
+            except Exception:
+                pass
+        elif email:
             user.email = email
 
         if new_password:
+            # A player's PIN protects a score; an admin's protects the site.
+            from ..models import SiteSetting
+            staff = (user.role or '') in ('admin', 'super_admin', 'quizmaster', 'creator')
+            if staff and SiteSetting.get('staff_require_password') == '1':
+                if new_password.isdigit() or len(new_password) < 10:
+                    flash('Accounts with staff roles need a real password: at least 10 '
+                          'characters and not just digits.', 'error')
+                    return render_template('admin/profile.html', user=user,
+                                           is_impersonation=is_impersonation)
+
             # Impersonated session can change admin password directly without knowing old random password
             if not is_impersonation and not user.check_password(current_password):
                 flash('Current password is incorrect.', 'error')

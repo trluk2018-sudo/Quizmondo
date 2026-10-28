@@ -329,6 +329,37 @@
   {% endif %}
   {% endwith %}
 
+  <!-- Confirm your account: once per return visit, never at sign up -->
+  {% if confirm_prompt %}
+  <div id="qmConfirmModal" class="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+    <div class="w-full max-w-sm p-5 sm:p-6 rounded-3xl bg-slate-950 border-2 border-amber-500/45 shadow-2xl space-y-4 font-mono text-center">
+      <div class="text-4xl">✉️</div>
+      <div class="space-y-1.5">
+        <h2 class="text-lg font-black text-white">Welcome back, {{ confirm_prompt.name }}</h2>
+        <p class="text-[11px] text-slate-400 leading-relaxed">
+          {% if confirm_prompt.required %}
+          Duels and the Daily Crossword open up once you confirm
+          <span class="font-bold text-amber-200">{{ confirm_prompt.email }}</span>.
+          {% else %}
+          Confirm <span class="font-bold text-amber-200">{{ confirm_prompt.email }}</span> and you can always get
+          back in, even if you forget your PIN. Takes one tap.
+          {% endif %}
+        </p>
+      </div>
+      <form method="POST" action="{{ url_for('account.confirm_send') }}" class="space-y-2">
+        <button type="submit"
+                class="w-full px-5 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs uppercase tracking-wider transition">
+          {% if confirm_prompt.sends %}Send the link again{% else %}Send me the link{% endif %}
+        </button>
+        <button type="button" onclick="document.getElementById('qmConfirmModal').remove();"
+                class="w-full px-5 py-2.5 rounded-2xl bg-slate-900 border border-slate-700 hover:border-slate-500 text-slate-300 font-bold text-[11px] uppercase tracking-wider transition">
+          Not now, let me play
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
   <!-- Main Content -->
   <main class="flex-grow">
     {% block content %}{% endblock %}

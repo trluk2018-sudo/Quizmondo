@@ -248,6 +248,12 @@
         <a href="{{ url_for('admin.settings_seo') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if request.endpoint == 'admin.settings_seo' %}bg-rose-600 text-white font-black shadow{% else %}text-slate-100 hover:bg-rose-600/30 hover:text-white font-semibold{% endif %}">
           <span>🔍</span> <span>SEO &amp; Analytics</span>
         </a>
+        <a href="{{ url_for('admin.settings_email') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if request.endpoint in ('admin.settings_email', 'admin.settings_email_test') %}bg-rose-600 text-white font-black shadow{% else %}text-slate-100 hover:bg-rose-600/30 hover:text-white font-semibold{% endif %}">
+          <span>✉️</span> <span>Email / SMTP</span>
+        </a>
+        <a href="{{ url_for('admin.settings_security') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if request.endpoint == 'admin.settings_security' %}bg-rose-600 text-white font-black shadow{% else %}text-slate-100 hover:bg-rose-600/30 hover:text-white font-semibold{% endif %}">
+          <span>🛡️</span> <span>Security</span>
+        </a>
         <a href="{{ url_for('auth.profile') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if request.endpoint == 'auth.profile' %}bg-rose-600 text-white font-black shadow{% else %}text-slate-100 hover:bg-rose-600/30 hover:text-white font-semibold{% endif %}">
           <span>🔑</span> <span>Profile &amp; Password</span>
         </a>

@@ -1454,6 +1454,110 @@ def settings_seo():
 
 
 # -------------------------------------------------------------------------
+# System & Security
+# -------------------------------------------------------------------------
+@admin_bp.route('/system/email', methods=['GET', 'POST'])
+@login_required
+def settings_email():
+    """Where the outgoing mail account is set up.
+
+    The password is write only: it is never sent back to the page, and an
+    empty box on save means "leave it as it was" rather than "clear it", so
+    saving the other fields does not wipe the credential.
+    """
+    if request.method == 'POST':
+        SiteSetting.set('smtp_host', (request.form.get('smtp_host') or '').strip())
+        SiteSetting.set('smtp_port', (request.form.get('smtp_port') or '587').strip())
+        SiteSetting.set('smtp_user', (request.form.get('smtp_user') or '').strip())
+        SiteSetting.set('smtp_from_name', (request.form.get('smtp_from_name') or 'Quizmondo').strip())
+        SiteSetting.set('smtp_from_email', (request.form.get('smtp_from_email') or '').strip())
+        password = request.form.get('smtp_password') or ''
+        if request.form.get('clear_password'):
+            SiteSetting.set('smtp_password', '')
+            flash('Email settings saved, and the stored password was cleared.', 'success')
+        elif password:
+            SiteSetting.set('smtp_password', password)
+            flash('Email settings and password saved.', 'success')
+        else:
+            flash('Email settings saved. The password was left as it was.', 'success')
+        return redirect(url_for('admin.settings_email'))
+
+    from ..utils import mail
+    conf = mail.config()
+    return render_template(
+        'admin/settings_email.html',
+        settings=SiteSetting.get_all(),
+        conf=conf,
+        ready=mail.mail_ready(conf),
+        last_error=mail.LAST_ERROR,
+    )
+
+
+@admin_bp.route('/system/email/test', methods=['POST'])
+@login_required
+def settings_email_test():
+    """Send one real email and say exactly what the mail server answered.
+
+    The only way to tell "set up" from "working".
+    """
+    from ..utils import mail
+    to = (request.form.get('to') or '').strip()
+    if not to:
+        user = db.session.get(User, session.get('user_id'))
+        to = (user.email if user else '') or ''
+    if not to or '@' not in to:
+        flash('Give an address to send the test to.', 'error')
+        return redirect(url_for('admin.settings_email'))
+
+    conf = mail.config()
+    body = ('This is a test from %s.\n\nIf it arrived, confirmation emails will '
+            'too.\n' % conf['smtp_from_name'])
+    ok, why = mail.deliver(mail.message(to, 'Test email from %s' % conf['smtp_from_name'],
+                                        body, conf), conf)
+    if ok:
+        flash('Sent to %s. If it is not there within a minute, look in spam.' % to, 'success')
+    else:
+        flash('Not sent: %s' % why, 'error')
+    return redirect(url_for('admin.settings_email'))
+
+
+@admin_bp.route('/system/security', methods=['GET', 'POST'])
+@login_required
+def settings_security():
+    from ..models_mail import AccountEmail
+
+    if request.method == 'POST':
+        SiteSetting.set('require_email_confirm',
+                        '1' if request.form.get('require_email_confirm') else '')
+        SiteSetting.set('guest_scores_saved',
+                        '1' if request.form.get('guest_scores_saved') else '')
+        SiteSetting.set('login_max_attempts', (request.form.get('login_max_attempts') or '8').strip())
+        SiteSetting.set('login_lockout_minutes',
+                        (request.form.get('login_lockout_minutes') or '15').strip())
+        SiteSetting.set('staff_require_password',
+                        '1' if request.form.get('staff_require_password') else '')
+        flash('Security settings updated.', 'success')
+        return redirect(url_for('admin.settings_security'))
+
+    accounts = User.query.filter(User.email.isnot(None)).count()
+    confirmed = AccountEmail.query.filter(AccountEmail.confirmed_at.isnot(None)).count()
+    # Staff on a six digit PIN are the real exposure: a player's PIN protects
+    # a score, an admin's protects the whole site.
+    staff = User.query.filter(User.role.in_(('admin', 'super_admin', 'quizmaster', 'creator'))).all()
+
+    from ..utils import mail
+    return render_template(
+        'admin/settings_security.html',
+        settings=SiteSetting.get_all(),
+        accounts=accounts,
+        confirmed=confirmed,
+        unconfirmed=max(0, accounts - confirmed),
+        staff=staff,
+        mail_ready=mail.mail_ready(),
+    )
+
+
+# -------------------------------------------------------------------------
 # Quizmondo Arena & Game Management
 # -------------------------------------------------------------------------
 @admin_bp.route('/questions')

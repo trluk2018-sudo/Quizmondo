@@ -1,0 +1,159 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Email / SMTP{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl space-y-6">
+
+  <div class="border-b border-slate-200 pb-4">
+    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Email / SMTP</h1>
+    <p class="text-xs text-slate-500 mt-1">
+      The mailbox the site sends from. Used for account confirmation emails, and for
+      anything else the site needs to send later.
+    </p>
+  </div>
+
+  <!-- Status -->
+  <div class="p-4 rounded-lg border {% if ready %}bg-emerald-50 border-emerald-300{% else %}bg-amber-50 border-amber-300{% endif %}">
+    <div class="flex items-start gap-3">
+      <span class="text-lg leading-none mt-0.5">{% if ready %}✓{% else %}!{% endif %}</span>
+      <div class="text-xs space-y-1">
+        {% if ready %}
+        <p class="font-bold text-emerald-900">Set up &mdash; sending as {{ conf.from_email }}</p>
+        <p class="text-emerald-800">
+          Set up is not the same as working. Send yourself a test below to be sure.
+        </p>
+        {% else %}
+        <p class="font-bold text-amber-900">Not set up yet</p>
+        <p class="text-amber-800">
+          A server, a username and a password are all needed before anything can be sent.
+          Until then, confirmation emails are skipped rather than failing.
+        </p>
+        {% endif %}
+        {% if last_error.error %}
+        <p class="text-rose-800 font-semibold pt-1">
+          Last failure{% if last_error.when %} at {{ last_error.when.strftime('%H:%M on %d %b') }}{% endif %}:
+          {{ last_error.error }}
+        </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <form method="POST" class="space-y-6">
+    <div class="bg-white border border-slate-200 p-6 space-y-4">
+      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-2">
+        Outgoing Mail Server
+      </h2>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">SMTP Server</label>
+          <input type="text" name="smtp_host" value="{{ settings.get('smtp_host', '') }}"
+                 placeholder="smtp-relay.brevo.com"
+                 class="w-full text-sm px-3 py-2 border border-slate-300 rounded font-mono">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Port</label>
+          <input type="number" name="smtp_port" value="{{ settings.get('smtp_port', '587') }}"
+                 class="w-full text-sm px-3 py-2 border border-slate-300 rounded font-mono">
+          <p class="text-[10px] text-slate-500 mt-1">587 upgrades to TLS, 465 is SSL throughout.</p>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Username</label>
+        <input type="text" name="smtp_user" value="{{ settings.get('smtp_user', '') }}"
+               autocomplete="off"
+               class="w-full text-sm px-3 py-2 border border-slate-300 rounded font-mono">
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">Password</label>
+        {% if conf.password_from_env %}
+        <div class="p-3 bg-emerald-50 border border-emerald-300 rounded text-xs text-emerald-900">
+          <span class="font-bold">Supplied by the server.</span>
+          The <code class="font-mono">SMTP_PASSWORD</code> environment variable is set, so it is
+          used and nothing is stored in the database. Anything typed here is ignored.
+        </div>
+        {% else %}
+        <input type="password" name="smtp_password" value="" autocomplete="new-password"
+               placeholder="{% if conf.password %}Stored — leave blank to keep it{% else %}Not set{% endif %}"
+               class="w-full text-sm px-3 py-2 border border-slate-300 rounded font-mono">
+        <p class="text-[10px] text-slate-500 mt-1">
+          Write only: it is never shown back on this page. Leaving it blank keeps the password
+          you already saved, so you can edit the other fields without wiping it.
+        </p>
+        {% if conf.password %}
+        <label class="flex items-center gap-2 mt-2 text-[11px] text-rose-700 font-semibold">
+          <input type="checkbox" name="clear_password" value="1" class="rounded border-slate-300">
+          Clear the stored password
+        </label>
+        {% endif %}
+        <div class="mt-2 p-3 bg-slate-50 border border-slate-200 rounded text-[11px] text-slate-600">
+          <span class="font-bold text-slate-800">Safer alternative.</span>
+          Set <code class="font-mono">SMTP_PASSWORD</code> as an environment variable in Coolify
+          instead. The password then never touches the database, so it stays out of every backup
+          taken of it. This page will notice and use it automatically.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="bg-white border border-slate-200 p-6 space-y-4">
+      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-2">
+        What Recipients See
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">From Name</label>
+          <input type="text" name="smtp_from_name" value="{{ settings.get('smtp_from_name', 'Quizmondo') }}"
+                 class="w-full text-sm px-3 py-2 border border-slate-300 rounded">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">From Address</label>
+          <input type="email" name="smtp_from_email" value="{{ settings.get('smtp_from_email', '') }}"
+                 placeholder="no-reply@quizmondo.com"
+                 class="w-full text-sm px-3 py-2 border border-slate-300 rounded font-mono">
+          <p class="text-[10px] text-slate-500 mt-1">Blank uses the username. Most providers insist these match.</p>
+        </div>
+      </div>
+      <div class="p-3 bg-blue-50 border border-blue-200 rounded text-[11px] text-blue-900">
+        <span class="font-bold">Before this gets used in anger:</span>
+        send through a transactional provider (Brevo, Mailgun and Postmark all have free tiers)
+        rather than a personal mailbox, and add SPF and DKIM records for the sending domain.
+        Without them, confirmation emails land in spam or are dropped outright.
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button type="submit" class="px-5 py-2.5 bg-slate-900 text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-slate-800">
+        Save Email Settings
+      </button>
+    </div>
+  </form>
+
+  <!-- Test -->
+  <form method="POST" action="{{ url_for('admin.settings_email_test') }}"
+        class="bg-white border border-slate-200 p-6 space-y-3">
+    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-2">
+      Send A Test
+    </h2>
+    <p class="text-xs text-slate-500">
+      Sends one real email with the settings above and reports exactly what the mail server
+      said. Save first if you have just changed anything.
+    </p>
+    <div class="flex flex-col sm:flex-row gap-3">
+      <input type="email" name="to" placeholder="your@address.com"
+             class="flex-1 text-sm px-3 py-2 border border-slate-300 rounded font-mono">
+      <button type="submit" {% if not ready %}disabled{% endif %}
+              class="px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded shrink-0
+                     {% if ready %}bg-blue-600 text-white hover:bg-blue-700{% else %}bg-slate-200 text-slate-400 cursor-not-allowed{% endif %}">
+        Send Test
+      </button>
+    </div>
+    <p class="text-[10px] text-slate-400">Left blank, it goes to the address on your own admin account.</p>
+  </form>
+
+</div>
+{% endblock %}
