@@ -1,0 +1,107 @@
+{# Game Arcade Picks — a hand-picked shelf of games, puzzles and quizzes.
+   Every card is editable in admin, and the whole module can be enabled,
+   reordered or removed like any other homepage section. #}
+{% from "themes/quizhub/modules/arcade_art.html" import arcade_art %}
+
+{% set art_style = cfg.get('art_style', 'arcade-grid') %}
+{% set art_accent = cfg.get('art_accent') or '#22d3ee' %}
+{% set art_second = cfg.get('art_second') or '#a855f7' %}
+{% set art_where = cfg.get('art_placement', 'background') %}
+{% set art_opacity = cfg.get('art_opacity', '55') %}
+{% set cols = cfg.get('columns', '3') %}
+{% set art_id = 'arcade-art-' ~ (mod.id if (mod and mod.id) else 'home') %}
+
+{% set palette = {
+  'cyan':    ['#22d3ee', 'rgba(34,211,238,.35)', 'rgba(34,211,238,.12)'],
+  'purple':  ['#c084fc', 'rgba(192,132,252,.35)', 'rgba(192,132,252,.12)'],
+  'pink':    ['#f472b6', 'rgba(244,114,182,.35)', 'rgba(244,114,182,.12)'],
+  'amber':   ['#fbbf24', 'rgba(251,191,36,.35)', 'rgba(251,191,36,.12)'],
+  'emerald': ['#34d399', 'rgba(52,211,153,.35)', 'rgba(52,211,153,.12)'],
+  'rose':    ['#fb7185', 'rgba(251,113,133,.35)', 'rgba(251,113,133,.12)']
+} %}
+
+<section class="relative overflow-hidden py-16 bg-gradient-to-b from-slate-950 via-[#120a26] to-slate-950 border-b-2 border-cyan-500/20 text-slate-100" id="game-arcade">
+
+  {% if art_where != 'overlay' %}
+  <div style="opacity: {{ (art_opacity|int) / 100 }}">{{ arcade_art(art_style, art_accent, art_second, art_id) }}</div>
+  {% endif %}
+
+  <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <!-- Section header -->
+    <div class="text-center max-w-3xl mx-auto mb-10">
+      {% if cfg.get('badge') %}
+      <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-[11px] font-mono font-bold uppercase tracking-widest">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+        {{ cfg.get('badge') }}
+      </span>
+      {% endif %}
+      <h2 class="mt-4 text-2xl sm:text-4xl font-black text-white leading-tight">
+        {{ cfg.get('headline') or mod.title or 'Pick Your Game' }}
+      </h2>
+      {% if cfg.get('subtext') %}
+      <p class="mt-3 text-sm sm:text-base text-slate-300 leading-relaxed">{{ cfg.get('subtext') }}</p>
+      {% endif %}
+    </div>
+
+    <!-- Game cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 {% if cols == '2' %}lg:grid-cols-2{% elif cols == '4' %}lg:grid-cols-4{% else %}lg:grid-cols-3{% endif %} gap-5">
+      {% for i in [1, 2, 3, 4, 5, 6] %}
+      {% set title = cfg.get('c' ~ i ~ '_title') %}
+      {% if title and cfg.get('c' ~ i ~ '_on', '1') != '0' %}
+      {% set tone = palette.get(cfg.get('c' ~ i ~ '_accent', 'cyan'), palette['cyan']) %}
+      <a href="{{ cfg.get('c' ~ i ~ '_url') or '/games/' }}"
+         class="group relative flex flex-col overflow-hidden rounded-2xl p-5 bg-slate-950/80 backdrop-blur border transition duration-300 hover:-translate-y-1 hover:shadow-2xl"
+         style="border-color: {{ tone[1] }}">
+        <!-- card glow, brightens on hover -->
+        <span class="absolute -top-16 -right-16 w-44 h-44 rounded-full blur-3xl opacity-50 group-hover:opacity-100 transition duration-500 pointer-events-none"
+              style="background: {{ tone[2] }}"></span>
+
+        <div class="relative flex items-start justify-between gap-3">
+          <span class="w-14 h-14 shrink-0 rounded-xl flex items-center justify-center text-3xl border group-hover:scale-110 transition duration-300"
+                style="background: {{ tone[2] }}; border-color: {{ tone[1] }}">
+            {{ cfg.get('c' ~ i ~ '_emoji') or '🎮' }}
+          </span>
+          {% if cfg.get('c' ~ i ~ '_tag') %}
+          <span class="px-2.5 py-1 rounded-full text-[10px] font-mono font-black uppercase tracking-wider border"
+                style="color: {{ tone[0] }}; border-color: {{ tone[1] }}; background: {{ tone[2] }}">
+            {{ cfg.get('c' ~ i ~ '_tag') }}
+          </span>
+          {% endif %}
+        </div>
+
+        <h3 class="relative mt-4 text-lg font-black text-white leading-snug">{{ title }}</h3>
+        {% if cfg.get('c' ~ i ~ '_text') %}
+        <p class="relative mt-2 text-xs text-slate-400 leading-relaxed flex-1">{{ cfg.get('c' ~ i ~ '_text') }}</p>
+        {% endif %}
+
+        <span class="relative mt-4 pt-3 border-t border-white/10 text-[11px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition"
+              style="color: {{ tone[0] }}">
+          {{ cfg.get('c' ~ i ~ '_cta') or 'Play now' }}
+          <span class="transition-transform duration-300 group-hover:translate-x-1">&rarr;</span>
+        </span>
+      </a>
+      {% endif %}
+      {% endfor %}
+    </div>
+
+    {% if cfg.get('button_text') %}
+    <div class="mt-10 text-center">
+      <a href="{{ cfg.get('button_url') or '/games/' }}"
+         class="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-slate-950 font-black uppercase tracking-wider text-xs shadow-lg hover:shadow-cyan-500/25 transition">
+        {{ cfg.get('button_text') }} <span>&rarr;</span>
+      </a>
+      {% if cfg.get('button_note') %}
+      <p class="mt-3 text-[11px] font-mono text-slate-500">{{ cfg.get('button_note') }}</p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  {% if art_where == 'overlay' %}
+  <!-- Artwork sits over the cards, faint, so the shelf reads as one arcade cabinet -->
+  <div class="absolute inset-0 z-20 pointer-events-none mix-blend-screen" style="opacity: {{ (art_opacity|int) / 100 }}">
+    {{ arcade_art(art_style, art_accent, art_second, art_id) }}
+  </div>
+  {% endif %}
+</section>

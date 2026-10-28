@@ -1,0 +1,146 @@
+{# Gamified background artwork, drawn as inline SVG so it stays sharp, themeable
+   and costs no extra request. Each style is a full-bleed layer meant to sit
+   behind a section at low opacity. Reusable from any module. #}
+
+{% macro arcade_art(style='arcade-grid', accent='#22d3ee', second='#a855f7', dom_id='art') %}
+{% if style and style != 'none' %}
+<div class="absolute inset-0 overflow-hidden pointer-events-none select-none" aria-hidden="true">
+  <style>
+    #{{ dom_id }} .drift { animation: {{ dom_id }}-drift 24s linear infinite; }
+    #{{ dom_id }} .bob   { animation: {{ dom_id }}-bob 7s ease-in-out infinite; }
+    #{{ dom_id }} .bob2  { animation: {{ dom_id }}-bob 9s ease-in-out infinite reverse; }
+    #{{ dom_id }} .twinkle { animation: {{ dom_id }}-twinkle 3.2s ease-in-out infinite; }
+    #{{ dom_id }} .scan  { animation: {{ dom_id }}-scan 6s linear infinite; }
+    @keyframes {{ dom_id }}-drift   { to { transform: translateY(-80px); } }
+    @keyframes {{ dom_id }}-bob     { 50% { transform: translateY(-14px) rotate(6deg); } }
+    @keyframes {{ dom_id }}-twinkle { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+    @keyframes {{ dom_id }}-scan    { 0% { transform: translateY(-10%); } 100% { transform: translateY(110%); } }
+    @media (prefers-reduced-motion: reduce) {
+      #{{ dom_id }} .drift, #{{ dom_id }} .bob, #{{ dom_id }} .bob2,
+      #{{ dom_id }} .twinkle, #{{ dom_id }} .scan { animation: none; }
+    }
+  </style>
+  <svg id="{{ dom_id }}" class="absolute inset-0 w-full h-full" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="{{ dom_id }}-fade" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="{{ accent }}" stop-opacity="0"/>
+        <stop offset="55%" stop-color="{{ accent }}" stop-opacity=".55"/>
+        <stop offset="100%" stop-color="{{ second }}" stop-opacity=".9"/>
+      </linearGradient>
+      <radialGradient id="{{ dom_id }}-glow">
+        <stop offset="0%" stop-color="{{ accent }}" stop-opacity=".45"/>
+        <stop offset="100%" stop-color="{{ accent }}" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="{{ dom_id }}-glow2">
+        <stop offset="0%" stop-color="{{ second }}" stop-opacity=".45"/>
+        <stop offset="100%" stop-color="{{ second }}" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+
+    {# ---------------------------------------------- neon arcade floor #}
+    {% if style == 'arcade-grid' %}
+    <ellipse cx="180" cy="90" rx="320" ry="220" fill="url(#{{ dom_id }}-glow)"/>
+    <ellipse cx="1040" cy="520" rx="340" ry="240" fill="url(#{{ dom_id }}-glow2)"/>
+    <g stroke="url(#{{ dom_id }}-fade)" stroke-width="1.5" fill="none">
+      {# receding horizontals, closer together towards the horizon #}
+      {% for y in [600, 540, 490, 450, 418, 394, 376, 362, 352, 345, 340] %}
+      <line x1="0" y1="{{ y }}" x2="1200" y2="{{ y }}"/>
+      {% endfor %}
+      {# verticals converging on the vanishing point #}
+      {% for i in range(-6, 7) %}
+      <line x1="{{ 600 + i * 200 }}" y1="600" x2="{{ 600 + i * 18 }}" y2="340"/>
+      {% endfor %}
+    </g>
+    <g fill="{{ accent }}" class="twinkle">
+      {% for p in [[140,120],[360,70],[900,150],[1120,90],[640,110]] %}
+      <rect x="{{ p[0] }}" y="{{ p[1] }}" width="7" height="7" rx="1.5" opacity=".8"/>
+      {% endfor %}
+    </g>
+
+    {# ---------------------------------------------- pixel confetti burst #}
+    {% elif style == 'pixel-confetti' %}
+    <ellipse cx="600" cy="300" rx="520" ry="340" fill="url(#{{ dom_id }}-glow)"/>
+    <g class="drift">
+      {% for p in [[60,40,14,0],[180,420,10,1],[300,150,18,0],[420,520,12,1],[520,60,9,0],
+                   [660,330,16,1],[760,120,11,0],[880,470,15,1],[980,220,10,0],[1100,380,18,1],
+                   [120,260,8,1],[240,600,14,0],[400,300,10,1],[560,470,13,0],[700,590,9,1],
+                   [840,40,12,0],[960,560,16,1],[1140,180,10,0],[1020,660,14,1],[320,700,12,0]] %}
+      <rect x="{{ p[0] }}" y="{{ p[1] }}" width="{{ p[2] }}" height="{{ p[2] }}" rx="2"
+            transform="rotate({{ (p[0] + p[1]) % 60 - 30 }} {{ p[0] + p[2] / 2 }} {{ p[1] + p[2] / 2 }})"
+            fill="{{ second if p[3] else accent }}" opacity=".5"/>
+      {% endfor %}
+    </g>
+    <g fill="none" stroke="{{ accent }}" stroke-width="2" opacity=".5" class="twinkle">
+      {% for p in [[150,520],[1050,120],[640,200]] %}
+      <path d="M{{ p[0] }} {{ p[1] - 16 }} v32 M{{ p[0] - 16 }} {{ p[1] }} h32"/>
+      {% endfor %}
+    </g>
+
+    {# ---------------------------------------------- floating game props #}
+    {% elif style == 'game-props' %}
+    <ellipse cx="200" cy="480" rx="340" ry="240" fill="url(#{{ dom_id }}-glow2)"/>
+    <ellipse cx="1000" cy="120" rx="320" ry="220" fill="url(#{{ dom_id }}-glow)"/>
+
+    {# gamepad #}
+    <g class="bob" transform="translate(120 140) scale(1.5)" fill="none" stroke="{{ accent }}" stroke-width="2.5" opacity=".45">
+      <path d="M18 8h44a18 18 0 0 1 17 12l10 30a12 12 0 0 1-19 13l-12-9H22l-12 9A12 12 0 0 1-9 50l10-30A18 18 0 0 1 18 8Z" stroke-linejoin="round"/>
+      <path d="M22 26v14M15 33h14"/>
+      <circle cx="58" cy="28" r="4"/><circle cx="68" cy="37" r="4"/>
+    </g>
+
+    {# dice #}
+    <g class="bob2" transform="translate(960 400) rotate(-12)" fill="none" stroke="{{ second }}" stroke-width="2.5" opacity=".45">
+      <rect x="0" y="0" width="76" height="76" rx="16"/>
+      <circle cx="22" cy="22" r="5" fill="{{ second }}" stroke="none"/>
+      <circle cx="54" cy="22" r="5" fill="{{ second }}" stroke="none"/>
+      <circle cx="38" cy="38" r="5" fill="{{ second }}" stroke="none"/>
+      <circle cx="22" cy="54" r="5" fill="{{ second }}" stroke="none"/>
+      <circle cx="54" cy="54" r="5" fill="{{ second }}" stroke="none"/>
+    </g>
+
+    {# crossword grid #}
+    <g class="bob" transform="translate(470 420) rotate(8)" opacity=".4">
+      {% for r in range(4) %}{% for c in range(4) %}
+      <rect x="{{ c * 26 }}" y="{{ r * 26 }}" width="24" height="24" rx="3"
+            fill="{{ accent if (r + c) % 3 == 0 else 'none' }}" fill-opacity=".35"
+            stroke="{{ accent }}" stroke-width="1.5"/>
+      {% endfor %}{% endfor %}
+    </g>
+
+    {# puzzle piece #}
+    <g class="bob2" transform="translate(760 90) scale(1.2)" fill="none" stroke="{{ accent }}" stroke-width="2.5" opacity=".4">
+      <path d="M8 8h26a10 10 0 0 1 20 0h26v26a10 10 0 0 0 0 20v26H54a10 10 0 0 0-20 0H8V54a10 10 0 0 1 0-20Z" stroke-linejoin="round"/>
+    </g>
+
+    {# trophy #}
+    <g class="bob" transform="translate(300 500)" fill="none" stroke="{{ second }}" stroke-width="2.5" opacity=".4">
+      <path d="M14 6h40v20a20 20 0 0 1-40 0Z" stroke-linejoin="round"/>
+      <path d="M14 10H4a12 12 0 0 0 12 12M54 10h10a12 12 0 0 1-12 12"/>
+      <path d="M34 46v12M22 62h24"/>
+    </g>
+
+    {# lightbulb #}
+    <g class="bob2" transform="translate(1090 220)" fill="none" stroke="{{ accent }}" stroke-width="2.5" opacity=".4">
+      <path d="M26 4a20 20 0 0 1 12 36v8H14v-8A20 20 0 0 1 26 4Z" stroke-linejoin="round"/>
+      <path d="M16 54h20M19 62h14"/>
+    </g>
+
+    {# ---------------------------------------------- crt scanlines #}
+    {% elif style == 'crt-scan' %}
+    <ellipse cx="600" cy="300" rx="560" ry="360" fill="url(#{{ dom_id }}-glow)"/>
+    <g stroke="{{ second }}" stroke-width="1" opacity=".18">
+      {% for i in range(0, 61) %}
+      <line x1="0" y1="{{ i * 10 }}" x2="1200" y2="{{ i * 10 }}"/>
+      {% endfor %}
+    </g>
+    <rect class="scan" x="0" y="0" width="1200" height="70" fill="url(#{{ dom_id }}-fade)" opacity=".35"/>
+    <g fill="{{ accent }}" class="twinkle">
+      {% for p in [[90,90],[1110,110],[560,40],[300,540],[980,520]] %}
+      <rect x="{{ p[0] }}" y="{{ p[1] }}" width="8" height="8" rx="2" opacity=".7"/>
+      {% endfor %}
+    </g>
+    {% endif %}
+  </svg>
+</div>
+{% endif %}
+{% endmacro %}
