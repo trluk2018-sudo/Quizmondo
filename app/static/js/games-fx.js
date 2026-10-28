@@ -257,6 +257,13 @@ window.QMG = (function () {
     return m > 0 ? m + ':' + (s < 10 ? '0' : '') + s : String(s);
   }
 
+  // A silent stopwatch, for games whose HUD slot is showing something other
+  // than the clock. Returns a function giving elapsed whole seconds.
+  function stopwatch() {
+    var began = Date.now();
+    return function () { return Math.round((Date.now() - began) / 1000); };
+  }
+
   // A count-up stopwatch for the puzzles, where slower simply scores less.
   function startStopwatch() {
     stopTimer();
@@ -377,6 +384,42 @@ window.QMG = (function () {
 
   function sleep(ms) { return new Promise(function (res) { setTimeout(res, ms); }); }
 
+  /**
+   * Redraw an image as a filled square and hand back a data URL.
+   *
+   * The flags, badges and logos in the question bank are all sorts of shapes,
+   * and a tile puzzle needs square tiles. Slicing a 3:2 flag straight into a
+   * square grid leaves white bands through the picture, so we centre-crop it
+   * onto a square canvas once and slice that instead. Falls back to the
+   * original URL if the image will not draw.
+   */
+  function squareImage(url, size) {
+    size = size || 600;
+    return new Promise(function (resolve) {
+      var img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function () {
+        try {
+          var canvas = document.createElement('canvas');
+          canvas.width = canvas.height = size;
+          var ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, size, size);
+          var w = img.naturalWidth || img.width || size;
+          var h = img.naturalHeight || img.height || size;
+          var scale = Math.max(size / w, size / h);
+          var dw = w * scale, dh = h * scale;
+          ctx.drawImage(img, (size - dw) / 2, (size - dh) / 2, dw, dh);
+          resolve(canvas.toDataURL('image/png'));
+        } catch (e) {
+          resolve(url);
+        }
+      };
+      img.onerror = function () { resolve(url); };
+      img.src = url;
+    });
+  }
+
   function init(opts) {
     gameKey = (opts && opts.gameKey) || '';
     best = (opts && opts.best) || 0;
@@ -396,8 +439,9 @@ window.QMG = (function () {
     bumpCombo: bumpCombo, resetCombo: resetCombo, getCombo: getCombo, comboMultiplier: comboMultiplier,
     pop: pop, shake: shake, flashOk: flashOk, confetti: confetti,
     startTimer: startTimer, stopTimer: stopTimer, addTime: addTime, timeLeft: timeLeft,
-    startStopwatch: startStopwatch, formatClock: formatClock,
+    startStopwatch: startStopwatch, stopwatch: stopwatch, formatClock: formatClock,
     finish: finish, replay: replay, onReplay: onReplay, hideOverlay: hideOverlay,
-    shuffle: shuffle, pick: pick, normalise: normalise, sleep: sleep
+    shuffle: shuffle, pick: pick, normalise: normalise, sleep: sleep,
+    squareImage: squareImage
   };
 })();

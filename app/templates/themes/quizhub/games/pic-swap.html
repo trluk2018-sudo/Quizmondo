@@ -1,0 +1,196 @@
+{% extends "themes/quizhub/games/_shell.html" %}
+
+{% block hud_mid_label %}Swaps{% endblock %}
+{% block hud_mid_value %}0{% endblock %}
+
+{% block game_stage %}
+<div class="space-y-3">
+  <div class="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-950/90 border border-pink-500/25 font-mono">
+    <div class="flex items-center gap-2 min-w-0">
+      <div class="w-10 h-10 rounded-lg bg-slate-900 border border-pink-500/30 shrink-0 overflow-hidden flex items-center justify-center">
+        <img id="psThumb" src="" alt="" class="max-w-full max-h-full object-contain opacity-40">
+      </div>
+      <div class="min-w-0">
+        <div class="text-[9px] text-slate-500 uppercase tracking-wider">Picture</div>
+        <div id="psLabel" class="text-xs font-black text-white truncate">—</div>
+      </div>
+    </div>
+    <div class="text-right shrink-0">
+      <div class="text-[9px] text-slate-500 uppercase tracking-wider">In place</div>
+      <div class="text-xs font-black text-emerald-300"><span id="psRight">0</span>/<span id="psTiles">9</span></div>
+    </div>
+  </div>
+
+  <div class="flex justify-center">
+    <div id="psBoard" class="qmg-nosel relative rounded-2xl overflow-hidden border-2 border-pink-500/35 shadow-2xl bg-slate-950 w-full"
+         style="max-width: 340px; aspect-ratio: 1 / 1;"></div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-2">
+    <button type="button" id="psNew" class="py-3 rounded-2xl bg-slate-900 border border-purple-500/30 text-slate-300 font-mono font-bold text-[11px] uppercase hover:border-cyan-400 transition">
+      🔀 New Picture
+    </button>
+    <button type="button" id="psSize" class="py-3 rounded-2xl bg-slate-900 border border-purple-500/30 text-pink-300 font-mono font-bold text-[11px] uppercase hover:border-pink-400 transition">
+      Grid: <span id="psSizeLabel">3×3</span>
+    </button>
+  </div>
+</div>
+{% endblock %}
+
+{% block how_extra %}
+<p class="mt-2">No empty square here — tap one tile, then tap the tile you want to trade it with. Correctly placed tiles get a green edge.</p>
+{% endblock %}
+
+{% block game_js %}
+<script>
+(function () {
+  var PICS = {{ pics|tojson }};
+
+  var boardEl = document.getElementById('psBoard');
+  var thumbEl = document.getElementById('psThumb');
+  var labelEl = document.getElementById('psLabel');
+  var rightEl = document.getElementById('psRight');
+  var tilesEl = document.getElementById('psTiles');
+  var sizeLabelEl = document.getElementById('psSizeLabel');
+
+  var N = 3;
+  var tiles = [];
+  var pic = null;
+  var selected = null;
+  var swaps = 0;
+  var elapsed = null;
+  var running = false;
+
+  function correctCount() {
+    return tiles.reduce(function (n, t, i) { return n + (t === i ? 1 : 0); }, 0);
+  }
+
+  function isSolved() { return correctCount() === N * N; }
+
+  function shuffleTiles() {
+    var base = [];
+    for (var i = 0; i < N * N; i++) base.push(i);
+    var order;
+    do { order = QMG.shuffle(base); }
+    while (order.filter(function (t, i) { return t === i; }).length > 1);
+    return order;
+  }
+
+  function render() {
+    boardEl.innerHTML = '';
+    var pct = 100 / N;
+    tiles.forEach(function (tile, pos) {
+      var r = Math.floor(pos / N), c = pos % N;
+      var sr = Math.floor(tile / N), sc = tile % N;
+      var correct = tile === pos;
+
+      var el = document.createElement('button');
+      el.type = 'button';
+      el.dataset.pos = pos;
+      el.className = 'absolute transition-all duration-150 ' +
+        (pos === selected ? 'ring-4 ring-cyan-400 z-10 scale-95 '
+          : (correct ? 'ring-2 ring-emerald-400/70 ' : 'ring-1 ring-slate-950/70 '));
+      el.style.width = pct + '%';
+      el.style.height = pct + '%';
+      el.style.left = (c * pct) + '%';
+      el.style.top = (r * pct) + '%';
+      el.style.backgroundImage = 'url("' + (pic.square || pic.url) + '")';
+      el.style.backgroundSize = (N * 100) + '% ' + (N * 100) + '%';
+      el.style.backgroundPosition = (sc * (100 / (N - 1))) + '% ' + (sr * (100 / (N - 1))) + '%';
+      el.style.backgroundColor = '#f8fafc';
+      el.style.backgroundRepeat = 'no-repeat';
+      boardEl.appendChild(el);
+    });
+    rightEl.textContent = correctCount();
+    tilesEl.textContent = N * N;
+  }
+
+  function tap(pos) {
+    if (!running) return;
+    if (selected === null) {
+      selected = pos;
+      QMG.audio.tick();
+      render();
+      return;
+    }
+    if (selected === pos) { selected = null; render(); return; }
+
+    var before = correctCount();
+    var tmp = tiles[pos]; tiles[pos] = tiles[selected]; tiles[selected] = tmp;
+    selected = null;
+    swaps += 1;
+    QMG.setMid(swaps);
+    render();
+
+    var after = correctCount();
+    if (after > before) {
+      QMG.bumpCombo();
+      QMG.audio.correct();
+      QMG.haptic(18);
+    } else {
+      QMG.resetCombo();
+      QMG.audio.tone(220, 110, 'sawtooth');
+    }
+
+    if (isSolved()) win();
+  }
+
+  boardEl.addEventListener('click', function (ev) {
+    var node = ev.target.closest('[data-pos]');
+    if (node) tap(parseInt(node.dataset.pos, 10));
+  });
+
+  function win() {
+    running = false;
+    var seconds = elapsed ? elapsed() : 0;
+    var par = N * N;
+    var base = N === 3 ? 900 : (N === 4 ? 1900 : 3200);
+    var score = Math.max(120, base - Math.max(0, swaps - par) * 25 - seconds * 4);
+    QMG.setScore(score);
+    QMG.finish({
+      icon: '🔄',
+      title: 'Picture Rebuilt!',
+      sub: 'It was ' + pic.label + '.',
+      detail: [swaps + ' swaps in ' + seconds + 's', 'Grid: ' + N + '×' + N]
+    });
+  }
+
+  document.getElementById('psNew').addEventListener('click', function () { start(); });
+  document.getElementById('psSize').addEventListener('click', function () {
+    N = N === 3 ? 4 : (N === 4 ? 5 : 3);
+    sizeLabelEl.textContent = N + '×' + N;
+    start();
+  });
+
+  function start() {
+    if (!PICS.length) {
+      boardEl.innerHTML = '<p class="p-6 text-center text-xs font-mono text-rose-300">No pictures available.</p>';
+      return;
+    }
+    pic = QMG.pick(PICS);
+    thumbEl.src = pic.url;
+    labelEl.textContent = pic.label;
+    tiles = shuffleTiles();
+    selected = null;
+    swaps = 0;
+    running = false;
+    QMG.setMidLabel('Swaps');
+    QMG.setMid('0');
+    QMG.setMidBar(1);
+    QMG.setScore(0);
+    boardEl.innerHTML = '<p class="absolute inset-0 flex items-center justify-center text-xs font-mono text-slate-500">Cutting the picture up…</p>';
+
+    // Flags and badges are all sorts of shapes; square them off before slicing.
+    QMG.squareImage(pic.url, 660).then(function (dataUrl) {
+      pic.square = dataUrl;
+      render();
+      running = true;
+      elapsed = QMG.stopwatch();
+    });
+  }
+
+  QMG.onReplay(start);
+  start();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,213 @@
+{% extends "themes/quizhub/games/_shell.html" %}
+
+{% block hud_mid_label %}Moves{% endblock %}
+{% block hud_mid_value %}0{% endblock %}
+
+{% block game_stage %}
+<div class="space-y-3">
+  <div class="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-950/90 border border-indigo-500/25 font-mono">
+    <div class="flex items-center gap-2 min-w-0">
+      <div class="w-10 h-10 rounded-lg bg-slate-900 border border-indigo-500/30 shrink-0 overflow-hidden flex items-center justify-center">
+        <img id="spThumb" src="" alt="" class="max-w-full max-h-full object-contain opacity-40">
+      </div>
+      <div class="min-w-0">
+        <div class="text-[9px] text-slate-500 uppercase tracking-wider">Puzzle</div>
+        <div id="spLabel" class="text-xs font-black text-white truncate">—</div>
+      </div>
+    </div>
+    <button type="button" id="spPeek" class="px-3 py-2 rounded-xl bg-slate-900 border border-indigo-500/30 text-indigo-300 font-mono font-bold text-[10px] uppercase hover:border-cyan-400 transition shrink-0">
+      👁 Peek
+    </button>
+  </div>
+
+  <div class="flex justify-center">
+    <div id="spBoard" class="qmg-nosel relative rounded-2xl overflow-hidden border-2 border-indigo-500/35 shadow-2xl bg-slate-950 w-full"
+         style="max-width: 340px; aspect-ratio: 1 / 1;"></div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-2">
+    <button type="button" id="spShuffle" class="py-3 rounded-2xl bg-slate-900 border border-purple-500/30 text-slate-300 font-mono font-bold text-[11px] uppercase hover:border-cyan-400 transition">
+      🔀 New Picture
+    </button>
+    <button type="button" id="spSize" class="py-3 rounded-2xl bg-slate-900 border border-purple-500/30 text-cyan-300 font-mono font-bold text-[11px] uppercase hover:border-cyan-400 transition">
+      Grid: <span id="spSizeLabel">3×3</span>
+    </button>
+  </div>
+</div>
+{% endblock %}
+
+{% block how_extra %}
+<p class="mt-2">Tap any tile touching the empty square to slide it in. Every shuffle is checked to be solvable, so you can always finish.</p>
+{% endblock %}
+
+{% block game_js %}
+<script>
+(function () {
+  var PICS = {{ pics|tojson }};
+
+  var boardEl = document.getElementById('spBoard');
+  var thumbEl = document.getElementById('spThumb');
+  var labelEl = document.getElementById('spLabel');
+  var sizeLabelEl = document.getElementById('spSizeLabel');
+
+  var N = 3;
+  var tiles = [];      // tiles[position] = tileIndex, with N*N-1 as the gap
+  var pic = null;
+  var moves = 0;
+  var elapsed = null;
+  var running = false;
+  var peeking = false;
+
+  function gap() { return N * N - 1; }
+
+  function solvedOrder() {
+    var out = [];
+    for (var i = 0; i < N * N; i++) out.push(i);
+    return out;
+  }
+
+  function isSolved() {
+    for (var i = 0; i < tiles.length; i++) { if (tiles[i] !== i) return false; }
+    return true;
+  }
+
+  // Count inversions to decide solvability, then fix the parity if it is wrong.
+  function solvable(order) {
+    var flat = order.filter(function (t) { return t !== gap(); });
+    var inversions = 0;
+    for (var i = 0; i < flat.length; i++) {
+      for (var j = i + 1; j < flat.length; j++) { if (flat[i] > flat[j]) inversions++; }
+    }
+    if (N % 2 === 1) return inversions % 2 === 0;
+    var gapRow = Math.floor(order.indexOf(gap()) / N);
+    var fromBottom = N - gapRow;
+    return (inversions + fromBottom) % 2 === 0;
+  }
+
+  function shuffleTiles() {
+    var order;
+    do {
+      order = QMG.shuffle(solvedOrder());
+    } while (!solvable(order) || order.every(function (t, i) { return t === i; }));
+    return order;
+  }
+
+  function render() {
+    boardEl.innerHTML = '';
+    var pct = 100 / N;
+    tiles.forEach(function (tile, pos) {
+      if (tile === gap() && !peeking) return;
+      var r = Math.floor(pos / N), c = pos % N;
+      var sr = Math.floor(tile / N), sc = tile % N;
+
+      var el = document.createElement('button');
+      el.type = 'button';
+      el.dataset.pos = pos;
+      el.className = 'absolute transition-all duration-150 ease-out border border-slate-950/60';
+      el.style.width = pct + '%';
+      el.style.height = pct + '%';
+      el.style.left = (c * pct) + '%';
+      el.style.top = (r * pct) + '%';
+      el.style.backgroundImage = 'url("' + (pic.square || pic.url) + '")';
+      el.style.backgroundSize = (N * 100) + '% ' + (N * 100) + '%';
+      el.style.backgroundPosition = (sc * (100 / (N - 1))) + '% ' + (sr * (100 / (N - 1))) + '%';
+      el.style.backgroundColor = '#f8fafc';
+      el.style.backgroundRepeat = 'no-repeat';
+      boardEl.appendChild(el);
+    });
+  }
+
+  function canSlide(pos) {
+    var g = tiles.indexOf(gap());
+    var pr = Math.floor(pos / N), pc = pos % N;
+    var gr = Math.floor(g / N), gc = g % N;
+    return (Math.abs(pr - gr) + Math.abs(pc - gc)) === 1;
+  }
+
+  function slide(pos) {
+    if (!running || !canSlide(pos)) { QMG.shake(boardEl); return; }
+    var g = tiles.indexOf(gap());
+    var tmp = tiles[pos]; tiles[pos] = tiles[g]; tiles[g] = tmp;
+    moves += 1;
+    QMG.setMid(moves);
+    QMG.audio.tone(300 + (moves % 8) * 35, 70, 'triangle');
+    QMG.haptic(10);
+    render();
+    if (isSolved()) win();
+  }
+
+  boardEl.addEventListener('click', function (ev) {
+    var node = ev.target.closest('[data-pos]');
+    if (node) slide(parseInt(node.dataset.pos, 10));
+  });
+
+  function win() {
+    running = false;
+    peeking = true;
+    render();
+    var seconds = elapsed ? elapsed() : 0;
+    var par = N * N * 6;
+    // A clean, quick solve is worth far more than grinding it out
+    var base = N === 3 ? 900 : (N === 4 ? 1800 : 3000);
+    var movePenalty = Math.max(0, moves - par) * 6;
+    var timePenalty = seconds * 4;
+    var score = Math.max(120, base - movePenalty - timePenalty);
+    QMG.setScore(score);
+    QMG.finish({
+      icon: '🖼️',
+      title: 'Picture Restored!',
+      sub: 'It was ' + pic.label + '.',
+      detail: [moves + ' moves in ' + seconds + 's', 'Grid: ' + N + '×' + N]
+    });
+  }
+
+  document.getElementById('spPeek').addEventListener('mousedown', peekOn);
+  document.getElementById('spPeek').addEventListener('mouseup', peekOff);
+  document.getElementById('spPeek').addEventListener('mouseleave', peekOff);
+  document.getElementById('spPeek').addEventListener('touchstart', function (e) { e.preventDefault(); peekOn(); });
+  document.getElementById('spPeek').addEventListener('touchend', peekOff);
+
+  function peekOn() { if (!running) return; peeking = true; render(); }
+  function peekOff() { if (!running) return; peeking = false; render(); }
+
+  document.getElementById('spShuffle').addEventListener('click', function () { start(); });
+
+  document.getElementById('spSize').addEventListener('click', function () {
+    N = N === 3 ? 4 : (N === 4 ? 5 : 3);
+    sizeLabelEl.textContent = N + '×' + N;
+    start();
+  });
+
+  function start() {
+    if (!PICS.length) {
+      boardEl.innerHTML = '<p class="p-6 text-center text-xs font-mono text-rose-300">No pictures available.</p>';
+      return;
+    }
+    pic = QMG.pick(PICS);
+    thumbEl.src = pic.url;
+    labelEl.textContent = pic.label;
+    tiles = shuffleTiles();
+    moves = 0;
+    peeking = false;
+    running = false;
+    QMG.setMidLabel('Moves');
+    QMG.setMid('0');
+    QMG.setMidBar(1);
+    QMG.setScore(0);
+    boardEl.innerHTML = '<p class="absolute inset-0 flex items-center justify-center text-xs font-mono text-slate-500">Cutting the picture up…</p>';
+
+    // Flags and badges are all sorts of shapes; square them off before slicing.
+    QMG.squareImage(pic.url, 660).then(function (dataUrl) {
+      pic.square = dataUrl;
+      render();
+      running = true;
+      // The HUD slot shows the move count here, so the clock runs silently.
+      elapsed = QMG.stopwatch();
+    });
+  }
+
+  QMG.onReplay(start);
+  start();
+})();
+</script>
+{% endblock %}
