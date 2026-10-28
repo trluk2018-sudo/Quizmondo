@@ -299,8 +299,8 @@ def word_ladder():
         pz = gd.word_ladder(rng, steps=steps)
         if pz:
             puzzles.append(pz)
-    # Lower case, to match how the page looks words up.
-    return _render_game('word-ladder', puzzles=puzzles, valid_words=sorted(gd.words_of_length(4)))
+    # Rungs are checked over the API against the full dictionary.
+    return _render_game('word-ladder', puzzles=puzzles)
 
 
 @games_bp.route('/crossword')
@@ -343,9 +343,13 @@ def missing_vowels():
 @games_bp.route('/five-guess')
 def five_guess():
     rng = random.Random()
-    pool = [w.upper() for w in gd.words_of_length(5)]
-    answers = gd.shuffled(pool, rng)[:400]
-    return _render_game('five-guess', answers=answers, valid_words=sorted(pool))
+    # Answers come from the harvested common-word list, so nobody is asked to
+    # guess something obscure. Guesses are checked against every five-letter
+    # word in the dictionary, which is small enough to send with the page.
+    # Guesses are checked against the full dictionary over the API rather than
+    # inlined: 16,000 five-letter words would quadruple the size of the page.
+    answers = gd.shuffled([w.upper() for w in gd.words_of_length(5)], rng)[:400]
+    return _render_game('five-guess', answers=answers)
 
 
 @games_bp.route('/emoji-riddles')
@@ -486,6 +490,20 @@ def submit_score():
         'rank': rank,
         'plays': row.plays,
     })
+
+
+@games_bp.route('/api/check-word', methods=['POST'])
+def check_word():
+    """Is this a real word?
+
+    The page carries a small common-word list and answers most guesses itself;
+    this is only called for a word it does not recognise. The dictionary is one
+    read-only set held in the process, so every game and every player checks
+    against the same copy without touching the database.
+    """
+    data = request.get_json(silent=True) or {}
+    word = str(data.get('word') or '')[:40]
+    return jsonify({'ok': True, 'word': word.upper(), 'valid': gd.is_word(word)})
 
 
 @games_bp.route('/api/leaderboard/<game_key>')

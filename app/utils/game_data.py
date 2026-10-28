@@ -253,12 +253,62 @@ def words_of_length(n: int) -> tuple:
 
 
 # ---------------------------------------------------------------------------
+# The full dictionary
+# ---------------------------------------------------------------------------
+# Held in the process as one read-only frozenset, so every word game and every
+# player checks against the same copy. 315,000 words is far too much to send to
+# a phone, so the browser keeps the small list above for instant answers and
+# asks the server about anything it does not recognise.
+
+_DICTIONARY_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'words-en.txt.gz'
+)
+
+
+@lru_cache(maxsize=1)
+def dictionary() -> frozenset:
+    """Every word the games will accept. Empty if the file is missing."""
+    import gzip
+    try:
+        with gzip.open(_DICTIONARY_PATH, 'rt', encoding='utf-8') as fh:
+            return frozenset(line.strip() for line in fh if line.strip())
+    except Exception:
+        return frozenset()
+
+
+def is_word(candidate: str) -> bool:
+    word = re.sub(r'[^A-Za-z]', '', candidate or '').lower()
+    if not word:
+        return False
+    words = dictionary()
+    if words:
+        return word in words
+    # No dictionary file: fall back to the harvested list rather than
+    # rejecting everything a player types.
+    return word in set(lexicon())
+
+
+@lru_cache(maxsize=12)
+def dictionary_words_of_length(n: int) -> tuple:
+    """Every dictionary word of one length, for the games that can inline them."""
+    words = dictionary()
+    if not words:
+        return words_of_length(n)
+    return tuple(sorted(w for w in words if len(w) == n))
+
+
+# ---------------------------------------------------------------------------
 # Word ladder
 # ---------------------------------------------------------------------------
 
 @lru_cache(maxsize=1)
 def _ladder_graph() -> dict:
-    """Adjacency map over four-letter words differing by exactly one letter."""
+    """Adjacency map over four-letter words differing by exactly one letter.
+
+    Built from the harvested common-word list rather than the full dictionary,
+    so the rungs of a generated ladder are words people have actually heard of.
+    Players may still climb using anything in the full dictionary.
+    """
     words = [w for w in words_of_length(4)]
     buckets = {}
     for w in words:
@@ -547,7 +597,7 @@ def wheel_puzzle(rng=None):
     available = collections.Counter(letters)
 
     solutions = []
-    for candidate in lexicon():
+    for candidate in (dictionary() or set(lexicon())):
         if len(candidate) < 3 or centre.lower() not in candidate:
             continue
         need = collections.Counter(candidate.upper())

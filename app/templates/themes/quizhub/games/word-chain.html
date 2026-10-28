@@ -39,6 +39,7 @@
 
 {% block how_extra %}
 <p class="mt-2">Each word buys you a little more time, but the clock speeds up as the chain grows. Longer words score far more than short ones.</p>
+<p class="mt-2 text-slate-500">Place names and proper nouns count — LEEDS and LONDON are both fair game.</p>
 {% endblock %}
 
 {% block game_js %}
@@ -52,7 +53,6 @@
   var chainEl = document.getElementById('wcChain');
   var countEl = document.getElementById('wcCount');
 
-  var lexicon = null;
   var used = {};
   var chain = [];
   var letter = 'S';
@@ -102,18 +102,29 @@
     if (word.length < 4) { say('Four letters or more', false); QMG.shake(inputEl); return; }
     if (word[0] !== letter) { say('Must start with ' + letter, false); QMG.audio.wrong(); QMG.shake(inputEl); return; }
     if (used[word]) { say('Already used ' + word, false); QMG.audio.wrong(); QMG.shake(inputEl); return; }
-    if (lexicon && !lexicon[word.toLowerCase()]) { say('“' + word + '” is not in the word list', false); QMG.audio.wrong(); QMG.shake(inputEl); return; }
 
+    // Claim the word straight away so a slow dictionary call cannot let the
+    // same word through twice, and hand it back if it turns out to be no word.
     used[word] = true;
-    QMG.bumpCombo();
-    var points = Math.round((word.length * word.length * 8) * QMG.comboMultiplier());
-    QMG.addScore(points, letterEl);
-    QMG.audio.correct();
-    QMG.haptic(22);
-    pushChain(word, points);
-    nextLetter(word);
-    restartClock();
-    inputEl.focus({ preventScroll: true });
+    QMG.checkWord(word).then(function (valid) {
+      if (!running) return;
+      if (!valid) {
+        delete used[word];
+        say('“' + word + '” is not in the dictionary', false);
+        QMG.audio.wrong();
+        QMG.shake(inputEl);
+        return;
+      }
+      QMG.bumpCombo();
+      var points = Math.round((word.length * word.length * 8) * QMG.comboMultiplier());
+      QMG.addScore(points, letterEl);
+      QMG.audio.correct();
+      QMG.haptic(22);
+      pushChain(word, points);
+      nextLetter(word);
+      restartClock();
+      inputEl.focus({ preventScroll: true });
+    });
   });
 
   function timeUp() {
@@ -141,14 +152,9 @@
     restartClock();
   }
 
-  // The dictionary is a separate file so only the games that need it pay for it.
-  fetch('/static/data/qm-lexicon.json')
-    .then(function (r) { return r.json(); })
-    .then(function (words) {
-      lexicon = {};
-      words.forEach(function (w) { lexicon[w] = true; });
-    })
-    .catch(function () { lexicon = null; /* fall back to accepting any guess */ });
+  // Common words are answered instantly from this small list; anything else
+  // is checked against the full dictionary on the server.
+  QMG.loadWords();
 
   QMG.onReplay(start);
   start();

@@ -14,6 +14,12 @@
     </div>
   </div>
 
+  <!-- Clue -->
+  <button type="button" id="fgClue"
+          class="w-full py-3 rounded-2xl bg-slate-900 border border-amber-500/35 text-amber-300 font-mono font-bold text-[11px] uppercase tracking-wider hover:border-amber-400 transition">
+    💡 Reveal a letter <span class="text-slate-500 normal-case">(costs one guess)</span>
+  </button>
+
   <!-- Keyboard -->
   <div id="fgKeys" class="qmg-nosel space-y-1.5"></div>
 </div>
@@ -21,14 +27,16 @@
 
 {% block how_extra %}
 <p class="mt-2">Three words per game. Solving in fewer guesses scores more, and every word you crack adds to the total.</p>
+<p class="mt-2 text-slate-500">Place names count as guesses, and the answer is always an everyday word.</p>
 {% endblock %}
 
 {% block game_js %}
 <script>
 (function () {
   var ANSWERS = {{ answers|tojson }};
+  // The answers are always legal guesses; everything else is checked against
+  // the full dictionary on the server.
   var VALID = {};
-  {{ valid_words|tojson }}.forEach(function (w) { VALID[w.toUpperCase()] = true; });
   ANSWERS.forEach(function (w) { VALID[w] = true; });
 
   var WORDS_PER_GAME = 3;
@@ -46,6 +54,9 @@
   var wordNo = 0;
   var solvedCount = 0;
   var keyState = {};
+  var revealed = {};
+  var revealsUsed = 0;
+  var checking = false;
   var running = false;
 
   function cellClass(state) {
@@ -156,8 +167,27 @@
 
   function submit() {
     if (currentGuess.length !== LENGTH) { say('Needs five letters', false); QMG.shake(boardEl); return; }
-    if (!VALID[currentGuess]) { say('“' + currentGuess + '” is not in the word list', false); QMG.audio.wrong(); QMG.shake(boardEl); return; }
+    if (checking) return;
 
+    var guess = currentGuess;
+    if (VALID[guess]) { scoreAndPlace(guess); return; }
+    checking = true;
+    QMG.checkWord(guess).then(function (valid) {
+      checking = false;
+      if (!running) return;
+      if (!valid) {
+        say('“' + guess + '” is not in the dictionary', false);
+        QMG.audio.wrong();
+        QMG.shake(boardEl);
+        return;
+      }
+      VALID[guess] = true;
+      scoreAndPlace(guess);
+    });
+  }
+
+  function scoreAndPlace(currentGuessWord) {
+    var currentGuess = currentGuessWord;
     var result = scoreGuess(currentGuess);
     guesses.push({ word: currentGuess, result: result });
 
@@ -178,7 +208,8 @@
       solvedCount += 1;
       QMG.bumpCombo();
       var left = MAX_GUESSES - guesses.length;
-      var points = Math.round((200 + left * 120) * QMG.comboMultiplier());
+      var points = Math.round((200 + left * 120) * QMG.comboMultiplier()) - revealsUsed * 80;
+      points = Math.max(40, points);
       QMG.addScore(points, boardEl);
       QMG.audio.victory();
       QMG.flashOk(boardEl);
@@ -194,6 +225,44 @@
       QMG.audio.switchTurn();
     }
   }
+
+  // Reveal one correct letter in its proper place. It costs a guess, so it is
+  // a real trade rather than a freebie.
+  document.getElementById('fgClue').addEventListener('click', function () {
+    if (!running) return;
+    var hidden = [];
+    for (var i = 0; i < LENGTH; i++) { if (!revealed[i]) hidden.push(i); }
+    if (!hidden.length) { say('Every letter is already showing', false); return; }
+    if (guesses.length >= MAX_GUESSES - 1) {
+      say('Not enough guesses left to spend one', false);
+      QMG.shake(boardEl);
+      return;
+    }
+
+    var spot = QMG.pick(hidden);
+    revealed[spot] = answer[spot];
+    revealsUsed += 1;
+
+    // Burn a guess by filling a row with what is known so far
+    var filler = '';
+    for (var j = 0; j < LENGTH; j++) { filler += revealed[j] || '·'; }
+    guesses.push({ word: filler, result: answer.split('').map(function (ch, k) {
+      return revealed[k] ? 'hit' : 'idle';
+    }) });
+    keyState[answer[spot]] = 'hit';
+
+    QMG.resetCombo();
+    QMG.audio.switchTurn();
+    renderBoard();
+    renderKeys();
+    say('Letter ' + (spot + 1) + ' is ' + answer[spot], true);
+
+    if (guesses.length >= MAX_GUESSES) {
+      running = false;
+      say('It was ' + answer, false);
+      setTimeout(nextWord, 2000);
+    }
+  });
 
   document.addEventListener('keydown', function (ev) {
     if (!running) return;
@@ -212,6 +281,7 @@
     guesses = [];
     currentGuess = '';
     keyState = {};
+    revealed = {};
     renderBoard();
     renderKeys();
     running = true;
@@ -223,12 +293,15 @@
       icon: solvedCount === WORDS_PER_GAME ? '🟩' : (solvedCount > 0 ? '👍' : '😖'),
       title: solvedCount === WORDS_PER_GAME ? 'Clean Sweep!' : (solvedCount > 0 ? 'Good Effort' : 'Tough Set'),
       sub: solvedCount + ' of ' + WORDS_PER_GAME + ' words cracked.',
+      detail: revealsUsed ? ['Letters revealed: ' + revealsUsed] : []
     });
   }
 
+  QMG.loadWords();
+
   function start() {
     QMG.setMidLabel('Word');
-    wordNo = 0; solvedCount = 0;
+    wordNo = 0; solvedCount = 0; revealsUsed = 0;
     feedbackEl.textContent = '';
     nextWord();
   }

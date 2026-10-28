@@ -43,14 +43,13 @@
 
 {% block how_extra %}
 <p class="mt-2">There is always at least one route in par. Taking a longer way round still counts, it just scores less.</p>
+<p class="mt-2 text-slate-500">Any real four-letter word is a legal rung, place names included.</p>
 {% endblock %}
 
 {% block game_js %}
 <script>
 (function () {
   var PUZZLES = {{ puzzles|tojson }};
-  var VALID = {};
-  {{ valid_words|tojson }}.forEach(function (w) { VALID[w] = true; });
   var ROUND_SECONDS = 240;
 
   var ladderEl = document.getElementById('wlLadder');
@@ -109,17 +108,24 @@
     inputEl.value = '';
     if (word.length !== 4) { say('Four letters, please', false); QMG.shake(inputEl); return; }
 
-    if (!VALID[word.toLowerCase()]) { say('“' + word + '” is not in the word list', false); QMG.audio.wrong(); QMG.shake(inputEl); return; }
     if (!differsByOne(previous(), word)) { say('Change exactly one letter from ' + previous(), false); QMG.audio.wrong(); QMG.shake(inputEl); return; }
     if (word === current.start || rungs.indexOf(word) !== -1) { say('Already used that rung', false); QMG.shake(inputEl); return; }
 
-    rungs.push(word);
-    QMG.audio.tick();
-    QMG.haptic(18);
-    render();
-
-    if (word === current.end) { solveRound(); }
-    inputEl.focus({ preventScroll: true });
+    QMG.checkWord(word).then(function (valid) {
+      if (!running) return;
+      if (!valid) {
+        say('“' + word + '” is not in the dictionary', false);
+        QMG.audio.wrong();
+        QMG.shake(inputEl);
+        return;
+      }
+      rungs.push(word);
+      QMG.audio.tick();
+      QMG.haptic(18);
+      render();
+      if (word === current.end) { solveRound(); }
+      inputEl.focus({ preventScroll: true });
+    });
   });
 
   function solveRound() {
@@ -193,6 +199,7 @@
     QMG.startTimer(ROUND_SECONDS, function () { finishUp(false); });
   }
 
+  QMG.loadWords();
   QMG.onReplay(start);
   start();
 })();

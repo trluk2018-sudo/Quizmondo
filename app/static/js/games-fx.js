@@ -420,6 +420,49 @@ window.QMG = (function () {
     });
   }
 
+  /**
+   * Word checking, in two tiers.
+   *
+   * The page loads a small common-word list, which answers almost every guess
+   * instantly. Anything it does not recognise goes to the server, which holds
+   * the full 315,000 word dictionary in memory. If that call fails we accept
+   * the word: wrongly rejecting something a player actually typed is worse
+   * than letting an odd one through.
+   */
+  var localWords = null;
+  var wordCache = {};
+
+  function loadWords(url) {
+    return fetch(url || '/static/data/qm-lexicon.json')
+      .then(function (r) { return r.json(); })
+      .then(function (list) {
+        localWords = {};
+        list.forEach(function (w) { localWords[w.toLowerCase()] = true; });
+        return localWords;
+      })
+      .catch(function () { localWords = null; });
+  }
+
+  function checkWord(word) {
+    var w = String(word || '').toLowerCase().replace(/[^a-z]/g, '');
+    if (!w) return Promise.resolve(false);
+    if (localWords && localWords[w]) return Promise.resolve(true);
+    if (w in wordCache) return Promise.resolve(wordCache[w]);
+
+    return fetch('/games/api/check-word', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ word: w })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var valid = !!(data && data.valid);
+        wordCache[w] = valid;
+        return valid;
+      })
+      .catch(function () { return true; });
+  }
+
   function init(opts) {
     gameKey = (opts && opts.gameKey) || '';
     best = (opts && opts.best) || 0;
@@ -442,6 +485,6 @@ window.QMG = (function () {
     startStopwatch: startStopwatch, stopwatch: stopwatch, formatClock: formatClock,
     finish: finish, replay: replay, onReplay: onReplay, hideOverlay: hideOverlay,
     shuffle: shuffle, pick: pick, normalise: normalise, sleep: sleep,
-    squareImage: squareImage
+    squareImage: squareImage, loadWords: loadWords, checkWord: checkWord
   };
 })();

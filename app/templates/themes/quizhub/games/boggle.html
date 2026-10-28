@@ -36,6 +36,7 @@
 
 {% block how_extra %}
 <p class="mt-2">Letters must touch, including diagonally, and no square can be used twice in one word. Tap the last letter again to step back.</p>
+<p class="mt-2 text-slate-500">Place names and proper nouns count, so LEEDS is allowed.</p>
 {% endblock %}
 
 {% block game_js %}
@@ -56,7 +57,6 @@
   var path = [];
   var found = {};
   var foundCount = 0;
-  var lexicon = null;
   var running = false;
 
   // Boggle's own scoring curve, scaled up so it sits alongside the other games.
@@ -121,33 +121,39 @@
     var word = path.map(function (i) { return letters[i]; }).join('');
     if (word.length < 3) { say('Three letters minimum', false); QMG.shake(gridEl); return; }
     if (found[word]) { say('Already found ' + word, false); QMG.shake(gridEl); path = []; paint(); return; }
-    if (lexicon && !lexicon[word.toLowerCase()]) {
-      say('“' + word + '” is not in the word list', false);
-      QMG.audio.wrong();
-      QMG.resetCombo();
-      QMG.shake(gridEl);
-      path = []; paint();
-      return;
-    }
 
+    // Claim it now so the same word cannot be submitted twice while the
+    // dictionary call is in flight.
     found[word] = true;
-    foundCount += 1;
-    QMG.bumpCombo();
-    var points = Math.round(wordPoints(word.length) * QMG.comboMultiplier());
-    QMG.addScore(points, gridEl);
-    QMG.audio.correct();
-    QMG.haptic(25);
-    QMG.flashOk(gridEl);
-
-    if (foundCount === 1) foundEl.innerHTML = '';
-    var pill = document.createElement('span');
-    pill.className = 'px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-200 border border-emerald-400/35 font-mono text-[11px] font-black qmg-grow';
-    pill.textContent = word + ' +' + points;
-    foundEl.appendChild(pill);
-    countEl.textContent = foundCount;
-
     path = [];
     paint();
+
+    QMG.checkWord(word).then(function (valid) {
+      if (!running) return;
+      if (!valid) {
+        delete found[word];
+        say('“' + word + '” is not in the dictionary', false);
+        QMG.audio.wrong();
+        QMG.resetCombo();
+        QMG.shake(gridEl);
+        return;
+      }
+
+      foundCount += 1;
+      QMG.bumpCombo();
+      var points = Math.round(wordPoints(word.length) * QMG.comboMultiplier());
+      QMG.addScore(points, gridEl);
+      QMG.audio.correct();
+      QMG.haptic(25);
+      QMG.flashOk(gridEl);
+
+      if (foundCount === 1) foundEl.innerHTML = '';
+      var pill = document.createElement('span');
+      pill.className = 'px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-200 border border-emerald-400/35 font-mono text-[11px] font-black qmg-grow';
+      pill.textContent = word + ' +' + points;
+      foundEl.appendChild(pill);
+      countEl.textContent = foundCount;
+    });
   }
 
   gridEl.addEventListener('click', function (ev) {
@@ -199,13 +205,9 @@
     QMG.startTimer(ROUND_SECONDS, timeUp);
   }
 
-  fetch('/static/data/qm-lexicon.json')
-    .then(function (r) { return r.json(); })
-    .then(function (words) {
-      lexicon = {};
-      words.forEach(function (w) { lexicon[w] = true; });
-    })
-    .catch(function () { lexicon = null; });
+  // Common words answer instantly from the small list; the rest go to the
+  // full dictionary on the server.
+  QMG.loadWords();
 
   QMG.onReplay(start);
   start();

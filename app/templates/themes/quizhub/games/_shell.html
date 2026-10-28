@@ -149,6 +149,23 @@
 
 <div id="qmgPopLayer" class="fixed inset-0 z-40 pointer-events-none overflow-hidden"></div>
 
+<!-- Rotate hint. These games are laid out for a portrait phone, so it is
+     landscape that squashes them, not the other way round. Pure CSS, so it
+     can never get out of step with the real orientation. -->
+<div id="qmgRotate" class="qmg-rotate">
+  <div class="text-center space-y-4 px-8">
+    <div class="text-5xl qmg-rotate-icon">📱</div>
+    <h2 class="text-xl font-black font-mono text-white">Turn your phone upright</h2>
+    <p class="text-xs font-mono text-slate-400 leading-relaxed max-w-xs mx-auto">
+      {{ game.title }} is laid out for a portrait screen — sideways leaves too little room to play it properly.
+    </p>
+    <button type="button" onclick="document.getElementById('qmgRotate').classList.add('qmg-rotate-off')"
+            class="px-5 py-2.5 rounded-2xl border border-purple-500/40 text-slate-300 hover:text-white hover:border-cyan-400 font-mono font-bold text-[11px] uppercase tracking-wider transition">
+      Carry on anyway
+    </button>
+  </div>
+</div>
+
 <style>
   .qmg-pop { position: fixed; transform: translate(-50%, -50%); font-weight: 900; font-family: ui-monospace, monospace;
              animation: qmgPop 900ms cubic-bezier(.2,.8,.3,1) forwards; text-shadow: 0 2px 12px rgba(0,0,0,.8); }
@@ -167,6 +184,23 @@
   @keyframes qmgGrow { 0% { transform: scale(.82); } 100% { transform: scale(1); } }
   #qmgStage, #qmgStage * { -webkit-tap-highlight-color: transparent; }
   .qmg-nosel { user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+
+  .qmg-rotate { display: none; }
+  /* Only a short landscape viewport, so it never fires on a laptop or tablet */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .qmg-rotate {
+      display: flex; align-items: center; justify-content: center;
+      position: fixed; inset: 0; z-index: 60;
+      background: rgba(9, 3, 23, .97); backdrop-filter: blur(6px);
+    }
+    .qmg-rotate.qmg-rotate-off { display: none; }
+  }
+  .qmg-rotate-icon { animation: qmgTip 1.8s ease-in-out infinite; }
+  @keyframes qmgTip {
+    0%, 55%, 100% { transform: rotate(-90deg); }
+    75%, 90% { transform: rotate(0deg); }
+  }
+  @media (prefers-reduced-motion: reduce) { .qmg-rotate-icon { animation: none; } }
 </style>
 
 <script src="/static/js/quiz-audio.js"></script>
