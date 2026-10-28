@@ -1,0 +1,358 @@
+{% extends "themes/quizhub/games/_shell.html" %}
+
+{% block game_stage %}
+{% if puzzle %}
+<div class="space-y-3">
+  <!-- Active clue -->
+  <div class="p-3.5 rounded-2xl bg-slate-950/95 border-2 border-amber-500/35 font-mono space-y-1 min-h-[72px]">
+    <div class="flex items-center gap-2">
+      <span id="cwNum" class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 text-[10px] font-black border border-amber-500/30">—</span>
+      <span id="cwDir" class="text-[10px] text-slate-500 uppercase tracking-wider">Tap a square to begin</span>
+      <span id="cwSolved" class="ml-auto text-[10px] font-black text-emerald-300 shrink-0">0/0</span>
+    </div>
+    <p id="cwClue" class="text-xs text-slate-200 leading-relaxed">Every clue is a real Quizmondo trivia question.</p>
+  </div>
+
+  <!-- Grid -->
+  <div class="flex justify-center">
+    <div id="cwGrid" class="qmg-nosel grid gap-[2px] p-2 rounded-2xl bg-slate-950/95 border-2 border-amber-500/30 shadow-xl w-full"
+         style="max-width: 420px;"></div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-2">
+    <button type="button" id="cwSwitch" class="py-3 rounded-2xl bg-slate-900 border border-purple-500/30 text-slate-300 font-mono font-bold text-[11px] uppercase hover:border-cyan-400 transition">
+      ⇄ Across / Down
+    </button>
+    <button type="button" id="cwReveal" class="py-3 rounded-2xl bg-slate-900 border border-amber-500/30 text-amber-300 font-mono font-bold text-[11px] uppercase hover:border-amber-400 transition">
+      💡 Reveal Letter
+    </button>
+  </div>
+
+  <!-- Clue list -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div class="p-4 rounded-2xl bg-slate-950/80 border border-purple-500/20 space-y-2">
+      <div class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Across</div>
+      <ol id="cwAcross" class="space-y-1.5"></ol>
+    </div>
+    <div class="p-4 rounded-2xl bg-slate-950/80 border border-purple-500/20 space-y-2">
+      <div class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Down</div>
+      <ol id="cwDown" class="space-y-1.5"></ol>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="p-8 rounded-3xl bg-slate-950/90 border border-rose-500/30 text-center font-mono space-y-2">
+  <div class="text-3xl">✏️</div>
+  <p class="text-xs text-rose-300 font-bold">No crossword could be compiled right now.</p>
+  <p class="text-[11px] text-slate-500">This one is built live from the question bank — try again in a moment.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block how_extra %}
+<p class="mt-2">An entry turns green the moment it is right, so there is nothing to submit. Revealing a letter costs 40 points.</p>
+{% endblock %}
+
+{% block game_js %}
+{% if puzzle %}
+<script>
+(function () {
+  var PUZZLE = {{ puzzle|tojson }};
+  var ROUND_SECONDS = 420;
+
+  var gridEl = document.getElementById('cwGrid');
+  var numEl = document.getElementById('cwNum');
+  var dirEl = document.getElementById('cwDir');
+  var clueEl = document.getElementById('cwClue');
+  var acrossEl = document.getElementById('cwAcross');
+  var downEl = document.getElementById('cwDown');
+
+  var cells = {};       // "r,c" -> { input, entries: [] }
+  var entries = [];
+  var active = null;    // entry
+  var activeIndex = 0;
+  var solvedCount = 0;
+  var revealsUsed = 0;
+  var running = false;
+
+  function key(r, c) { return r + ',' + c; }
+
+  function entryCells(entry) {
+    var out = [];
+    for (var i = 0; i < entry.answer.length; i++) {
+      var r = entry.row + (entry.dir === 'down' ? i : 0);
+      var c = entry.col + (entry.dir === 'across' ? i : 0);
+      out.push(cells[key(r, c)]);
+    }
+    return out;
+  }
+
+  function build() {
+    gridEl.style.gridTemplateColumns = 'repeat(' + PUZZLE.cols + ', minmax(0, 1fr))';
+    gridEl.innerHTML = '';
+    cells = {};
+
+    // Which cells are in play, and which start an entry
+    var live = {};
+    var numbers = {};
+    entries.forEach(function (entry) {
+      numbers[key(entry.row, entry.col)] = entry.number;
+      for (var i = 0; i < entry.answer.length; i++) {
+        var r = entry.row + (entry.dir === 'down' ? i : 0);
+        var c = entry.col + (entry.dir === 'across' ? i : 0);
+        live[key(r, c)] = true;
+      }
+    });
+
+    for (var r = 0; r < PUZZLE.rows; r++) {
+      for (var c = 0; c < PUZZLE.cols; c++) {
+        var holder = document.createElement('div');
+        holder.className = 'relative aspect-square';
+        if (!live[key(r, c)]) {
+          holder.innerHTML = '<div class="w-full h-full"></div>';
+          gridEl.appendChild(holder);
+          continue;
+        }
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.inputMode = 'text';
+        input.maxLength = 1;
+        input.autocomplete = 'off';
+        input.autocapitalize = 'characters';
+        input.spellcheck = false;
+        input.dataset.r = r;
+        input.dataset.c = c;
+        input.className = inputClass('idle');
+        holder.appendChild(input);
+
+        if (numbers[key(r, c)]) {
+          var tag = document.createElement('span');
+          tag.className = 'absolute top-0 left-[2px] text-[8px] font-mono font-black text-amber-300/80 pointer-events-none leading-none';
+          tag.textContent = numbers[key(r, c)];
+          holder.appendChild(tag);
+        }
+
+        gridEl.appendChild(holder);
+        cells[key(r, c)] = { input: input, entries: [] };
+      }
+    }
+
+    entries.forEach(function (entry) {
+      entryCells(entry).forEach(function (cell) { if (cell) cell.entries.push(entry); });
+    });
+  }
+
+  function inputClass(state) {
+    var base = 'w-full h-full rounded-[3px] text-center font-mono font-black uppercase ' +
+      'text-[13px] sm:text-base focus:outline-none transition-colors caret-transparent ';
+    if (state === 'solved') return base + 'bg-emerald-500 text-slate-950 border border-emerald-300';
+    if (state === 'active') return base + 'bg-cyan-900/70 text-white border-2 border-cyan-400';
+    if (state === 'inword') return base + 'bg-purple-800/70 text-white border border-purple-300/50';
+    return base + 'bg-slate-600/70 text-white border border-slate-400/40';
+  }
+
+  function isSolved(entry) { return entry.solved === true; }
+
+  function paint() {
+    Object.keys(cells).forEach(function (k) {
+      var cell = cells[k];
+      var solved = cell.entries.some(isSolved);
+      cell.input.className = inputClass(solved ? 'solved' : 'idle');
+      cell.input.readOnly = solved;
+    });
+    if (active) {
+      entryCells(active).forEach(function (cell, i) {
+        if (!cell) return;
+        if (cell.entries.some(isSolved)) return;
+        cell.input.className = inputClass(i === activeIndex ? 'active' : 'inword');
+      });
+    }
+    renderClueLists();
+  }
+
+  function setActive(entry, index) {
+    active = entry;
+    activeIndex = index || 0;
+    numEl.textContent = entry.number + (entry.dir === 'across' ? 'A' : 'D');
+    dirEl.textContent = entry.dir + ' • ' + entry.answer.length + ' letters';
+    clueEl.textContent = entry.clue;
+    paint();
+    var cell = entryCells(entry)[activeIndex];
+    if (cell) cell.input.focus({ preventScroll: true });
+  }
+
+  function focusCell(r, c, preferDir) {
+    var cell = cells[key(r, c)];
+    if (!cell || !cell.entries.length) return;
+    var candidates = cell.entries.filter(function (e) { return !isSolved(e); });
+    if (!candidates.length) candidates = cell.entries;
+    var entry = candidates.find(function (e) { return e.dir === preferDir; }) || candidates[0];
+    var idx = entry.dir === 'across' ? (c - entry.col) : (r - entry.row);
+    setActive(entry, idx);
+  }
+
+  gridEl.addEventListener('focusin', function (ev) {
+    var input = ev.target;
+    if (!input.dataset || input.dataset.r === undefined) return;
+    var r = parseInt(input.dataset.r, 10), c = parseInt(input.dataset.c, 10);
+    // Tapping a cell already inside the active entry just moves the cursor
+    if (active && cells[key(r, c)].entries.indexOf(active) !== -1) {
+      activeIndex = active.dir === 'across' ? (c - active.col) : (r - active.row);
+      paint();
+      return;
+    }
+    focusCell(r, c, active ? active.dir : 'across');
+  });
+
+  gridEl.addEventListener('input', function (ev) {
+    var input = ev.target;
+    if (!input.dataset || input.dataset.r === undefined || !active) return;
+    var ch = (input.value || '').toUpperCase().replace(/[^A-Z]/g, '');
+    input.value = ch;
+    if (ch) {
+      QMG.audio.tick();
+      checkEntries(parseInt(input.dataset.r, 10), parseInt(input.dataset.c, 10));
+      advance(1);
+    }
+  });
+
+  gridEl.addEventListener('keydown', function (ev) {
+    if (!active) return;
+    if (ev.key === 'Backspace' && !ev.target.value) { ev.preventDefault(); advance(-1); }
+    else if (ev.key === 'ArrowRight' || ev.key === 'ArrowDown') { ev.preventDefault(); advance(1); }
+    else if (ev.key === 'ArrowLeft' || ev.key === 'ArrowUp') { ev.preventDefault(); advance(-1); }
+  });
+
+  function advance(step) {
+    if (!active) return;
+    var cellList = entryCells(active);
+    var i = activeIndex + step;
+    while (i >= 0 && i < cellList.length && cellList[i] && cellList[i].input.readOnly) { i += step; }
+    if (i < 0 || i >= cellList.length) {
+      if (step > 0) { jumpToNextUnsolved(); }
+      return;
+    }
+    activeIndex = i;
+    paint();
+    cellList[i].input.focus({ preventScroll: true });
+  }
+
+  function jumpToNextUnsolved() {
+    var remaining = entries.filter(function (e) { return !isSolved(e); });
+    if (!remaining.length) return;
+    var at = remaining.indexOf(active);
+    var next = remaining[(at + 1) % remaining.length];
+    setActive(next, 0);
+  }
+
+  function checkEntries(r, c) {
+    var cell = cells[key(r, c)];
+    if (!cell) return;
+    cell.entries.forEach(function (entry) {
+      if (isSolved(entry)) return;
+      var text = entryCells(entry).map(function (x) { return x ? (x.input.value || '') : ''; }).join('');
+      if (text.toUpperCase() !== entry.answer) return;
+
+      entry.solved = true;
+      solvedCount += 1;
+      QMG.bumpCombo();
+      var points = Math.round((80 + entry.answer.length * 30) * QMG.comboMultiplier());
+      QMG.addScore(points, cell.input);
+      QMG.audio.correct();
+      QMG.haptic(25);
+      document.getElementById('cwSolved').textContent = solvedCount + '/' + entries.length;
+      entryCells(entry).forEach(function (x) { if (x) QMG.flashOk(x.input); });
+    });
+    paint();
+    if (solvedCount >= entries.length) { win(); }
+  }
+
+  function renderClueLists() {
+    [['across', acrossEl], ['down', downEl]].forEach(function (pair) {
+      var dir = pair[0], host = pair[1];
+      host.innerHTML = '';
+      entries.filter(function (e) { return e.dir === dir; }).forEach(function (entry) {
+        var li = document.createElement('li');
+        li.className = 'text-[11px] font-mono leading-snug cursor-pointer px-2 py-1 rounded-lg transition ' +
+          (isSolved(entry) ? 'text-emerald-300/70 line-through'
+            : (entry === active ? 'bg-cyan-950/50 text-cyan-200 border border-cyan-500/30' : 'text-slate-400 hover:text-white'));
+        li.innerHTML = '<strong class="text-amber-300/80">' + entry.number + '.</strong> ' +
+          entry.clue.replace(/[<>]/g, '') + ' <span class="text-slate-600">(' + entry.answer.length + ')</span>';
+        li.addEventListener('click', function () { if (!isSolved(entry)) setActive(entry, 0); });
+        host.appendChild(li);
+      });
+    });
+  }
+
+  document.getElementById('cwSwitch').addEventListener('click', function () {
+    if (!active) return;
+    var cellList = entryCells(active);
+    var cell = cellList[activeIndex];
+    if (!cell) return;
+    var other = cell.entries.find(function (e) { return e !== active && !isSolved(e); });
+    if (other) {
+      var r = parseInt(cell.input.dataset.r, 10), c = parseInt(cell.input.dataset.c, 10);
+      setActive(other, other.dir === 'across' ? (c - other.col) : (r - other.row));
+    } else {
+      jumpToNextUnsolved();
+    }
+  });
+
+  document.getElementById('cwReveal').addEventListener('click', function () {
+    if (!running || !active) return;
+    var cellList = entryCells(active);
+    for (var i = 0; i < cellList.length; i++) {
+      var cell = cellList[i];
+      if (!cell || cell.input.readOnly) continue;
+      if ((cell.input.value || '').toUpperCase() === active.answer[i]) continue;
+      cell.input.value = active.answer[i];
+      revealsUsed += 1;
+      QMG.addScore(-40, cell.input);
+      QMG.resetCombo();
+      QMG.audio.switchTurn();
+      checkEntries(parseInt(cell.input.dataset.r, 10), parseInt(cell.input.dataset.c, 10));
+      return;
+    }
+  });
+
+  function win() {
+    running = false;
+    var secondsLeft = Math.round(QMG.timeLeft() / 1000);
+    var bonus = secondsLeft * 2;
+    QMG.addScore(bonus);
+    QMG.finish({
+      icon: '✏️',
+      title: 'Crossword Complete!',
+      sub: 'All ' + entries.length + ' trivia clues solved.',
+      detail: ['Time bonus: +' + bonus].concat(revealsUsed ? ['Letters revealed: ' + revealsUsed] : [])
+    });
+  }
+
+  function timeUp() {
+    running = false;
+    QMG.finish({
+      win: false,
+      icon: '⏱️',
+      title: 'Time Up',
+      sub: solvedCount + ' of ' + entries.length + ' clues solved.',
+    });
+  }
+
+  function start() {
+    entries = PUZZLE.entries.map(function (e) { return Object.assign({}, e, { solved: false }); });
+    solvedCount = 0;
+    revealsUsed = 0;
+    build();
+    document.getElementById('cwSolved').textContent = '0/' + entries.length;
+    paint();
+    running = true;
+    QMG.startTimer(ROUND_SECONDS, timeUp);
+  }
+
+  // A replay should be a fresh grid, which only the server can compile.
+  QMG.onReplay(function () { window.location.reload(); });
+  start();
+})();
+</script>
+{% endif %}
+{% endblock %}

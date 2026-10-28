@@ -1,0 +1,240 @@
+{% extends "themes/quizhub/games/_shell.html" %}
+
+{% block hud_mid_label %}Word{% endblock %}
+{% block hud_mid_value %}1/3{% endblock %}
+
+{% block game_stage %}
+<div class="space-y-3">
+  <div class="p-4 sm:p-5 rounded-3xl bg-slate-950/95 border-2 border-lime-500/35 shadow-2xl space-y-4 relative overflow-hidden">
+    <div class="absolute -top-16 left-1/2 -translate-x-1/2 w-64 h-32 bg-lime-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="relative space-y-3">
+      <div id="fgBoard" class="qmg-nosel grid gap-1.5 justify-center"></div>
+      <div id="fgFeedback" class="min-h-[18px] font-mono text-xs font-bold text-center"></div>
+    </div>
+  </div>
+
+  <!-- Keyboard -->
+  <div id="fgKeys" class="qmg-nosel space-y-1.5"></div>
+</div>
+{% endblock %}
+
+{% block how_extra %}
+<p class="mt-2">Three words per game. Solving in fewer guesses scores more, and every word you crack adds to the total.</p>
+{% endblock %}
+
+{% block game_js %}
+<script>
+(function () {
+  var ANSWERS = {{ answers|tojson }};
+  var VALID = {};
+  {{ valid_words|tojson }}.forEach(function (w) { VALID[w.toUpperCase()] = true; });
+  ANSWERS.forEach(function (w) { VALID[w] = true; });
+
+  var WORDS_PER_GAME = 3;
+  var MAX_GUESSES = 6;
+  var LENGTH = 5;
+  var ROWS = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+
+  var boardEl = document.getElementById('fgBoard');
+  var keysEl = document.getElementById('fgKeys');
+  var feedbackEl = document.getElementById('fgFeedback');
+
+  var answer = '';
+  var guesses = [];
+  var currentGuess = '';
+  var wordNo = 0;
+  var solvedCount = 0;
+  var keyState = {};
+  var running = false;
+
+  function cellClass(state) {
+    var base = 'w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center font-mono font-black text-xl sm:text-2xl transition ';
+    if (state === 'hit') return base + 'bg-emerald-500 text-slate-950 border-2 border-emerald-300';
+    if (state === 'near') return base + 'bg-amber-500 text-slate-950 border-2 border-amber-300';
+    if (state === 'miss') return base + 'bg-slate-800 text-slate-500 border-2 border-slate-700';
+    if (state === 'live') return base + 'bg-slate-900 text-white border-2 border-cyan-400';
+    return base + 'bg-slate-900/60 text-white border-2 border-purple-500/25';
+  }
+
+  // Standard two-pass scoring so a repeated letter is not marked twice.
+  function scoreGuess(guess) {
+    var result = new Array(LENGTH).fill('miss');
+    var pool = {};
+    for (var i = 0; i < LENGTH; i++) {
+      if (guess[i] === answer[i]) { result[i] = 'hit'; }
+      else { pool[answer[i]] = (pool[answer[i]] || 0) + 1; }
+    }
+    for (var j = 0; j < LENGTH; j++) {
+      if (result[j] === 'hit') continue;
+      if (pool[guess[j]]) { result[j] = 'near'; pool[guess[j]] -= 1; }
+    }
+    return result;
+  }
+
+  function renderBoard() {
+    boardEl.style.gridTemplateColumns = 'repeat(' + LENGTH + ', minmax(0, 1fr))';
+    boardEl.innerHTML = '';
+    for (var r = 0; r < MAX_GUESSES; r++) {
+      for (var c = 0; c < LENGTH; c++) {
+        var cell = document.createElement('div');
+        var letter = '';
+        var state = 'idle';
+        if (r < guesses.length) {
+          letter = guesses[r].word[c];
+          state = guesses[r].result[c];
+        } else if (r === guesses.length && c < currentGuess.length) {
+          letter = currentGuess[c];
+          state = 'live';
+        }
+        cell.className = cellClass(state);
+        cell.textContent = letter;
+        boardEl.appendChild(cell);
+      }
+    }
+  }
+
+  function keyClass(state) {
+    var base = 'flex-1 min-w-0 h-11 rounded-lg font-mono font-black text-sm transition ';
+    if (state === 'hit') return base + 'bg-emerald-500 text-slate-950';
+    if (state === 'near') return base + 'bg-amber-500 text-slate-950';
+    if (state === 'miss') return base + 'bg-slate-800 text-slate-600';
+    return base + 'bg-slate-900 border border-purple-500/30 text-slate-100 active:bg-purple-900/70';
+  }
+
+  function renderKeys() {
+    keysEl.innerHTML = '';
+    ROWS.forEach(function (row, idx) {
+      var line = document.createElement('div');
+      line.className = 'flex gap-1.5 justify-center';
+      if (idx === 2) {
+        line.appendChild(wideKey('ENTER', 'enter'));
+      }
+      row.split('').forEach(function (ch) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = keyClass(keyState[ch] || 'idle');
+        btn.textContent = ch;
+        btn.addEventListener('click', function () { press(ch); });
+        line.appendChild(btn);
+      });
+      if (idx === 2) {
+        line.appendChild(wideKey('⌫', 'back'));
+      }
+      keysEl.appendChild(line);
+    });
+  }
+
+  function wideKey(label, action) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'px-2.5 h-11 rounded-lg bg-slate-900 border border-purple-500/30 text-cyan-300 font-mono font-black text-[10px] active:bg-purple-900/70 transition shrink-0';
+    btn.textContent = label;
+    btn.addEventListener('click', function () { press(action === 'enter' ? 'ENTER' : 'BACK'); });
+    return btn;
+  }
+
+  function say(text, good) {
+    feedbackEl.textContent = text;
+    feedbackEl.className = 'min-h-[18px] font-mono text-xs font-bold text-center ' + (good ? 'text-emerald-300' : 'text-rose-300');
+    setTimeout(function () { if (feedbackEl.textContent === text) feedbackEl.textContent = ''; }, 1600);
+  }
+
+  function press(key) {
+    if (!running) return;
+    if (key === 'BACK') {
+      currentGuess = currentGuess.slice(0, -1);
+      renderBoard();
+      return;
+    }
+    if (key === 'ENTER') { submit(); return; }
+    if (currentGuess.length >= LENGTH) return;
+    currentGuess += key;
+    QMG.audio.tick();
+    renderBoard();
+  }
+
+  function submit() {
+    if (currentGuess.length !== LENGTH) { say('Needs five letters', false); QMG.shake(boardEl); return; }
+    if (!VALID[currentGuess]) { say('“' + currentGuess + '” is not in the word list', false); QMG.audio.wrong(); QMG.shake(boardEl); return; }
+
+    var result = scoreGuess(currentGuess);
+    guesses.push({ word: currentGuess, result: result });
+
+    // The keyboard only ever gets better news, never worse
+    for (var i = 0; i < LENGTH; i++) {
+      var ch = currentGuess[i];
+      var rank = { miss: 1, near: 2, hit: 3 };
+      if (!keyState[ch] || rank[result[i]] > rank[keyState[ch]]) { keyState[ch] = result[i]; }
+    }
+
+    var solved = currentGuess === answer;
+    currentGuess = '';
+    renderBoard();
+    renderKeys();
+
+    if (solved) {
+      running = false;
+      solvedCount += 1;
+      QMG.bumpCombo();
+      var left = MAX_GUESSES - guesses.length;
+      var points = Math.round((200 + left * 120) * QMG.comboMultiplier());
+      QMG.addScore(points, boardEl);
+      QMG.audio.victory();
+      QMG.flashOk(boardEl);
+      say('✅ ' + answer + ' in ' + guesses.length + ' — +' + points, true);
+      setTimeout(nextWord, 1500);
+    } else if (guesses.length >= MAX_GUESSES) {
+      running = false;
+      QMG.resetCombo();
+      QMG.audio.wrong();
+      say('It was ' + answer, false);
+      setTimeout(nextWord, 2200);
+    } else {
+      QMG.audio.switchTurn();
+    }
+  }
+
+  document.addEventListener('keydown', function (ev) {
+    if (!running) return;
+    if (ev.key === 'Enter') { ev.preventDefault(); press('ENTER'); return; }
+    if (ev.key === 'Backspace') { ev.preventDefault(); press('BACK'); return; }
+    var ch = (ev.key || '').toUpperCase();
+    if (ch.length === 1 && ch >= 'A' && ch <= 'Z') press(ch);
+  });
+
+  function nextWord() {
+    if (wordNo >= WORDS_PER_GAME) { finishUp(); return; }
+    wordNo += 1;
+    QMG.setMid(wordNo + '/' + WORDS_PER_GAME);
+    QMG.setMidBar(wordNo / WORDS_PER_GAME);
+    answer = QMG.pick(ANSWERS);
+    guesses = [];
+    currentGuess = '';
+    keyState = {};
+    renderBoard();
+    renderKeys();
+    running = true;
+  }
+
+  function finishUp() {
+    QMG.finish({
+      win: solvedCount > 0,
+      icon: solvedCount === WORDS_PER_GAME ? '🟩' : (solvedCount > 0 ? '👍' : '😖'),
+      title: solvedCount === WORDS_PER_GAME ? 'Clean Sweep!' : (solvedCount > 0 ? 'Good Effort' : 'Tough Set'),
+      sub: solvedCount + ' of ' + WORDS_PER_GAME + ' words cracked.',
+    });
+  }
+
+  function start() {
+    QMG.setMidLabel('Word');
+    wordNo = 0; solvedCount = 0;
+    feedbackEl.textContent = '';
+    nextWord();
+  }
+
+  QMG.onReplay(start);
+  start();
+})();
+</script>
+{% endblock %}

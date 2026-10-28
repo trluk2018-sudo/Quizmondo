@@ -347,7 +347,7 @@ def trivia_clues(min_len=3, max_len=9, limit=400):
     return out
 
 
-def crossword_puzzle(rng=None, size=11, target_words=9):
+def crossword_puzzle(rng=None, size=9, target_words=7):
     """Compile a small interlocking crossword from real trivia clues.
 
     Classic greedy compiler: seed with one long word, then keep trying to hook
