@@ -1469,6 +1469,7 @@ def settings_email():
         SiteSetting.set('smtp_host', (request.form.get('smtp_host') or '').strip())
         SiteSetting.set('smtp_port', (request.form.get('smtp_port') or '587').strip())
         SiteSetting.set('smtp_user', (request.form.get('smtp_user') or '').strip())
+        SiteSetting.set('smtp_encryption', (request.form.get('smtp_encryption') or '').strip())
         SiteSetting.set('smtp_from_name', (request.form.get('smtp_from_name') or 'Quizmondo').strip())
         SiteSetting.set('smtp_from_email', (request.form.get('smtp_from_email') or '').strip())
         password = request.form.get('smtp_password') or ''

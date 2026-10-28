@@ -33,8 +33,9 @@ TIMEOUT = 20
 
 DEFAULTS = {
     'smtp_host': '',
-    'smtp_port': '587',
+    'smtp_port': '465',
     'smtp_user': '',
+    'smtp_encryption': '',
     'smtp_from_name': 'Quizmondo',
     'smtp_from_email': '',
 }
@@ -50,7 +51,9 @@ def config() -> dict:
     try:
         conf['port'] = int(conf['smtp_port'])
     except (TypeError, ValueError):
-        conf['port'] = 587
+        conf['port'] = 465
+    # Unset means follow the port, which is right far more often than not.
+    conf['encryption'] = conf['smtp_encryption'] or ('ssl' if conf['port'] == 465 else 'tls')
     return conf
 
 
@@ -105,12 +108,12 @@ def deliver(msg, conf=None):
         msg['Message-ID'] = make_msgid(domain=domain)
     server = None
     try:
-        if conf['port'] == 465:
+        if conf['encryption'] == 'ssl':
             server = smtplib.SMTP_SSL(conf['smtp_host'], conf['port'], timeout=TIMEOUT)
         else:
             server = smtplib.SMTP(conf['smtp_host'], conf['port'], timeout=TIMEOUT)
             server.ehlo()
-            if server.has_extn('starttls'):
+            if conf['encryption'] != 'none' and server.has_extn('starttls'):
                 server.starttls()
                 server.ehlo()
         server.login(conf['smtp_user'], conf['password'])
