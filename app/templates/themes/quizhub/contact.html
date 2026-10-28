@@ -1,13 +1,17 @@
 {% extends "themes/quizhub/base.html" %}
 
-{% block title %}Arena Operations &amp; Contact &mdash; {{ site_title }}{% endblock %}
+{% block title %}Contact &mdash; {{ site_title }}{% endblock %}
 
 {% block content %}
 <div class="space-y-0 text-slate-100">
   <section class="bg-gradient-to-r from-slate-950 via-[#1e1438] to-slate-900 text-white py-14 border-b-2 border-purple-500/30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <span class="text-xs font-black uppercase tracking-widest text-amber-400">ARENA SUPPORT &amp; REFEREE DESK</span>
-      <h1 class="text-3xl sm:text-5xl font-black tracking-tight mt-1">Arena Match Operations &amp; Support</h1>
+      <span class="text-xs font-black uppercase tracking-widest text-amber-400">GET IN TOUCH</span>
+      <h1 class="text-3xl sm:text-5xl font-black tracking-tight mt-1">Contact Quizmondo</h1>
+      <p class="text-sm text-slate-300 mt-2 max-w-2xl">
+        Found a wrong answer, want a pub quiz set up for your venue, or need your account data removed?
+        Send a message and we will come back to you.
+      </p>
     </div>
   </section>
 
@@ -23,44 +27,52 @@
       <div class="lg:col-span-7">
         <form action="{{ url_for('public.contact') }}" method="POST" class="bg-slate-950/90 border-2 border-purple-500/30 rounded-2xl p-8 space-y-6 shadow-2xl">
           <div class="space-y-1">
-            <h3 class="text-xl font-black text-white">Send Match Operations A Message</h3>
-            <p class="text-xs text-slate-400">Tournament hosting, custom question packs, account verification, or corporate league inquiries.</p>
+            <h3 class="text-xl font-black text-white">Send a message</h3>
+            <p class="text-xs text-slate-400">We read everything. Replies are usually within a few days.</p>
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400 mb-2">Player / Organizer Name</label>
-            <input type="text" name="name" required placeholder="Your name or gamer tag" class="w-full text-xs px-4 py-3 rounded-xl bg-slate-900 border border-purple-500/30 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400">
+            <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400 mb-2">Your name</label>
+            <input type="text" name="name" required placeholder="Name or player name" class="w-full text-xs px-4 py-3 rounded-xl bg-slate-900 border border-purple-500/30 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400">
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400 mb-2">Email Address</label>
-            <input type="email" name="email" required placeholder="player@domain.com" class="w-full text-xs px-4 py-3 rounded-xl bg-slate-900 border border-purple-500/30 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400">
+            <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400 mb-2">Email address</label>
+            <input type="email" name="email" required placeholder="you@example.com" class="w-full text-xs px-4 py-3 rounded-xl bg-slate-900 border border-purple-500/30 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400">
+            <span class="text-[10px] text-slate-500 block mt-1.5">Only used to reply to you.</span>
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400 mb-2">Message Brief</label>
-            <textarea name="message" rows="5" required placeholder="Describe your tournament requirements or question..." class="w-full text-xs px-4 py-3 rounded-xl bg-slate-900 border border-purple-500/30 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"></textarea>
+            <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400 mb-2">Message</label>
+            <textarea name="message" rows="6" required placeholder="What can we help with?" class="w-full text-xs px-4 py-3 rounded-xl bg-slate-900 border border-purple-500/30 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"></textarea>
           </div>
           <button type="submit" class="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 via-purple-600 to-pink-500 hover:from-cyan-400 hover:to-pink-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-purple-500/30 transition">
-            Transmit Message ⚡
+            Send Message
           </button>
         </form>
       </div>
 
       <div class="lg:col-span-5 space-y-6">
-        <div class="bg-slate-950/90 border border-purple-500/30 rounded-2xl p-8 space-y-6 shadow-2xl">
-          <h3 class="text-lg font-black text-white border-b border-purple-500/20 pb-3">Arena Command Center</h3>
-          <div class="space-y-4 text-xs">
-            <div>
-              <span class="block text-slate-400 font-bold uppercase tracking-wider">Tournament Dispatch Hotline</span>
-              <span class="text-base font-bold text-amber-400">{{ settings.get('contact_phone', '+44 800 999 1234') }}</span>
-            </div>
-            <div>
-              <span class="block text-slate-400 font-bold uppercase tracking-wider">Match Referee Desk</span>
-              <span class="text-sm font-bold text-cyan-400">{{ settings.get('contact_email', 'referee@triviamatrix.local') }}</span>
-            </div>
-            <div>
-              <span class="block text-slate-400 font-bold uppercase tracking-wider">Arena Operational Hours</span>
-              <span class="text-slate-300">24/7 Matchmaking &bull; Hourly Tournaments Live</span>
-            </div>
-          </div>
+        <div class="bg-slate-950/90 border border-purple-500/30 rounded-2xl p-8 space-y-5 shadow-2xl">
+          <h3 class="text-lg font-black text-white border-b border-purple-500/20 pb-3">What to get in touch about</h3>
+          <ul class="space-y-3 text-xs text-slate-300">
+            <li class="flex gap-2.5"><span class="text-cyan-400">▸</span><span><strong class="text-white">A wrong answer.</strong> Tell us the question and we will fix or pull it.</span></li>
+            <li class="flex gap-2.5"><span class="text-cyan-400">▸</span><span><strong class="text-white">Running a pub quiz.</strong> We can set your venue up with its own league and host console.</span></li>
+            <li class="flex gap-2.5"><span class="text-cyan-400">▸</span><span><strong class="text-white">Your data.</strong> Ask for a copy of what we hold, or ask us to delete your account. See the <a href="/privacy" class="text-cyan-400 hover:text-cyan-300 underline">privacy page</a>.</span></li>
+            <li class="flex gap-2.5"><span class="text-cyan-400">▸</span><span><strong class="text-white">Something broken.</strong> Tell us what you were doing and on what device.</span></li>
+          </ul>
+        </div>
+
+        {% if settings.get('contact_email') %}
+        <div class="bg-slate-950/90 border border-purple-500/30 rounded-2xl p-8 space-y-2 shadow-2xl">
+          <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Or email us</span>
+          <a href="mailto:{{ settings.get('contact_email') }}" class="text-sm font-bold text-cyan-400 hover:text-cyan-300 break-all">{{ settings.get('contact_email') }}</a>
+        </div>
+        {% endif %}
+
+        <div class="bg-slate-900/60 border border-purple-500/20 rounded-2xl p-6 space-y-2">
+          <p class="text-[11px] text-slate-400 leading-relaxed">
+            Quizmondo is free to play and run as a hobby project, so please be patient with replies.
+            The <a href="/terms" class="text-cyan-400 hover:text-cyan-300 underline">terms</a> explain
+            what that means.
+          </p>
         </div>
       </div>
     </div>

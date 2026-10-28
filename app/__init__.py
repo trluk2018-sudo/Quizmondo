@@ -304,6 +304,9 @@ def _seed_defaults():
             db.session.add(SiteSetting(key=k, value=v))
         elif k in ('site_logo', 'footer_logo', 'active_theme'):
             existing.value = v
+        elif k == 'header_cta_url' and existing.value == '/contact':
+            # Correct the one bad default without overriding a destination chosen since
+            existing.value = v
 
     # Seed Quizmondo Arena initial question packs, leagues, and homepage modules
     from .utils.quiz_seed import seed_quizmondo_full_environment
@@ -367,6 +370,125 @@ def _seed_defaults():
             sort_order=1
         )
         db.session.add(about_page)
+
+    # Legal pages. Seeded once so they are editable in Admin > Pages like any other page
+    # rather than baked into a template.
+    terms_page = Page.query.filter_by(slug='terms').first()
+    if not terms_page:
+        db.session.add(Page(
+            title='Terms & Conditions',
+            slug='terms',
+            excerpt='Quizmondo is free to use and provided as-is. These are the rules of the house.',
+            content="""<p><strong>Quizmondo is free to use, and it is run as a hobby project.</strong> These terms set out what that means in practice. By playing, you accept them.</p>
+
+<h2>1. The service is free, and provided as-is</h2>
+<p>There is no charge to play Quizmondo and no subscription. In return, the service comes with no guarantees. It may be slow, it may be unavailable, questions may contain mistakes, and scores or accounts may occasionally be lost. We make no promise that the site will be available at any particular time or that any feature will keep working.</p>
+
+<h2>2. It can be withdrawn or changed at any time</h2>
+<p>We may change, suspend, restrict or shut down Quizmondo, in whole or in part, at any time and without notice. That includes removing features, resetting leaderboards and league tables, deleting inactive accounts, or ending the service altogether. Because the service is free, no refund or compensation arises in any of these cases.</p>
+
+<h2>3. Fair use, and what counts as abuse</h2>
+<p>Use Quizmondo the way it is meant to be used. You must not:</p>
+<ul>
+<li>cheat, manipulate scores, or use scripts, bots or automated tools to play, except the in-game bots we provide;</li>
+<li>attempt to access accounts, data or parts of the system that are not yours;</li>
+<li>probe, scan, overload or attack the service, or make excessive automated requests;</li>
+<li>submit community questions or team, squad or player names that are abusive, hateful, obscene, defamatory, or that infringe someone else's rights;</li>
+<li>harass other players, including through names, messages or invitations;</li>
+<li>copy, scrape or republish the question bank or other site content for your own service;</li>
+<li>use the service for anything unlawful.</li>
+</ul>
+<p>We may remove content, suspend or delete accounts, and block access, at our discretion and without notice, where we believe these rules have been broken. We do not have to explain the decision.</p>
+
+<h2>4. Your account</h2>
+<p>You are responsible for your account and for keeping your PIN or password to yourself. Do not share it. Tell us if you think someone else has access. You may stop using the service at any time, and you may ask us to delete your account.</p>
+
+<h2>5. Content you submit</h2>
+<p>If you write quiz questions, team names or other content, you confirm it is yours to submit and does not infringe anyone's rights. You keep ownership of it, and you give us permission to host, display and use it within Quizmondo. We may edit or remove anything submitted, including through our moderation queue.</p>
+
+<h2>6. Quizzes, prizes and pub leagues</h2>
+<p>Where a venue runs a pub quiz through Quizmondo, any prize is the venue's and nothing to do with us. We provide the software only. We are not responsible for how a quiz is run, how it is scored in the room, or any prize that is or is not awarded.</p>
+
+<h2>7. Accuracy of questions</h2>
+<p>We try to get questions and answers right, but trivia is trivia and errors happen. Nothing on Quizmondo should be relied on as factual, professional or any other kind of advice.</p>
+
+<h2>8. Liability</h2>
+<p>To the extent the law allows, we accept no liability for any loss or damage arising from your use of Quizmondo, including lost scores, lost accounts, lost data or unavailability of the service. Nothing in these terms limits liability for death or personal injury caused by negligence, for fraud, or for anything else that cannot lawfully be limited.</p>
+
+<h2>9. Children</h2>
+<p>Quizmondo is intended for general audiences. If you are under 13, please ask a parent or guardian before creating an account.</p>
+
+<h2>10. Changes to these terms</h2>
+<p>We may update these terms. The version on this page is the one that applies. Continuing to use the service after a change means you accept the new version.</p>
+
+<h2>11. Governing law</h2>
+<p>These terms are governed by the law of England and Wales, and the courts of England and Wales have jurisdiction.</p>
+
+<h2>Contact</h2>
+<p>Questions about these terms can be sent through the <a href="/contact">contact page</a>.</p>""",
+            template='default', status='publish', sort_order=90
+        ))
+
+    privacy_page = Page.query.filter_by(slug='privacy').first()
+    if not privacy_page:
+        db.session.add(Page(
+            title='Privacy & Your Data',
+            slug='privacy',
+            excerpt='What we collect, which is a player name, an email address and a hashed PIN, and nothing else.',
+            content="""<p>This page explains what Quizmondo does with your personal data, in plain terms. We collect as little as we can get away with.</p>
+
+<h2>Who is responsible</h2>
+<p>Quizmondo operates this site and is the data controller for the personal data described here. You can reach us through the <a href="/contact">contact page</a>.</p>
+
+<h2>What we actually collect</h2>
+<p>If you create an account, we store three things:</p>
+<ul>
+<li><strong>Your player name</strong> &mdash; chosen by you, and shown to other players on leaderboards and in games. It does not have to be your real name, and we would rather it was not.</li>
+<li><strong>Your email address</strong> &mdash; used to identify your account so you can sign back in.</li>
+<li><strong>Your PIN or password</strong> &mdash; stored only as a cryptographic hash, never as readable text. Nobody at Quizmondo can see it.</li>
+</ul>
+<p>That is the whole of it. We do not ask for your real name, address, date of birth, phone number or payment details, because we have no use for them. There are no adverts and we do not sell data.</p>
+
+<h2>What is created as you play</h2>
+<p>Using the site produces some data of its own: your scores, XP and rank, the duels and group games you take part in, any quiz questions or team names you submit, and &mdash; if you play a pub quiz &mdash; the result of that night under your team name. Some of this is shown publicly, which is rather the point of a leaderboard.</p>
+
+<h2>Playing without an account</h2>
+<p>You can play as a guest without giving us anything at all. A guest is identified by a random key stored in your browser, with a made-up display name. Clear your browser data and that guest is gone for good, along with its scores.</p>
+
+<h2>Cookies and similar storage</h2>
+<p>We use a session cookie to keep you signed in and to remember which table or squad you joined. The game screens also use your browser's local storage to keep your place in a round, so a refresh or a lost signal does not cost you your answers. None of this is used for advertising or cross-site tracking.</p>
+<p>If the site owner has enabled website analytics, that provider may set its own cookies. Where that is the case it is disclosed here before it is switched on.</p>
+
+<h2>Why we are allowed to hold it</h2>
+<p>We process your account data to provide a service you have asked for &mdash; in data protection terms, performance of a contract and our legitimate interest in running the site. There is no profiling and no automated decision-making that affects you.</p>
+
+<h2>Who else sees it</h2>
+<p>We do not sell or share your personal data. It sits on hosting infrastructure operated by our hosting provider, which processes it only to run the site. Your player name and scores are visible to other players where you would expect: leaderboards, duel results, group games and pub league tables.</p>
+
+<h2>How long we keep it</h2>
+<p>Account data is kept while the account exists. Ask us to delete it and it goes. We may remove accounts that have been inactive for a long time. Pub league results are kept as a historical record under the team name used on the night.</p>
+
+<h2>Your rights</h2>
+<p>Under UK and EU data protection law you can ask us to:</p>
+<ul>
+<li>tell you what we hold about you, and give you a copy;</li>
+<li>correct anything that is wrong;</li>
+<li>delete your account and personal data;</li>
+<li>restrict or object to how we use it;</li>
+<li>withdraw consent, where we relied on it.</li>
+</ul>
+<p>Ask through the <a href="/contact">contact page</a> and we will deal with it within one month. Since we hold so little, most requests are quick. If you are unhappy with how we have handled it, you can complain to the Information Commissioner's Office at <a href="https://ico.org.uk" target="_blank" rel="noopener">ico.org.uk</a>.</p>
+
+<h2>Security</h2>
+<p>Passwords and PINs are stored hashed, and the site is served over HTTPS. No system is perfectly secure, so please use a PIN you do not use anywhere else.</p>
+
+<h2>Children</h2>
+<p>Quizmondo is for general audiences. If you are under 13, ask a parent or guardian before creating an account. If you believe a child has given us data without that, contact us and we will remove it.</p>
+
+<h2>Changes</h2>
+<p>If what we collect changes, this page changes with it, and the new version applies from the day it is published.</p>""",
+            template='default', status='publish', sort_order=91
+        ))
 
     contact_page = Page.query.filter_by(slug='contact').first()
     if not contact_page:
