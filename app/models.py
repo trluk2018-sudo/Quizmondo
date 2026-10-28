@@ -410,6 +410,12 @@ class PlayerProfile(db.Model):
     matches_won = db.Column(db.Integer, default=0)
     is_banned = db.Column(db.Boolean, default=False)
     ban_reason = db.Column(db.String(255), default='')
+    # Paused by the player: hidden from public lists, and reversible by signing in
+    is_paused = db.Column(db.Boolean, default=False, index=True)
+    # Erased by the player: the identity is gone for good and only the score remains.
+    # There is deliberately no way back from this, which is what makes it erasure
+    # under Article 17 rather than pseudonymisation.
+    is_anonymised = db.Column(db.Boolean, default=False, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_active_at = db.Column(db.DateTime, default=datetime.utcnow)
 

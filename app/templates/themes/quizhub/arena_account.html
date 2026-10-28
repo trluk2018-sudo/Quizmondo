@@ -1,0 +1,124 @@
+{% extends "themes/quizhub/base.html" %}
+
+{% block title %}Your Account • Quizmondo{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#090317] text-slate-100 font-sans py-10 sm:py-14 relative overflow-hidden">
+  <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 w-full space-y-7 relative z-10">
+
+    <div class="space-y-2">
+      <a href="{{ url_for('arena.dashboard') }}" class="text-xs font-mono text-cyan-400 hover:text-cyan-300">&larr; Arena</a>
+      <h1 class="text-2xl sm:text-4xl font-black font-mono text-white tracking-tight">Your Account</h1>
+    </div>
+
+    <!-- What we hold -->
+    <div class="p-6 rounded-3xl bg-slate-950/95 border border-purple-500/40 shadow-2xl space-y-4 font-mono">
+      <h2 class="text-sm font-black text-white uppercase tracking-wider border-b border-purple-500/20 pb-3">
+        Everything we hold about you
+      </h2>
+      <div class="space-y-2.5 text-xs">
+        <div class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-900/80 border border-purple-500/20">
+          <span class="text-slate-400">Player name</span>
+          <strong class="text-white">{{ player.display_name }}</strong>
+        </div>
+        <div class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-900/80 border border-purple-500/20">
+          <span class="text-slate-400">Email address</span>
+          <strong class="text-white break-all">{{ account.email if account else '—' }}</strong>
+        </div>
+        <div class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-900/80 border border-purple-500/20">
+          <span class="text-slate-400">PIN</span>
+          <strong class="text-slate-500">Stored as a one-way hash. Nobody can read it.</strong>
+        </div>
+      </div>
+      <p class="text-[11px] text-slate-400 leading-relaxed">
+        That is the lot. No real name, address, date of birth, phone number or payment details &mdash;
+        see the <a href="/privacy" class="text-cyan-400 hover:text-cyan-300 underline">privacy notice</a>.
+        Your scores, XP and game history are kept against this account.
+      </p>
+    </div>
+
+    <!-- Pause -->
+    <div class="p-6 rounded-3xl bg-slate-950/95 border border-amber-500/40 shadow-2xl space-y-4 font-mono">
+      <div class="flex items-start gap-3">
+        <span class="text-2xl">⏸️</span>
+        <div class="space-y-1">
+          <h2 class="text-sm font-black text-amber-300 uppercase tracking-wider">Take a break</h2>
+          <p class="text-[11px] text-slate-400 leading-relaxed">
+            Hides you from leaderboards and signs you out. Nothing is deleted &mdash; your account,
+            scores and history stay exactly as they are, and signing back in brings it all back.
+            This is <strong class="text-slate-300">not</strong> deletion.
+          </p>
+        </div>
+      </div>
+      <form method="POST" action="{{ url_for('arena.account_pause') }}"
+            onsubmit="return confirm('Pause your account and sign out? You can bring it back by signing in again.');">
+        <button type="submit" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-amber-200 font-bold text-xs uppercase tracking-wider transition">
+          Pause my account
+        </button>
+      </form>
+    </div>
+
+    <!-- Erase -->
+    <div class="p-6 rounded-3xl bg-slate-950/95 border-2 border-rose-500/50 shadow-2xl space-y-5 font-mono">
+      <div class="flex items-start gap-3">
+        <span class="text-2xl">🗑️</span>
+        <div class="space-y-1">
+          <h2 class="text-sm font-black text-rose-300 uppercase tracking-wider">Delete my account</h2>
+          <p class="text-[11px] text-slate-400 leading-relaxed">
+            Your right to erasure. You do not have to give a reason, and it happens immediately.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
+        <div class="p-3.5 rounded-2xl bg-rose-950/30 border border-rose-500/30 space-y-1.5">
+          <div class="font-black text-rose-300 uppercase tracking-wider text-[10px]">Deleted for good</div>
+          <ul class="space-y-1 text-slate-300">
+            <li>• Your email address</li>
+            <li>• Your player name</li>
+            <li>• Your stored PIN</li>
+            <li>• The account itself</li>
+          </ul>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-slate-900/80 border border-purple-500/25 space-y-1.5">
+          <div class="font-black text-cyan-300 uppercase tracking-wider text-[10px]">Kept, but anonymous</div>
+          <ul class="space-y-1 text-slate-300">
+            <li>• Your score and XP</li>
+            <li>• Renamed to "Former Player"</li>
+            <li>• No longer traceable to you</li>
+            <li>• Keeps other players' results honest</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="p-3.5 rounded-2xl bg-slate-900 border border-rose-500/40 space-y-2">
+        <p class="text-[11px] text-rose-200 leading-relaxed">
+          <strong>This cannot be undone.</strong> There is deliberately no way back &mdash; if we kept
+          one, we would still be holding the link between you and the record, and it would not be
+          deletion. If you might want to return, use <span class="text-amber-300">Take a break</span> instead.
+        </p>
+      </div>
+
+      <form method="POST" action="{{ url_for('arena.account_delete') }}" class="space-y-3"
+            onsubmit="return confirm('Permanently erase your account? This cannot be undone.');">
+        <div class="space-y-1.5">
+          <label class="block text-[11px] font-bold text-slate-300 uppercase">Type DELETE to confirm</label>
+          <input type="text" name="confirm" required placeholder="DELETE" autocomplete="off"
+                 class="w-full sm:w-56 bg-slate-950 border border-rose-500/40 rounded-xl p-3 text-white uppercase tracking-widest focus:outline-none focus:border-rose-400">
+        </div>
+        <button type="submit" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-wider transition">
+          Erase my account permanently
+        </button>
+      </form>
+    </div>
+
+    <p class="text-[11px] text-slate-500 font-mono text-center">
+      Want a copy of your data instead, or something corrected? Ask on the
+      <a href="/contact" class="text-cyan-400 hover:text-cyan-300 underline">contact page</a> &mdash;
+      we answer within one month.
+    </p>
+  </div>
+</div>
+{% endblock %}

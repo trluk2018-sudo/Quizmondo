@@ -10,6 +10,26 @@
 
   <div class="max-w-md mx-auto px-4 sm:px-6 w-full relative z-10 space-y-6">
 
+    {% if reactivate_id %}
+    <!-- Right PIN, but the account is paused: offer it back rather than refusing -->
+    <div class="p-5 rounded-3xl bg-amber-950/40 border-2 border-amber-400/60 shadow-2xl space-y-3 font-mono text-center">
+      <div class="text-3xl">⏸️</div>
+      <h2 class="text-base font-black text-amber-200">This account is paused</h2>
+      <p class="text-[11px] text-slate-300 leading-relaxed">
+        Your details are right. You paused this account, so it is hidden from the leaderboards.
+        Bring it back and your scores and history come with it.
+      </p>
+      <form method="POST" action="{{ url_for('arena.account_reactivate') }}" class="space-y-2.5 text-left">
+        <input type="hidden" name="username" value="{{ reactivate_id }}">
+        <input type="password" name="password" required placeholder="Re-enter your PIN to confirm"
+               class="w-full bg-slate-950 border border-amber-500/40 rounded-xl p-3 text-white text-xs focus:outline-none focus:border-amber-400">
+        <button type="submit" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider transition">
+          Reactivate my account
+        </button>
+      </form>
+    </div>
+    {% endif %}
+
     <!-- Header Avatar & Title -->
     <div class="text-center space-y-2">
       <div class="inline-block transform hover:scale-105 transition duration-300">

@@ -214,6 +214,14 @@ def _ensure_schema():
             db.session.execute(text("ALTER TABLE page_modules ADD COLUMN theme VARCHAR(50) DEFAULT 'hisoft'"))
             db.session.commit()
 
+        cols_profiles = [row[1] for row in db.session.execute(text("PRAGMA table_info(player_profiles)")).fetchall()]
+        if cols_profiles:
+            if 'is_paused' not in cols_profiles:
+                db.session.execute(text("ALTER TABLE player_profiles ADD COLUMN is_paused BOOLEAN DEFAULT 0"))
+            if 'is_anonymised' not in cols_profiles:
+                db.session.execute(text("ALTER TABLE player_profiles ADD COLUMN is_anonymised BOOLEAN DEFAULT 0"))
+            db.session.commit()
+
         cols_leagues = [row[1] for row in db.session.execute(text("PRAGMA table_info(pub_leagues)")).fetchall()]
         if cols_leagues and 'teams_json' not in cols_leagues:
             db.session.execute(text("ALTER TABLE pub_leagues ADD COLUMN teams_json TEXT DEFAULT '[]'"))

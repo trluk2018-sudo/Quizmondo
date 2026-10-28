@@ -281,6 +281,9 @@
       </a>
       <div class="pt-3 border-t border-purple-500/20 flex gap-2">
         {% if session.get('user_id') %}
+        <a href="{{ url_for('arena.account_settings') }}" class="w-full text-center py-2.5 rounded-xl bg-slate-900 border border-purple-500/30 text-cyan-300 font-bold mb-2 block">
+          Your Account &amp; Data
+        </a>
         <a href="{{ url_for('arena.player_logout') }}" class="w-full text-center py-2.5 rounded-xl bg-slate-900 border border-purple-500/30 text-rose-300 font-bold">
           Sign Out ({{ session.get('username') }})
         </a>

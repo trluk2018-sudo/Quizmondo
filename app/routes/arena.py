@@ -571,7 +571,7 @@ def dashboard():
     friends_roster, open_group_challenges = _get_friends_and_group_challenges(player)
 
     # Top leaderboards
-    top_players = PlayerProfile.query.order_by(PlayerProfile.xp.desc()).limit(5).all()
+    top_players = PlayerProfile.query.filter_by(is_paused=False).order_by(PlayerProfile.xp.desc()).limit(5).all()
 
     # Available Packs
     packs = QuizPack.query.order_by(QuizPack.created_at.desc()).limit(6).all()
@@ -1610,6 +1610,13 @@ def player_login():
                 return redirect(next_url)
             return redirect(url_for('arena.dashboard'))
         else:
+            paused = User.query.filter(
+                (func.lower(User.username) == login_id.lower()) | (func.lower(User.email) == login_id.lower())
+            ).first()
+            if paused and not paused.is_active and paused.check_password(password):
+                return render_template('themes/quizhub/arena_login.html',
+                                       player=get_current_player(persist=False),
+                                       reactivate_id=login_id)
             flash("Invalid player name/email or 6-digit PIN.", "error")
 
     player = get_current_player(persist=False)
@@ -1627,11 +1634,127 @@ def player_logout():
     return redirect(url_for('arena.dashboard'))
 
 
+# =========================================================================
+# Account control: pausing, and erasure
+#
+# Two deliberately different things. Pausing hides you and is reversible,
+# because the account is still there. Erasure destroys the identity and
+# cannot be undone - if it could be undone we would still be holding the
+# link between you and the record, which is pseudonymisation, not erasure,
+# and the privacy notice would be wrong.
+# =========================================================================
+
+def anonymised_display_name():
+    """A name that says nothing about who it used to be."""
+    return 'Former Player %s' % ''.join(random.choice('0123456789') for _ in range(4))
+
+
+def erase_player_identity(profile):
+    """Irreversibly strip the identity, keeping only the score.
+
+    Deletes the User row entirely (email, username, password hash), scrubs the
+    profile's own identifying fields, and rotates the session key so the browser
+    cookie that used to open this account cannot open it again. What is left -
+    XP, matches played, level - is no longer personal data because nothing ties
+    it to a person any more.
+    """
+    user = db.session.get(User, profile.user_id) if profile.user_id else None
+    if user:
+        db.session.delete(user)
+
+    old_key = profile.session_key
+    new_name = anonymised_display_name()
+
+    # Scrub the name wherever it was copied, before the key it is found by changes
+    ArenaMatch.query.filter_by(player1_session=old_key).update(
+        {'player1_name': new_name}, synchronize_session=False)
+    ArenaMatch.query.filter_by(player2_session=old_key).update(
+        {'player2_name': new_name}, synchronize_session=False)
+    GroupPlayer.query.filter_by(player_key=old_key).update(
+        {'display_name': new_name}, synchronize_session=False)
+
+    profile.user_id = None
+    profile.display_name = new_name
+    profile.session_key = secrets.token_urlsafe(16)
+    profile.avatar_key = 'quizzy'
+    profile.is_anonymised = True
+    profile.is_paused = False
+    return new_name
+
+
+@arena_bp.route('/account')
+def account_settings():
+    """What a player can do with their own account and data."""
+    if not session.get('user_id'):
+        flash('Sign in to manage your account.', 'error')
+        return redirect(url_for('arena.player_login', next='/arena/account'))
+    player = get_current_player()
+    user = db.session.get(User, session.get('user_id'))
+    return render_template('themes/quizhub/arena_account.html', player=player, account=user)
+
+
+@arena_bp.route('/account/pause', methods=['POST'])
+def account_pause():
+    """Hide the account and sign out. Signing back in brings it back."""
+    if not session.get('user_id'):
+        return redirect(url_for('arena.player_login'))
+    player = get_current_player()
+    user = db.session.get(User, session.get('user_id'))
+    if user:
+        user.is_active = False
+    player.is_paused = True
+    db.session.commit()
+    for key in ('user_id', 'username', 'user_role', 'qm_player_key', 'is_creator'):
+        session.pop(key, None)
+    flash('Your account is paused and hidden. Sign in again whenever you want it back.', 'success')
+    return redirect(url_for('arena.dashboard'))
+
+
+@arena_bp.route('/account/delete', methods=['POST'])
+def account_delete():
+    """Erase the identity for good, keeping the score detached and anonymous."""
+    if not session.get('user_id'):
+        return redirect(url_for('arena.player_login'))
+    if (request.form.get('confirm') or '').strip().upper() != 'DELETE':
+        flash('Type DELETE in the box to confirm you want your account erased.', 'error')
+        return redirect(url_for('arena.account_settings'))
+
+    player = get_current_player()
+    new_name = erase_player_identity(player)
+    db.session.commit()
+    for key in ('user_id', 'username', 'user_role', 'qm_player_key', 'is_creator'):
+        session.pop(key, None)
+    flash('Your account has been erased. Your email, player name and PIN are gone for good. '
+          'Your score remains on the board as "%s" and can no longer be traced to you.' % new_name, 'success')
+    return redirect(url_for('public.home'))
+
+
+@arena_bp.route('/account/reactivate', methods=['POST'])
+def account_reactivate():
+    """Bring a paused account back, once the right PIN has been given."""
+    login_id = (request.form.get('username') or '').strip()
+    password = (request.form.get('password') or '').strip()
+    user = User.query.filter(
+        (func.lower(User.username) == login_id.lower()) | (func.lower(User.email) == login_id.lower())
+    ).first()
+    if not user or not user.check_password(password):
+        flash('That player name or PIN did not match.', 'error')
+        return redirect(url_for('arena.player_login'))
+
+    user.is_active = True
+    profile = PlayerProfile.query.filter_by(user_id=user.id).first()
+    if profile:
+        profile.is_paused = False
+    db.session.commit()
+    flash('Welcome back! Your account is live again, with your scores intact.', 'success')
+    return redirect(url_for('arena.player_login'))
+
+
 @arena_bp.route('/leaderboard')
 def leaderboard():
     """Full global leaderboard ranking table."""
     player = get_current_player(persist=False)
-    top_players = PlayerProfile.query.order_by(PlayerProfile.xp.desc()).limit(50).all()
+    top_players = PlayerProfile.query.filter_by(is_paused=False).order_by(PlayerProfile.xp.desc()).limit(50).all()
     return render_template(
         'themes/quizhub/arena_leaderboard.html',
         player=player,
