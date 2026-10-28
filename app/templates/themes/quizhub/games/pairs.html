@@ -1,0 +1,180 @@
+{% extends "themes/quizhub/games/_shell.html" %}
+
+{% block game_stage %}
+<div class="space-y-3">
+  <div class="flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-slate-950/90 border border-emerald-500/25 font-mono text-[11px]">
+    <span class="text-slate-400">Pairs: <strong id="pmFound" class="text-emerald-300">0</strong>/<strong id="pmTotal" class="text-emerald-300">8</strong></span>
+    <span class="text-slate-400">Flips: <strong id="pmFlips" class="text-cyan-300">0</strong></span>
+    <button type="button" id="pmSize" class="px-2.5 py-1 rounded-lg bg-slate-900 border border-purple-500/30 text-purple-200 font-bold hover:border-cyan-400 transition">
+      <span id="pmSizeLabel">4×4</span>
+    </button>
+  </div>
+
+  <div id="pmBoard" class="qmg-nosel grid gap-2"></div>
+</div>
+{% endblock %}
+
+{% block how_extra %}
+<p class="mt-2">Matched pairs name themselves as they land, so you pick up a few flags and badges on the way through.</p>
+{% endblock %}
+
+{% block game_js %}
+<script>
+(function () {
+  var PICS = {{ pics|tojson }};
+  var ROUND_SECONDS = 150;
+
+  var boardEl = document.getElementById('pmBoard');
+  var foundEl = document.getElementById('pmFound');
+  var totalEl = document.getElementById('pmTotal');
+  var flipsEl = document.getElementById('pmFlips');
+  var sizeLabelEl = document.getElementById('pmSizeLabel');
+
+  var COLS = 4, ROWS = 4;
+  var cards = [];
+  var faceUp = [];
+  var matched = {};
+  var flips = 0;
+  var pairsFound = 0;
+  var busy = false;
+  var running = false;
+
+  function cardCount() { return COLS * ROWS; }
+
+  function buildDeck() {
+    var needed = cardCount() / 2;
+    var chosen = QMG.shuffle(PICS).slice(0, needed);
+    // If the image bank is thin, fall back to repeating what we have
+    while (chosen.length < needed && PICS.length) { chosen.push(PICS[chosen.length % PICS.length]); }
+    var deck = [];
+    chosen.forEach(function (pic, i) {
+      deck.push({ id: i, pic: pic });
+      deck.push({ id: i, pic: pic });
+    });
+    return QMG.shuffle(deck);
+  }
+
+  function render() {
+    boardEl.style.gridTemplateColumns = 'repeat(' + COLS + ', minmax(0, 1fr))';
+    boardEl.innerHTML = '';
+    cards.forEach(function (card, i) {
+      var isUp = faceUp.indexOf(i) !== -1 || matched[card.id];
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.i = i;
+      btn.className = 'aspect-square rounded-xl flex items-center justify-center p-1.5 transition transform active:scale-95 overflow-hidden ' +
+        (matched[card.id]
+          ? 'bg-emerald-500/20 border-2 border-emerald-400/60'
+          : (isUp ? 'bg-white border-2 border-cyan-400'
+                  : 'bg-gradient-to-br from-purple-700 to-indigo-900 border-2 border-purple-400/40 shadow-lg'));
+      if (isUp) {
+        var img = document.createElement('img');
+        img.src = card.pic.url;
+        img.alt = card.pic.label;
+        img.className = 'max-w-full max-h-full object-contain';
+        btn.appendChild(img);
+      } else {
+        btn.innerHTML = '<span class="text-xl opacity-70">❓</span>';
+      }
+      boardEl.appendChild(btn);
+    });
+  }
+
+  function flip(i) {
+    if (!running || busy) return;
+    var card = cards[i];
+    if (matched[card.id] || faceUp.indexOf(i) !== -1) return;
+
+    faceUp.push(i);
+    flips += 1;
+    flipsEl.textContent = flips;
+    QMG.audio.tone(500, 90, 'triangle');
+    QMG.haptic(10);
+    render();
+
+    if (faceUp.length < 2) return;
+
+    busy = true;
+    var a = cards[faceUp[0]], b = cards[faceUp[1]];
+    if (a.id === b.id) {
+      matched[a.id] = true;
+      pairsFound += 1;
+      foundEl.textContent = pairsFound;
+      QMG.bumpCombo();
+      var points = Math.round(120 * QMG.comboMultiplier());
+      QMG.addScore(points, boardEl);
+      QMG.audio.correct();
+      QMG.haptic(25);
+      QMG.pop(boardEl, a.pic.label, 'ok');
+      faceUp = [];
+      busy = false;
+      render();
+      if (pairsFound >= cardCount() / 2) win();
+    } else {
+      QMG.resetCombo();
+      QMG.audio.wrong();
+      setTimeout(function () {
+        faceUp = [];
+        busy = false;
+        render();
+      }, 750);
+    }
+  }
+
+  boardEl.addEventListener('click', function (ev) {
+    var node = ev.target.closest('[data-i]');
+    if (node) flip(parseInt(node.dataset.i, 10));
+  });
+
+  document.getElementById('pmSize').addEventListener('click', function () {
+    if (COLS === 4 && ROWS === 4) { COLS = 4; ROWS = 5; }
+    else if (ROWS === 5) { COLS = 4; ROWS = 6; }
+    else { COLS = 4; ROWS = 4; }
+    sizeLabelEl.textContent = COLS + '×' + ROWS;
+    start();
+  });
+
+  function win() {
+    running = false;
+    var secondsLeft = Math.round(QMG.timeLeft() / 1000);
+    var perfect = cardCount();
+    var bonus = secondsLeft * 8 + Math.max(0, (perfect * 2 - flips)) * 15;
+    QMG.addScore(bonus);
+    QMG.finish({
+      icon: '🃏',
+      title: 'Board Cleared!',
+      sub: 'All ' + (cardCount() / 2) + ' pairs matched.',
+      detail: [flips + ' flips used', 'Bonus: +' + bonus]
+    });
+  }
+
+  function timeUp() {
+    running = false;
+    QMG.finish({
+      win: false,
+      icon: '⏱️',
+      title: 'Time Up',
+      sub: pairsFound + ' of ' + (cardCount() / 2) + ' pairs matched.',
+    });
+  }
+
+  function start() {
+    if (!PICS.length) {
+      boardEl.innerHTML = '<p class="col-span-4 p-6 text-center text-xs font-mono text-rose-300">No images available.</p>';
+      return;
+    }
+    cards = buildDeck();
+    faceUp = []; matched = {}; flips = 0; pairsFound = 0; busy = false;
+    foundEl.textContent = '0';
+    totalEl.textContent = cardCount() / 2;
+    flipsEl.textContent = '0';
+    render();
+    running = true;
+    QMG.startTimer(ROUND_SECONDS, timeUp);
+  }
+
+  QMG.onReplay(start);
+  start();
+})();
+</script>
+{% endblock %}

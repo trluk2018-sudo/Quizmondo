@@ -1,0 +1,148 @@
+{% extends "themes/quizhub/games/_shell.html" %}
+
+{% block game_stage %}
+<div class="space-y-4">
+  <div class="text-center font-mono min-h-[24px]">
+    <span id="sdStatus" class="text-sm font-black text-rose-200">One tile is a slightly different shade</span>
+  </div>
+
+  <div class="flex justify-center">
+    <div id="sdGrid" class="qmg-nosel grid gap-1.5 w-full" style="max-width: 330px;"></div>
+  </div>
+
+  <div class="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-slate-950/80 border border-purple-500/20 font-mono text-[11px]">
+    <span class="text-slate-400">Round: <strong id="sdRound" class="text-purple-300">1</strong></span>
+    <span class="text-slate-400">Found: <strong id="sdFound" class="text-emerald-300">0</strong></span>
+    <span class="text-slate-400">Grid: <strong id="sdSize" class="text-cyan-300">2×2</strong></span>
+    <span class="text-slate-400">Lives: <strong id="sdLives" class="text-rose-300">3</strong></span>
+  </div>
+</div>
+{% endblock %}
+
+{% block how_extra %}
+<p class="mt-2">Every round the grid grows and the odd colour gets closer to its neighbours. Tap wrong and it costs a life.</p>
+{% endblock %}
+
+{% block game_js %}
+<script>
+(function () {
+  var MAX_LIVES = 3;
+  var ROUND_SECONDS = 120;
+
+  var gridEl = document.getElementById('sdGrid');
+  var statusEl = document.getElementById('sdStatus');
+  var foundEl = document.getElementById('sdFound');
+  var roundEl = document.getElementById('sdRound');
+  var sizeEl = document.getElementById('sdSize');
+  var livesEl = document.getElementById('sdLives');
+
+  var round = 0;
+  var found = 0;
+  var lives = MAX_LIVES;
+  var oddIndex = -1;
+  var accepting = false;
+
+  function gridSize() { return Math.min(8, 2 + Math.floor(round / 2)); }
+
+  // The difference shrinks as the grid grows, so it stays just findable
+  function difference() { return Math.max(4, 42 - round * 2.6); }
+
+  function newRound() {
+    round += 1;
+    roundEl.textContent = round;
+
+    var n = gridSize();
+    sizeEl.textContent = n + '×' + n;
+
+    var hue = Math.floor(Math.random() * 360);
+    var sat = 62 + Math.floor(Math.random() * 18);
+    var light = 46 + Math.floor(Math.random() * 12);
+    var base = 'hsl(' + hue + ', ' + sat + '%, ' + light + '%)';
+    var oddLight = light + (Math.random() < 0.5 ? -1 : 1) * difference() / 3.2;
+    var oddSat = sat - difference() / 2.4;
+    var odd = 'hsl(' + hue + ', ' + Math.max(10, oddSat) + '%, ' + Math.min(92, Math.max(12, oddLight)) + '%)';
+
+    oddIndex = Math.floor(Math.random() * n * n);
+
+    gridEl.style.gridTemplateColumns = 'repeat(' + n + ', minmax(0, 1fr))';
+    gridEl.innerHTML = '';
+    for (var i = 0; i < n * n; i++) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.i = i;
+      btn.className = 'aspect-square rounded-lg transition transform active:scale-95';
+      btn.style.background = (i === oddIndex ? odd : base);
+      gridEl.appendChild(btn);
+    }
+    statusEl.textContent = 'Find the odd one';
+    statusEl.className = 'text-sm font-black text-rose-200';
+    accepting = true;
+  }
+
+  function tap(i) {
+    if (!accepting) return;
+
+    if (i === oddIndex) {
+      accepting = false;
+      found += 1;
+      foundEl.textContent = found;
+      QMG.bumpCombo();
+      var points = Math.round((50 + round * 25) * QMG.comboMultiplier());
+      QMG.addScore(points, gridEl.children[i]);
+      QMG.audio.correct();
+      QMG.haptic(20);
+      QMG.flashOk(gridEl.children[i]);
+      QMG.addTime(2);
+      statusEl.textContent = '✅ +' + points;
+      statusEl.className = 'text-sm font-black text-emerald-300';
+      setTimeout(newRound, 420);
+      return;
+    }
+
+    lives -= 1;
+    livesEl.textContent = lives;
+    QMG.resetCombo();
+    QMG.audio.wrong();
+    QMG.shake(gridEl);
+    QMG.haptic(55);
+
+    if (lives <= 0) {
+      accepting = false;
+      gridEl.children[oddIndex].classList.add('ring-4', 'ring-white');
+      setTimeout(function () { finishUp(false); }, 900);
+      return;
+    }
+    statusEl.textContent = 'Not that one — ' + lives + ' live' + (lives === 1 ? '' : 's') + ' left';
+    statusEl.className = 'text-sm font-black text-rose-300';
+  }
+
+  gridEl.addEventListener('click', function (ev) {
+    var node = ev.target.closest('[data-i]');
+    if (node) tap(parseInt(node.dataset.i, 10));
+  });
+
+  function finishUp(timedOut) {
+    accepting = false;
+    QMG.stopTimer();
+    QMG.finish({
+      win: found >= 6,
+      icon: found >= 12 ? '👀' : (timedOut ? '⏱️' : '💥'),
+      title: found >= 12 ? 'Hawk Eyes!' : (timedOut ? 'Time Up' : 'Out Of Lives'),
+      sub: found + ' odd one' + (found === 1 ? '' : 's') + ' spotted.',
+      detail: ['Hardest grid: ' + gridSize() + '×' + gridSize()]
+    });
+  }
+
+  function start() {
+    round = 0; found = 0; lives = MAX_LIVES;
+    foundEl.textContent = '0';
+    livesEl.textContent = MAX_LIVES;
+    newRound();
+    QMG.startTimer(ROUND_SECONDS, function () { finishUp(true); });
+  }
+
+  QMG.onReplay(start);
+  start();
+})();
+</script>
+{% endblock %}

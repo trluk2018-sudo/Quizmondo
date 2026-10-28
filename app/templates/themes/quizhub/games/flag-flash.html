@@ -1,0 +1,172 @@
+{% extends "themes/quizhub/games/_shell.html" %}
+
+{% block hud_mid_label %}Round{% endblock %}
+{% block hud_mid_value %}1{% endblock %}
+
+{% block game_stage %}
+<div class="space-y-4">
+  <!-- The flash panel -->
+  <div class="relative rounded-3xl bg-slate-950/95 border-2 border-violet-500/35 shadow-2xl overflow-hidden"
+       style="min-height: 190px;">
+    <div class="absolute -top-16 left-1/2 -translate-x-1/2 w-64 h-32 bg-violet-500/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div id="ffStage" class="relative h-full min-h-[190px] flex flex-col items-center justify-center gap-3 p-5">
+      <span id="ffStatus" class="font-mono text-sm font-black text-violet-200">Get ready…</span>
+      <img id="ffImage" src="" alt="" class="hidden max-h-28 max-w-[70%] object-contain drop-shadow-2xl">
+    </div>
+  </div>
+
+  <!-- Choices -->
+  <div id="ffChoices" class="qmg-nosel grid grid-cols-2 gap-2"></div>
+
+  <div class="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-slate-950/80 border border-purple-500/20 font-mono text-[11px]">
+    <span class="text-slate-400">Right: <strong id="ffRight" class="text-emerald-300">0</strong></span>
+    <span class="text-slate-400">Flash: <strong id="ffFlash" class="text-cyan-300">1.4s</strong></span>
+    <span class="text-slate-400">Lives: <strong id="ffLives" class="text-rose-300">3</strong></span>
+  </div>
+</div>
+{% endblock %}
+
+{% block how_extra %}
+<p class="mt-2">The flash gets shorter every round. Later on you are matching a shape and a colour, not reading a flag.</p>
+{% endblock %}
+
+{% block game_js %}
+<script>
+(function () {
+  var PICS = {{ pics|tojson }};
+  var MAX_LIVES = 3;
+
+  var stageEl = document.getElementById('ffStage');
+  var statusEl = document.getElementById('ffStatus');
+  var imageEl = document.getElementById('ffImage');
+  var choicesEl = document.getElementById('ffChoices');
+  var rightEl = document.getElementById('ffRight');
+  var flashEl = document.getElementById('ffFlash');
+  var livesEl = document.getElementById('ffLives');
+
+  var round = 0;
+  var right = 0;
+  var lives = MAX_LIVES;
+  var target = null;
+  var accepting = false;
+
+  function flashMs() { return Math.max(350, 1400 - round * 90); }
+
+  function newRound() {
+    round += 1;
+    QMG.setMid(round);
+    QMG.setMidBar(Math.min(1, round / 15));
+    flashEl.textContent = (flashMs() / 1000).toFixed(1) + 's';
+
+    accepting = false;
+    choicesEl.innerHTML = '';
+    statusEl.textContent = 'Watch closely…';
+    statusEl.className = 'font-mono text-sm font-black text-amber-300';
+    imageEl.classList.add('hidden');
+
+    var pool = QMG.shuffle(PICS);
+    target = pool[0];
+    // Decoys come from the same set where we can, so it stays a memory test
+    var sameSet = pool.filter(function (p) { return p.set === target.set && p.url !== target.url; });
+    var decoys = (sameSet.length >= 3 ? sameSet : pool.filter(function (p) { return p.url !== target.url; })).slice(0, 3);
+    var options = QMG.shuffle([target].concat(decoys));
+
+    setTimeout(function () {
+      imageEl.src = target.url;
+      imageEl.classList.remove('hidden');
+      imageEl.classList.add('qmg-grow');
+      statusEl.textContent = '';
+      QMG.audio.tone(660, 120, 'sine');
+
+      setTimeout(function () {
+        imageEl.classList.add('hidden');
+        statusEl.textContent = 'Which one was it?';
+        statusEl.className = 'font-mono text-sm font-black text-cyan-300';
+        renderChoices(options);
+        accepting = true;
+      }, flashMs());
+    }, 700);
+  }
+
+  function renderChoices(options) {
+    choicesEl.innerHTML = '';
+    options.forEach(function (pic) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'aspect-[3/2] rounded-2xl bg-white border-2 border-purple-500/30 flex items-center justify-center p-2 ' +
+        'transition transform active:scale-95 hover:border-cyan-400 overflow-hidden';
+      var img = document.createElement('img');
+      img.src = pic.url;
+      img.alt = pic.label;
+      img.className = 'max-w-full max-h-full object-contain pointer-events-none';
+      btn.appendChild(img);
+      btn.addEventListener('click', function () { choose(pic, btn); });
+      choicesEl.appendChild(btn);
+    });
+  }
+
+  function choose(pic, btn) {
+    if (!accepting) return;
+    accepting = false;
+
+    if (pic.url === target.url) {
+      right += 1;
+      rightEl.textContent = right;
+      QMG.bumpCombo();
+      var points = Math.round((80 + round * 20) * QMG.comboMultiplier());
+      QMG.addScore(points, btn);
+      QMG.audio.correct();
+      QMG.haptic(22);
+      QMG.flashOk(btn);
+      btn.className = btn.className.replace('border-purple-500/30', 'border-emerald-400');
+      statusEl.textContent = '✅ ' + target.label;
+      statusEl.className = 'font-mono text-sm font-black text-emerald-300';
+      setTimeout(newRound, 900);
+      return;
+    }
+
+    lives -= 1;
+    livesEl.textContent = lives;
+    QMG.resetCombo();
+    QMG.audio.wrong();
+    QMG.shake(choicesEl);
+    QMG.haptic(60);
+    btn.className = btn.className.replace('border-purple-500/30', 'border-rose-500');
+    statusEl.textContent = 'It was ' + target.label;
+    statusEl.className = 'font-mono text-sm font-black text-rose-300';
+    imageEl.src = target.url;
+    imageEl.classList.remove('hidden');
+
+    if (lives <= 0) {
+      setTimeout(function () {
+        QMG.finish({
+          win: right >= 5,
+          icon: right >= 10 ? '⚡' : '💥',
+          title: right >= 10 ? 'Lightning Eyes!' : 'Out Of Lives',
+          sub: right + ' correct before the flashes beat you.',
+          detail: ['Reached round ' + round]
+        });
+      }, 1400);
+      return;
+    }
+    setTimeout(newRound, 1600);
+  }
+
+  function start() {
+    round = 0; right = 0; lives = MAX_LIVES;
+    rightEl.textContent = '0';
+    livesEl.textContent = MAX_LIVES;
+    QMG.setMidLabel('Round');
+    QMG.setMidBar(0);
+    if (!PICS.length) {
+      stageEl.innerHTML = '<p class="text-xs font-mono text-rose-300">No images available.</p>';
+      return;
+    }
+    newRound();
+  }
+
+  QMG.onReplay(start);
+  start();
+})();
+</script>
+{% endblock %}

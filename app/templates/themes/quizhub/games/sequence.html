@@ -1,0 +1,178 @@
+{% extends "themes/quizhub/games/_shell.html" %}
+
+{% block hud_mid_label %}Round{% endblock %}
+{% block hud_mid_value %}1{% endblock %}
+
+{% block game_stage %}
+<div class="space-y-4">
+  <div class="text-center font-mono min-h-[24px]">
+    <span id="sqStatus" class="text-sm font-black text-amber-300">Tap a pad to begin</span>
+  </div>
+
+  <div id="sqPads" class="qmg-nosel grid grid-cols-2 gap-3 max-w-xs mx-auto"></div>
+
+  <div class="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-slate-950/80 border border-purple-500/20 font-mono text-[11px]">
+    <span class="text-slate-400">Longest: <strong id="sqLongest" class="text-emerald-300">0</strong></span>
+    <span class="text-slate-400">Lives: <strong id="sqLives" class="text-rose-300">3</strong></span>
+  </div>
+</div>
+{% endblock %}
+
+{% block how_extra %}
+<p class="mt-2">Each pad has its own note. Most people find they remember the tune before they remember the colours.</p>
+{% endblock %}
+
+{% block game_js %}
+<script>
+(function () {
+  var PADS = [
+    { colour: 'from-emerald-400 to-emerald-600', lit: 'from-emerald-200 to-emerald-400', freq: 329.63 },
+    { colour: 'from-rose-400 to-rose-600', lit: 'from-rose-200 to-rose-400', freq: 261.63 },
+    { colour: 'from-amber-400 to-amber-600', lit: 'from-amber-200 to-amber-400', freq: 392.00 },
+    { colour: 'from-cyan-400 to-cyan-600', lit: 'from-cyan-200 to-cyan-400', freq: 523.25 },
+  ];
+  var MAX_LIVES = 3;
+
+  var padsEl = document.getElementById('sqPads');
+  var statusEl = document.getElementById('sqStatus');
+  var longestEl = document.getElementById('sqLongest');
+  var livesEl = document.getElementById('sqLives');
+
+  var pads = [];
+  var sequence = [];
+  var inputAt = 0;
+  var round = 0;
+  var longest = 0;
+  var lives = MAX_LIVES;
+  var accepting = false;
+  var started = false;
+
+  function padClass(i, lit) {
+    var p = PADS[i];
+    return 'aspect-square rounded-3xl bg-gradient-to-br ' + (lit ? p.lit : p.colour) +
+      ' border-2 border-white/20 shadow-xl transition-all duration-100 ' + (lit ? 'scale-95 brightness-150' : '');
+  }
+
+  function build() {
+    padsEl.innerHTML = '';
+    pads = [];
+    PADS.forEach(function (p, i) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.i = i;
+      btn.className = padClass(i, false);
+      padsEl.appendChild(btn);
+      pads.push(btn);
+    });
+  }
+
+  function light(i, ms) {
+    pads[i].className = padClass(i, true);
+    QMG.audio.tone(PADS[i].freq, ms || 320, 'sine');
+    setTimeout(function () { pads[i].className = padClass(i, false); }, ms || 320);
+  }
+
+  function playback() {
+    accepting = false;
+    statusEl.textContent = 'Watch…';
+    statusEl.className = 'text-sm font-black text-amber-300';
+    // The sequence speeds up as it grows, so later rounds stay tense
+    var gap = Math.max(240, 620 - sequence.length * 25);
+    sequence.forEach(function (padIndex, step) {
+      setTimeout(function () { light(padIndex, Math.round(gap * 0.6)); }, step * gap);
+    });
+    setTimeout(function () {
+      accepting = true;
+      inputAt = 0;
+      statusEl.textContent = 'Your turn — ' + sequence.length + ' to repeat';
+      statusEl.className = 'text-sm font-black text-cyan-300';
+    }, sequence.length * gap + 200);
+  }
+
+  function nextRound() {
+    round += 1;
+    QMG.setMid(round);
+    QMG.setMidBar(Math.min(1, sequence.length / 20));
+    sequence.push(Math.floor(Math.random() * PADS.length));
+    setTimeout(playback, 600);
+  }
+
+  function tap(i) {
+    if (!started) { startGame(); return; }
+    if (!accepting) return;
+
+    light(i, 220);
+    QMG.haptic(12);
+
+    if (sequence[inputAt] === i) {
+      inputAt += 1;
+      if (inputAt >= sequence.length) {
+        accepting = false;
+        longest = Math.max(longest, sequence.length);
+        longestEl.textContent = longest;
+        QMG.bumpCombo();
+        var points = Math.round(sequence.length * 50 * QMG.comboMultiplier());
+        QMG.addScore(points, padsEl);
+        QMG.audio.correct();
+        statusEl.textContent = '✅ Correct! +' + points;
+        statusEl.className = 'text-sm font-black text-emerald-300';
+        setTimeout(nextRound, 900);
+      }
+      return;
+    }
+
+    // Wrong pad
+    lives -= 1;
+    livesEl.textContent = lives;
+    QMG.resetCombo();
+    QMG.audio.wrong();
+    QMG.shake(padsEl);
+    QMG.haptic(60);
+    accepting = false;
+
+    if (lives <= 0) {
+      QMG.finish({
+        win: longest >= 5,
+        icon: longest >= 8 ? '🔔' : '💥',
+        title: longest >= 8 ? 'Remarkable Recall' : 'Sequence Broken',
+        sub: 'Your longest sequence was ' + longest + '.',
+        detail: ['Reached round ' + round]
+      });
+      return;
+    }
+
+    statusEl.textContent = 'Missed! ' + lives + ' live' + (lives === 1 ? '' : 's') + ' left — watch again';
+    statusEl.className = 'text-sm font-black text-rose-300';
+    setTimeout(playback, 1200);
+  }
+
+  padsEl.addEventListener('click', function (ev) {
+    var node = ev.target.closest('[data-i]');
+    if (node) tap(parseInt(node.dataset.i, 10));
+  });
+
+  function startGame() {
+    started = true;
+    sequence = [];
+    round = 0;
+    nextRound();
+  }
+
+  function start() {
+    build();
+    sequence = []; inputAt = 0; round = 0; longest = 0; lives = MAX_LIVES;
+    accepting = false; started = false;
+    longestEl.textContent = '0';
+    livesEl.textContent = MAX_LIVES;
+    QMG.setMidLabel('Round');
+    QMG.setMid('1');
+    QMG.setMidBar(0);
+    statusEl.textContent = 'Tap a pad to begin';
+    statusEl.className = 'text-sm font-black text-amber-300';
+  }
+
+  QMG.onReplay(start);
+  start();
+})();
+</script>
+{% endblock %}

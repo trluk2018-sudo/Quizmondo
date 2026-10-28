@@ -1,0 +1,185 @@
+{% extends "themes/quizhub/games/_shell.html" %}
+
+{% block hud_mid_label %}Round{% endblock %}
+{% block hud_mid_value %}1{% endblock %}
+
+{% block game_stage %}
+<div class="space-y-4">
+  <div class="text-center font-mono min-h-[24px]">
+    <span id="grStatus" class="text-sm font-black text-amber-300">Memorise the lit squares</span>
+  </div>
+
+  <div class="flex justify-center">
+    <div id="grGrid" class="qmg-nosel grid gap-2 w-full" style="max-width: 320px;"></div>
+  </div>
+
+  <div class="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-slate-950/80 border border-purple-500/20 font-mono text-[11px]">
+    <span class="text-slate-400">Pattern: <strong id="grSize" class="text-cyan-300">3</strong> tiles</span>
+    <span class="text-slate-400">Lives: <strong id="grLives" class="text-rose-300">3</strong></span>
+  </div>
+</div>
+{% endblock %}
+
+{% block how_extra %}
+<p class="mt-2">Order does not matter — just find every lit tile. The grid grows as you go, so the pattern gets harder to hold.</p>
+{% endblock %}
+
+{% block game_js %}
+<script>
+(function () {
+  var MAX_LIVES = 3;
+
+  var gridEl = document.getElementById('grGrid');
+  var statusEl = document.getElementById('grStatus');
+  var sizeEl = document.getElementById('grSize');
+  var livesEl = document.getElementById('grLives');
+
+  var N = 3;
+  var pattern = [];
+  var picked = {};
+  var round = 0;
+  var lives = MAX_LIVES;
+  var accepting = false;
+  var tiles = [];
+
+  function tileClass(state) {
+    var base = 'aspect-square rounded-xl transition-all duration-150 border-2 ';
+    if (state === 'lit') return base + 'bg-gradient-to-br from-cyan-300 to-purple-400 border-white/50 scale-95 shadow-xl';
+    if (state === 'hit') return base + 'bg-emerald-500 border-emerald-300';
+    if (state === 'miss') return base + 'bg-rose-600 border-rose-400';
+    return base + 'bg-slate-900 border-purple-500/25 active:bg-purple-900/60';
+  }
+
+  function build() {
+    gridEl.style.gridTemplateColumns = 'repeat(' + N + ', minmax(0, 1fr))';
+    gridEl.innerHTML = '';
+    tiles = [];
+    for (var i = 0; i < N * N; i++) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.i = i;
+      btn.className = tileClass('idle');
+      gridEl.appendChild(btn);
+      tiles.push(btn);
+    }
+  }
+
+  function patternSize() { return Math.min(N * N - 2, 2 + round); }
+
+  function gridSizeForRound() {
+    if (round <= 3) return 3;
+    if (round <= 7) return 4;
+    return 5;
+  }
+
+  function showPattern() {
+    accepting = false;
+    statusEl.textContent = 'Memorise…';
+    statusEl.className = 'text-sm font-black text-amber-300';
+    pattern.forEach(function (i) { tiles[i].className = tileClass('lit'); });
+    pattern.forEach(function (i, k) {
+      setTimeout(function () { QMG.audio.tone(400 + k * 45, 110, 'sine'); }, k * 90);
+    });
+
+    // Less looking time as the pattern grows
+    var showMs = Math.max(900, 2200 - round * 110);
+    setTimeout(function () {
+      tiles.forEach(function (t) { t.className = tileClass('idle'); });
+      accepting = true;
+      picked = {};
+      statusEl.textContent = 'Now tap all ' + pattern.length;
+      statusEl.className = 'text-sm font-black text-cyan-300';
+    }, showMs);
+  }
+
+  function nextRound() {
+    round += 1;
+    QMG.setMid(round);
+    QMG.setMidBar(Math.min(1, round / 12));
+    var wanted = gridSizeForRound();
+    if (wanted !== N) { N = wanted; build(); }
+    var cells = [];
+    for (var i = 0; i < N * N; i++) cells.push(i);
+    pattern = QMG.shuffle(cells).slice(0, patternSize());
+    sizeEl.textContent = pattern.length;
+    setTimeout(showPattern, 500);
+  }
+
+  function tap(i) {
+    if (!accepting || picked[i]) return;
+    picked[i] = true;
+
+    if (pattern.indexOf(i) !== -1) {
+      tiles[i].className = tileClass('hit');
+      QMG.audio.tone(620, 110, 'sine');
+      QMG.haptic(12);
+      var got = Object.keys(picked).filter(function (k) { return pattern.indexOf(+k) !== -1; }).length;
+      if (got >= pattern.length) {
+        accepting = false;
+        QMG.bumpCombo();
+        var points = Math.round(pattern.length * 60 * QMG.comboMultiplier());
+        QMG.addScore(points, gridEl);
+        QMG.audio.correct();
+        statusEl.textContent = '✅ Clean sweep! +' + points;
+        statusEl.className = 'text-sm font-black text-emerald-300';
+        setTimeout(nextRound, 900);
+      }
+      return;
+    }
+
+    // Wrong tile
+    tiles[i].className = tileClass('miss');
+    lives -= 1;
+    livesEl.textContent = lives;
+    QMG.resetCombo();
+    QMG.audio.wrong();
+    QMG.shake(gridEl);
+    QMG.haptic(60);
+    accepting = false;
+
+    pattern.forEach(function (p) { if (!picked[p]) tiles[p].className = tileClass('lit'); });
+
+    if (lives <= 0) {
+      setTimeout(function () {
+        QMG.finish({
+          win: round >= 5,
+          icon: round >= 8 ? '🧠' : '💥',
+          title: round >= 8 ? 'Exceptional Memory' : 'Pattern Lost',
+          sub: 'You cleared ' + (round - 1) + ' round' + (round === 2 ? '' : 's') + '.',
+          detail: ['Biggest pattern: ' + pattern.length + ' tiles']
+        });
+      }, 900);
+      return;
+    }
+
+    statusEl.textContent = 'Missed — ' + lives + ' live' + (lives === 1 ? '' : 's') + ' left';
+    statusEl.className = 'text-sm font-black text-rose-300';
+    setTimeout(function () {
+      tiles.forEach(function (t) { t.className = tileClass('idle'); });
+      showPattern();
+    }, 1400);
+  }
+
+  gridEl.addEventListener('click', function (ev) {
+    var node = ev.target.closest('[data-i]');
+    if (node) tap(parseInt(node.dataset.i, 10));
+  });
+
+  function start() {
+    N = 3;
+    round = 0;
+    lives = MAX_LIVES;
+    picked = {};
+    accepting = false;
+    livesEl.textContent = MAX_LIVES;
+    QMG.setMidLabel('Round');
+    QMG.setMidBar(0);
+    build();
+    nextRound();
+  }
+
+  QMG.onReplay(start);
+  start();
+})();
+</script>
+{% endblock %}
