@@ -118,11 +118,22 @@
           <p class="text-[10px] text-slate-500 mt-1">Blank uses the username. Most providers insist these match.</p>
         </div>
       </div>
-      <div class="p-3 bg-blue-50 border border-blue-200 rounded text-[11px] text-blue-900">
-        <span class="font-bold">Before this gets used in anger:</span>
-        send through a transactional provider (Brevo, Mailgun and Postmark all have free tiers)
-        rather than a personal mailbox, and add SPF and DKIM records for the sending domain.
-        Without them, confirmation emails land in spam or are dropped outright.
+      <div class="p-3 bg-blue-50 border border-blue-200 rounded text-[11px] text-blue-900 space-y-1.5">
+        <p>
+          <span class="font-bold">Sending through cPanel.</span>
+          Use <code class="font-mono">mail.&lt;your domain&gt;</code> on port 465, the full email
+          address as the username, and the same address to send from. cPanel lists these under
+          Email Accounts &rarr; Connect Devices if you want to check the hostname it expects.
+        </p>
+        <p>
+          Because the mail leaves the cPanel server rather than this one, that domain's existing
+          SPF and DKIM records already cover it &mdash; there is nothing to add.
+        </p>
+        <p>
+          The one thing worth checking: this app runs on a different machine from cPanel, so
+          outbound port 465 has to be open here. Plenty of hosts block mail ports by default.
+          The test below will say so plainly if that is the problem.
+        </p>
       </div>
     </div>
 
