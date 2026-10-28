@@ -41,6 +41,18 @@
       </div>
     </div>
 
+    {% if scores_saved is defined and not scores_saved %}
+    <!-- Guest: playing is free, keeping the score is not -->
+    <a href="{{ url_for('arena.player_register', next=request.path) }}"
+       class="block p-3 rounded-2xl bg-amber-950/50 border border-amber-500/35 hover:border-amber-400 transition font-mono text-center">
+      <span class="text-[11px] font-black text-amber-200">Playing as a guest</span>
+      <span class="block text-[10px] text-amber-100/70 leading-relaxed mt-0.5">
+        Your best stays until you close the browser. Make an account and it is kept for
+        good, with XP, coins and a place on the board. &rarr;
+      </span>
+    </a>
+    {% endif %}
+
     <!-- Combo / streak pill -->
     <div class="flex items-center justify-center min-h-[26px]">
       <div id="qmgCombo" class="hidden px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-mono text-xs font-black animate-pulse">

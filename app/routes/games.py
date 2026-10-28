@@ -8,7 +8,8 @@ XP and coins to the player's profile, the same way finishing a duel round does.
 import random
 from datetime import date, datetime, timedelta
 
-from flask import Blueprint, abort, jsonify, render_template, request
+from flask import (Blueprint, abort, flash, jsonify, redirect, render_template,
+                   request, session, url_for)
 
 from ..models import db, PlayerProfile, SiteSetting
 from ..models_games import MiniGameScore, DailyChallengeScore
@@ -24,6 +25,92 @@ def inject_games_global_data():
     data = inject_global_data()
     data['avatar_lookup'] = AVATAR_LOOKUP
     return data
+
+
+# ---------------------------------------------------------------------------
+# Guests
+#
+# A guest may play every mini game. What they may not do is leave a trail: no
+# profile row, no score row, nothing to tidy up after them. Their scores ride
+# along in the signed session cookie instead, which means they can see their
+# best for the afternoon and lose it when they close the browser.
+#
+# The cookie is also the carrot. "You scored 840 and it is not saved" is the
+# best argument for an account there is, and the moment they make one those
+# scores are moved into the table rather than thrown away.
+# ---------------------------------------------------------------------------
+
+GUEST_SCORES = 'qm_guest_scores'
+
+
+def _has_account() -> bool:
+    return bool(session.get('user_id'))
+
+
+def _guests_recorded() -> bool:
+    """Whether an operator has asked for guest rows in the table after all."""
+    return SiteSetting.get('guest_scores_saved') == '1'
+
+
+def _guest_bests() -> dict:
+    scores = session.get(GUEST_SCORES)
+    return scores if isinstance(scores, dict) else {}
+
+
+def _remember_guest_score(key, score):
+    """Hold one guest score in the cookie. Returns (best, improved, plays)."""
+    scores = dict(_guest_bests())
+    entry = scores.get(key) or {}
+    best = int(entry.get('best') or 0)
+    plays = int(entry.get('plays') or 0) + 1
+    improved = score > best
+    scores[key] = {'best': max(best, score), 'last': score, 'plays': plays}
+    session[GUEST_SCORES] = scores
+    session.modified = True
+    return scores[key]['best'], improved, plays
+
+
+@games_bp.before_app_request
+def adopt_guest_scores():
+    """Move a cookie's worth of guest scores into the table once they sign up.
+
+    Runs app wide rather than at registration, because the registration route
+    belongs to the Arena. The common case costs one dictionary lookup, since
+    there is nothing to do unless the cookie holds scores and the visitor now
+    has an account.
+    """
+    if not session.get(GUEST_SCORES) or not _has_account():
+        return
+    scores = _guest_bests()
+    session.pop(GUEST_SCORES, None)
+    session.modified = True
+    try:
+        player = get_current_player()
+        if not player:
+            return
+        for key, entry in scores.items():
+            if key not in GAME_BY_KEY:
+                continue
+            score = int(entry.get('best') or 0)
+            row = MiniGameScore.query.filter_by(
+                player_session=player.session_key, game_key=key).first()
+            if row is None:
+                row = MiniGameScore(player_session=player.session_key, game_key=key,
+                                    best_score=0, plays=0)
+                db.session.add(row)
+            row.display_name = player.display_name
+            row.avatar_key = player.avatar_key
+            row.plays = (row.plays or 0) + int(entry.get('plays') or 1)
+            row.last_score = int(entry.get('last') or score)
+            row.last_played_at = datetime.utcnow()
+            if score > (row.best_score or 0):
+                row.best_score = score
+                row.best_at = datetime.utcnow()
+        db.session.commit()
+    except Exception:
+        # Carrying scores over is a courtesy. It must never be the reason a
+        # newly registered player cannot load a page.
+        db.session.rollback()
 
 
 # ---------------------------------------------------------------------------
@@ -219,7 +306,28 @@ def built_games():
 # Score helpers
 # ---------------------------------------------------------------------------
 
-def _score_rows(session_key):
+class _GuestBest:
+    """A guest's cookie score, shaped like a MiniGameScore row.
+
+    The hub and the game shell read best_score and plays off whatever they are
+    given, so a guest's figures can go through the same templates.
+    """
+    __slots__ = ('game_key', 'best_score', 'last_score', 'plays', 'saved')
+
+    def __init__(self, game_key, entry):
+        self.game_key = game_key
+        self.best_score = int(entry.get('best') or 0)
+        self.last_score = int(entry.get('last') or 0)
+        self.plays = int(entry.get('plays') or 0)
+        self.saved = False
+
+
+def _score_rows(session_key=None):
+    """Everyone's own figures, from the table or from the cookie."""
+    if not _has_account() and not _guests_recorded():
+        return {key: _GuestBest(key, entry) for key, entry in _guest_bests().items()}
+    if not session_key:
+        return {}
     rows = MiniGameScore.query.filter_by(player_session=session_key).all()
     return {r.game_key: r for r in rows}
 
@@ -238,7 +346,7 @@ def _leaderboard(game_key, limit=10):
 @games_bp.route('/')
 def hub():
     player = get_current_player(persist=False)
-    bests = _score_rows(player.session_key) if player else {}
+    bests = _score_rows(player.session_key if player else None)
 
     total_plays = sum((r.plays or 0) for r in bests.values())
     played_count = sum(1 for r in bests.values() if (r.plays or 0) > 0)
@@ -272,12 +380,13 @@ def _render_game(key, **payload):
     except Exception:
         abort(404)  # registered but not built yet
     player = get_current_player(persist=False)
-    row = MiniGameScore.query.filter_by(player_session=player.session_key, game_key=key).first() if player else None
+    row = _score_rows(player.session_key if player else None).get(key)
     return render_template(
         f'themes/quizhub/games/{key}.html',
         game=meta,
         games=built_games(),
         player=player,
+        scores_saved=_has_account() or _guests_recorded(),
         best=(row.best_score if row else 0),
         plays=(row.plays if row else 0),
         leaderboard=_leaderboard(key),
@@ -457,6 +566,23 @@ def submit_score():
         score = 0
     score = max(0, min(score, 100000))
 
+    if not _has_account() and not _guests_recorded():
+        # Nothing is written anywhere. The score lives in the cookie until
+        # they either make an account or close the browser.
+        best, improved, plays = _remember_guest_score(key, score)
+        return jsonify({
+            'ok': True,
+            'guest': True,
+            'score': score,
+            'best': best,
+            'improved': improved,
+            'xp': 0,
+            'coins': 0,
+            'plays': plays,
+            'signup_url': url_for('arena.player_register'),
+            'note': 'Not saved — make an account to keep it.',
+        })
+
     player = get_current_player()  # a submitted score is worth saving a profile for
     row = MiniGameScore.query.filter_by(player_session=player.session_key, game_key=key).first()
     if not row:
@@ -540,6 +666,14 @@ def _settle_champion(day):
 
 @games_bp.route('/daily')
 def daily():
+    if not _has_account():
+        # Everybody gets the same grid, so a daily leaderboard made of
+        # throwaway identities would be meaningless: clear the cookies, replay
+        # the grid, post a better time. An account is the whole mechanism.
+        flash('The Daily Crossword needs an account — that is how scores and the '
+              'champion award are tracked. Mini games are open to everyone.', 'error')
+        return redirect(url_for('arena.player_register', next=url_for('games.daily')))
+
     today = date.today()
     spec, puzzle = gd.daily_crossword(today)
     player = get_current_player(persist=False)
@@ -578,6 +712,11 @@ def submit_daily_score():
     data = request.get_json(silent=True) or {}
     today = date.today()
     spec = gd.daily_spec(today)
+
+    # Checked before the day, so a guest is told what is actually wrong.
+    if not _has_account():
+        return jsonify({'ok': False, 'error': 'The Daily Crossword needs an account.',
+                        'signup_url': url_for('arena.player_register')}), 403
 
     if str(data.get('key') or '') != spec['key']:
         # The day rolled over while they were playing, or the key was fiddled
