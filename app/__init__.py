@@ -430,65 +430,112 @@ def _seed_defaults():
         ))
 
     privacy_page = Page.query.filter_by(slug='privacy').first()
+    privacy_body = """<p class="lead">This notice explains what personal data Quizmondo collects, why, what we do with it, and the rights you have over it. It is written to meet Articles 13 and 14 of the UK GDPR. We collect as little as we can.</p>
+<p><em>Last updated: 28 October 2026.</em></p>
+
+<h2>1. Who is the data controller</h2>
+<p>Quizmondo operates this website and is the <strong>data controller</strong> for the personal data described below. You can reach us about anything on this page through the <a href="/contact">contact page</a>. We have not appointed a Data Protection Officer, as we are not required to.</p>
+
+<h2>2. What personal data we collect</h2>
+<p>If you create an account we store exactly three pieces of personal data:</p>
+<table>
+<tr><th>What</th><th>Why we need it</th></tr>
+<tr><td><strong>Player name</strong></td><td>To identify you in games and show you on leaderboards. It need not be your real name, and we would prefer it was not.</td></tr>
+<tr><td><strong>Email address</strong></td><td>To identify your account so you can sign back in, and to reply if you contact us.</td></tr>
+<tr><td><strong>PIN or password</strong></td><td>To secure your account. Stored only as a one-way cryptographic hash, never in readable form. Nobody at Quizmondo can see it.</td></tr>
+</table>
+<p>We do <strong>not</strong> collect your real name, postal address, date of birth, telephone number, payment details or location. We have no use for them. There is no advertising on Quizmondo and we do not sell data to anyone.</p>
+
+<h3>Data created by playing</h3>
+<p>Using the site also generates records linked to your account: scores, XP and rank, the duels and group games you play, quiz questions or team names you submit, and pub quiz results recorded under the team name used on the night. Some of this is shown publicly &mdash; that is the purpose of a leaderboard.</p>
+
+<h3>Playing without an account</h3>
+<p>You can play entirely as a guest. A guest is identified only by a random key held in your own browser with a generated display name; we hold no email or password for you. Clearing your browser data removes that identity and its scores permanently.</p>
+
+<h2>3. Our lawful basis for processing</h2>
+<table>
+<tr><th>Processing</th><th>Lawful basis (UK GDPR Article 6)</th></tr>
+<tr><td>Holding your account so you can sign in and play</td><td>Article 6(1)(b) &mdash; performance of a contract with you</td></tr>
+<tr><td>Showing player names and scores on leaderboards</td><td>Article 6(1)(f) &mdash; legitimate interests: running a competitive quiz service that works as players expect</td></tr>
+<tr><td>Keeping the service secure and preventing cheating or abuse</td><td>Article 6(1)(f) &mdash; legitimate interests: protecting the service and its players</td></tr>
+<tr><td>Replying to a message you send us</td><td>Article 6(1)(f) &mdash; legitimate interests: answering your enquiry</td></tr>
+<tr><td>Optional website analytics, where enabled</td><td>Article 6(1)(a) &mdash; consent, which you may withdraw at any time</td></tr>
+</table>
+<p>Providing this data is not a statutory requirement. It is required only to hold an account: without an email address and a PIN there is no way to sign you back in. You may always play as a guest instead.</p>
+
+<h2>4. Who we share it with</h2>
+<p>We do not sell, rent or trade your personal data, and we do not share it for marketing. It is stored on hosting infrastructure operated by our hosting provider, which acts as a <strong>data processor</strong> and handles it only on our instructions in order to run the site. Your player name and scores are visible to other players in the ordinary course of play: leaderboards, duel results, group games and pub league tables. We will disclose data where the law requires it.</p>
+
+<h2>5. International transfers</h2>
+<p>Our hosting is within the UK or the European Economic Area. If that ever changes, transfers will be made only to a country with UK adequacy status or under appropriate safeguards such as the International Data Transfer Agreement, and this notice will be updated to say so.</p>
+
+<h2>6. How long we keep it</h2>
+<ul>
+<li><strong>Account data</strong> is kept for as long as your account exists. Ask us to delete it and we delete it.</li>
+<li><strong>Inactive accounts</strong> may be removed after a long period of no activity.</li>
+<li><strong>Pub league results</strong> are retained as a historical record of a competition, under the team name used that night.</li>
+<li><strong>Messages you send us</strong> are kept only as long as needed to deal with them.</li>
+</ul>
+
+<h2>7. Your rights, and how to use them</h2>
+<p>Under the UK GDPR you have the following rights. All of them are free, and we will respond within <strong>one month</strong>.</p>
+<ul>
+<li><strong>Right of access (Article 15).</strong> Ask what we hold about you and get a copy.</li>
+<li><strong>Right to rectification (Article 16).</strong> Have anything inaccurate corrected. You can change your player name yourself at any time.</li>
+<li><strong>Right to erasure (Article 17).</strong> Have your personal data deleted &mdash; see below.</li>
+<li><strong>Right to restrict processing (Article 18).</strong> Ask us to stop using your data while a dispute is resolved.</li>
+<li><strong>Right to data portability (Article 20).</strong> Receive the data you gave us in a structured, machine-readable format.</li>
+<li><strong>Right to object (Article 21).</strong> Object to processing we carry out under legitimate interests, including appearing on public leaderboards.</li>
+<li><strong>Right to withdraw consent (Article 7).</strong> Where we rely on consent, withdraw it at any time without affecting what was done beforehand.</li>
+</ul>
+<p>To use any of these, write to us through the <a href="/contact">contact page</a> from the email address on your account, or tell us the player name concerned. We may need to confirm it is really you before acting, so that somebody else cannot delete your account.</p>
+
+<h3>Deleting your account and your data</h3>
+<p>You have the right to have your personal data erased, and you do not have to give a reason. On request we will, within one month:</p>
+<ul>
+<li>delete your <strong>email address</strong>;</li>
+<li>delete your <strong>player name</strong>;</li>
+<li>delete your <strong>stored PIN or password hash</strong>;</li>
+<li>delete the account itself, so it can no longer be signed into.</li>
+</ul>
+<p>We will also remove your player name from leaderboards and from duel and group game records, or replace it with an anonymous label where a record of the game itself has to remain so that other players' results still make sense. Once a name has been removed in this way the remaining record is no longer personal data and cannot be traced back to you.</p>
+<p>One honest exception: a pub quiz result recorded under a <em>team</em> name, which is usually shared by several people and is not normally personal data, is kept as the historical record of that competition. If a team name does identify you, tell us and we will change or remove it.</p>
+<p>Erasure is permanent. Scores, XP and rank cannot be recovered afterwards.</p>
+
+<h2>8. Cookies and browser storage</h2>
+<p>We use a <strong>session cookie</strong> to keep you signed in and to remember which table or squad you joined. The game screens use your browser's <strong>local storage</strong> to hold your place in a round, so refreshing the page or losing signal does not cost you your answers. Both are strictly necessary for the site to work and neither is used for advertising or cross-site tracking.</p>
+<p>If website analytics are switched on by the site owner, that provider may set its own cookies. Where that happens it is disclosed here and relies on your consent.</p>
+
+<h2>9. Automated decision-making</h2>
+<p>We do not carry out profiling or automated decision-making that produces legal or similarly significant effects. Scoring a quiz is automated, but it only decides who won a quiz.</p>
+
+<h2>10. Security</h2>
+<p>PINs and passwords are stored only as one-way hashes, and the site is served over HTTPS. No system is completely secure, so please use a PIN you do not use anywhere else.</p>
+
+<h2>11. Children</h2>
+<p>Quizmondo is intended for general audiences. If you are under 13, please ask a parent or guardian before creating an account. If you believe a child has provided us with personal data without that permission, contact us and we will delete it.</p>
+
+<h2>12. Complaints</h2>
+<p>If you are unhappy with how we have handled your personal data, please tell us first so we can put it right. You also have the right to complain to the UK supervisory authority, the Information Commissioner's Office, at <a href="https://ico.org.uk" target="_blank" rel="noopener">ico.org.uk</a> or on 0303 123 1113.</p>
+
+<h2>13. Changes to this notice</h2>
+<p>If what we collect or what we do with it changes, this page is updated and the date at the top changes with it."""
     if not privacy_page:
         db.session.add(Page(
             title='Privacy & Your Data',
             slug='privacy',
-            excerpt='What we collect, which is a player name, an email address and a hashed PIN, and nothing else.',
-            content="""<p>This page explains what Quizmondo does with your personal data, in plain terms. We collect as little as we can get away with.</p>
-
-<h2>Who is responsible</h2>
-<p>Quizmondo operates this site and is the data controller for the personal data described here. You can reach us through the <a href="/contact">contact page</a>.</p>
-
-<h2>What we actually collect</h2>
-<p>If you create an account, we store three things:</p>
-<ul>
-<li><strong>Your player name</strong> &mdash; chosen by you, and shown to other players on leaderboards and in games. It does not have to be your real name, and we would rather it was not.</li>
-<li><strong>Your email address</strong> &mdash; used to identify your account so you can sign back in.</li>
-<li><strong>Your PIN or password</strong> &mdash; stored only as a cryptographic hash, never as readable text. Nobody at Quizmondo can see it.</li>
-</ul>
-<p>That is the whole of it. We do not ask for your real name, address, date of birth, phone number or payment details, because we have no use for them. There are no adverts and we do not sell data.</p>
-
-<h2>What is created as you play</h2>
-<p>Using the site produces some data of its own: your scores, XP and rank, the duels and group games you take part in, any quiz questions or team names you submit, and &mdash; if you play a pub quiz &mdash; the result of that night under your team name. Some of this is shown publicly, which is rather the point of a leaderboard.</p>
-
-<h2>Playing without an account</h2>
-<p>You can play as a guest without giving us anything at all. A guest is identified by a random key stored in your browser, with a made-up display name. Clear your browser data and that guest is gone for good, along with its scores.</p>
-
-<h2>Cookies and similar storage</h2>
-<p>We use a session cookie to keep you signed in and to remember which table or squad you joined. The game screens also use your browser's local storage to keep your place in a round, so a refresh or a lost signal does not cost you your answers. None of this is used for advertising or cross-site tracking.</p>
-<p>If the site owner has enabled website analytics, that provider may set its own cookies. Where that is the case it is disclosed here before it is switched on.</p>
-
-<h2>Why we are allowed to hold it</h2>
-<p>We process your account data to provide a service you have asked for &mdash; in data protection terms, performance of a contract and our legitimate interest in running the site. There is no profiling and no automated decision-making that affects you.</p>
-
-<h2>Who else sees it</h2>
-<p>We do not sell or share your personal data. It sits on hosting infrastructure operated by our hosting provider, which processes it only to run the site. Your player name and scores are visible to other players where you would expect: leaderboards, duel results, group games and pub league tables.</p>
-
-<h2>How long we keep it</h2>
-<p>Account data is kept while the account exists. Ask us to delete it and it goes. We may remove accounts that have been inactive for a long time. Pub league results are kept as a historical record under the team name used on the night.</p>
-
-<h2>Your rights</h2>
-<p>Under UK and EU data protection law you can ask us to:</p>
-<ul>
-<li>tell you what we hold about you, and give you a copy;</li>
-<li>correct anything that is wrong;</li>
-<li>delete your account and personal data;</li>
-<li>restrict or object to how we use it;</li>
-<li>withdraw consent, where we relied on it.</li>
-</ul>
-<p>Ask through the <a href="/contact">contact page</a> and we will deal with it within one month. Since we hold so little, most requests are quick. If you are unhappy with how we have handled it, you can complain to the Information Commissioner's Office at <a href="https://ico.org.uk" target="_blank" rel="noopener">ico.org.uk</a>.</p>
-
-<h2>Security</h2>
-<p>Passwords and PINs are stored hashed, and the site is served over HTTPS. No system is perfectly secure, so please use a PIN you do not use anywhere else.</p>
-
-<h2>Children</h2>
-<p>Quizmondo is for general audiences. If you are under 13, ask a parent or guardian before creating an account. If you believe a child has given us data without that, contact us and we will remove it.</p>
-
-<h2>Changes</h2>
-<p>If what we collect changes, this page changes with it, and the new version applies from the day it is published.</p>""",
+            excerpt='What we collect, which is a player name, an email address and a hashed PIN, and nothing else. Including how to have it all deleted.',
+            content=privacy_body,
             template='default', status='publish', sort_order=91
         ))
+    elif 'We collect as little as we can get away with' in (privacy_page.content or ''):
+        # The first version of this page was a plain-English summary rather than a
+        # compliant notice. Upgrade it in place, but only while it is word for word
+        # that version - keyed on a phrase unique to it - so that any edit made in
+        # the admin, however small, is left alone.
+        privacy_page.content = privacy_body
+        privacy_page.excerpt = ('What we collect, which is a player name, an email address and a hashed PIN, '
+                                'and nothing else. Including how to have it all deleted.')
 
     contact_page = Page.query.filter_by(slug='contact').first()
     if not contact_page:
