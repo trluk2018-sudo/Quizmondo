@@ -45,6 +45,32 @@
       </div>
     </div>
 
+    <!-- Today's crossword -->
+    <a href="{{ url_for('games.daily') }}"
+       class="group block p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-amber-950/60 via-slate-950 to-purple-950/40 border-2 border-amber-500/45 hover:border-cyan-400 shadow-2xl transition transform hover:-translate-y-1 active:scale-[0.99] relative overflow-hidden">
+      <div class="absolute -top-10 -right-6 text-[6rem] opacity-10 pointer-events-none select-none">🗓️</div>
+      <div class="relative flex items-center justify-between gap-4">
+        <div class="min-w-0 space-y-1.5">
+          <span class="inline-block px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black uppercase font-mono border border-amber-500/30">
+            {% if daily_done %}Played today{% else %}New today{% endif %}
+          </span>
+          <h3 class="text-lg sm:text-xl font-black font-mono text-white group-hover:text-cyan-300 transition">
+            Daily Crossword
+          </h3>
+          <p class="text-[11px] font-mono text-slate-400 leading-relaxed">
+            {{ daily_spec.date.strftime('%A') }} &bull; {{ daily_spec.tier }} &mdash; {{ daily_spec.blurb }}
+            One grid a day, the same for everybody. It builds through the week.
+          </p>
+        </div>
+        <div class="text-center shrink-0 font-mono">
+          <div class="text-3xl">🗓️</div>
+          <div class="text-[10px] font-black text-amber-300 mt-1 group-hover:underline">
+            {% if daily_done %}See results{% else %}Play &rarr;{% endif %}
+          </div>
+        </div>
+      </div>
+    </a>
+
     <!-- Game groups -->
     {% for group_key, group_name, group_icon, group_tag in groups %}
     {% set group_games = games|selectattr('group', 'equalto', group_key)|list %}

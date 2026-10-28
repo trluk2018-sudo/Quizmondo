@@ -6,12 +6,12 @@ here touches Arena matches or Pub League scoring — a mini game only ever adds
 XP and coins to the player's profile, the same way finishing a duel round does.
 """
 import random
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 from flask import Blueprint, abort, jsonify, render_template, request
 
-from ..models import db
-from ..models_games import MiniGameScore
+from ..models import db, PlayerProfile, SiteSetting
+from ..models_games import MiniGameScore, DailyChallengeScore
 from ..utils import game_data as gd
 from .arena import get_current_player, AVATAR_LOOKUP
 from .public import inject_global_data
@@ -243,9 +243,17 @@ def hub():
     total_plays = sum((r.plays or 0) for r in bests.values())
     played_count = sum(1 for r in bests.values() if (r.plays or 0) > 0)
 
+    today = date.today()
+    today_spec = gd.daily_spec(today)
+    daily_done = bool(player and DailyChallengeScore.query.filter_by(
+        player_session=player.session_key, challenge_key=today_spec['key']
+    ).first())
+
     return render_template(
         'themes/quizhub/games/hub.html',
         player=player,
+        daily_spec=today_spec,
+        daily_done=daily_done,
         games=built_games(),
         groups=GROUPS,
         bests=bests,
@@ -490,6 +498,139 @@ def submit_score():
         'rank': rank,
         'plays': row.plays,
     })
+
+
+# ---------------------------------------------------------------------------
+# The daily crossword
+# ---------------------------------------------------------------------------
+
+DAILY_CHAMPION_COINS = 250
+
+
+def _daily_board(challenge_key, limit=20):
+    return DailyChallengeScore.query.filter_by(challenge_key=challenge_key).order_by(
+        DailyChallengeScore.score.desc(), DailyChallengeScore.seconds_taken.asc()
+    ).limit(limit).all()
+
+
+def _settle_champion(day):
+    """Award the previous day's winner, once.
+
+    There is no scheduler in this app, so a finished day is settled the next
+    time anybody opens the page. A flag in site settings records that it has
+    been paid, which keeps it to one award however many people look.
+    """
+    key = 'crossword-%s' % day.isoformat()
+    flag = 'daily_champion_paid_%s' % day.isoformat()
+    champion = DailyChallengeScore.query.filter_by(challenge_key=key).order_by(
+        DailyChallengeScore.score.desc(), DailyChallengeScore.seconds_taken.asc()
+    ).first()
+    if not champion:
+        return None
+
+    if not SiteSetting.get(flag):
+        winner = PlayerProfile.query.filter_by(session_key=champion.player_session).first()
+        if winner:
+            winner.coins = (winner.coins or 0) + DAILY_CHAMPION_COINS
+            winner.add_xp(100)
+        SiteSetting.set(flag, '1')
+        db.session.commit()
+    return champion
+
+
+@games_bp.route('/daily')
+def daily():
+    today = date.today()
+    spec, puzzle = gd.daily_crossword(today)
+    player = get_current_player(persist=False)
+
+    mine = None
+    if player:
+        mine = DailyChallengeScore.query.filter_by(
+            player_session=player.session_key, challenge_key=spec['key']
+        ).first()
+
+    champion = _settle_champion(today - timedelta(days=1))
+
+    return render_template(
+        'themes/quizhub/games/daily.html',
+        # An empty key stops the shared shell posting to the ordinary score
+        # endpoint; the daily has its own, with its own one-go-a-day rule.
+        game={'key': '', 'title': 'Daily Crossword', 'icon': '🗓️',
+              'how': 'One grid a day, the same for everyone. It builds through the week '
+                     'and starts fresh on Monday. You get a single attempt, so take your time.'},
+        games=built_games(),
+        player=player,
+        spec=spec,
+        puzzle=puzzle,
+        mine=mine,
+        best=(mine.score if mine else 0),
+        leaderboard=_daily_board(spec['key']),
+        champion=champion,
+        champion_day=(today - timedelta(days=1)),
+        ladder=[gd.DAILY_LADDER[i] for i in range(7)],
+        today_weekday=today.weekday(),
+    )
+
+
+@games_bp.route('/api/daily-score', methods=['POST'])
+def submit_daily_score():
+    data = request.get_json(silent=True) or {}
+    today = date.today()
+    spec = gd.daily_spec(today)
+
+    if str(data.get('key') or '') != spec['key']:
+        # The day rolled over while they were playing, or the key was fiddled
+        return jsonify({'ok': False, 'error': 'That puzzle is no longer today\'s.'}), 400
+
+    try:
+        score = max(0, min(int(data.get('score') or 0), 100000))
+        seconds = max(0, min(int(data.get('seconds') or 0), 86400))
+    except (TypeError, ValueError):
+        score, seconds = 0, 0
+
+    player = get_current_player()
+    existing = DailyChallengeScore.query.filter_by(
+        player_session=player.session_key, challenge_key=spec['key']
+    ).first()
+    # Everyone gets the same grid, so a replay would just be a memory test.
+    if existing:
+        return jsonify({'ok': True, 'already': True, 'score': existing.score,
+                        'rank': _daily_rank(spec['key'], existing)})
+
+    row = DailyChallengeScore(
+        player_session=player.session_key,
+        challenge_key=spec['key'],
+        challenge_date=today,
+        display_name=player.display_name,
+        avatar_key=player.avatar_key,
+        score=score,
+        seconds_taken=seconds,
+        solved=bool(data.get('solved')),
+    )
+    db.session.add(row)
+
+    xp = min(XP_CAP, int(score * 0.12))
+    if xp > 0 and player.id:
+        player.add_xp(xp)
+        player.coins = (player.coins or 0) + xp // 10
+        player.last_active_at = datetime.utcnow()
+    db.session.commit()
+
+    return jsonify({'ok': True, 'already': False, 'score': score, 'xp': xp,
+                    'coins': xp // 10, 'rank': _daily_rank(spec['key'], row),
+                    'players': DailyChallengeScore.query.filter_by(challenge_key=spec['key']).count()})
+
+
+def _daily_rank(challenge_key, row):
+    return DailyChallengeScore.query.filter(
+        DailyChallengeScore.challenge_key == challenge_key,
+        db.or_(
+            DailyChallengeScore.score > (row.score or 0),
+            db.and_(DailyChallengeScore.score == (row.score or 0),
+                    DailyChallengeScore.seconds_taken < (row.seconds_taken or 0)),
+        ),
+    ).count() + 1
 
 
 @games_bp.route('/api/check-word', methods=['POST'])

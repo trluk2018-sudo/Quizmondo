@@ -370,15 +370,30 @@ def word_ladder(rng=None, steps=4):
 # Trivia clues & crossword
 # ---------------------------------------------------------------------------
 
-def trivia_clues(min_len=3, max_len=9, limit=400):
-    """Single-word trivia answers paired with their question, for word puzzles."""
+def trivia_clues(min_len=3, max_len=9, limit=400, rng=None, difficulties=None):
+    """Single-word trivia answers paired with their question, for word puzzles.
+
+    Pass an rng to make the selection repeatable: the rows come back in id
+    order and are shuffled with that generator instead of being randomised by
+    the database. The daily puzzle needs this, because every web worker has to
+    build the identical grid from the same date.
+    """
     from ..models import QuizQuestion, db
     from sqlalchemy.sql.expression import func
 
-    rows = QuizQuestion.query.filter(
+    query = QuizQuestion.query.filter(
         QuizQuestion.question_type == 'classic',
         db.or_(QuizQuestion.status == 'approved', QuizQuestion.status.is_(None)),
-    ).order_by(func.random()).limit(limit * 6).all()
+    )
+    if difficulties:
+        query = query.filter(QuizQuestion.difficulty.in_(list(difficulties)))
+
+    if rng is not None:
+        rows = query.order_by(QuizQuestion.id.asc()).all()
+        rng.shuffle(rows)
+        rows = rows[:limit * 6]
+    else:
+        rows = query.order_by(func.random()).limit(limit * 6).all()
 
     out = []
     seen = set()
@@ -397,7 +412,7 @@ def trivia_clues(min_len=3, max_len=9, limit=400):
     return out
 
 
-def crossword_puzzle(rng=None, size=9, target_words=7):
+def crossword_puzzle(rng=None, size=9, target_words=7, difficulties=None, deterministic=False):
     """Compile a small interlocking crossword from real trivia clues.
 
     Classic greedy compiler: seed with one long word, then keep trying to hook
@@ -405,7 +420,12 @@ def crossword_puzzle(rng=None, size=9, target_words=7):
     that would create accidental adjacent lettering.
     """
     rng = rng or random
-    pool = [c for c in trivia_clues(min_len=4, max_len=9, limit=260) if len(c['answer']) >= 4]
+    # Nothing longer than the grid itself, or the seed word runs off the edge.
+    longest = min(9, size)
+    pool = [c for c in trivia_clues(min_len=4, max_len=longest, limit=260,
+                                    rng=(rng if deterministic else None),
+                                    difficulties=difficulties)
+            if 4 <= len(c['answer']) <= longest]
     if len(pool) < 4:
         return None
     rng.shuffle(pool)
@@ -529,6 +549,64 @@ def crossword_puzzle(rng=None, size=9, target_words=7):
     entries.sort(key=lambda e: (e['number'], e['dir']))
 
     return {'rows': r1 - r0 + 1, 'cols': c1 - c0 + 1, 'entries': entries}
+
+
+# ---------------------------------------------------------------------------
+# The daily crossword
+# ---------------------------------------------------------------------------
+# One puzzle a day, the same for everybody, which gets harder as the week goes
+# on and starts again on Monday. A difficulty that only ever climbs would be
+# unsolvable within a few months, so this follows the newspaper convention:
+# Monday is a warm-up, Saturday is the brute, Sunday is a big friendly one.
+
+DAILY_LADDER = {
+    0: {'name': 'Monday',    'size': 7,  'words': 5,  'tier': 'Warm-up',   'difficulties': ['easy'],
+        'seconds': 300, 'blurb': 'A gentle start to the week.'},
+    1: {'name': 'Tuesday',   'size': 8,  'words': 6,  'tier': 'Steady',    'difficulties': ['easy', 'medium'],
+        'seconds': 330, 'blurb': 'A little more to chew on.'},
+    2: {'name': 'Wednesday', 'size': 9,  'words': 7,  'tier': 'Midweek',   'difficulties': ['easy', 'medium'],
+        'seconds': 360, 'blurb': 'Halfway, and it knows it.'},
+    3: {'name': 'Thursday',  'size': 9,  'words': 8,  'tier': 'Tricky',    'difficulties': ['medium'],
+        'seconds': 390, 'blurb': 'The clues stop being generous.'},
+    4: {'name': 'Friday',    'size': 10, 'words': 9,  'tier': 'Testing',   'difficulties': ['medium', 'hard'],
+        'seconds': 420, 'blurb': 'Earn your weekend.'},
+    5: {'name': 'Saturday',  'size': 11, 'words': 10, 'tier': 'The Brute', 'difficulties': ['medium', 'hard'],
+        'seconds': 480, 'blurb': 'The hardest grid of the week.'},
+    6: {'name': 'Sunday',    'size': 10, 'words': 9,  'tier': 'The Big One', 'difficulties': ['easy', 'medium', 'hard'],
+        'seconds': 480, 'blurb': 'A large one to do over a long breakfast.'},
+}
+
+
+def daily_spec(day):
+    """The shape of the puzzle for a given date."""
+    spec = dict(DAILY_LADDER[day.weekday()])
+    spec['date'] = day
+    spec['key'] = 'crossword-%s' % day.isoformat()
+    return spec
+
+
+@lru_cache(maxsize=8)
+def _daily_crossword_cached(iso_date: str, size: int, words: int, difficulties: tuple):
+    # Seeded from the date, so every web worker builds the identical grid and
+    # the puzzle only has to be compiled once a day rather than once a request.
+    seed = int(iso_date.replace('-', ''))
+    rng = random.Random(seed)
+    puzzle = crossword_puzzle(rng, size=size, target_words=words,
+                              difficulties=list(difficulties), deterministic=True)
+    if not puzzle:
+        # A thin difficulty band can starve the compiler; fall back to the
+        # whole question bank rather than showing nobody a puzzle.
+        rng = random.Random(seed)
+        puzzle = crossword_puzzle(rng, size=size, target_words=words, deterministic=True)
+    return puzzle
+
+
+def daily_crossword(day):
+    spec = daily_spec(day)
+    puzzle = _daily_crossword_cached(
+        day.isoformat(), spec['size'], spec['words'], tuple(spec['difficulties'])
+    )
+    return spec, puzzle
 
 
 # ---------------------------------------------------------------------------
