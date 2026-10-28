@@ -251,9 +251,32 @@ class FeaturedGame(db.Model):
     # Optional: ties the slide to a quiz category, purely for the admin's own reference
     category_slug = db.Column(db.String(80), default='')
     credit = db.Column(db.String(200), default='')
+    # Optional YouTube background, played silently behind the slide. The image stays
+    # as the poster while it loads and as the fallback where video will not play.
+    video_url = db.Column(db.String(500), default='')
     sort_order = db.Column(db.Integer, default=0, index=True)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def youtube_id(self) -> str:
+        """The video id out of whatever YouTube URL was pasted in."""
+        src = (self.video_url or '').strip()
+        if not src:
+            return ''
+        patterns = (
+            r'(?:youtube\.com/watch\?v=)([A-Za-z0-9_-]{6,20})',
+            r'(?:youtu\.be/)([A-Za-z0-9_-]{6,20})',
+            r'(?:youtube\.com/embed/)([A-Za-z0-9_-]{6,20})',
+            r'(?:youtube\.com/shorts/)([A-Za-z0-9_-]{6,20})',
+        )
+        for pattern in patterns:
+            found = re.search(pattern, src)
+            if found:
+                return found.group(1)
+        # A bare id pasted on its own
+        if re.fullmatch(r'[A-Za-z0-9_-]{6,20}', src):
+            return src
+        return ''
 
     def resolved_image(self) -> str:
         """Where the image actually lives: an uploaded file, a pasted URL, or the packaged fallback."""

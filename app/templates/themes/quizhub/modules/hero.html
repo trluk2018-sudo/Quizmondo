@@ -62,6 +62,15 @@
              {% if loop.first %}style="position:relative"{% endif %}
              data-slide="{{ loop.index0 }}">
             <img src="{{ g.resolved_image() }}" alt="{{ g.title }}" class="w-full h-80 sm:h-96 object-cover transform group-hover:scale-105 transition duration-500">
+            {% if g.youtube_id() %}
+            <!-- Silent looping video behind the slide; the picture above is its poster -->
+            <div class="absolute inset-0 overflow-hidden pointer-events-none">
+              <iframe
+                class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[177.77vh] min-w-full h-[56.25vw] min-h-full"
+                src="https://www.youtube-nocookie.com/embed/{{ g.youtube_id() }}?autoplay=1&mute=1&loop=1&playlist={{ g.youtube_id() }}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&disablekb=1"
+                title="{{ g.title }}" frameborder="0" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" tabindex="-1"></iframe>
+            </div>
+            {% endif %}
             <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
             <div class="absolute bottom-4 left-4 right-4 p-4 rounded-xl bg-slate-900/90 backdrop-blur border border-purple-400/30 flex items-center justify-between gap-3">
               <div class="min-w-0">

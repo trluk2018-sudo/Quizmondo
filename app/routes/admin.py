@@ -19,6 +19,17 @@ def require_admin_role():
         flash('Quizmondo Control Centre backend is restricted to administrators only.', 'error')
         return redirect(url_for('public.home'))
 
+@admin_bp.context_processor
+def inject_admin_quick_pages():
+    """The site pages that get edited often enough to deserve a sidebar link."""
+    try:
+        wanted = ('contact', 'privacy', 'terms')
+        pages = Page.query.filter(Page.slug.in_(wanted)).all()
+        return {'admin_quick_pages': {p.slug: p for p in pages}}
+    except Exception:
+        return {'admin_quick_pages': {}}
+
+
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'pdf'}
 
 
@@ -546,6 +557,7 @@ def featured_games():
                 cta_text=(request.form.get('cta_text') or 'PLAY NOW').strip(),
                 category_slug=(request.form.get('category_slug') or '').strip(),
                 credit=(request.form.get('credit') or '').strip(),
+                video_url=(request.form.get('video_url') or '').strip(),
                 sort_order=last + 1,
                 is_active=True
             )
@@ -575,6 +587,7 @@ def featured_games():
             slide.cta_text = (request.form.get('cta_text') or 'PLAY NOW').strip()
             slide.category_slug = (request.form.get('category_slug') or '').strip()
             slide.credit = (request.form.get('credit') or '').strip()
+            slide.video_url = (request.form.get('video_url') or '').strip()
             db.session.commit()
             flash(f'"{slide.title}" updated.', 'success')
 

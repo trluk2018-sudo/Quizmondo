@@ -1645,8 +1645,20 @@ def player_logout():
 # =========================================================================
 
 def anonymised_display_name():
-    """A name that says nothing about who it used to be."""
-    return 'Former Player %s' % ''.join(random.choice('0123456789') for _ in range(4))
+    """A randomised name in the same shape as any guest's.
+
+    Not a label like "Former Player", which would mark the row out as a deleted
+    account and still tell people something about it. This is indistinguishable
+    from an ordinary guest name, which is the point of anonymising.
+    """
+    for _ in range(40):
+        candidate = 'Challenger_%06x' % secrets.randbelow(16 ** 6)
+        taken_profile = PlayerProfile.query.filter(
+            func.lower(PlayerProfile.display_name) == candidate.lower()).first()
+        taken_user = User.query.filter(func.lower(User.username) == candidate.lower()).first()
+        if not taken_profile and not taken_user:
+            return candidate
+    return 'Challenger_%s' % secrets.token_hex(5)
 
 
 def erase_player_identity(profile):

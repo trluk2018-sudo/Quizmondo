@@ -226,6 +226,11 @@ def _ensure_schema():
         if cols_leagues and 'teams_json' not in cols_leagues:
             db.session.execute(text("ALTER TABLE pub_leagues ADD COLUMN teams_json TEXT DEFAULT '[]'"))
             db.session.commit()
+        cols_featured = [row[1] for row in db.session.execute(text("PRAGMA table_info(featured_games)")).fetchall()]
+        if cols_featured and 'video_url' not in cols_featured:
+            db.session.execute(text("ALTER TABLE featured_games ADD COLUMN video_url VARCHAR(500) DEFAULT ''"))
+            db.session.commit()
+
         if cols_leagues and 'is_virtual' not in cols_leagues:
             db.session.execute(text("ALTER TABLE pub_leagues ADD COLUMN is_virtual BOOLEAN"))
             db.session.commit()

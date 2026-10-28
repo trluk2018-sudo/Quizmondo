@@ -191,9 +191,17 @@
         <a href="{{ url_for('admin.media') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if 'media' in request.endpoint %}bg-amber-400 text-slate-950 font-black shadow{% else %}text-slate-100 hover:bg-amber-500/25 hover:text-white font-semibold{% endif %}">
           <span>🖼️</span> <span>Media Library</span>
         </a>
-        <a href="{{ url_for('admin.featured_games') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if request.endpoint == 'admin.featured_games' %}bg-amber-400 text-slate-950 font-black shadow{% else %}text-slate-100 hover:bg-amber-500/25 hover:text-white font-semibold{% endif %}">
-          <span>🖼️</span> <span>Featured Games</span>
-        </a>
+        <div class="pt-1.5 mt-1.5 border-t border-white/10 space-y-0.5">
+          <div class="px-3 pb-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">Site Pages</div>
+          {% for slug, label, icon in [('contact', 'Contact Page', '✉️'), ('privacy', 'Privacy Policy', '🔒'), ('terms', 'Terms & Conditions', '📜')] %}
+          {% set pg = admin_quick_pages.get(slug) %}
+          {% if pg %}
+          <a href="{{ url_for('admin.page_edit', page_id=pg.id) }}" class="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-100 hover:bg-amber-500/25 hover:text-white font-semibold transition">
+            <span>{{ icon }}</span> <span>{{ label }}</span>
+          </a>
+          {% endif %}
+          {% endfor %}
+        </div>
       </div>
 
       <!-- BLOCK 5: DESIGN & INTERFACE (Blue / Indigo Shaded Block) -->
@@ -207,6 +215,9 @@
         </a>
         <a href="{{ url_for('admin.layout') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if request.endpoint == 'admin.layout' %}bg-blue-600 text-white font-black shadow{% else %}text-slate-100 hover:bg-blue-600/30 hover:text-white font-semibold{% endif %}">
           <span>🧩</span> <span>Home Page Layout</span>
+        </a>
+        <a href="{{ url_for('admin.featured_games') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if request.endpoint == 'admin.featured_games' %}bg-blue-600 text-white font-black shadow{% else %}text-slate-100 hover:bg-blue-600/30 hover:text-white font-semibold{% endif %}">
+          <span>🖼️</span> <span>Hero Featured Games</span>
         </a>
         <a href="{{ url_for('admin.header_settings') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if request.endpoint == 'admin.header_settings' %}bg-blue-600 text-white font-black shadow{% else %}text-slate-100 hover:bg-blue-600/30 hover:text-white font-semibold{% endif %}">
           <span>🔝</span> <span>Header &amp; Logo</span>
