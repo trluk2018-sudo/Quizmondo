@@ -197,6 +197,24 @@ GAMES = [
 GAME_BY_KEY = {g['key']: g for g in GAMES}
 
 
+def built_games():
+    """Only the games whose template actually exists.
+
+    The registry is written ahead of the templates, so a game that has not been
+    built yet is simply left off the hub instead of handing a player a 500.
+    """
+    from flask import current_app
+
+    out = []
+    for g in GAMES:
+        try:
+            current_app.jinja_env.get_template('themes/quizhub/games/%s.html' % g['key'])
+        except Exception:
+            continue
+        out.append(g)
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Score helpers
 # ---------------------------------------------------------------------------
@@ -228,7 +246,7 @@ def hub():
     return render_template(
         'themes/quizhub/games/hub.html',
         player=player,
-        games=GAMES,
+        games=built_games(),
         groups=GROUPS,
         bests=bests,
         total_plays=total_plays,
@@ -240,12 +258,17 @@ def _render_game(key, **payload):
     meta = GAME_BY_KEY.get(key)
     if not meta:
         abort(404)
+    from flask import current_app
+    try:
+        current_app.jinja_env.get_template(f'themes/quizhub/games/{key}.html')
+    except Exception:
+        abort(404)  # registered but not built yet
     player = get_current_player(persist=False)
     row = MiniGameScore.query.filter_by(player_session=player.session_key, game_key=key).first() if player else None
     return render_template(
         f'themes/quizhub/games/{key}.html',
         game=meta,
-        games=GAMES,
+        games=built_games(),
         player=player,
         best=(row.best_score if row else 0),
         plays=(row.plays if row else 0),
