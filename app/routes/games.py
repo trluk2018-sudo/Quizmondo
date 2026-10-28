@@ -299,8 +299,8 @@ def word_ladder():
         pz = gd.word_ladder(rng, steps=steps)
         if pz:
             puzzles.append(pz)
-    valid = set(w.upper() for w in gd.words_of_length(4))
-    return _render_game('word-ladder', puzzles=puzzles, valid_words=sorted(valid))
+    # Lower case, to match how the page looks words up.
+    return _render_game('word-ladder', puzzles=puzzles, valid_words=sorted(gd.words_of_length(4)))
 
 
 @games_bp.route('/crossword')

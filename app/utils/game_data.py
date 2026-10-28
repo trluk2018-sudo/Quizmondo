@@ -184,9 +184,9 @@ LETTER_BAG = ('AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNN'
 # Nine-letter words for the word wheel; centre letter is index 0 after shuffle
 WHEEL_WORDS = [
     'BREAKFAST', 'CHOCOLATE', 'DANGEROUS', 'ELEPHANTS', 'FANTASTIC',
-    'GOALKEEPER', 'HEDGEHOGS', 'IMPORTANT', 'JELLYFISH', 'KNOWLEDGE',
+    'GOALPOSTS', 'HEDGEHOGS', 'IMPORTANT', 'JELLYFISH', 'KNOWLEDGE',
     'LIGHTNING', 'MOUNTAINS', 'NEWSPAPER', 'ORCHESTRA', 'PINEAPPLE',
-    'RASPBERRY', 'SANDWICHES', 'TELEPHONE', 'UMBRELLAS', 'VEGETABLE',
+    'RASPBERRY', 'SCARECROW', 'TELEPHONE', 'UMBRELLAS', 'VEGETABLE',
     'WATERFALL', 'YESTERDAY', 'ADVENTURE', 'BUTTERFLY', 'CELEBRATE',
     'DETECTIVE', 'EDUCATION', 'FIREPLACE', 'GOLDFINCH', 'HAMBURGER',
 ]
@@ -539,7 +539,7 @@ def roll_boggle(rng=None):
 def wheel_puzzle(rng=None):
     """Nine letters with one compulsory centre letter, plus every word in them."""
     rng = rng or random
-    word = rng.choice(WHEEL_WORDS)[:9]
+    word = rng.choice(WHEEL_WORDS)
     letters = list(word)
     rng.shuffle(letters)
     centre = letters[0]
@@ -553,6 +553,9 @@ def wheel_puzzle(rng=None):
         need = collections.Counter(candidate.upper())
         if all(available.get(ch, 0) >= cnt for ch, cnt in need.items()):
             solutions.append(candidate.upper())
+    # The nine-letter word is the whole point of the round, so it counts even
+    # when the harvested lexicon happens not to carry it.
+    solutions.append(word)
     return {
         'centre': centre,
         'outer': letters[1:],
