@@ -254,6 +254,10 @@ class FeaturedGame(db.Model):
     # Optional YouTube background, played silently behind the slide. The image stays
     # as the poster while it loads and as the fallback where video will not play.
     video_url = db.Column(db.String(500), default='')
+    # Optional clip, in seconds. 0 for either means "from the top" / "to the end",
+    # so an advertiser can show the ten seconds that matter rather than a whole film.
+    video_start = db.Column(db.Integer, default=0)
+    video_end = db.Column(db.Integer, default=0)
     sort_order = db.Column(db.Integer, default=0, index=True)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -277,6 +281,44 @@ class FeaturedGame(db.Model):
         if re.fullmatch(r'[A-Za-z0-9_-]{6,20}', src):
             return src
         return ''
+
+    def youtube_embed_url(self) -> str:
+        """The background player URL, clipped if a start or end was given.
+
+        Served from youtube-nocookie.com, muted, looping, with controls, branding
+        and keyboard off so it behaves as a background rather than a player.
+        """
+        vid = self.youtube_id()
+        if not vid:
+            return ''
+        start = max(0, int(self.video_start or 0))
+        end = max(0, int(self.video_end or 0))
+        params = [
+            'autoplay=1', 'mute=1', 'loop=1', 'playlist=' + vid,
+            'controls=0', 'showinfo=0', 'rel=0', 'modestbranding=1',
+            'playsinline=1', 'disablekb=1', 'iv_load_policy=3',
+        ]
+        if start:
+            params.append('start=%d' % start)
+        if end > start:
+            params.append('end=%d' % end)
+        return 'https://www.youtube-nocookie.com/embed/%s?%s' % (vid, '&'.join(params))
+
+    def clip_label(self) -> str:
+        """How the clip reads in the admin list."""
+        start = int(self.video_start or 0)
+        end = int(self.video_end or 0)
+
+        def mmss(total):
+            return '%d:%02d' % (total // 60, total % 60)
+
+        if start and end > start:
+            return '%s to %s' % (mmss(start), mmss(end))
+        if start:
+            return 'from %s' % mmss(start)
+        if end:
+            return 'first %s' % mmss(end)
+        return 'whole video'
 
     def resolved_image(self) -> str:
         """Where the image actually lives: an uploaded file, a pasted URL, or the packaged fallback."""

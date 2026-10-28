@@ -535,6 +535,14 @@ def save_uploaded_image(file, prefix='img'):
     return f"/uploads/{filename}"
 
 
+def clip_seconds(raw):
+    """A non-negative whole number of seconds, or 0 for no limit."""
+    try:
+        return max(0, int(raw or 0))
+    except (TypeError, ValueError):
+        return 0
+
+
 @admin_bp.route('/featured', methods=['GET', 'POST'])
 @login_required
 def featured_games():
@@ -558,6 +566,8 @@ def featured_games():
                 category_slug=(request.form.get('category_slug') or '').strip(),
                 credit=(request.form.get('credit') or '').strip(),
                 video_url=(request.form.get('video_url') or '').strip(),
+                video_start=clip_seconds(request.form.get('video_start')),
+                video_end=clip_seconds(request.form.get('video_end')),
                 sort_order=last + 1,
                 is_active=True
             )
@@ -588,6 +598,11 @@ def featured_games():
             slide.category_slug = (request.form.get('category_slug') or '').strip()
             slide.credit = (request.form.get('credit') or '').strip()
             slide.video_url = (request.form.get('video_url') or '').strip()
+            slide.video_start = clip_seconds(request.form.get('video_start'))
+            slide.video_end = clip_seconds(request.form.get('video_end'))
+            if slide.video_end and slide.video_end <= slide.video_start:
+                # An end before the start would play nothing, so treat it as no end
+                slide.video_end = 0
             db.session.commit()
             flash(f'"{slide.title}" updated.', 'success')
 

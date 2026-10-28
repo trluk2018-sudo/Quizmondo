@@ -67,7 +67,7 @@
             <div class="absolute inset-0 overflow-hidden pointer-events-none">
               <iframe
                 class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[177.77vh] min-w-full h-[56.25vw] min-h-full"
-                src="https://www.youtube-nocookie.com/embed/{{ g.youtube_id() }}?autoplay=1&mute=1&loop=1&playlist={{ g.youtube_id() }}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&disablekb=1"
+                src="{{ g.youtube_embed_url() }}"
                 title="{{ g.title }}" frameborder="0" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" tabindex="-1"></iframe>
             </div>
             {% endif %}
