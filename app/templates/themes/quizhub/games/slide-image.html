@@ -56,6 +56,10 @@
   var moves = 0;
   var elapsed = null;
   var running = false;
+  // Solved, as opposed to merely not running: the board is also not
+  // running while it is being set up, and the picture must not be whole
+  // then.
+  var finished = false;
   var peeking = false;
 
   function gap() { return N * N - 1; }
@@ -96,16 +100,33 @@
     boardEl.innerHTML = '';
     var pct = 100 / N;
     tiles.forEach(function (tile, pos) {
-      if (tile === gap() && !peeking) return;
-      var isLastPiece = (tile === gap() && !running);
+      var isGap = (tile === gap());
+      // The hole has to exist for anything to slide, but it does not have to
+      // be a black square. Drawn as a ghost, the flag reads as a whole
+      // picture with one piece still to settle, rather than one that can
+      // never be finished. Picture Swap next door has every tile, so an
+      // empty square here looked like a fault rather than the mechanic.
+      var ghost = isGap && !peeking && !finished;
+      var isLastPiece = isGap && finished;
       var r = Math.floor(pos / N), c = pos % N;
       var sr = Math.floor(tile / N), sc = tile % N;
 
       var el = document.createElement('button');
       el.type = 'button';
-      el.dataset.pos = pos;
+      // The ghost carries no position, so a tap goes straight past it to the
+      // board: it is scenery, not a tile you can move.
+      if (!ghost) el.dataset.pos = pos;
       el.className = 'absolute transition-all duration-150 ease-out border border-slate-950/60' +
         (isLastPiece ? ' qmg-lastpiece' : '');
+      if (ghost) {
+        // Faint enough to be plainly the empty slot, solid enough that the
+        // flag still reads as one picture. The dashed edge says "a piece
+        // belongs here" rather than "this one is broken".
+        el.style.opacity = '.3';
+        el.style.pointerEvents = 'none';
+        el.style.filter = 'grayscale(.35)';
+        el.style.border = '2px dashed rgba(148,163,184,.55)';
+      }
       el.style.width = pct + '%';
       el.style.height = pct + '%';
       el.style.left = (c * pct) + '%';
@@ -142,6 +163,7 @@
 
   function win() {
     running = false;
+    finished = true;
     peeking = true;
     // The last piece drops into the hole the puzzle needed to be playable, so
     // the flag is whole at the end. Worth a pause before the overlay lands:
@@ -195,6 +217,7 @@
     moves = 0;
     peeking = false;
     running = false;
+    finished = false;
     QMG.setMidLabel('Moves');
     QMG.setMid('0');
     QMG.setMidBar(1);
