@@ -1225,9 +1225,15 @@ def submit_round(match_code):
             bot_tl = random.randint(4, 12) if bot_correct else random.randint(1, 8)
             bot_pts = q.points + (bot_tl * 5) if bot_correct else 0
             bot_score += bot_pts
+            # A miss has to land on an option that is actually wrong. This used to
+            # be hard-coded to 'B', so whenever B was the right answer the results
+            # screen showed the bot picking the correct line and marked it wrong.
+            wrong_options = [k for k in (q.get_options() or {}) if k != q.correct_option]
+            bot_choice = q.correct_option if bot_correct else (
+                random.choice(wrong_options) if wrong_options else q.correct_option)
             bot_detailed.append({
                 'question_id': q.id,
-                'selected': q.correct_option if bot_correct else 'B',
+                'selected': bot_choice,
                 'is_correct': bot_correct,
                 'time_left': bot_tl,
                 'time_taken': round(15.0 - bot_tl, 1),
