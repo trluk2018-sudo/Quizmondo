@@ -655,4 +655,790 @@ ARTICLES = [
 </ul>
 """),
 
+    # ==================================================================
+    _a('why-pluto-stopped-being-a-planet', 'Why Pluto Stopped Being a Planet',
+       FACT,
+       'Pluto did not change. The definition did, and only because astronomers kept finding more objects like it. What actually happened in 2006, and why the answer is eight.',
+       '/static/img/articles/solarsystem.jpg',
+       """
+<p>Ask how many planets there are and plenty of people still say nine, usually while adding that the whole thing was a bit unfair. Here is what actually happened.</p>
+
+<h3>Pluto was always the odd one out</h3>
+<p>Discovered in 1930 by Clyde Tombaugh, Pluto never quite fitted. It is small — smaller than our own Moon. Its orbit is tilted 17 degrees out of the plane the other planets share, and it is so stretched that for twenty years of its 248-year circuit it is closer to the Sun than Neptune. For most of the 20th century this was treated as a charming quirk.</p>
+
+<h3>Then astronomers started finding more of them</h3>
+<p>From the 1990s, better telescopes revealed that the outer solar system is full of icy bodies. The Kuiper Belt turned out to contain thousands of objects, and some were not far off Pluto’s size.</p>
+<p>The decisive one was <strong>Eris</strong>, found in 2005. It is roughly Pluto’s size and about 27% more massive. Astronomers faced a straight choice: admit Eris as the tenth planet and brace for an eleventh, twelfth and twentieth, or decide what a planet actually is.</p>
+
+<h3>The 2006 definition</h3>
+<p>The International Astronomical Union agreed that a planet must do three things:</p>
+<ol>
+<li><strong>Orbit the Sun.</strong></li>
+<li><strong>Be massive enough for its own gravity to pull it into a round shape.</strong></li>
+<li><strong>Have "cleared the neighbourhood" around its orbit.</strong></li>
+</ol>
+<p>Pluto passes the first two comfortably. It fails the third. It shares its region with a vast number of other Kuiper Belt objects and has not swept them up or flung them away, as the eight planets did with their own orbital paths long ago. Pluto was reclassified as a <strong>dwarf planet</strong>.</p>
+
+<h3>The objections, fairly stated</h3>
+<p>The vote has been criticised, and not unreasonably. Only a few hundred of the IAU’s thousands of members were present. "Clearing the neighbourhood" is vague — Earth shares its orbit with plenty of near-Earth asteroids, and Jupiter has the Trojans parked in its path. Several planetary scientists, including the lead on NASA’s New Horizons mission to Pluto, still reject the definition and argue for a purely geophysical one based on shape, under which Pluto and several moons would be planets.</p>
+<p>That argument is genuine and ongoing. But for quiz purposes the answer is settled: <strong>eight</strong>.</p>
+
+<h3>The five dwarf planets</h3>
+<p><strong>Ceres</strong> (in the asteroid belt), <strong>Pluto</strong>, <strong>Haumea</strong>, <strong>Makemake</strong> and <strong>Eris</strong>. Ceres is itself a reclassification story: it was called a planet for about fifty years after its discovery in 1801, until astronomers found so many other asteroids that it was demoted. Pluto is the second object to be treated this way, not the first.</p>
+
+<h3>Worth knowing</h3>
+<ul>
+<li><strong>Pluto has five moons.</strong> The largest, Charon, is so big relative to Pluto that the pair orbit a point in empty space between them.</li>
+<li><strong>Nobody has seen a full Pluto year.</strong> It has not completed one orbit since its discovery, and will not until 2178.</li>
+<li><strong>It was named by an eleven-year-old.</strong> Venetia Burney of Oxford suggested the Roman god of the underworld, and her grandfather passed it on.</li>
+</ul>
+"""),
+
+    # ==================================================================
+    _a('animal-facts-that-sound-made-up', 'Twelve Animal Facts That Sound Completely Made Up',
+       FACT,
+       'Wombat cubes, immortal jellyfish, shrimp that punch at the speed of a bullet, and the bird that sleeps mid-flight — all true, with the reasons why.',
+       '/static/img/articles/animal-facts.jpg',
+       """
+<p>Every one of these is genuinely true, which is why they make such good quiz questions. The explanation is usually more interesting than the fact.</p>
+
+<h3>1. Wombats produce cube-shaped droppings</h3>
+<p>Around a hundred a night, and they really are cubic. The last stretch of the wombat’s intestine has regions of differing stiffness that shape the contents as they dry. Cubes do not roll away, which matters for an animal that marks territory on logs and rocks.</p>
+
+<h3>2. Octopuses have three hearts and blue blood</h3>
+<p>Two hearts push blood through the gills, one serves the rest of the body. Their blood uses haemocyanin, which carries oxygen with copper rather than iron, making it blue and far more efficient in cold, low-oxygen water. The main heart stops when they swim, which is why they prefer crawling.</p>
+
+<h3>3. A shrimp punches hard enough to boil water</h3>
+<p>The mantis shrimp’s club accelerates at the pace of a .22 bullet. It moves so fast that the water behind it vaporises into a bubble, which collapses with a flash of light and a shockwave. The prey is hit twice: once by the club, once by the bubble.</p>
+
+<h3>4. One jellyfish can reverse its own ageing</h3>
+<p><em>Turritopsis dohrnii</em>, when injured or starving, can revert its adult cells to an earlier life stage and start again, in principle indefinitely. It is still perfectly edible by everything else in the sea, so immortality is theoretical.</p>
+
+<h3>5. Swifts stay airborne for ten months</h3>
+<p>Tracking has shown common swifts flying continuously for up to ten months, feeding, mating and sleeping on the wing. They shut down half the brain at a time while gliding, a trick dolphins also use.</p>
+
+<h3>6. Sea otters hold hands while sleeping</h3>
+<p>So they do not drift apart on the current. They also wrap themselves in kelp as an anchor, and each keeps a favourite stone in a pouch of loose skin under the foreleg for breaking shells.</p>
+
+<h3>7. Cows have best friends</h3>
+<p>Research at Northampton found that cows paired with a preferred companion had measurably lower heart rates than those penned with a random animal. Separate the pair and stress hormones rise.</p>
+
+<h3>8. A flamingo is not born pink</h3>
+<p>Chicks are grey. The colour comes from carotenoid pigments in the algae and brine shrimp they eat, processed in the liver and deposited in the feathers. A flamingo on the wrong diet fades to white.</p>
+
+<h3>9. Tardigrades survive the vacuum of space</h3>
+<p>In 2007 tardigrades were exposed to open space for ten days, and some survived and reproduced afterwards. They can enter a desiccated state called a tun, replacing their water with a sugar that turns their cells to glass.</p>
+
+<h3>10. Elephants cannot jump</h3>
+<p>Alone among mammals, they have no moment with all four feet off the ground at once. Their legs are built as weight-bearing columns, with little of the springy tendon that powers a jump, and the bones could not take the landing.</p>
+
+<h3>11. A snail can sleep for three years</h3>
+<p>Some desert and land snails seal themselves into their shell with dried mucus and enter estivation, waiting out drought. Revivals after several years are documented, including a British Museum specimen glued to a display card in 1846 that turned out to be alive four years later.</p>
+
+<h3>12. Crows recognise faces and hold grudges</h3>
+<p>A University of Washington study had researchers wear a particular mask while trapping crows. The birds scolded anyone wearing that mask for years afterwards — including crows that had never been trapped, having learned it from the others.</p>
+"""),
+
+    # ==================================================================
+    _a('the-human-body-in-numbers', 'The Human Body in Numbers',
+       FACT,
+       'Bones, beats, blood, blinks and breaths. The figures that come up in quizzes, the ones usually quoted wrongly, and what they mean.',
+       '/static/img/articles/body-numbers.svg',
+       """
+<p>A body is a set of surprisingly quotable numbers. These are the ones worth knowing, with the common mistakes flagged.</p>
+
+<h3>The structure</h3>
+<table>
+<tr><th>Measure</th><th>Number</th></tr>
+<tr><td>Bones in an adult</td><td>206</td></tr>
+<tr><td>Bones at birth</td><td>About 300, many of which fuse</td></tr>
+<tr><td>Bones in each hand</td><td>27</td></tr>
+<tr><td>Bones in each foot</td><td>26</td></tr>
+<tr><td>Skeletal muscles</td><td>About 600</td></tr>
+<tr><td>Teeth, adult</td><td>32, including wisdom teeth</td></tr>
+<tr><td>Teeth, child</td><td>20 milk teeth</td></tr>
+<tr><td>Pairs of ribs</td><td>12</td></tr>
+<tr><td>Vertebrae in the neck</td><td>7</td></tr>
+</table>
+<p>More than half the bones in the body are in the hands and feet — 106 of 206 between them.</p>
+
+<h3>The running costs</h3>
+<table>
+<tr><th>Measure</th><th>Number</th></tr>
+<tr><td>Resting heart rate</td><td>60–100 beats a minute</td></tr>
+<tr><td>Heartbeats in a year</td><td>Roughly 35 million</td></tr>
+<tr><td>Breaths a day</td><td>Around 20,000</td></tr>
+<tr><td>Blood volume</td><td>About 5 litres</td></tr>
+<tr><td>Blinks a day</td><td>Around 15,000 to 20,000</td></tr>
+<tr><td>Litres of saliva a year</td><td>Roughly 500</td></tr>
+<tr><td>Body temperature</td><td>About 37°C, though the average is now measured a little lower</td></tr>
+<tr><td>Water as a share of body mass</td><td>About 60% in an adult</td></tr>
+</table>
+
+<h3>The very small and very long</h3>
+<ul>
+<li><strong>Smallest bone:</strong> the stapes, about 3 mm, in the middle ear.</li>
+<li><strong>Longest bone:</strong> the femur, roughly a quarter of your height.</li>
+<li><strong>Longest nerve:</strong> the sciatic, from the lower back to the foot.</li>
+<li><strong>Blood vessels end to end:</strong> commonly quoted as 100,000 km, which is an estimate built on estimates. Treat it as "a very long way" rather than a fact.</li>
+<li><strong>Strongest muscle:</strong> depends what you mean. The masseter, in the jaw, exerts most force for its size; the gluteus maximus is the largest; the heart does the most total work.</li>
+</ul>
+
+<h3>Figures people repeat that are wrong</h3>
+<ul>
+<li><strong>"You only use 10% of your brain."</strong> Entirely false. Brain imaging shows activity throughout, and there is no idle 90%.</li>
+<li><strong>"The body replaces itself every seven years."</strong> Some cells turn over in days, others in decades. The lens of the eye and most neurons of the cerebral cortex stay with you for life.</li>
+<li><strong>"Fingernails keep growing after death."</strong> The skin retracts as it dehydrates, which makes nails and stubble look longer. Nothing is growing.</li>
+<li><strong>"Humans have five senses."</strong> A convention from Aristotle. Balance, temperature, pain and proprioception — knowing where your limbs are without looking — are all separate senses.</li>
+</ul>
+"""),
+
+    # ==================================================================
+    _a('how-the-days-of-the-week-got-their-names', 'How the Days of the Week Got Their Names',
+       FACT,
+       'Four English days are named after Norse gods, two after the sun and moon, and one after a Roman. The full derivation, and why French and Spanish look so different.',
+       '/static/img/articles/days-of-week.svg',
+       """
+<p>English day names are a collision of two systems. The Romans named the days after the seven classical planets, which were themselves named after gods. When those names reached northern Europe, most of the Roman gods were swapped for their closest Germanic equivalent. One was not.</p>
+
+<h3>The seven</h3>
+<table>
+<tr><th>Day</th><th>From</th><th>Who or what</th></tr>
+<tr><td>Monday</td><td>Mōnandæg</td><td>The Moon</td></tr>
+<tr><td>Tuesday</td><td>Tīwesdæg</td><td>Tīw, Norse Tyr, god of war and law</td></tr>
+<tr><td>Wednesday</td><td>Wōdnesdæg</td><td>Wōden, Norse Odin</td></tr>
+<tr><td>Thursday</td><td>Thunresdæg</td><td>Thunor, Norse Thor, god of thunder</td></tr>
+<tr><td>Friday</td><td>Frīgedæg</td><td>Frige, linked to Frigg or Freyja</td></tr>
+<tr><td>Saturday</td><td>Sæternesdæg</td><td>Saturn — the one Roman name kept</td></tr>
+<tr><td>Sunday</td><td>Sunnandæg</td><td>The Sun</td></tr>
+</table>
+
+<h3>Why the swap works so neatly</h3>
+<p>Line the English names up against the Roman ones and the logic appears:</p>
+<table>
+<tr><th>Roman</th><th>Germanic stand-in</th><th>Shared role</th></tr>
+<tr><td>Mars (<em>martis</em>)</td><td>Tīw / Tyr</td><td>War</td></tr>
+<tr><td>Mercury (<em>mercurii</em>)</td><td>Wōden / Odin</td><td>Travel, cunning, the dead</td></tr>
+<tr><td>Jupiter (<em>iovis</em>)</td><td>Thunor / Thor</td><td>Thunder, the sky</td></tr>
+<tr><td>Venus (<em>veneris</em>)</td><td>Frige</td><td>Love</td></tr>
+</table>
+<p>This is why French keeps the Roman originals almost intact: <em>mardi</em>, <em>mercredi</em>, <em>jeudi</em>, <em>vendredi</em>. Spanish and Italian do the same. English went through a Norse filter; the Romance languages did not.</p>
+
+<h3>The two ends of the week</h3>
+<p>French, Spanish and Italian replaced Sunday with a Christian name — <em>dimanche</em>, <em>domingo</em>, <em>domenica</em>, all from <em>dies Dominicus</em>, the Lord’s day — and Saturday with words derived from Sabbath: <em>samedi</em>, <em>sábado</em>. English kept the older pagan names at both ends.</p>
+
+<h3>Why seven at all?</h3>
+<p>The seven-day week has no astronomical basis. It comes from Babylonian astronomy, which tracked seven moving objects in the sky — the Sun, the Moon, Mercury, Venus, Mars, Jupiter and Saturn — and was reinforced by the Jewish Sabbath cycle. The Romans used an eight-day market week before adopting the seven-day one in the first century AD.</p>
+<p>It has been attacked since. The French Revolutionary calendar tried ten-day weeks, and the Soviet Union experimented with five and six-day cycles in the 1930s. Both were abandoned.</p>
+
+<h3>For quizzes</h3>
+<ul>
+<li><strong>Which day is named after a Roman god in English?</strong> Saturday, and only Saturday.</li>
+<li><strong>Which Norse god gives us Wednesday?</strong> Odin, as Wōden.</li>
+<li><strong>Which two are named after things rather than gods?</strong> Sunday and Monday.</li>
+</ul>
+"""),
+
+    # ==================================================================
+    _a('why-is-the-sea-salty', 'Why Is the Sea Salty?',
+       FACT,
+       'Rain is fresh, rivers are fresh, and they both drain into the sea. So where does the salt come from, why does it not keep rising, and why is the Dead Sea so much saltier?',
+       '/static/img/articles/sea-salt.jpg',
+       """
+<p>The sea is about 3.5% salt by weight. Scaled up, every litre of seawater holds roughly 35 grams of dissolved solids, mostly sodium chloride. If you spread all the salt in the oceans evenly over the land, it would form a layer about 150 metres deep.</p>
+
+<h3>Where it comes from</h3>
+<p>Two sources, working on very different timescales.</p>
+<p><strong>Rain, slowly dissolving the land.</strong> Rainwater is slightly acidic, because it picks up carbon dioxide from the air and forms weak carbonic acid. Over millions of years that acid eats at rock, freeing ions of sodium, chloride, calcium and magnesium. Rivers carry them to the sea. Each river is only faintly salty — far too faint to taste — but they have been doing this continuously for billions of years, and the sea is where it all collects.</p>
+<p><strong>Hydrothermal vents, from below.</strong> Seawater seeps into cracks in the ocean floor, is heated by magma, strips minerals out of the hot rock and jets back out. Underwater volcanoes add more directly.</p>
+
+<h3>Why rivers stay fresh</h3>
+<p>This is the part that confuses people. The answer is that rivers are a conveyor belt, not a container. Water flows through and keeps going, carrying its dissolved minerals out to sea. The sea is the end of the line. Water leaves it only by evaporating, and evaporation takes the water and leaves the salt behind.</p>
+<p>A lake with an outflowing river stays fresh for the same reason. A lake with no outlet does not.</p>
+
+<h3>So why is it not getting saltier?</h3>
+<p>Because salt leaves too. The ocean has been at roughly its present saltiness for hundreds of millions of years, in a slow balance. Salt is removed when sea spray blows inland, when shallow seas evaporate and leave salt deposits, when minerals react with fresh volcanic rock on the sea floor, and when marine organisms take up calcium and other ions to build shells that eventually become sediment.</p>
+
+<h3>Why the Dead Sea is different</h3>
+<p>The Dead Sea is about 34% salt, nearly ten times ordinary seawater. It sits in the lowest land basin on Earth, in a hot, dry climate, and it has <strong>no outlet</strong>. The Jordan brings water in; only evaporation takes it out. Everything dissolved stays, and keeps concentrating.</p>
+<p>The same thing happens at the Great Salt Lake in Utah and Lake Assal in Djibouti, which is saltier still.</p>
+
+<h3>Things worth knowing</h3>
+<ul>
+<li><strong>The Baltic is almost drinkable</strong> in places — under 1% salt, because so many rivers feed it and it exchanges little water with the Atlantic.</li>
+<li><strong>The Red Sea is unusually salty</strong> for an open sea, at around 4%, because it is hot, has high evaporation and almost no rivers flowing into it.</li>
+<li><strong>Drinking seawater dehydrates you.</strong> Your kidneys cannot produce urine as salty as the sea, so they must use your own body water to flush the excess salt out.</li>
+</ul>
+"""),
+
+    # ==================================================================
+    _a('where-everyday-phrases-come-from', 'Where Everyday Phrases Actually Come From',
+       FACT,
+       'Fifteen common sayings traced to their real origin — and the popular explanations that turn out to be invented, including almost every acronym story you have heard.',
+       '/static/img/articles/phrases.jpg',
+       """
+<p>Phrase origins attract invented explanations more than almost any other subject. These are the ones that hold up, and a few famous ones that do not.</p>
+
+<h3>Genuine origins</h3>
+<p><strong>Rule of thumb.</strong> From using the thumb as a rough measure in brewing, carpentry and cooking. The widely repeated claim that it refers to a law permitting a man to beat his wife with a stick no thicker than his thumb has no legal basis; it comes from an 18th-century joke about a judge, repeated until it sounded official.</p>
+<p><strong>Steal someone’s thunder.</strong> Precisely traceable. The playwright John Dennis invented a new way of making thunder noises for his 1704 play, which flopped. He then heard his own thunder machine being used in a production of Macbeth and said, "They steal my thunder."</p>
+<p><strong>Turn a blind eye.</strong> Attributed to Nelson at Copenhagen in 1801, who raised a telescope to his blind eye to avoid seeing the signal to withdraw. The story is probably embroidered but is contemporary rather than invented later.</p>
+<p><strong>Bite the bullet.</strong> From battlefield surgery before anaesthetic, giving the patient something to clamp down on.</p>
+<p><strong>Mad as a hatter.</strong> Hat makers used mercury to treat felt. Chronic mercury poisoning causes tremors, slurred speech and severe anxiety, and the trade’s reputation long predates Lewis Carroll.</p>
+<p><strong>Caught red-handed.</strong> A Scottish legal term from the 15th century, meaning a poacher caught with blood still on the hands.</p>
+<p><strong>Pull out all the stops.</strong> From organ playing: the stops control which sets of pipes sound, and pulling them all out produces maximum volume.</p>
+<p><strong>At loggerheads.</strong> A loggerhead was a long-handled iron tool with a ball on the end, used for heating tar — and apparently for hitting people with.</p>
+<p><strong>Saved by the bell.</strong> Boxing, where the bell ends the round before a count is finished. Not, as commonly claimed, from bells on coffins for the accidentally buried; those devices existed but the phrase does not come from them.</p>
+<p><strong>Let the cat out of the bag.</strong> Disputed, but most likely from markets where a piglet was sold in a sack and a cat substituted by dishonest traders. Opening the bag revealed the fraud. The same trick gives us "a pig in a poke".</p>
+
+<h3>Origins that are invented</h3>
+<p><strong>Almost every acronym story is false.</strong> English made very few words from acronyms before the 20th century. "Posh" does not stand for Port Out, Starboard Home. "Golf" is not Gentlemen Only, Ladies Forbidden. "Tip" is not To Insure Promptness. "News" is not North East West South. Each was reverse-engineered long after the word existed.</p>
+<p><strong>Raining cats and dogs</strong> has no convincing origin. The story about animals falling through thatched roofs is a 1990s internet invention, part of a widely circulated list of fake etymologies that also produced "the whole nine yards" and "threshold" explanations.</p>
+<p><strong>Sleep tight</strong> is unlikely to refer to tightening rope beds. The adverb "tight" meaning soundly is attested, and rope beds were not usually tightened nightly.</p>
+
+<h3>How to spot a fake</h3>
+<p>Be suspicious when the explanation is unusually tidy, when it involves an acronym, when it explains the phrase too literally, and when it comes with a vivid historical scene. Real etymologies are usually messier and often uncertain.</p>
+"""),
+
+    # ==================================================================
+    _a('how-leap-years-actually-work', 'How Leap Years Actually Work',
+       FACT,
+       'Every four years, except every hundred, except every four hundred. Why 1900 was not a leap year and 2000 was, and what the extra day is correcting.',
+       '/static/img/articles/leap-year.svg',
+       """
+<p>Most people know leap years come every four years. Fewer know about the two exceptions, which is exactly why they make good quiz questions.</p>
+
+<h3>The problem being solved</h3>
+<p>A year is not a whole number of days. The Earth takes about <strong>365.2422 days</strong> to go round the Sun. A calendar of 365 days therefore runs fast by just under a quarter of a day a year.</p>
+<p>Left alone, that drifts. After a century the calendar would be 24 days out; after 750 years, midsummer would fall in what the calendar called spring. For an agricultural society, and for a church fixing Easter against the spring equinox, that is a real problem.</p>
+
+<h3>The Julian fix, and why it overcorrected</h3>
+<p>Julius Caesar’s calendar of 45 BC added one day every four years, treating the year as exactly 365.25 days. That is close, but it is 11 minutes and 14 seconds too long. Small, but it accumulates: about one day every 128 years. By the 1500s the calendar had drifted ten days from the seasons.</p>
+
+<h3>The Gregorian rule</h3>
+<p>In 1582 Pope Gregory XIII’s reform added two exceptions. A year is a leap year if:</p>
+<ol>
+<li>It is divisible by <strong>4</strong>, <em>unless</em></li>
+<li>it is divisible by <strong>100</strong>, <em>unless</em></li>
+<li>it is also divisible by <strong>400</strong>.</li>
+</ol>
+<table>
+<tr><th>Year</th><th>Leap?</th><th>Why</th></tr>
+<tr><td>2024</td><td>Yes</td><td>Divisible by 4</td></tr>
+<tr><td>1900</td><td>No</td><td>Divisible by 100, not by 400</td></tr>
+<tr><td>2000</td><td>Yes</td><td>Divisible by 400</td></tr>
+<tr><td>2100</td><td>No</td><td>Divisible by 100, not by 400</td></tr>
+</table>
+<p>This drops three leap days every four centuries, giving an average year of 365.2425 days — within about 27 seconds of the truth, or one day’s error in roughly 3,200 years.</p>
+
+<h3>The ten days that never happened</h3>
+<p>Catholic countries adopted the new calendar in October 1582, skipping from the 4th straight to the 15th. Protestant and Orthodox countries held out for a long time. Britain and its colonies did not switch until <strong>1752</strong>, by which point eleven days had to be dropped: 2 September was followed by 14 September. Russia changed only after the 1917 revolution, which is why the October Revolution is commemorated in November.</p>
+
+<h3>Worth knowing</h3>
+<ul>
+<li><strong>29 February birthdays</strong> affect roughly one person in 1,461.</li>
+<li><strong>Leap seconds are a separate thing entirely</strong>, added irregularly to account for the slowing of Earth’s rotation, not its orbit. A decision has been taken to stop using them by 2035.</li>
+<li><strong>The leap year tradition of women proposing</strong> on 29 February is a 19th-century invention with a fake Irish backstory attached.</li>
+<li><strong>1712 in Sweden had a 30 February.</strong> Sweden botched a gradual transition between calendars, then reverted by adding an extra day. It is the only time that date has existed.</li>
+</ul>
+"""),
+
+    # ==================================================================
+    _a('why-sixty-seconds-in-a-minute', 'Why There Are Sixty Seconds in a Minute',
+       FACT,
+       'Everything else went metric. Time did not. The answer is Babylonian, involves counting on finger bones, and explains why a circle has 360 degrees too.',
+       '/static/img/articles/sixty.svg',
+       """
+<p>We measure almost everything in tens. Time is the glaring exception: 60 seconds, 60 minutes, 24 hours. The reason is about 4,000 years old.</p>
+
+<h3>The Babylonians counted in sixties</h3>
+<p>Sumerian and later Babylonian mathematics used a base-60 system, called sexagesimal. It was not arbitrary. <strong>60 divides cleanly by 1, 2, 3, 4, 5, 6, 10, 12, 15, 20 and 30.</strong> For a civilisation doing arithmetic without decimal fractions, that is enormously convenient: a third of an hour is 20 minutes exactly, a quarter is 15, a fifth is 12. Try that with 100 and you get recurring fractions almost immediately.</p>
+
+<h3>How you count to sixty on two hands</h3>
+<p>There is a neat theory for where 60 came from. Each finger, excluding the thumb, has three segments — twelve on one hand. Use the thumb to tap each segment in turn and you count to 12 on one hand. Each time you reach 12, raise one finger on the other hand. Five fingers, twelve each: <strong>60</strong>.</p>
+<p>This also explains the stubborn persistence of 12 in English measurement: twelve inches, twelve pence in a shilling, twelve in a dozen.</p>
+
+<h3>How it reached the clock</h3>
+<p>The Egyptians divided day and night into twelve parts each, giving 24 hours. Greek astronomers, building on Babylonian records, needed finer divisions for their calculations and divided the hour into 60 <em>partes minutae primae</em> — "first small parts" — and each of those into 60 <em>partes minutae secundae</em>, "second small parts".</p>
+<p>That is where the words come from. A <strong>minute</strong> is a minute, meaning tiny, division. A <strong>second</strong> is literally the second division.</p>
+<p>Clocks could not measure anything that precise for centuries afterwards. Minute hands only became common in the 1600s, after the pendulum clock made them worth having.</p>
+
+<h3>And why a circle has 360 degrees</h3>
+<p>Same source. 360 is six sixties, divides by a great many numbers, and is conveniently close to the number of days in a year — so the sun moves roughly one degree along the ecliptic each day. Minutes and seconds of arc survive in navigation and astronomy for exactly the same reason they survive in time.</p>
+
+<h3>The attempts to change it</h3>
+<p>Revolutionary France introduced decimal time in 1793: ten-hour days, 100-minute hours, 100-second minutes. It required everyone to buy a new clock and think in unfamiliar units, and was abandoned within about eighteen months. A decimal calendar of twelve 30-day months plus five spare days lasted rather longer, until Napoleon scrapped it in 1806.</p>
+<p>Metric time has been proposed repeatedly since and has never caught on. Sixty has survived every attempt to replace it — not because it is better in the abstract, but because changing it would mean changing every clock, every timetable and every habit at once.</p>
+"""),
+
+    # ==================================================================
+    _a('why-your-keyboard-says-qwerty', 'Why Your Keyboard Says QWERTY',
+       FACT,
+       'The layout was designed for a machine with physical levers that jammed. Why it survived the typewriter, whether Dvorak is really faster, and the "typewriter" row myth.',
+       '/static/img/articles/qwerty.jpg',
+       """
+<p>The letters on your keyboard are arranged in an order that made sense for a mechanical device nobody has used in decades. Here is how it happened and why it stuck.</p>
+
+<h3>The jamming problem</h3>
+<p>Christopher Latham Sholes built his first practical typewriter in the late 1860s with keys in alphabetical order. On those machines each key swung a metal typebar up to strike the paper. If two bars next to each other were struck in quick succession, they collided and jammed, and the typist had to stop and untangle them by hand.</p>
+<p>Sholes rearranged the keys over several years so that letters frequently typed one after another in English sat far apart on the typebar basket, reducing collisions. The layout sold to Remington in 1873 is recognisably QWERTY.</p>
+
+<h3>The "it was designed to slow typists down" claim</h3>
+<p>This is half right in a way that is usually told wrong. The goal was never to slow the typist; it was to stop the machine jamming, which in practice let people type <em>faster</em> without stopping to fix it. The distinction matters, and the slowing-down version is repeated far more often than the truth.</p>
+
+<h3>The telegraph theory</h3>
+<p>There is decent evidence that early Morse telegraph operators influenced the layout too. They were among the first heavy users, transcribing Morse live, and some of QWERTY’s odder choices — the placement of Z and S, for instance — fit the ambiguities of American Morse better than they fit English letter frequency.</p>
+
+<h3>Why it survived</h3>
+<p>By the 1890s, typists had been trained on QWERTY in huge numbers, and schools taught touch-typing on it. Any manufacturer selling a different layout had to persuade buyers to retrain their entire typing pool. The layout outlived the mechanism it was built for because the cost of switching was carried by people, not machines — the textbook example of what economists call path dependence.</p>
+
+<h3>Is Dvorak actually faster?</h3>
+<p>August Dvorak patented an alternative in 1936, putting vowels and common consonants on the home row. Early US Navy studies reported large gains, but Dvorak himself was involved in running them, and later independent research has found differences small enough to be within the noise. Speed appears to depend far more on practice than on layout.</p>
+<p>Colemak, a more recent design that keeps most keys where QWERTY has them, is the more popular alternative today precisely because it is easier to switch to.</p>
+
+<h3>The typewriter row</h3>
+<p>All the letters of "typewriter" appear on the top row — T, Y, P, E, W, R, I, T, E, R. It is widely claimed Sholes arranged this deliberately so salesmen could type the product name quickly. There is no contemporary evidence for it, and it is more likely a coincidence that was noticed afterwards and turned into a story.</p>
+
+<h3>Elsewhere in the world</h3>
+<ul>
+<li><strong>AZERTY</strong> in France and Belgium.</li>
+<li><strong>QWERTZ</strong> in Germany and much of central Europe, where Z is common in German.</li>
+<li><strong>QWERTY with modifications</strong> almost everywhere else, including the UK, where the only real differences from the US layout are the position of @, " and the £ sign.</li>
+</ul>
+"""),
+
+    # ==================================================================
+    _a('foods-not-from-where-you-think', 'Nine Foods That Are Not From Where You Think',
+       FACT,
+       'Chicken tikka masala, fortune cookies, French fries, Swiss fondue and more — dishes whose nationality is a marketing decision, an accident, or simply wrong.',
+       '/static/img/articles/food-origins.jpg',
+       """
+<p>National dishes are often younger and more foreign than they look. These are the ones quizzes love.</p>
+
+<h3>1. Chicken tikka masala — Britain</h3>
+<p>Almost certainly invented in a British Indian restaurant, with Glasgow the most commonly claimed birthplace. The usual story has a chef adding a tin of tomato soup and cream to dry tikka for a customer who wanted gravy. Robin Cook called it "a true British national dish" in 2001. It is not served in India except to tourists.</p>
+
+<h3>2. Fortune cookies — Japan, then California</h3>
+<p>Not Chinese. Similar crackers containing paper fortunes were made in Kyoto in the 1800s. Japanese immigrants brought them to California, where they were served in Japanese-run tea gardens. During the Second World War, with Japanese Americans interned, Chinese American restaurants took over production, and the cookie became permanently associated with Chinese food.</p>
+
+<h3>3. French fries — probably Belgium</h3>
+<p>Belgium claims them, with a tradition of frying small fish in the Meuse valley and switching to potato strips when the river froze. The "French" is thought to come from American soldiers in the First World War who encountered them in French-speaking Belgium. The Belgians are still annoyed about it.</p>
+
+<h3>4. Croissants — Austria</h3>
+<p>The crescent-shaped <em>kipferl</em> is Viennese and far older than the French pastry. August Zang opened a Viennese bakery in Paris in 1839, French bakers imitated it, and over the following decades the laminated butter dough we now call a croissant developed in France. The shape is Austrian; the pastry is French.</p>
+
+<h3>5. Swiss fondue — a marketing campaign</h3>
+<p>Melted cheese dishes are genuinely old and Alpine. But fondue became <em>the</em> Swiss national dish because the Swiss Cheese Union promoted it heavily from the 1930s to sell surplus cheese, pushing it as patriotic, including into army rations. The same organisation popularised the idea that every meal should end with cheese.</p>
+
+<h3>6. Vindaloo — Portugal</h3>
+<p>From the Portuguese <em>carne de vinha d’alhos</em>, meat in wine and garlic, brought to Goa by Portuguese colonists. Local cooks substituted palm vinegar for wine and added chillies — which the Portuguese had themselves brought from the Americas.</p>
+
+<h3>7. Tempura — Portugal again</h3>
+<p>Portuguese missionaries in 16th-century Japan ate battered fried fish during Ember Days, periods of fasting from meat. The Latin <em>quattuor tempora</em>, four times, is the likely source of the name. Japanese cooks refined the technique into something far lighter than the original.</p>
+
+<h3>8. German chocolate cake — not German</h3>
+<p>Named after Samuel German, an Englishman who developed a type of dark baking chocolate for an American company in 1852. The recipe first appeared in a Dallas newspaper in 1957 as "German’s Chocolate Cake". The apostrophe fell off and the nationality stuck.</p>
+
+<h3>9. Spaghetti bolognese — not really Bologna</h3>
+<p>Bologna has <em>ragù alla bolognese</em>, but it is traditionally served with tagliatelle, not spaghetti, and is meatier and far less tomato-heavy than the British version. The dish as most of the world knows it developed abroad. The mayor of Bologna has publicly complained about it more than once.</p>
+
+<h3>And one that is exactly what it says</h3>
+<p><strong>Hawaiian pizza</strong> is Canadian. Invented in Ontario in 1962 by Sam Panopoulos, a Greek immigrant, and named after the brand of tinned pineapple he used.</p>
+"""),
+
+    # ==================================================================
+    _a('what-flags-are-telling-you', 'What Flags Are Actually Telling You',
+       FACT,
+       'Crescents, crosses, stars, pan-African and pan-Arab colours. How to read a national flag you have never seen before, and the rules most of them follow.',
+       '/static/img/articles/flags.svg',
+       """
+<p>Flags are not random. Once you know a handful of patterns you can make a decent guess at a flag’s region, and often its history, without recognising it at all.</p>
+
+<h3>The Nordic cross</h3>
+<p>An off-centre cross, shifted towards the hoist, marks a Nordic country: Denmark, Sweden, Norway, Finland and Iceland, plus the Faroe Islands and Åland. Denmark’s Dannebrog is the original and is traditionally dated to 1219, making it the oldest continuously used national flag. Every other Nordic flag is a deliberate copy of its layout.</p>
+
+<h3>Pan-Slavic colours</h3>
+<p>Red, white and blue in horizontal bands runs through Russia, Serbia, Slovakia, Slovenia, Croatia and Czechia. The scheme was adopted at a Slavic congress in Prague in 1848, borrowing from the Russian flag, which had itself borrowed from the Dutch.</p>
+
+<h3>Pan-African colours</h3>
+<p>Red, gold and green — often with black — appear across Ghana, Senegal, Mali, Guinea, Cameroon, Ethiopia and many more. Ethiopia is the source: it was the African state that resisted colonisation, and newly independent countries adopted its colours deliberately. Red for blood shed, gold for mineral wealth, green for the land.</p>
+
+<h3>Pan-Arab colours</h3>
+<p>Red, white, black and green mark Jordan, Palestine, Kuwait, Sudan, the UAE, Iraq, Syria, Egypt and Yemen. They derive from the flag of the Arab Revolt of 1916, each colour representing a historic dynasty or era: black for the Abbasids, white for the Umayyads, green for the Fatimids, red for the Hashemites.</p>
+
+<h3>The crescent and star</h3>
+<p>Common across Muslim-majority countries — Turkey, Pakistan, Tunisia, Algeria, Malaysia, Azerbaijan. It is an Ottoman inheritance rather than a religious requirement, which is why many Muslim countries do not use it. Saudi Arabia instead carries the <em>shahada</em> in script above a sword, and because the text is sacred, the flag is never flown at half-mast.</p>
+
+<h3>The Union Jack in the corner</h3>
+<p>A canton with the Union Flag marks a current or former British territory: Australia, New Zealand, Fiji, Tuvalu, and various overseas territories. Distinguishing Australia from New Zealand is a standard quiz trap — Australia has six white stars including a large seven-pointed Commonwealth Star; New Zealand has four red stars with white borders.</p>
+
+<h3>The rules most flags follow</h3>
+<ul>
+<li><strong>Keep it simple</strong> enough for a child to draw from memory.</li>
+<li><strong>Use meaningful symbolism</strong> rather than decoration.</li>
+<li><strong>Use two or three basic colours.</strong></li>
+<li><strong>No lettering or seals</strong>, which are illegible at a distance and reversed on the back.</li>
+<li><strong>Be distinctive, or deliberately related</strong> to a flag you share history with.</li>
+</ul>
+
+<h3>The ones that break the rules</h3>
+<ul>
+<li><strong>Nepal</strong> is the only non-rectangular national flag, two stacked pennants.</li>
+<li><strong>Switzerland and Vatican City</strong> are the only two squares.</li>
+<li><strong>Paraguay</strong> has different designs on each side.</li>
+<li><strong>Mozambique</strong> carries an AK-47, the only modern firearm on a national flag.</li>
+<li><strong>Belize</strong> has fifty-odd colours and two human figures, making it the most complex of all.</li>
+</ul>
+"""),
+
+    # ==================================================================
+    _a('why-honey-never-goes-off', 'Why Honey Never Goes Off',
+       FACT,
+       'Edible honey has been found in 3,000-year-old Egyptian tombs. Three properties keep it safe almost indefinitely, and one of them explains why it must never be given to a baby.',
+       '/static/img/articles/honey.jpg',
+       """
+<p>Honey is the only common food that does not spoil. Sealed jars recovered from Egyptian tombs, thousands of years old, have been found still edible. Three things are doing the work.</p>
+
+<h3>1. There is almost no water in it</h3>
+<p>Honey is typically 17 to 18% water, and bacteria and moulds need far more than that to live. More importantly, honey is a supersaturated sugar solution — so much sugar dissolved in so little water that it is desperate to absorb more. It is strongly <strong>hygroscopic</strong>: it pulls water out of anything it touches, including any microbe that lands in it, drying the cell out through osmosis before it can multiply.</p>
+
+<h3>2. It is acidic</h3>
+<p>Honey sits at a pH of about 3.9, roughly as acidic as orange juice, which is hostile to most spoilage organisms.</p>
+
+<h3>3. The bees add hydrogen peroxide</h3>
+<p>This is the clever part. Bees secrete an enzyme called glucose oxidase into the nectar. When honey is diluted, that enzyme breaks glucose down into gluconic acid and <strong>hydrogen peroxide</strong> — an antiseptic. Concentrated honey produces very little, but the moment it is diluted, as it would be by any moisture that got in, peroxide production starts up and kills what arrived with the water.</p>
+
+<h3>Why bees make it so dry</h3>
+<p>None of this is for our benefit. Nectar is about 70 to 80% water when collected. Bees reduce it by passing it between themselves, exposing it to air in the comb and fanning their wings to evaporate the rest. They are making a food store that will survive a winter without refrigeration. The side effect is a substance that outlasts civilisations.</p>
+
+<h3>The conditions that break it</h3>
+<p>Honey keeps indefinitely only if kept <strong>sealed and dry</strong>. Left open, it absorbs atmospheric moisture, the sugar concentration falls, and it can ferment — which is how mead is made deliberately. A wet spoon in the jar is the usual culprit.</p>
+
+<h3>Crystallised is not spoiled</h3>
+<p>Honey turning grainy and pale is normal. The glucose is simply coming out of solution, and it happens faster in cooler conditions and with some floral sources than others. Standing the jar in warm water dissolves it again. Raw honey crystallises sooner because pollen grains give the crystals something to form on.</p>
+
+<h3>The exception: never give honey to a baby</h3>
+<p>Honey can contain dormant spores of <em>Clostridium botulinum</em>. They are harmless to anyone with a developed gut, because established gut bacteria out-compete them. In an infant under twelve months the gut flora is not yet established, the spores can germinate, and the result is infant botulism, which is serious. Honey’s own defences stop the bacteria growing <em>in the jar</em>, but they do not destroy the spores.</p>
+
+<h3>Worth knowing</h3>
+<ul>
+<li><strong>Honey has been used on wounds for millennia</strong>, and medical-grade honey is used in modern wound care — the peroxide and the water-drawing effect together.</li>
+<li><strong>A worker bee makes about a twelfth of a teaspoon</strong> of honey in her entire life.</li>
+<li><strong>Manuka honey</strong> has additional antibacterial activity from methylglyoxal, which does not depend on the peroxide mechanism.</li>
+</ul>
+"""),
+
+    # ==================================================================
+    _a('how-to-win-a-pub-quiz', 'How to Win a Pub Quiz',
+       CRAFT,
+       'Team size, who to bring, how to handle the ones nobody knows, and the two rounds that decide most quizzes. Practical tactics rather than "know more things".',
+       '/static/img/articles/pub.jpg',
+       """
+<p>Most teams lose pub quizzes on process, not knowledge. These are the things that actually move the score.</p>
+
+<h3>Build the team for coverage, not cleverness</h3>
+<p>Four to six is the sweet spot. Below four you have gaps; above six the discussion gets slower than the quiz. One very well-read person is worth less than four people with genuinely different lives — someone who watches sport, someone who watches television, someone older than the rest of you, someone who listens to chart music.</p>
+<p>The single most useful team member is usually the one who is thirty years older or younger than everyone else.</p>
+
+<h3>Write the answer down last</h3>
+<p>Appoint one person to hold the pen for the whole quiz, and let them be the one who decides when to commit. Teams lose points by writing an early confident answer and never revisiting it. Leave blanks and come back; the answer often arrives while you are arguing about question seven.</p>
+
+<h3>Know how to argue</h3>
+<p>The commonest failure in a pub quiz team is the loudest person winning. A useful habit: before settling, ask everyone to say how sure they are out of ten. Someone quietly on eight should beat someone confidently on five, and this makes that visible without anyone having to fight for it.</p>
+<p>Equally, if nobody is above a four, stop. Write the most plausible answer quickly and spend the time on a question you can actually get.</p>
+
+<h3>Guess properly</h3>
+<ul>
+<li><strong>Never leave a blank.</strong> There is no negative marking in a pub quiz.</li>
+<li><strong>For a year, guess a round number in the right era.</strong> You often get a point for being within a range.</li>
+<li><strong>For "which country", the answer is usually not the obvious one</strong> — a setter asking about the world’s largest producer of something rarely means the country you first think of.</li>
+<li><strong>For a person, go for the most famous candidate that fits.</strong> Setters write for a pub, not a seminar.</li>
+<li><strong>If the question names an unusual detail, it is doing work.</strong> "Which Scottish-born engineer" is narrowing it for a reason.</li>
+</ul>
+
+<h3>The rounds that decide it</h3>
+<p><strong>The picture round.</strong> Usually handed out early to work on throughout the night. Teams that leave it until last get fewer of them. Give it to one person immediately and let them chip away while the others handle the spoken rounds.</p>
+<p><strong>The music round.</strong> Intros are recognised almost instantly or not at all. If nobody has it in five seconds, nobody is going to have it in thirty. Move on and come back.</p>
+<p><strong>The wipeout or jackpot round.</strong> Where most quizzes are genuinely won and lost. If the format lets you wager, wager on the category your weakest-covered member is strongest in, not the one the team feels best about collectively.</p>
+
+<h3>Things that are worth more than they look</h3>
+<ul>
+<li><strong>Read the question sheet ahead</strong> if you have one. Half the team can work on later questions.</li>
+<li><strong>Write legibly.</strong> Points are genuinely lost to handwriting at marking time.</li>
+<li><strong>Hand in on time.</strong> Also genuinely lost.</li>
+<li><strong>Check the spelling of names</strong> if the quizmaster has said spelling counts. Most say it does not, some mean it.</li>
+</ul>
+
+<h3>And the etiquette</h3>
+<p>No phones. It is obvious from the answers, it is obvious from your face, and the quizmaster has seen it a hundred times. Winning a meat raffle by cheating is a poor way to spend an evening.</p>
+"""),
+
+    # ==================================================================
+    _a('how-to-solve-a-cryptic-crossword-clue', 'How to Solve a Cryptic Crossword Clue',
+       CRAFT,
+       'Every cryptic clue contains a definition and a piece of wordplay. Learn the eight clue types and the standard indicator words, and the whole thing opens up.',
+       '/static/img/articles/cryptic.svg',
+       """
+<p>Cryptic crosswords look impenetrable and are not. They follow strict rules, and once you know them you are no longer guessing.</p>
+
+<h3>The one rule everything rests on</h3>
+<p><strong>Every cryptic clue gives you the answer twice.</strong> Once as a straight definition, once as wordplay. The definition is almost always at the very start or the very end of the clue, never in the middle.</p>
+<p>So the first move on any clue is to find where it splits. Read the first word or two as a definition, then the last word or two, and see which feels like it could define a word.</p>
+
+<h3>The eight clue types</h3>
+
+<p><strong>1. Anagram.</strong> Signalled by a word suggesting disorder: <em>confused, broken, mixed, cooked, drunk, out, badly, strangely, arranged</em>.</p>
+<p><em>Example:</em> "Cheater, oddly, is an instructor" (7). The definition is "instructor" at the end. "Oddly" signals an anagram, and the fodder is CHEATER, which rearranges to <strong>TEACHER</strong>. Both halves land: TEACHER is an instructor, and its letters are those of "cheater".</p>
+
+<p><strong>2. Hidden word.</strong> The answer sits inside the clue, spanning words. Signalled by <em>in, some, part of, held by, within</em>.</p>
+<p><em>Example:</em> "Beginning found in lemon sets" (5). "Found in" signals a hidden word and "beginning" is the definition. Read straight across the letters: lem<strong>ON SET</strong>s gives <strong>ONSET</strong>.</p>
+
+<p><strong>3. Reversal.</strong> The answer is another word backwards. Signalled by <em>back, returning, up (in a down clue), reflected, going west</em>.</p>
+<p><em>Example:</em> "Evil returning live" (4) &rarr; LIVE reversed is <strong>EVIL</strong>.</p>
+
+<p><strong>4. Charade.</strong> The answer is built from pieces joined in order, like charades.</p>
+<p><em>Example:</em> "Vehicle animal provides floor covering" (6). Take the pieces in order: vehicle gives CAR, animal gives PET, and together they make <strong>CARPET</strong>, which is the floor covering.</p>
+
+<p><strong>5. Container.</strong> One word goes inside another. Signalled by <em>in, around, holding, swallowing, eating, outside</em>.</p>
+
+<p><strong>6. Deletion.</strong> Remove a letter. Signalled by <em>heartless</em> (lose the middle), <em>endless / unfinished</em> (lose the last), <em>beheaded</em> (lose the first).</p>
+
+<p><strong>7. Homophone.</strong> Sounds like another word. Signalled by <em>we hear, reportedly, on the radio, said, aloud</em>.</p>
+
+<p><strong>8. Double definition.</strong> Two meanings side by side, no wordplay at all. Usually a short clue of two or three words.</p>
+<p><em>Example:</em> "Left port" (4) &rarr; <strong>LEFT</strong> and port both mean the same side of a ship.</p>
+
+<h3>The abbreviations setters assume you know</h3>
+<table>
+<tr><th>Clue says</th><th>You write</th></tr>
+<tr><td>Learner, student</td><td>L</td></tr>
+<tr><td>Doctor</td><td>MD, DR, MO</td></tr>
+<tr><td>Queen</td><td>ER, R</td></tr>
+<tr><td>King</td><td>K, R</td></tr>
+<tr><td>Gold</td><td>OR, AU</td></tr>
+<tr><td>Silver</td><td>AG</td></tr>
+<tr><td>Iron</td><td>FE</td></tr>
+<tr><td>Fifty / hundred / thousand</td><td>L / C / M</td></tr>
+<tr><td>Note</td><td>A–G, DO, RE, MI, TE</td></tr>
+<tr><td>Sailor</td><td>AB, TAR, SALT</td></tr>
+<tr><td>Point</td><td>N, S, E, W</td></tr>
+<tr><td>About</td><td>RE, CA, C</td></tr>
+<tr><td>Very</td><td>SO (in music, F for forte)</td></tr>
+<tr><td>River</td><td>R, or EXE, PO, DEE</td></tr>
+</table>
+
+<h3>How to work a clue</h3>
+<ol>
+<li><strong>Count the letters</strong> and write the enumeration down.</li>
+<li><strong>Find the definition</strong> at one end.</li>
+<li><strong>Look for an indicator word</strong> in the rest — it tells you which of the eight types you are in.</li>
+<li><strong>Solve the wordplay</strong> and check it against the definition.</li>
+<li><strong>Confirm both halves work.</strong> If only one does, you have the wrong answer.</li>
+</ol>
+<p>That last step is the one that separates solving from guessing. A cryptic answer is right when <em>both</em> readings land. If you cannot explain why your answer works, it is probably not the answer.</p>
+"""),
+
+    # ==================================================================
+    _a('how-to-write-a-quiz-round-worth-playing', 'How to Write a Quiz Round Worth Playing',
+       CRAFT,
+       'The difference between a good question and a hard one. Pitching difficulty, ordering a round, writing plausible wrong answers, and the mistakes that lose a room.',
+       '/static/img/articles/quiz-craft.svg',
+       """
+<p>Writing quiz questions is harder than it looks, and the common failure is not that questions are too easy or too hard. It is that they are not enjoyable to be asked.</p>
+
+<h3>A good question is one people enjoy getting wrong</h3>
+<p>That is the whole craft in a sentence. The best questions produce a groan and a "of course" when the answer comes, not a shrug. Aim for things people half know, where the answer is retrievable with effort.</p>
+<p>A question nobody can get teaches nothing and flattens the room. A question everybody gets is a formality. The sweet spot is roughly <strong>60 to 70% of the room getting it</strong>, with the rest kicking themselves.</p>
+
+<h3>Pitch it at what people have been exposed to</h3>
+<p>Not what they have studied. Most people have absorbed an enormous amount of information passively and have no idea they know it. The skill is finding the questions that unlock it.</p>
+<p>"What is the capital of Burkina Faso?" tests whether somebody has memorised a list. "Which country's flag is the only one that is not rectangular?" tests whether somebody has ever looked properly at a flag. The second is a far better question and is not easier.</p>
+
+<h3>Order the round properly</h3>
+<p>Start easy. The first question sets the room's confidence for the whole round, and a team that gets question one wrong spends question two still arguing about it.</p>
+<p>A reliable eight-question shape:</p>
+<ol>
+<li>Easy, to settle everyone.</li>
+<li>Easy.</li>
+<li>Medium.</li>
+<li>Medium.</li>
+<li>The hard one, placed where the room is warmed up but not tired.</li>
+<li>Medium, to recover.</li>
+<li>Something funny or surprising.</li>
+<li>Medium-hard, so the round ends on a real contest.</li>
+</ol>
+
+<h3>Writing the wrong answers</h3>
+<p>For multiple choice, the wrong options are where the quality lives. Three rules:</p>
+<ul>
+<li><strong>Every option must be plausible.</strong> If one is obviously silly you have turned a four-way question into a three-way one.</li>
+<li><strong>Keep them the same kind of thing.</strong> Four countries, four years, four people. Mixing categories gives the answer away.</li>
+<li><strong>Keep them the same length.</strong> Players unconsciously pick the longest, most detailed option, because question writers unconsciously write it.</li>
+</ul>
+<p>The strongest wrong answer is the one most people would give if you asked the question open — the common misconception. "Which planet is hottest?" is a good question precisely because Mercury is a tempting wrong answer.</p>
+
+<h3>Write the explanation, not just the answer</h3>
+<p>The ten seconds after the answer is read out is when people actually learn something, and it is the part most quizzes waste. "Venus, because a runaway greenhouse effect traps the heat, which is why it is hotter than Mercury" is worth four times "Venus".</p>
+
+<h3>The mistakes that lose a room</h3>
+<ul>
+<li><strong>Ambiguity.</strong> If two answers are defensible, you will spend five minutes arguing and someone will leave annoyed. Test every question on someone who was not in the room when you wrote it.</li>
+<li><strong>Questions that are really about one hobby.</strong> A round of Premier League squad numbers is a specialist exam wearing a quiz costume.</li>
+<li><strong>Too many dates.</strong> One year question per round. They are memory tests, not thinking.</li>
+<li><strong>Burying the question.</strong> Put the thing being asked at the end, after the context, so people know what they are listening for.</li>
+<li><strong>Not checking.</strong> Facts drift. Record-holders change, countries rename, "largest" and "first" claims get overtaken. Check anything superlative before you use it.</li>
+</ul>
+"""),
+
+    # ==================================================================
+    _a('memory-tricks-that-work-for-trivia', 'Memory Tricks That Actually Work for Trivia',
+       CRAFT,
+       'The memory palace, chunking, spacing and why you forget names. Techniques with real evidence behind them, and how to use them on things quizzes ask about.',
+       '/static/img/articles/chess.jpg',
+       """
+<p>Competitive memory athletes are not born with unusual brains. Studies scanning them have found ordinary memory hardware running better techniques. Here are the ones worth the effort.</p>
+
+<h3>1. The memory palace</h3>
+<p>The oldest technique there is, attributed to the Greek poet Simonides. Picture a place you know intimately — your home, your walk to work — and place each thing you want to remember at a specific spot along a fixed route.</p>
+<p>To remember the planets in order, put the Sun on your doorstep, Mercury on the hall table, Venus on the stairs, and so on. To recall them, walk the route.</p>
+<p>It works because spatial memory is extraordinarily strong and almost effortless, while abstract lists are neither. You are smuggling the list into a system built for places.</p>
+<p><strong>Make the images absurd.</strong> A vivid, strange, moving image sticks far better than a sensible one. Saturn as a giant onion ring wedged in your bathroom door will outlast any amount of staring at a list.</p>
+
+<h3>2. Chunking</h3>
+<p>Working memory holds roughly four to seven items. But an item can be any size. "BBCITVCNNFBI" is twelve letters and nearly impossible; "BBC ITV CNN FBI" is four chunks and trivial.</p>
+<p>This is why phone numbers are grouped, and why chess masters can reproduce a board after a glance — they are not seeing twenty pieces but five familiar formations. The same works for dates, lists and sequences: find the groups.</p>
+
+<h3>3. Spacing, not cramming</h3>
+<p>The most robustly supported finding in the whole field. Reviewing material at increasing intervals — a day, three days, a week, a month — produces far more durable memory than the same total time spent in one session.</p>
+<p>Cramming works for tomorrow and is nearly useless for next month. If you want a question bank in your head for a quiz league that runs all season, ten minutes a week beats two hours the night before.</p>
+
+<h3>4. Testing yourself, not rereading</h3>
+<p>Rereading notes feels productive and mostly is not. The act of <em>retrieving</em> something strengthens the memory far more than seeing it again. Cover the answers and try to produce them. Getting it wrong and then seeing the answer is better for retention than never having struggled.</p>
+
+<h3>Why you forget names</h3>
+<p>Names are uniquely hard, and it is not your fault. A name is arbitrary — nothing about a person's face tells you they are called Graham, whereas "baker" would at least connect to something. Arbitrary labels have nothing to hook onto.</p>
+<p>What helps:</p>
+<ul>
+<li><strong>Say it back immediately.</strong> "Nice to meet you, Graham."</li>
+<li><strong>Attach it to an image.</strong> Graham → a cracker, placed on his forehead. Ridiculous, and it works.</li>
+<li><strong>Use it once more within a minute</strong>, then again before you leave.</li>
+</ul>
+
+<h3>Applying it to quiz material</h3>
+<ul>
+<li><strong>Ordered lists</strong> — planets, monarchs, elements, Oscar winners — go in a memory palace.</li>
+<li><strong>Pairs</strong> — capitals and countries, gods and their Roman names — go in a linked image. Picture a bear drinking beer in Bern.</li>
+<li><strong>Numbers</strong> — convert to something concrete. 1066 is easier as an image of an arrow than as four digits.</li>
+<li><strong>Anything you keep getting wrong</strong> — this is the material worth spacing. The questions you already know need no revision at all.</li>
+</ul>
+
+<h3>What does not work</h3>
+<p>Listening to recordings while asleep does nothing. "Brain training" games mostly make you better at those games. And there is no evidence for learning styles — being a "visual learner" is not a real category, though visual imagery helps everybody.</p>
+"""),
+
+    # ==================================================================
+    _a('a-short-history-of-the-quiz-show', 'A Short History of the Quiz Show',
+       CRAFT,
+       'From 1930s radio to the scandal that nearly killed the format, through Mastermind and Millionaire to the streaming era. How the quiz show became what it is.',
+       '/static/img/articles/quiz-show.jpg',
+       """
+<p>The quiz show is nearly a century old, and its shape has been set as much by scandal and regulation as by entertainment.</p>
+
+<h3>Radio, 1930s</h3>
+<p>The format began on American radio. <em>Professor Quiz</em> in 1936 is usually credited as the first, with listeners sending in questions. <em>Information Please</em> turned the idea round: a panel of experts tried to answer questions from the audience, and listeners won money when they stumped them. The BBC’s <em>Round Britain Quiz</em> started in 1947 and is still running, making it the oldest surviving quiz programme anywhere.</p>
+
+<h3>Television and the big money, 1950s</h3>
+<p>Television raised the stakes literally. <em>The $64,000 Question</em> launched in 1955 and was a sensation — contestants in isolation booths, enormous prizes, weeks of build-up around a single person.</p>
+
+<h3>The scandal that changed everything</h3>
+<p>It was rigged. In 1958 it emerged that producers of <em>Twenty-One</em> had been feeding answers to telegenic contestants and instructing others to lose. Charles Van Doren, a Columbia academic who had become a national figure during a long winning run, eventually admitted to Congress that his entire run was scripted.</p>
+<p>The fallout was severe. Big-money quizzes vanished from American television almost completely, and US law was changed to make rigging a contest a federal offence. The format only recovered by becoming modest: daytime shows with small prizes and visible fairness.</p>
+
+<h3>Britain goes the other way</h3>
+<p>British television never had the same crisis, partly because strict rules capped prize values for decades. That pushed the BBC and ITV towards difficulty and format invention rather than money.</p>
+<ul>
+<li><strong>University Challenge</strong> (1962), adapted from America’s <em>College Bowl</em>, and still built on speed and genuine academic range.</li>
+<li><strong>Mastermind</strong> (1972), devised by Bill Wright, a former RAF gunner who had been interrogated by the Gestapo — which is where the black chair, the spotlight and the relentless questioning came from.</li>
+<li><strong>Blockbusters</strong>, <strong>Fifteen to One</strong>, <strong>Countdown</strong>: formats built on structure rather than jackpots.</li>
+</ul>
+
+<h3>Millionaire changes the world, 1998</h3>
+<p><em>Who Wants to Be a Millionaire?</em> was devised in Britain and became the most successfully exported television format in history, licensed to well over a hundred countries. Its innovations — the lifelines, the money ladder, the lighting dropping as the stakes rose, the long pause before "final answer" — are now standard everywhere.</p>
+<p>It also produced the format’s most famous modern scandal, the 2001 coughing conviction, later re-examined and dramatised.</p>
+
+<h3>The quizzer as character</h3>
+<p>The 2000s moved the expert from contestant to opponent. <em>The Chase</em>, <em>Eggheads</em> and <em>The Weakest Link</em> made the professional quizzer a recurring personality, which solved an old problem: you can keep a brilliant player on screen indefinitely if they are not the one winning the money.</p>
+
+<h3>And now</h3>
+<p>The format has survived streaming better than most, because it is cheap to make, endlessly repeatable and works as background viewing. The genuine change is that quizzes are now mostly played rather than watched — on phones, in apps, asynchronously against friends. The pub quiz, which long predates all of this, carries on largely unchanged.</p>
+
+<h3>Quiz show facts worth knowing</h3>
+<ul>
+<li><strong>The Mastermind chair</strong> is an original prop and has its own travel case.</li>
+<li><strong>Jeopardy!</strong> answers in the form of a question partly as a legacy of the rigging scandal — giving contestants the answer was a way of signalling fairness.</li>
+<li><strong>Countdown</strong> was the first programme broadcast on Channel 4, in November 1982.</li>
+<li><strong>University Challenge</strong> was off air from 1987 to 1994, and Bamber Gascoigne presented the first run, Jeremy Paxman the second.</li>
+</ul>
+"""),
+
+    # ==================================================================
+    _a('tricks-crossword-setters-reuse', 'The Tricks Crossword Setters Use Again and Again',
+       CRAFT,
+       'Setters have a standard toolkit, and most of it repeats. The vocabulary they rely on, the misdirections they love, and the words that exist mainly to fit a grid.',
+       '/static/img/articles/setter-tricks.svg',
+       """
+<p>Crossword setters are not trying to beat you. They are trying to beat you <em>fairly</em>, which means working within conventions you are expected to learn. Once you know the toolkit, half the fight is over.</p>
+
+<h3>Crosswordese: words that live mostly in grids</h3>
+<p>Short words with awkward vowel patterns are gold to a setter and rare in ordinary life. You will meet these constantly:</p>
+<table>
+<tr><th>Word</th><th>Means</th></tr>
+<tr><td>ERNE</td><td>Sea eagle</td></tr>
+<tr><td>ADIT</td><td>Mine entrance</td></tr>
+<tr><td>ETUI</td><td>Small needle case</td></tr>
+<tr><td>OAST</td><td>Hop-drying kiln</td></tr>
+<tr><td>ESNE</td><td>Anglo-Saxon labourer</td></tr>
+<tr><td>ANIL</td><td>Indigo plant</td></tr>
+<tr><td>EWER</td><td>Water jug</td></tr>
+<tr><td>ORLE</td><td>Heraldic border</td></tr>
+<tr><td>ALEE</td><td>Away from the wind</td></tr>
+<tr><td>EPEE</td><td>Fencing sword</td></tr>
+<tr><td>OLEO</td><td>Margarine</td></tr>
+<tr><td>ASEA</td><td>At sea</td></tr>
+</table>
+
+<h3>The misdirections</h3>
+<p><strong>Capital letters that mean nothing.</strong> A clue starts with a capital because clues do, so "Bill" might be a duck’s beak, an invoice or a poster, not a man.</p>
+<p><strong>Words with two jobs.</strong> "Flower" is very often something that flows — a river. "Number" can mean something that numbs. "Second" can be a unit of time, a supporter, or the letter after the first.</p>
+<p><strong>Proper nouns hiding in plain sight.</strong> "Rose" as a past tense. "Reading" as a town. "Polish" as a nationality or a verb, depending on the capital letter you are not allowed to rely on.</p>
+<p><strong>Plural traps.</strong> A clue ending in S is not necessarily a plural — it might be the last letter of a charade.</p>
+
+<h3>Indicator words to recognise instantly</h3>
+<table>
+<tr><th>Device</th><th>Typical signals</th></tr>
+<tr><td>Anagram</td><td>confused, broken, cooked, drunk, strange, wild, out, poorly, novel, arranged</td></tr>
+<tr><td>Reversal</td><td>back, up, returning, retreating, reflected, recalled</td></tr>
+<tr><td>Hidden</td><td>in, some, part of, held by, a bit of, within</td></tr>
+<tr><td>Homophone</td><td>we hear, said, reportedly, on the radio, aloud, spoken</td></tr>
+<tr><td>Container</td><td>in, around, holding, eating, outside, embracing</td></tr>
+<tr><td>Deletion</td><td>heartless, endless, beheaded, curtailed, topless</td></tr>
+<tr><td>First letters</td><td>initially, firstly, leaders, at the start, heads of</td></tr>
+<tr><td>Last letters</td><td>finally, ends, tails, at last</td></tr>
+</table>
+
+<h3>The ones that catch everyone</h3>
+<ul>
+<li><strong>"Perhaps" or "say" or "for example"</strong> means the definition is a category, not the exact thing. "Dog, say" could clue SPANIEL or PET.</li>
+<li><strong>"Nothing" is O.</strong> "Love" in a tennis sense is also O.</li>
+<li><strong>"One" is I or A or AN.</strong></li>
+<li><strong>"The French" is LE, LA or LES.</strong> "The German" is DER, DIE or DAS. Setters love this.</li>
+<li><strong>"Boxer" might be Ali</strong>, and a great many short clues are really asking for a famous three-letter surname.</li>
+<li><strong>A question mark at the end</strong> is a warning: the clue is doing something cheeky, usually a pun or a definition that is stretched.</li>
+</ul>
+
+<h3>Why the same answers recur</h3>
+<p>A setter filling a grid needs words that interlock. Letters like E, A, R, S and T appear constantly because they are common in English, so answers rich in them fit more easily. That is why you meet ERNE and ETUI far more often in crosswords than in life, and why the same handful of rivers, Greek gods, musical notes and chemical symbols turn up week after week.</p>
+<p>Which means learning them pays compound interest. The crosswordese above, plus the abbreviations setters assume, will unlock more clues than any amount of general knowledge.</p>
+"""),
+
 ]

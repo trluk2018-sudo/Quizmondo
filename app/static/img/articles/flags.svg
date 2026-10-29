@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140a2e"/>
+      <stop offset="55%" stop-color="#0a0620"/>
+      <stop offset="100%" stop-color="#05030f"/>
+    </linearGradient>
+    <radialGradient id="glowA"><stop offset="0%" stop-color="#22d3ee" stop-opacity=".40"/><stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB"><stop offset="0%" stop-color="#f472b6" stop-opacity=".38"/><stop offset="100%" stop-color="#f472b6" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <ellipse cx="120" cy="70" rx="300" ry="210" fill="url(#glowA)"/>
+  <ellipse cx="690" cy="390" rx="320" ry="220" fill="url(#glowB)"/>
+  <text x="54" y="70" font-family="Verdana,DejaVu Sans,sans-serif" font-size="38" font-weight="bold" fill="#f8fafc">Reading a Flag</text>
+  <text x="56" y="98" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" fill="#94a3b8">Crosses, crescents and borrowed colours</text>
+  <g>
+    <rect x="54" y="160" width="150" height="100" fill="#1e3a8a"/>
+    <rect x="54" y="200" width="150" height="20" fill="#f8fafc"/>
+    <rect x="96" y="160" width="20" height="100" fill="#f8fafc"/>
+    <text x="54" y="282" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8">Nordic cross</text>
+  </g>
+  <g>
+    <rect x="234" y="160" width="150" height="33" fill="#c0392b"/>
+    <rect x="234" y="193" width="150" height="34" fill="#f1c40f"/>
+    <rect x="234" y="227" width="150" height="33" fill="#1e8449"/>
+    <text x="234" y="282" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8">Pan-African</text>
+  </g>
+  <g>
+    <rect x="414" y="160" width="150" height="100" fill="#b91c1c"/>
+    <circle cx="470" cy="210" r="27" fill="#f8fafc"/>
+    <circle cx="482" cy="210" r="22" fill="#b91c1c"/>
+    <text x="512" y="218" font-size="30" fill="#f8fafc" text-anchor="middle">&#9733;</text>
+    <text x="414" y="282" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8">Crescent and star</text>
+  </g>
+  <g>
+    <rect x="594" y="160" width="50" height="100" fill="#1e3a8a"/>
+    <rect x="644" y="160" width="50" height="100" fill="#f8fafc"/>
+    <rect x="694" y="160" width="50" height="100" fill="#b91c1c"/>
+    <text x="594" y="282" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8">Tricolour</text>
+  </g>
+  <text x="54" y="340" font-family="Verdana,sans-serif" font-size="16" fill="#f8fafc">An off-centre cross means Nordic. Red, gold and green means Africa.</text>
+  <text x="54" y="370" font-family="Verdana,sans-serif" font-size="16" fill="#f8fafc">Red, white, black and green means the Arab world.</text>
+
+  <rect x="1" y="1" width="798" height="448" fill="none" stroke="#22d3ee" stroke-opacity=".22"/>
+</svg>

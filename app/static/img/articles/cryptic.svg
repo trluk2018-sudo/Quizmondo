@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140a2e"/>
+      <stop offset="55%" stop-color="#0a0620"/>
+      <stop offset="100%" stop-color="#05030f"/>
+    </linearGradient>
+    <radialGradient id="glowA"><stop offset="0%" stop-color="#22d3ee" stop-opacity=".40"/><stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB"><stop offset="0%" stop-color="#34d399" stop-opacity=".38"/><stop offset="100%" stop-color="#34d399" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <ellipse cx="120" cy="70" rx="300" ry="210" fill="url(#glowA)"/>
+  <ellipse cx="690" cy="390" rx="320" ry="220" fill="url(#glowB)"/>
+  <text x="54" y="70" font-family="Verdana,DejaVu Sans,sans-serif" font-size="38" font-weight="bold" fill="#f8fafc">Cryptic Clues</text>
+  <text x="56" y="98" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" fill="#94a3b8">Every clue gives the answer twice</text>
+  <rect x="54" y="160" width="520" height="62" rx="10" fill="#22d3ee" fill-opacity=".10" stroke="#22d3ee" stroke-opacity=".40"/>
+  <text x="74" y="200" font-family="Georgia,serif" font-size="23" fill="#fbbf24">Vehicle animal provides </text>
+  <text x="366" y="200" font-family="Georgia,serif" font-size="23" fill="#34d399">floor covering</text>
+  <text x="520" y="200" font-family="Georgia,serif" font-size="23" fill="#94a3b8">(6)</text>
+  <text x="74" y="250" font-family="Verdana,sans-serif" font-size="14" fill="#fbbf24">wordplay</text>
+  <text x="366" y="250" font-family="Verdana,sans-serif" font-size="14" fill="#34d399">definition</text>
+  <rect x="74" y="290" width="48" height="48" rx="5" fill="#22d3ee" fill-opacity=".14" stroke="#22d3ee" stroke-opacity=".55" stroke-width="2"/>
+  <text x="98" y="324" font-family="Verdana,sans-serif" font-size="25" font-weight="bold" fill="#f8fafc" text-anchor="middle">C</text>
+  <rect x="130" y="290" width="48" height="48" rx="5" fill="#22d3ee" fill-opacity=".14" stroke="#22d3ee" stroke-opacity=".55" stroke-width="2"/>
+  <text x="154" y="324" font-family="Verdana,sans-serif" font-size="25" font-weight="bold" fill="#f8fafc" text-anchor="middle">A</text>
+  <rect x="186" y="290" width="48" height="48" rx="5" fill="#22d3ee" fill-opacity=".14" stroke="#22d3ee" stroke-opacity=".55" stroke-width="2"/>
+  <text x="210" y="324" font-family="Verdana,sans-serif" font-size="25" font-weight="bold" fill="#f8fafc" text-anchor="middle">R</text>
+  <rect x="242" y="290" width="48" height="48" rx="5" fill="#22d3ee" fill-opacity=".14" stroke="#22d3ee" stroke-opacity=".55" stroke-width="2"/>
+  <text x="266" y="324" font-family="Verdana,sans-serif" font-size="25" font-weight="bold" fill="#f8fafc" text-anchor="middle">P</text>
+  <rect x="298" y="290" width="48" height="48" rx="5" fill="#22d3ee" fill-opacity=".14" stroke="#22d3ee" stroke-opacity=".55" stroke-width="2"/>
+  <text x="322" y="324" font-family="Verdana,sans-serif" font-size="25" font-weight="bold" fill="#f8fafc" text-anchor="middle">E</text>
+  <rect x="354" y="290" width="48" height="48" rx="5" fill="#22d3ee" fill-opacity=".14" stroke="#22d3ee" stroke-opacity=".55" stroke-width="2"/>
+  <text x="378" y="324" font-family="Verdana,sans-serif" font-size="25" font-weight="bold" fill="#f8fafc" text-anchor="middle">T</text>
+  <text x="74" y="380" font-family="Verdana,sans-serif" font-size="16" fill="#94a3b8">CAR + PET, and a carpet is a floor covering. Both halves land.</text>
+
+  <rect x="1" y="1" width="798" height="448" fill="none" stroke="#22d3ee" stroke-opacity=".22"/>
+</svg>

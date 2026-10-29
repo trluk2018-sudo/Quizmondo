@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140a2e"/>
+      <stop offset="55%" stop-color="#0a0620"/>
+      <stop offset="100%" stop-color="#05030f"/>
+    </linearGradient>
+    <radialGradient id="glowA"><stop offset="0%" stop-color="#f472b6" stop-opacity=".40"/><stop offset="100%" stop-color="#f472b6" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB"><stop offset="0%" stop-color="#22d3ee" stop-opacity=".38"/><stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <ellipse cx="120" cy="70" rx="300" ry="210" fill="url(#glowA)"/>
+  <ellipse cx="690" cy="390" rx="320" ry="220" fill="url(#glowB)"/>
+  <text x="54" y="70" font-family="Verdana,DejaVu Sans,sans-serif" font-size="38" font-weight="bold" fill="#f8fafc">The Body in Numbers</text>
+  <text x="56" y="98" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" fill="#94a3b8">The figures quizzes ask for</text>
+  <rect x="54" y="170" width="152" height="108" rx="12" fill="#f472b6" fill-opacity=".10" stroke="#f472b6" stroke-opacity=".40" stroke-width="2"/>
+  <text x="130" y="228" font-family="Verdana,sans-serif" font-size="38" font-weight="bold" fill="#f8fafc" text-anchor="middle">206</text>
+  <text x="130" y="258" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">bones</text>
+  <rect x="234" y="170" width="152" height="108" rx="12" fill="#f472b6" fill-opacity=".10" stroke="#f472b6" stroke-opacity=".40" stroke-width="2"/>
+  <text x="310" y="228" font-family="Verdana,sans-serif" font-size="38" font-weight="bold" fill="#f8fafc" text-anchor="middle">32</text>
+  <text x="310" y="258" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">teeth</text>
+  <rect x="414" y="170" width="152" height="108" rx="12" fill="#f472b6" fill-opacity=".10" stroke="#f472b6" stroke-opacity=".40" stroke-width="2"/>
+  <text x="490" y="228" font-family="Verdana,sans-serif" font-size="38" font-weight="bold" fill="#f8fafc" text-anchor="middle">12</text>
+  <text x="490" y="258" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">rib pairs</text>
+  <rect x="594" y="170" width="152" height="108" rx="12" fill="#f472b6" fill-opacity=".10" stroke="#f472b6" stroke-opacity=".40" stroke-width="2"/>
+  <text x="670" y="228" font-family="Verdana,sans-serif" font-size="38" font-weight="bold" fill="#f8fafc" text-anchor="middle">7</text>
+  <text x="670" y="258" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">neck bones</text>
+  <rect x="54" y="300" width="152" height="108" rx="12" fill="#f472b6" fill-opacity=".10" stroke="#f472b6" stroke-opacity=".40" stroke-width="2"/>
+  <text x="130" y="358" font-family="Verdana,sans-serif" font-size="38" font-weight="bold" fill="#f8fafc" text-anchor="middle">5L</text>
+  <text x="130" y="388" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">of blood</text>
+  <rect x="234" y="300" width="152" height="108" rx="12" fill="#f472b6" fill-opacity=".10" stroke="#f472b6" stroke-opacity=".40" stroke-width="2"/>
+  <text x="310" y="358" font-family="Verdana,sans-serif" font-size="38" font-weight="bold" fill="#f8fafc" text-anchor="middle">60%</text>
+  <text x="310" y="388" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">water</text>
+  <rect x="414" y="300" width="152" height="108" rx="12" fill="#f472b6" fill-opacity=".10" stroke="#f472b6" stroke-opacity=".40" stroke-width="2"/>
+  <text x="490" y="358" font-family="Verdana,sans-serif" font-size="38" font-weight="bold" fill="#f8fafc" text-anchor="middle">3mm</text>
+  <text x="490" y="388" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">smallest bone</text>
+  <rect x="594" y="300" width="152" height="108" rx="12" fill="#f472b6" fill-opacity=".10" stroke="#f472b6" stroke-opacity=".40" stroke-width="2"/>
+  <text x="670" y="358" font-family="Verdana,sans-serif" font-size="38" font-weight="bold" fill="#f8fafc" text-anchor="middle">20k</text>
+  <text x="670" y="388" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">breaths a day</text>
+
+  <rect x="1" y="1" width="798" height="448" fill="none" stroke="#f472b6" stroke-opacity=".22"/>
+</svg>
