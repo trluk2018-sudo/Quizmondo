@@ -96,7 +96,7 @@
     paintPattern();
     inputEl.value = '';
     progressEl.textContent = Math.min(done + 1, total);
-    inputEl.focus({ preventScroll: true });
+    QMG.softFocus(inputEl);
   }
 
   document.getElementById('erForm').addEventListener('submit', function (ev) {
@@ -138,7 +138,7 @@
     hintsEl.textContent = hintsUsed;
     paintPattern();
     QMG.audio.tick();
-    inputEl.focus({ preventScroll: true });
+    QMG.softFocus(inputEl);
   });
 
   document.getElementById('erPass').addEventListener('click', function () {

@@ -50,7 +50,12 @@
   var target = null;
   var accepting = false;
 
-  function flashMs() { return Math.max(350, 1400 - round * 90); }
+  // The flash shortens gently as the rounds go by, and takes a real step down
+  // for every ten flags got right, so the pace answers to skill and not just
+  // to how long someone has been sitting there.
+  function flashMs() {
+    return Math.max(300, 1300 - round * 40 - Math.floor(right / 10) * 150);
+  }
 
   function newRound() {
     round += 1;

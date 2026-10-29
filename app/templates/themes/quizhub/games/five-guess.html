@@ -56,6 +56,8 @@
   var keyState = {};
   var revealed = {};
   var revealsUsed = 0;
+  // Two is enough to break a deadlock without solving the word for them.
+  var MAX_REVEALS = 2;
   var checking = false;
   var running = false;
 
@@ -65,6 +67,8 @@
     if (state === 'near') return base + 'bg-amber-500 text-slate-950 border-2 border-amber-300';
     if (state === 'miss') return base + 'bg-slate-800 text-slate-500 border-2 border-slate-700';
     if (state === 'live') return base + 'bg-slate-900 text-white border-2 border-cyan-400';
+    // The square the next letter will land in, so it is obvious where typing goes.
+    if (state === 'cursor') return base + 'bg-slate-900 text-white border-2 border-cyan-400 qmg-cursor';
     return base + 'bg-slate-900/60 text-white border-2 border-purple-500/25';
   }
 
@@ -97,6 +101,8 @@
         } else if (r === guesses.length && c < currentGuess.length) {
           letter = currentGuess[c];
           state = 'live';
+        } else if (r === guesses.length && c === currentGuess.length && running) {
+          state = 'cursor';
         }
         cell.className = cellClass(state);
         cell.textContent = letter;
@@ -233,6 +239,11 @@
     var hidden = [];
     for (var i = 0; i < LENGTH; i++) { if (!revealed[i]) hidden.push(i); }
     if (!hidden.length) { say('Every letter is already showing', false); return; }
+    if (revealsUsed >= MAX_REVEALS) {
+      say('Two reveals a word is the limit', false);
+      QMG.shake(boardEl);
+      return;
+    }
     if (guesses.length >= MAX_GUESSES - 1) {
       say('Not enough guesses left to spend one', false);
       QMG.shake(boardEl);

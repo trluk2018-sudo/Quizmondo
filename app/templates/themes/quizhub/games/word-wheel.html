@@ -161,13 +161,13 @@
     pill.textContent = word + ' +' + points;
     foundEl.appendChild(pill);
     countEl.textContent = foundCount;
-    inputEl.focus({ preventScroll: true });
+    QMG.softFocus(inputEl);
   });
 
   document.getElementById('wwClear').addEventListener('click', function () {
     inputEl.value = '';
     QMG.audio.tick();
-    inputEl.focus({ preventScroll: true });
+    QMG.softFocus(inputEl);
   });
 
   function timeUp() {

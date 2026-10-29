@@ -111,10 +111,7 @@
     if (isSolved()) win();
   }
 
-  boardEl.addEventListener('click', function (ev) {
-    var node = ev.target.closest('[data-pos]');
-    if (node) slide(parseInt(node.dataset.pos, 10));
-  });
+  QMG.boardGestures(boardEl, slide);
 
   function win() {
     running = false;
