@@ -1167,6 +1167,30 @@ def seed_quizmondo_full_environment():
         lq.explanation = 'Composer Hirokazu Tanaka arranged the 19th-century Russian folk song "Korobeiniki" (The Peddlers) into the legendary Game Boy Tetris Type A theme.'
     db.session.commit()
 
+    # 2a-ii. Repair three Rhyme Time questions that shipped unplayable.
+    # One was keyed to the wrong option; the other two had clues describing a
+    # pair that was not among the answers, while their explanations were right.
+    # Seeding only ever inserts, so these existing rows need updating by hand.
+    RHYME_FIXES = [
+        ('RHYME TIME: What pairs an icy polar mammal with a glass container of pale ale?',
+         None, 'A', 'A polar bear rhymes with a glass of beer!'),
+        ('RHYME TIME: What pairs a loud alarm on your phone with a tranquil pastoral meadow?',
+         'RHYME TIME: What pairs a bell-like ring from your phone with a small green citrus fruit?',
+         'A', 'A bell chime rhymes with a lime!'),
+        ('RHYME TIME: What pairs a shiny gold financial coin with a joint on your finger?',
+         'RHYME TIME: What pairs an American unit of currency with the band around a shirt neck?',
+         'B', 'A dollar rhymes perfectly with a shirt collar!'),
+    ]
+    for old_prompt, new_prompt, correct, explanation in RHYME_FIXES:
+        for row in QuizQuestion.query.filter(
+            QuizQuestion.prompt.in_([old_prompt] + ([new_prompt] if new_prompt else []))
+        ).all():
+            if new_prompt:
+                row.prompt = new_prompt
+            row.correct_option = correct
+            row.explanation = explanation
+    db.session.commit()
+
     # 2b. Synchronize Extra Questions
     try:
         from .extra_questions import EXTRA_QUESTIONS

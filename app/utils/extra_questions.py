@@ -379,7 +379,7 @@ EXTRA_QUESTIONS = {
     ],
     'words-rhymes': [
         {
-            'prompt': 'RHYME TIME: What pairs a loud alarm on your phone with a tranquil pastoral meadow?',
+            'prompt': 'RHYME TIME: What pairs a bell-like ring from your phone with a small green citrus fruit?',
             'options': {'A': 'Chime & Lime', 'B': 'Beeper & Creeper', 'C': 'Snooze & Cruise', 'D': 'Ringer & Singer'},
             'correct': 'A',
             'explanation': 'A bell chime rhymes with a lime, creating a classic phonological wordplay pair!',
@@ -395,7 +395,7 @@ EXTRA_QUESTIONS = {
             'type': 'classic'
         },
         {
-            'prompt': 'RHYME TIME: What pairs a shiny gold financial coin with a joint on your finger?',
+            'prompt': 'RHYME TIME: What pairs an American unit of currency with the band around a shirt neck?',
             'options': {'A': 'Penny & Many', 'B': 'Dollar & Collar', 'C': 'Buck & Chuck', 'D': 'Quarter & Porter'},
             'correct': 'B',
             'explanation': 'A silver or paper dollar rhymes perfectly with a neck collar!',
@@ -413,8 +413,8 @@ EXTRA_QUESTIONS = {
         {
             'prompt': 'RHYME TIME: What pairs an icy polar mammal with a glass container of pale ale?',
             'options': {'A': 'Bear & Beer', 'B': 'Seal & Meal', 'C': 'Fox & Box', 'D': 'Hare & Fare'},
-            'correct': 'B',
-            'explanation': 'A swimming polar seal rhymes with an evening meal!',
+            'correct': 'A',
+            'explanation': 'A polar bear rhymes with a glass of beer!',
             'difficulty': 'easy',
             'type': 'rhyme_time'
         }
