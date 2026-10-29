@@ -1191,6 +1191,41 @@ def seed_quizmondo_full_environment():
     except Exception as e:
         print('Error seeding extra questions:', e)
 
+    # 2b-ii. Synchronize the second wave: twenty more per category.
+    # Keyed on the prompt, like the block above, so a question edited in admin
+    # is never clobbered and a redeploy adds nothing twice.
+    try:
+        from .questions_wave2 import QUESTIONS_WAVE2
+        existing = set(r[0] for r in db.session.query(QuizQuestion.prompt).all())
+        wave2 = []
+        for cat_slug, q_list in QUESTIONS_WAVE2.items():
+            pack = QuizPack.query.filter_by(category_slug=cat_slug).first()
+            for q_data in q_list:
+                if q_data['prompt'] in existing:
+                    continue
+                existing.add(q_data['prompt'])
+                wave2.append(QuizQuestion(
+                    category_slug=cat_slug,
+                    category_name=pack.title if pack else cat_slug.replace('-', ' ').title(),
+                    pack_slug=cat_slug,
+                    prompt=q_data['prompt'],
+                    question_type=q_data.get('type', 'classic'),
+                    options_json=json.dumps(q_data['options']),
+                    correct_option=q_data['correct'],
+                    explanation=q_data['explanation'],
+                    difficulty=q_data.get('difficulty', 'medium'),
+                    time_limit=15,
+                    points=100,
+                    status='approved',
+                    is_community=False
+                ))
+        if wave2:
+            db.session.bulk_save_objects(wave2)
+            db.session.commit()
+            print('QUESTIONS_WAVE2_ADDED', len(wave2))
+    except Exception as e:
+        print('Error seeding wave 2 questions:', e)
+
     # 2c. Synchronize 15 Mega Categories (3,000+ Questions)
     try:
         mega_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'mega_questions_3000.json')
