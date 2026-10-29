@@ -97,13 +97,15 @@
     var pct = 100 / N;
     tiles.forEach(function (tile, pos) {
       if (tile === gap() && !peeking) return;
+      var isLastPiece = (tile === gap() && !running);
       var r = Math.floor(pos / N), c = pos % N;
       var sr = Math.floor(tile / N), sc = tile % N;
 
       var el = document.createElement('button');
       el.type = 'button';
       el.dataset.pos = pos;
-      el.className = 'absolute transition-all duration-150 ease-out border border-slate-950/60';
+      el.className = 'absolute transition-all duration-150 ease-out border border-slate-950/60' +
+        (isLastPiece ? ' qmg-lastpiece' : '');
       el.style.width = pct + '%';
       el.style.height = pct + '%';
       el.style.left = (c * pct) + '%';
@@ -141,7 +143,11 @@
   function win() {
     running = false;
     peeking = true;
+    // The last piece drops into the hole the puzzle needed to be playable, so
+    // the flag is whole at the end. Worth a pause before the overlay lands:
+    // finishing the picture and never being shown it is a poor reward.
     render();
+    QMG.audio.victory();
     var seconds = elapsed ? elapsed() : 0;
     var par = N * N * 6;
     // A clean, quick solve is worth far more than grinding it out
@@ -150,12 +156,14 @@
     var timePenalty = seconds * 4;
     var score = Math.max(120, base - movePenalty - timePenalty);
     QMG.setScore(score);
-    QMG.finish({
-      icon: '🖼️',
-      title: 'Picture Restored!',
-      sub: 'It was ' + pic.label + '.',
-      detail: [moves + ' moves in ' + seconds + 's', 'Grid: ' + N + '×' + N]
-    });
+    setTimeout(function () {
+      QMG.finish({
+        icon: '🖼️',
+        title: 'Picture Restored!',
+        sub: 'It was ' + pic.label + '.',
+        detail: [moves + ' moves in ' + seconds + 's', 'Grid: ' + N + '×' + N]
+      });
+    }, 1600);
   }
 
   document.getElementById('spPeek').addEventListener('mousedown', peekOn);
