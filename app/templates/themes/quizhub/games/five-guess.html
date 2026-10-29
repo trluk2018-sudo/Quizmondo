@@ -192,19 +192,23 @@
     });
   }
 
-  function scoreAndPlace(currentGuessWord) {
-    var currentGuess = currentGuessWord;
-    var result = scoreGuess(currentGuess);
-    guesses.push({ word: currentGuess, result: result });
+  function scoreAndPlace(word) {
+    // The guess arrives as an argument because the dictionary check is async
+    // and the player may have typed on since. It must not be called
+    // currentGuess: a local of that name shadows the one the keyboard fills,
+    // so clearing it cleared a copy, the real one stayed five letters long,
+    // and every later keypress was refused as a full word.
+    var result = scoreGuess(word);
+    guesses.push({ word: word, result: result });
 
     // The keyboard only ever gets better news, never worse
     for (var i = 0; i < LENGTH; i++) {
-      var ch = currentGuess[i];
+      var ch = word[i];
       var rank = { miss: 1, near: 2, hit: 3 };
       if (!keyState[ch] || rank[result[i]] > rank[keyState[ch]]) { keyState[ch] = result[i]; }
     }
 
-    var solved = currentGuess === answer;
+    var solved = word === answer;
     currentGuess = '';
     renderBoard();
     renderKeys();
