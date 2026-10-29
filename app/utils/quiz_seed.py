@@ -2,7 +2,7 @@
 import os
 import json
 from datetime import datetime, timedelta
-from ..models import db, QuizQuestion, QuizPack, PubLeague, PageModule, MenuItem, Post, Category, SiteSetting, FeaturedGame
+from ..models import db, QuizQuestion, QuizPack, PubLeague, PageModule, MenuItem, Post, Category, SiteSetting, FeaturedGame, ArenaMatch, ArenaRound
 from .modules import get_default_config, MODULE_DEFINITIONS
 
 SEED_PACKS = [
@@ -1190,6 +1190,57 @@ def seed_quizmondo_full_environment():
             row.correct_option = correct
             row.explanation = explanation
     db.session.commit()
+
+    # 2a-iii. Repair bot answers stored against the right option.
+    # A bot miss used to be recorded as option 'B' whatever the question, so on
+    # any question whose answer was B the results screen showed the bot choosing
+    # the correct line while marking it wrong. Scores were always right, only the
+    # recorded choice was not, so this moves that choice onto an option that is
+    # genuinely wrong and leaves points, totals and winners untouched.
+    # Bot matches only: in a friend duel player two is a real person.
+    if not SiteSetting.query.filter_by(key='bot_answers_repaired').first():
+        try:
+            bot_match_ids = [
+                m.id for m in ArenaMatch.query.filter_by(
+                    player2_session='bot_quizmondo_ai').all()
+            ]
+            repaired_rows = repaired_answers = 0
+            if bot_match_ids:
+                correct_by_q = dict(db.session.query(
+                    QuizQuestion.id, QuizQuestion.correct_option).all())
+                options_by_q = dict(db.session.query(
+                    QuizQuestion.id, QuizQuestion.options_json).all())
+                for rnd in ArenaRound.query.filter(
+                        ArenaRound.match_id.in_(bot_match_ids)).all():
+                    answers = rnd.get_p2_answers()
+                    touched = False
+                    for answer in answers:
+                        if not isinstance(answer, dict) or answer.get('is_correct'):
+                            continue
+                        qid = answer.get('question_id')
+                        right = correct_by_q.get(qid)
+                        if not right or answer.get('selected') != right:
+                            continue
+                        try:
+                            keys = list(json.loads(options_by_q.get(qid) or '{}').keys())
+                        except Exception:
+                            keys = ['A', 'B', 'C', 'D']
+                        wrong = [k for k in keys if k != right] or ['A', 'B', 'C', 'D']
+                        # Deterministic, so a repeat run cannot shuffle a duel again
+                        answer['selected'] = wrong[(qid or 0) % len(wrong)]
+                        touched = True
+                        repaired_answers += 1
+                    if touched:
+                        rnd.p2_answers_json = json.dumps(answers)
+                        repaired_rows += 1
+            db.session.add(SiteSetting(key='bot_answers_repaired', value='1'))
+            db.session.commit()
+            if repaired_answers:
+                print('BOT_ANSWERS_REPAIRED rounds=%d answers=%d'
+                      % (repaired_rows, repaired_answers))
+        except Exception as e:
+            db.session.rollback()
+            print('Error repairing bot answers:', e)
 
     # 2b. Synchronize Extra Questions
     try:
