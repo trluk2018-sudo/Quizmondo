@@ -479,6 +479,10 @@ window.QMG = (function () {
     opts = opts || {};
     var onKey = opts.onKey || function () {};
     var states = {};
+    // A game whose letters are given to you - an anagram, a word wheel, the
+    // vowels put back into a phrase - wants those letters and no others. A
+    // full alphabet there is just twenty spare keys to look past.
+    var rows = opts.rows || KEY_ROWS;
 
     function keyClass(state) {
       var base = 'flex-1 min-w-0 h-11 rounded-lg font-mono font-black text-sm transition select-none ';
@@ -512,10 +516,11 @@ window.QMG = (function () {
     function render() {
       host.innerHTML = '';
       host.className = 'space-y-1.5 qmg-nosel';
-      KEY_ROWS.forEach(function (row, idx) {
+      var last = rows.length - 1;
+      rows.forEach(function (row, idx) {
         var line = document.createElement('div');
         line.className = 'flex gap-1.5 justify-center';
-        if (idx === 2 && opts.enter !== false) {
+        if (idx === last && opts.enter !== false) {
           line.appendChild(wideKey(opts.enterLabel || 'ENTER', 'ENTER'));
         }
         row.split('').forEach(function (ch) {
@@ -526,7 +531,7 @@ window.QMG = (function () {
           tap(btn, ch);
           line.appendChild(btn);
         });
-        if (idx === 2) {
+        if (idx === last) {
           line.appendChild(wideKey('⌫', 'BACK', 'text-rose-300'));
         }
         host.appendChild(line);
@@ -539,6 +544,7 @@ window.QMG = (function () {
       el: host,
       render: render,
       setStates: function (map) { states = map || {}; render(); },
+      setRows: function (next) { rows = next || KEY_ROWS; render(); },
       // Physical keyboards still work, for anyone on a desktop.
       bindPhysical: function () {
         document.addEventListener('keydown', function (ev) {
@@ -563,6 +569,49 @@ window.QMG = (function () {
   // gap can only go one way, so the direction of the swipe does not need
   // reading: starting the gesture on a tile is enough to say which one to move.
   // -------------------------------------------------------------------------
+
+  // Hang a keyboard of ours onto a game that already has a text box and a
+  // form. The game's own submit handler is left exactly as it was: the keys
+  // simply type into the box and press go, which is all the device keyboard
+  // was ever doing.
+  //
+  // On a touch screen the box is made read only so tapping it cannot raise
+  // the system keyboard over the game. On a desktop it stays an ordinary
+  // input, because typing on real keys should still work.
+  function attachKeyboard(host, input, form, opts) {
+    if (!host || !input) return null;
+    opts = opts || {};
+    var coarse = !(window.matchMedia && window.matchMedia('(pointer: fine)').matches);
+    if (coarse) {
+      input.readOnly = true;
+      input.setAttribute('inputmode', 'none');
+    }
+
+    function submit() {
+      if (!form) return;
+      if (form.requestSubmit) form.requestSubmit();
+      else form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    }
+
+    return keyboard(host, {
+      rows: opts.rows,
+      enterLabel: opts.enterLabel || 'ENTER',
+      onKey: function (k) {
+        if (k === 'BACK') {
+          input.value = input.value.slice(0, -1);
+        } else if (k === 'ENTER') {
+          submit();
+        } else if (/^[A-Z]$/.test(k)) {
+          if (opts.maxLength && input.value.length >= opts.maxLength) return;
+          input.value += k;
+          audio.tick();
+        } else {
+          return;
+        }
+        if (opts.onChange) opts.onChange(input.value);
+      }
+    });
+  }
 
   // Put the cursor in a box, but only where that is a kindness. On a desktop
   // it saves a click. On a phone it throws the keyboard up over the game
@@ -618,6 +667,7 @@ window.QMG = (function () {
     finish: finish, replay: replay, onReplay: onReplay, hideOverlay: hideOverlay,
     shuffle: shuffle, pick: pick, normalise: normalise, sleep: sleep,
     squareImage: squareImage, loadWords: loadWords, checkWord: checkWord,
-    keyboard: keyboard, boardGestures: boardGestures, softFocus: softFocus
+    keyboard: keyboard, attachKeyboard: attachKeyboard,
+    boardGestures: boardGestures, softFocus: softFocus
   };
 })();

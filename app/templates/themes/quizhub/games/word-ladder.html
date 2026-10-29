@@ -35,6 +35,9 @@
         </div>
       </form>
 
+      <!-- Our own keys: the device keyboard covers too much of a phone -->
+      <div id="wlKeys" class="pt-1"></div>
+
       <div id="wlFeedback" class="min-h-[18px] font-mono text-xs font-bold text-center"></div>
     </div>
   </div>
@@ -202,6 +205,13 @@
   QMG.loadWords();
   QMG.onReplay(start);
   start();
+
+  QMG.attachKeyboard(
+    document.getElementById('wlKeys'),
+    document.getElementById('wlInput'),
+    document.getElementById('wlForm'),
+    { enterLabel: 'ENTER' }
+  );
 })();
 </script>
 {% endblock %}

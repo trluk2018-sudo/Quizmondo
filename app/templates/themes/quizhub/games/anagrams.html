@@ -36,6 +36,10 @@
         </div>
       </form>
 
+      <!-- The keys are this word's own letters; a full alphabet
+           here would be twenty spare keys to look past -->
+      <div id="anKeys" class="pt-1"></div>
+
       <div id="anFeedback" class="min-h-[18px] font-mono text-xs font-bold"></div>
     </div>
   </div>
@@ -98,7 +102,8 @@
     lenEl.textContent = current.word.length;
     paintLetters(current.scrambled);
     inputEl.value = '';
-    inputEl.focus({ preventScroll: true });
+    if (keys) keys.setRows(letterRows(current.scrambled));
+    QMG.softFocus(inputEl);
   }
 
   function say(text, good) {
@@ -176,6 +181,21 @@
     nextWord();
     QMG.startTimer(ROUND_SECONDS, timeUp);
   }
+
+  // Split the letters over one or two rows so they stay thumb sized.
+  function letterRows(letters) {
+    var all = letters.join ? letters.join('') : String(letters);
+    if (all.length <= 6) return [all];
+    var half = Math.ceil(all.length / 2);
+    return [all.slice(0, half), all.slice(half)];
+  }
+
+  var keys = QMG.attachKeyboard(
+    document.getElementById('anKeys'),
+    inputEl,
+    formEl,
+    { enterLabel: 'ENTER', rows: [''] }
+  );
 
   QMG.onReplay(start);
   start();

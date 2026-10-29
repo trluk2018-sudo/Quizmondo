@@ -20,6 +20,9 @@
         </button>
       </form>
 
+      <!-- Our own keys: the device keyboard covers too much of a phone -->
+      <div id="wcKeys" class="pt-1"></div>
+
       <div id="wcFeedback" class="min-h-[18px] font-mono text-xs font-bold"></div>
     </div>
   </div>
@@ -160,6 +163,13 @@
 
   QMG.onReplay(start);
   start();
+
+  QMG.attachKeyboard(
+    document.getElementById('wcKeys'),
+    document.getElementById('wcInput'),
+    document.getElementById('wcForm'),
+    { enterLabel: 'ENTER' }
+  );
 })();
 </script>
 {% endblock %}

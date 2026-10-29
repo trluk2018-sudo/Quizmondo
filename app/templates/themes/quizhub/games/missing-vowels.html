@@ -29,6 +29,9 @@
         </div>
       </form>
 
+      <!-- Our own keys: the device keyboard covers too much of a phone -->
+      <div id="mvKeys" class="pt-1"></div>
+
       <div id="mvFeedback" class="min-h-[18px] font-mono text-xs font-bold"></div>
     </div>
   </div>
@@ -171,6 +174,13 @@
 
   QMG.onReplay(start);
   start();
+
+  QMG.attachKeyboard(
+    document.getElementById('mvKeys'),
+    document.getElementById('mvInput'),
+    document.getElementById('mvForm'),
+    { enterLabel: 'ENTER' }
+  );
 })();
 </script>
 {% endblock %}

@@ -25,6 +25,9 @@
         </div>
       </form>
 
+      <!-- Only the nine letters on the wheel are worth a key -->
+      <div id="wwKeys" class="pt-1"></div>
+
       <div id="wwFeedback" class="min-h-[18px] font-mono text-xs font-bold text-center"></div>
     </div>
   </div>
@@ -205,6 +208,19 @@
 
   QMG.onReplay(function () { window.location.reload(); });
   start();
+  // The wheel's own nine letters, centre first so the compulsory one leads.
+  (function () {
+    var wheel = [PUZZLE.centre].concat(PUZZLE.outer || []);
+    var all = wheel.join('').toUpperCase();
+    var half = Math.ceil(all.length / 2);
+    QMG.attachKeyboard(
+      document.getElementById('wwKeys'),
+      inputEl,
+      document.getElementById('wwForm'),
+      { enterLabel: 'ENTER', rows: [all.slice(0, half), all.slice(half)] }
+    );
+  })();
+
 })();
 </script>
 {% endblock %}
