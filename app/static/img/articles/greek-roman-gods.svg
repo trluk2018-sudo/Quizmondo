@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140a2e"/>
+      <stop offset="55%" stop-color="#0a0620"/>
+      <stop offset="100%" stop-color="#05030f"/>
+    </linearGradient>
+    <radialGradient id="glowA"><stop offset="0%" stop-color="#22d3ee" stop-opacity=".40"/><stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB"><stop offset="0%" stop-color="#a855f7" stop-opacity=".38"/><stop offset="100%" stop-color="#a855f7" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <ellipse cx="120" cy="70" rx="300" ry="210" fill="url(#glowA)"/>
+  <ellipse cx="690" cy="390" rx="320" ry="220" fill="url(#glowB)"/>
+  <text x="54" y="70" font-family="Verdana,DejaVu Sans,sans-serif" font-size="40" font-weight="bold" fill="#f8fafc">Greek Gods,</text>
+  <text x="56" y="98" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" fill="#94a3b8">and their Roman names</text>
+  <text x="54" y="170" font-family="Georgia,serif" font-size="26" fill="#22d3ee">Zeus</text>
+  <text x="250" y="170" font-family="Verdana,sans-serif" font-size="20" fill="#94a3b8">&#8594;</text>
+  <text x="300" y="170" font-family="Georgia,serif" font-size="26" fill="#fbbf24">Jupiter</text>
+  <text x="54" y="228" font-family="Georgia,serif" font-size="26" fill="#22d3ee">Ares</text>
+  <text x="250" y="228" font-family="Verdana,sans-serif" font-size="20" fill="#94a3b8">&#8594;</text>
+  <text x="300" y="228" font-family="Georgia,serif" font-size="26" fill="#fbbf24">Mars</text>
+  <text x="54" y="286" font-family="Georgia,serif" font-size="26" fill="#22d3ee">Hermes</text>
+  <text x="250" y="286" font-family="Verdana,sans-serif" font-size="20" fill="#94a3b8">&#8594;</text>
+  <text x="300" y="286" font-family="Georgia,serif" font-size="26" fill="#fbbf24">Mercury</text>
+  <text x="54" y="344" font-family="Georgia,serif" font-size="26" fill="#22d3ee">Artemis</text>
+  <text x="250" y="344" font-family="Verdana,sans-serif" font-size="20" fill="#94a3b8">&#8594;</text>
+  <text x="300" y="344" font-family="Georgia,serif" font-size="26" fill="#fbbf24">Diana</text>
+  <g stroke="#a855f7" stroke-width="3" fill="none" opacity=".45">
+    <rect x="600" y="150" width="120" height="18" rx="4"/>
+    <rect x="590" y="382" width="140" height="20" rx="4"/>
+    <path d="M618 170 L618 382"/>
+    <path d="M650 170 L650 382"/>
+    <path d="M682 170 L682 382"/>
+  </g>
+
+  <rect x="1" y="1" width="798" height="448" fill="none" stroke="#22d3ee" stroke-opacity=".22"/>
+</svg>

@@ -354,4 +354,305 @@ ARTICLES = [
 <p>Roman numerals let a setter smuggle letters into an answer. "Fifty" means <strong>L</strong>. "Hundred" means <strong>C</strong>. "Thousand" or "a grand" means <strong>M</strong>. "Five hundred" means <strong>D</strong>. "One" at the start of a word is very often <strong>I</strong>. If a clue mentions a number and the answer does not look numeric, this is almost always what is going on.</p>
 """),
 
+    # ==================================================================
+    _a('every-shakespeare-play', 'Every Shakespeare Play, Grouped and Dated',
+       REF,
+       'All 38 plays sorted into comedies, histories, tragedies and romances, with approximate dates, the ones of disputed authorship, and the short titles setters reach for.',
+       '/static/img/articles/shakespeare.jpg',
+       """
+<p>Shakespeare wrote somewhere around 38 plays, depending on how you count collaborations. The First Folio of 1623 sorted them into three groups — comedies, histories and tragedies — and scholars later added a fourth, the late romances.</p>
+
+<h3>Comedies</h3>
+<p>All’s Well That Ends Well · As You Like It · The Comedy of Errors · Love’s Labour’s Lost · Measure for Measure · The Merchant of Venice · The Merry Wives of Windsor · A Midsummer Night’s Dream · Much Ado About Nothing · The Taming of the Shrew · Twelfth Night · The Two Gentlemen of Verona · The Two Noble Kinsmen · Troilus and Cressida</p>
+
+<h3>Histories</h3>
+<p>King John · Richard II · Henry IV Part 1 · Henry IV Part 2 · Henry V · Henry VI Part 1 · Henry VI Part 2 · Henry VI Part 3 · Richard III · Henry VIII</p>
+
+<h3>Tragedies</h3>
+<p>Antony and Cleopatra · Coriolanus · Hamlet · Julius Caesar · King Lear · Macbeth · Othello · Romeo and Juliet · Timon of Athens · Titus Andronicus</p>
+
+<h3>Late romances</h3>
+<p>Cymbeline · Pericles · The Tempest · The Winter’s Tale</p>
+
+<h3>Roughly when</h3>
+<table>
+<tr><th>Period</th><th>Plays</th></tr>
+<tr><td>c.1590–1594</td><td>The Henry VI plays, Richard III, The Comedy of Errors, Titus Andronicus, The Taming of the Shrew</td></tr>
+<tr><td>c.1595–1599</td><td>Romeo and Juliet, A Midsummer Night’s Dream, Richard II, The Merchant of Venice, Henry IV, Much Ado, Henry V, Julius Caesar</td></tr>
+<tr><td>c.1600–1606</td><td>Hamlet, Twelfth Night, Othello, Measure for Measure, King Lear, Macbeth</td></tr>
+<tr><td>c.1607–1613</td><td>Antony and Cleopatra, Coriolanus, Pericles, Cymbeline, The Winter’s Tale, The Tempest, Henry VIII</td></tr>
+</table>
+
+<h3>The disputed ones</h3>
+<ul>
+<li><strong>Pericles</strong> and <strong>Henry VIII</strong> are widely accepted as collaborations, the latter with John Fletcher.</li>
+<li><strong>The Two Noble Kinsmen</strong> is also Shakespeare and Fletcher, and was left out of the First Folio entirely.</li>
+<li><strong>Edward III</strong> is now included in some complete editions and not in others.</li>
+<li><strong>Cardenio</strong> is lost. <strong>Love’s Labour’s Won</strong> is referred to in a 1598 list and may be a lost play or an alternative title for one we already have.</li>
+</ul>
+
+<h3>Facts quizzes ask for</h3>
+<ul>
+<li><strong>Longest play:</strong> Hamlet, around 4,000 lines. Uncut it runs over four hours.</li>
+<li><strong>Shortest:</strong> The Comedy of Errors, at roughly 1,800 lines.</li>
+<li><strong>Only play set largely in Scotland:</strong> Macbeth — traditionally called "the Scottish play" in a theatre, to avoid the bad luck of naming it.</li>
+<li><strong>The one with a bear:</strong> The Winter’s Tale, and its famous stage direction, "Exit, pursued by a bear".</li>
+</ul>
+
+<h3>Short titles for crosswords</h3>
+<p><strong>6:</strong> Hamlet. <strong>7:</strong> Macbeth, Othello, Pericles. <strong>8:</strong> King Lear, Cymbeline. Setters also love single characters: <strong>Iago</strong> (4), <strong>Puck</strong> (4), <strong>Lear</strong> (4), <strong>Ariel</strong> (5), <strong>Hamlet</strong> (6), <strong>Juliet</strong> (6), <strong>Oberon</strong> (6), <strong>Shylock</strong> (7).</p>
+"""),
+
+    # ==================================================================
+    _a('nato-phonetic-alphabet', 'The NATO Phonetic Alphabet, and Why It Sounds Like That',
+       REF,
+       'Alfa to Zulu in full, the numbers, the two words that are deliberately misspelled, and what the alphabet replaced — including the British one with Ack and Beer.',
+       '/static/img/articles/phonetic-alphabet.svg',
+       """
+<p>The spelling alphabet used by aviation, shipping, the military and anyone reading a postcode down a bad phone line was agreed in 1956 after years of testing. Every word was chosen to survive noise, distortion and a heavy accent at either end.</p>
+
+<h3>The alphabet</h3>
+<table>
+<tr><th>Letter</th><th>Word</th><th>Letter</th><th>Word</th></tr>
+<tr><td>A</td><td>Alfa</td><td>N</td><td>November</td></tr>
+<tr><td>B</td><td>Bravo</td><td>O</td><td>Oscar</td></tr>
+<tr><td>C</td><td>Charlie</td><td>P</td><td>Papa</td></tr>
+<tr><td>D</td><td>Delta</td><td>Q</td><td>Quebec</td></tr>
+<tr><td>E</td><td>Echo</td><td>R</td><td>Romeo</td></tr>
+<tr><td>F</td><td>Foxtrot</td><td>S</td><td>Sierra</td></tr>
+<tr><td>G</td><td>Golf</td><td>T</td><td>Tango</td></tr>
+<tr><td>H</td><td>Hotel</td><td>U</td><td>Uniform</td></tr>
+<tr><td>I</td><td>India</td><td>V</td><td>Victor</td></tr>
+<tr><td>J</td><td>Juliett</td><td>W</td><td>Whiskey</td></tr>
+<tr><td>K</td><td>Kilo</td><td>X</td><td>X-ray</td></tr>
+<tr><td>L</td><td>Lima</td><td>Y</td><td>Yankee</td></tr>
+<tr><td>M</td><td>Mike</td><td>Z</td><td>Zulu</td></tr>
+</table>
+
+<h3>The two deliberate misspellings</h3>
+<p><strong>Alfa</strong>, not Alpha. <strong>Juliett</strong>, with two Ts. Both are spelled that way on purpose. "Ph" is not pronounced as an F in several languages, and a French speaker reading "Juliet" would be inclined to leave the T silent. The odd spellings remove the ambiguity.</p>
+
+<h3>The numbers</h3>
+<p>Zero · One · Two · Three · Four · Five · Six · Seven · Eight · Niner. <strong>Niner</strong> keeps nine from being confused with the German <em>nein</em>, and three and five are often said as "tree" and "fife" in aviation for the same sort of reason.</p>
+
+<h3>What came before</h3>
+<p>Britain used several systems. The First World War signallers used <strong>Ack, Beer, Charlie, Don, Edward</strong> — which is where "ack-ack" for anti-aircraft fire comes from, from AA. The RAF in the Second World War used <strong>Able, Baker, Charlie, Dog, Easy, Fox</strong>, and American forces used a close variant, which is why "Able Baker" turns up in war films.</p>
+<p>The problem was that these alphabets were full of sounds that do not exist in every language. The 1956 set was tested on speakers of many languages under deliberately poor conditions, and only words that survived all of it were kept.</p>
+
+<h3>Where it shows up in quizzes</h3>
+<ul>
+<li><strong>Only three are place names... almost.</strong> India, Lima, Quebec are cities or countries. Sierra and Victor are not.</li>
+<li><strong>Whiskey</strong> is spelled the Irish and American way, with an E, not the Scottish way.</li>
+<li><strong>Oscar, Victor and Mike</strong> are the three that are ordinary first names.</li>
+<li><strong>Hotel, Golf, Tango, Foxtrot</strong> — the four that are things you can do or stay in.</li>
+</ul>
+"""),
+
+    # ==================================================================
+    _a('zodiac-signs-and-symbols', 'The Twelve Zodiac Signs, Their Dates and Their Symbols',
+       REF,
+       'Each sign with its dates, symbol, ruling planet and element, the Latin names setters use, and the thirteenth constellation that is not a sign.',
+       '/static/img/articles/zodiac.svg',
+       """
+<p>Whatever you make of astrology, the zodiac is quiz and crossword furniture. The names are Latin, they are short, and each has a symbol, an element and a ruling planet attached.</p>
+
+<h3>The twelve</h3>
+<table>
+<tr><th>Sign</th><th>Symbol</th><th>Dates</th><th>Element</th><th>Ruler</th></tr>
+<tr><td>Aries</td><td>The Ram</td><td>21 Mar – 19 Apr</td><td>Fire</td><td>Mars</td></tr>
+<tr><td>Taurus</td><td>The Bull</td><td>20 Apr – 20 May</td><td>Earth</td><td>Venus</td></tr>
+<tr><td>Gemini</td><td>The Twins</td><td>21 May – 20 Jun</td><td>Air</td><td>Mercury</td></tr>
+<tr><td>Cancer</td><td>The Crab</td><td>21 Jun – 22 Jul</td><td>Water</td><td>The Moon</td></tr>
+<tr><td>Leo</td><td>The Lion</td><td>23 Jul – 22 Aug</td><td>Fire</td><td>The Sun</td></tr>
+<tr><td>Virgo</td><td>The Maiden</td><td>23 Aug – 22 Sep</td><td>Earth</td><td>Mercury</td></tr>
+<tr><td>Libra</td><td>The Scales</td><td>23 Sep – 22 Oct</td><td>Air</td><td>Venus</td></tr>
+<tr><td>Scorpio</td><td>The Scorpion</td><td>23 Oct – 21 Nov</td><td>Water</td><td>Pluto / Mars</td></tr>
+<tr><td>Sagittarius</td><td>The Archer</td><td>22 Nov – 21 Dec</td><td>Fire</td><td>Jupiter</td></tr>
+<tr><td>Capricorn</td><td>The Goat</td><td>22 Dec – 19 Jan</td><td>Earth</td><td>Saturn</td></tr>
+<tr><td>Aquarius</td><td>The Water Bearer</td><td>20 Jan – 18 Feb</td><td>Air</td><td>Uranus / Saturn</td></tr>
+<tr><td>Pisces</td><td>The Fish</td><td>19 Feb – 20 Mar</td><td>Water</td><td>Neptune / Jupiter</td></tr>
+</table>
+
+<h3>Things worth knowing</h3>
+<ul>
+<li><strong>Only one sign has no animal or human figure.</strong> Libra, the scales. Every other sign is a creature or a person.</li>
+<li><strong>Four elements, three signs each.</strong> Fire: Aries, Leo, Sagittarius. Earth: Taurus, Virgo, Capricorn. Air: Gemini, Libra, Aquarius. Water: Cancer, Scorpio, Pisces.</li>
+<li><strong>Aquarius is an air sign</strong>, despite carrying water. This catches people out constantly.</li>
+<li><strong>Two signs are half-and-half.</strong> Sagittarius is a centaur, Capricorn traditionally a goat with a fish’s tail.</li>
+<li><strong>The dates shift slightly</strong> year to year, because the sun does not cross the boundaries at the same clock time each year.</li>
+</ul>
+
+<h3>The thirteenth constellation</h3>
+<p><strong>Ophiuchus</strong>, the serpent bearer, sits on the ecliptic between Scorpio and Sagittarius, so the sun passes through it every year. It has never been one of the twelve signs, because the zodiac divides the sky into twelve equal thirty-degree slices rather than following constellation boundaries. Every few years a news story announces that star signs have "changed". They have not.</p>
+
+<h3>For crossword solvers</h3>
+<p><strong>3:</strong> Leo. <strong>5:</strong> Aries, Libra, Virgo. <strong>6:</strong> Taurus, Gemini, Cancer, Pisces. <strong>7:</strong> Scorpio. <strong>8:</strong> Aquarius. <strong>9:</strong> Capricorn. <strong>11:</strong> Sagittarius. "The Ram", "the bull", "the scales" and "the archer" in a clue are nearly always pointing at these.</p>
+"""),
+
+    # ==================================================================
+    _a('seven-wonders-ancient-and-new', 'The Seven Wonders, Ancient and New',
+       REF,
+       'The original seven wonders of the ancient world, which survives, the modern replacement list voted on in 2007, and the natural wonders people confuse with both.',
+       '/static/img/articles/pyramids.jpg',
+       """
+<p>There are at least three "seven wonders" lists in circulation, and quiz questions rarely say which one they mean. Here are all of them.</p>
+
+<h3>The seven wonders of the ancient world</h3>
+<table>
+<tr><th>Wonder</th><th>Where</th><th>Fate</th></tr>
+<tr><td>Great Pyramid of Giza</td><td>Egypt</td><td>Still standing</td></tr>
+<tr><td>Hanging Gardens of Babylon</td><td>Iraq</td><td>Possibly never existed</td></tr>
+<tr><td>Statue of Zeus at Olympia</td><td>Greece</td><td>Lost, probably to fire</td></tr>
+<tr><td>Temple of Artemis at Ephesus</td><td>Turkey</td><td>Destroyed, rebuilt, destroyed again</td></tr>
+<tr><td>Mausoleum at Halicarnassus</td><td>Turkey</td><td>Brought down by earthquakes</td></tr>
+<tr><td>Colossus of Rhodes</td><td>Greece</td><td>Fell in an earthquake after 54 years</td></tr>
+<tr><td>Lighthouse of Alexandria</td><td>Egypt</td><td>Toppled by earthquakes</td></tr>
+</table>
+
+<p><strong>Only the Great Pyramid survives</strong>, and it is also the oldest of the seven by a very long way — around two thousand years older than any of the others.</p>
+
+<h3>Three things worth knowing</h3>
+<ul>
+<li><strong>The Hanging Gardens may be a myth.</strong> No Babylonian text mentions them, and no archaeological trace has been found. One theory is that the descriptions actually refer to gardens at Nineveh, a different city altogether.</li>
+<li><strong>The Colossus did not straddle the harbour.</strong> That image comes from medieval illustrations. It stood on one side, and at around 33 metres it was roughly the height of the Statue of Liberty without her pedestal.</li>
+<li><strong>"Mausoleum" is a word because of one of them.</strong> The tomb of Mausolus at Halicarnassus was so famous that his name became the general term for any grand tomb.</li>
+</ul>
+
+<h3>The new seven wonders, voted in 2007</h3>
+<table>
+<tr><th>Wonder</th><th>Country</th></tr>
+<tr><td>Great Wall of China</td><td>China</td></tr>
+<tr><td>Petra</td><td>Jordan</td></tr>
+<tr><td>Christ the Redeemer</td><td>Brazil</td></tr>
+<tr><td>Machu Picchu</td><td>Peru</td></tr>
+<tr><td>Chichén Itzá</td><td>Mexico</td></tr>
+<tr><td>Colosseum</td><td>Italy</td></tr>
+<tr><td>Taj Mahal</td><td>India</td></tr>
+</table>
+<p>The Great Pyramid was given honorary status rather than being made to compete, after Egypt objected to the whole exercise.</p>
+
+<h3>And the natural seven</h3>
+<p>There is no single agreed list, but the most commonly cited one runs: the Grand Canyon, the Great Barrier Reef, the Harbour of Rio de Janeiro, Mount Everest, the Northern Lights, Parícutin volcano and Victoria Falls.</p>
+"""),
+
+    # ==================================================================
+    _a('what-money-is-called-around-the-world', 'What Money Is Called Around the World',
+       REF,
+       'The currency of every country worth knowing, the ones that share a name, the shortest and strangest, and what a rand, a rial and a ringgit actually belong to.',
+       '/static/img/articles/currencies.jpg',
+       """
+<p>Currencies are a crossword favourite because so many are short, vowel-heavy and unmistakable: <strong>euro</strong>, <strong>rand</strong>, <strong>yen</strong>, <strong>lira</strong>, <strong>peso</strong>.</p>
+
+<h3>Europe</h3>
+<table>
+<tr><th>Country</th><th>Currency</th></tr>
+<tr><td>Eurozone (20 countries)</td><td>Euro</td></tr>
+<tr><td>United Kingdom</td><td>Pound sterling</td></tr>
+<tr><td>Switzerland</td><td>Swiss franc</td></tr>
+<tr><td>Norway, Denmark, Sweden, Iceland</td><td>Krone / krona</td></tr>
+<tr><td>Poland</td><td>Zloty</td></tr>
+<tr><td>Czechia</td><td>Koruna</td></tr>
+<tr><td>Hungary</td><td>Forint</td></tr>
+<tr><td>Romania</td><td>Leu</td></tr>
+<tr><td>Bulgaria</td><td>Lev</td></tr>
+<tr><td>Ukraine</td><td>Hryvnia</td></tr>
+<tr><td>Russia</td><td>Rouble</td></tr>
+<tr><td>Turkey</td><td>Lira</td></tr>
+</table>
+
+<h3>Asia and the Middle East</h3>
+<table>
+<tr><th>Country</th><th>Currency</th></tr>
+<tr><td>Japan</td><td>Yen</td></tr>
+<tr><td>China</td><td>Yuan (the renminbi)</td></tr>
+<tr><td>India, Pakistan, Sri Lanka, Nepal</td><td>Rupee</td></tr>
+<tr><td>South Korea, North Korea</td><td>Won</td></tr>
+<tr><td>Thailand</td><td>Baht</td></tr>
+<tr><td>Vietnam</td><td>Dong</td></tr>
+<tr><td>Malaysia</td><td>Ringgit</td></tr>
+<tr><td>Indonesia</td><td>Rupiah</td></tr>
+<tr><td>Israel</td><td>Shekel</td></tr>
+<tr><td>Saudi Arabia, Qatar, Oman</td><td>Riyal / rial</td></tr>
+<tr><td>Iran</td><td>Rial</td></tr>
+<tr><td>Iraq, Jordan, Kuwait</td><td>Dinar</td></tr>
+</table>
+
+<h3>Africa and the Americas</h3>
+<table>
+<tr><th>Country</th><th>Currency</th></tr>
+<tr><td>South Africa</td><td>Rand</td></tr>
+<tr><td>Nigeria</td><td>Naira</td></tr>
+<tr><td>Ghana</td><td>Cedi</td></tr>
+<tr><td>Kenya, Tanzania, Uganda</td><td>Shilling</td></tr>
+<tr><td>Egypt</td><td>Egyptian pound</td></tr>
+<tr><td>Morocco</td><td>Dirham</td></tr>
+<tr><td>Ethiopia</td><td>Birr</td></tr>
+<tr><td>Brazil</td><td>Real</td></tr>
+<tr><td>Mexico, Argentina, Chile, Colombia</td><td>Peso</td></tr>
+<tr><td>Peru</td><td>Sol</td></tr>
+<tr><td>Venezuela</td><td>Bolívar</td></tr>
+<tr><td>Costa Rica</td><td>Colón</td></tr>
+</table>
+
+<h3>The ones that catch people out</h3>
+<ul>
+<li><strong>China has two names for its money.</strong> The renminbi is the currency; the yuan is the unit. Like sterling and the pound.</li>
+<li><strong>Not every "dollar" is American.</strong> Australia, Canada, New Zealand, Singapore, Hong Kong, Jamaica, Fiji and more all use dollars.</li>
+<li><strong>Switzerland does not use the euro.</strong> Nor do Norway, Sweden, Denmark, Poland, Czechia or Hungary, all of which are in Europe and several of which are in the EU.</li>
+<li><strong>Panama and Ecuador use the US dollar</strong> as their own currency, as do several others.</li>
+<li><strong>The Scottish and Northern Irish notes</strong> are pounds sterling, issued by commercial banks rather than the Bank of England. They are not a separate currency.</li>
+</ul>
+
+<h3>Short ones for crosswords</h3>
+<p><strong>3:</strong> yen, won, sol, lek, leu, lev. <strong>4:</strong> euro, rand, baht, dong, cedi, birr, mark, lira. <strong>5:</strong> pound, krona, krone, zloty, pesos, rupee, franc, dinar, naira, riyal.</p>
+"""),
+
+    # ==================================================================
+    _a('first-twenty-elements', 'The First Twenty Elements, and How to Remember Them',
+       REF,
+       'Hydrogen to calcium in order, with symbols and atomic numbers, a mnemonic that actually sticks, and what each one is for.',
+       '/static/img/articles/elements.svg',
+       """
+<p>Quiz questions about the periodic table almost always live in the first twenty. Learn these in order and you have covered most of what any general knowledge round will ask.</p>
+
+<h3>The first twenty</h3>
+<table>
+<tr><th>#</th><th>Element</th><th>Symbol</th><th>Known for</th></tr>
+<tr><td>1</td><td>Hydrogen</td><td>H</td><td>Lightest and most abundant element</td></tr>
+<tr><td>2</td><td>Helium</td><td>He</td><td>Balloons; the only element found in the sun first</td></tr>
+<tr><td>3</td><td>Lithium</td><td>Li</td><td>Batteries; lightest metal</td></tr>
+<tr><td>4</td><td>Beryllium</td><td>Be</td><td>Light, stiff, used in aerospace</td></tr>
+<tr><td>5</td><td>Boron</td><td>B</td><td>Borax, heat-resistant glass</td></tr>
+<tr><td>6</td><td>Carbon</td><td>C</td><td>The basis of all known life</td></tr>
+<tr><td>7</td><td>Nitrogen</td><td>N</td><td>78% of the air</td></tr>
+<tr><td>8</td><td>Oxygen</td><td>O</td><td>21% of the air; breathing</td></tr>
+<tr><td>9</td><td>Fluorine</td><td>F</td><td>Toothpaste; most reactive element</td></tr>
+<tr><td>10</td><td>Neon</td><td>Ne</td><td>Signs that glow orange-red</td></tr>
+<tr><td>11</td><td>Sodium</td><td>Na</td><td>Half of table salt</td></tr>
+<tr><td>12</td><td>Magnesium</td><td>Mg</td><td>Burns bright white; in chlorophyll</td></tr>
+<tr><td>13</td><td>Aluminium</td><td>Al</td><td>Cans, foil, aircraft</td></tr>
+<tr><td>14</td><td>Silicon</td><td>Si</td><td>Sand, glass, computer chips</td></tr>
+<tr><td>15</td><td>Phosphorus</td><td>P</td><td>Matches; bones and DNA</td></tr>
+<tr><td>16</td><td>Sulfur</td><td>S</td><td>The rotten-egg smell</td></tr>
+<tr><td>17</td><td>Chlorine</td><td>Cl</td><td>The other half of salt; pools</td></tr>
+<tr><td>18</td><td>Argon</td><td>Ar</td><td>Inert filler in light bulbs</td></tr>
+<tr><td>19</td><td>Potassium</td><td>K</td><td>Bananas; nerve signals</td></tr>
+<tr><td>20</td><td>Calcium</td><td>Ca</td><td>Bones, teeth, chalk</td></tr>
+</table>
+
+<h3>A mnemonic that sticks</h3>
+<p>Take the initials in order — H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca — and read them as a sentence:</p>
+<p><em>"Harry He Likes Beer But Could Not Obtain Food. New Nations Might Also Sign Peace Security Clause. Arthur King Can."</em></p>
+<p>It is nonsense, which is exactly why it works. Most people find they can reel off the first ten within a few minutes and the rest within a day.</p>
+
+<h3>Things people get wrong</h3>
+<ul>
+<li><strong>Helium was found in the sun before it was found on Earth</strong>, in the spectrum of an eclipse in 1868. It is named after Helios.</li>
+<li><strong>Hydrogen is not a metal</strong> in ordinary conditions, despite sitting above the alkali metals.</li>
+<li><strong>Aluminium and aluminum</strong> are the same element. The international spelling has the extra I; the American one does not.</li>
+<li><strong>The lightest metal is lithium</strong>, not aluminium. Lithium floats on water.</li>
+<li><strong>Fluorine, not chlorine</strong>, is the most reactive of all elements.</li>
+</ul>
+"""),
+
 ]

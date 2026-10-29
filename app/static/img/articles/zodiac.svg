@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140a2e"/>
+      <stop offset="55%" stop-color="#0a0620"/>
+      <stop offset="100%" stop-color="#05030f"/>
+    </linearGradient>
+    <radialGradient id="glowA"><stop offset="0%" stop-color="#a855f7" stop-opacity=".40"/><stop offset="100%" stop-color="#a855f7" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB"><stop offset="0%" stop-color="#22d3ee" stop-opacity=".38"/><stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <ellipse cx="120" cy="70" rx="300" ry="210" fill="url(#glowA)"/>
+  <ellipse cx="690" cy="390" rx="320" ry="220" fill="url(#glowB)"/>
+  <text x="54" y="70" font-family="Verdana,DejaVu Sans,sans-serif" font-size="40" font-weight="bold" fill="#f8fafc">The Twelve Signs</text>
+  <text x="56" y="98" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" fill="#94a3b8">Dates, symbols, elements and rulers</text>
+  <circle cx="620.0" cy="142.0" r="26" fill="#a855f7" fill-opacity=".12" stroke="#a855f7" stroke-opacity=".45"/>
+  <text x="620.0" y="152.0" font-size="26" fill="#f8fafc" text-anchor="middle">♈</text>
+  <circle cx="684.0" cy="159.1" r="26" fill="#a855f7" fill-opacity=".12" stroke="#a855f7" stroke-opacity=".45"/>
+  <text x="684.0" y="169.1" font-size="26" fill="#f8fafc" text-anchor="middle">♉</text>
+  <circle cx="730.9" cy="206.0" r="26" fill="#a855f7" fill-opacity=".12" stroke="#a855f7" stroke-opacity=".45"/>
+  <text x="730.9" y="216.0" font-size="26" fill="#f8fafc" text-anchor="middle">♊</text>
+  <circle cx="748.0" cy="270.0" r="26" fill="#a855f7" fill-opacity=".12" stroke="#a855f7" stroke-opacity=".45"/>
+  <text x="748.0" y="280.0" font-size="26" fill="#f8fafc" text-anchor="middle">♋</text>
+  <circle cx="730.9" cy="334.0" r="26" fill="#a855f7" fill-opacity=".12" stroke="#a855f7" stroke-opacity=".45"/>
+  <text x="730.9" y="344.0" font-size="26" fill="#f8fafc" text-anchor="middle">♌</text>
+  <circle cx="684.0" cy="380.9" r="26" fill="#a855f7" fill-opacity=".12" stroke="#a855f7" stroke-opacity=".45"/>
+  <text x="684.0" y="390.9" font-size="26" fill="#f8fafc" text-anchor="middle">♍</text>
+  <circle cx="620.0" cy="398.0" r="26" fill="#a855f7" fill-opacity=".12" stroke="#a855f7" stroke-opacity=".45"/>
+  <text x="620.0" y="408.0" font-size="26" fill="#f8fafc" text-anchor="middle">♎</text>
+  <circle cx="556.0" cy="380.9" r="26" fill="#a855f7" fill-opacity=".12" stroke="#a855f7" stroke-opacity=".45"/>
+  <text x="556.0" y="390.9" font-size="26" fill="#f8fafc" text-anchor="middle">♏</text>
+  <circle cx="509.1" cy="334.0" r="26" fill="#a855f7" fill-opacity=".12" stroke="#a855f7" stroke-opacity=".45"/>
+  <text x="509.1" y="344.0" font-size="26" fill="#f8fafc" text-anchor="middle">♐</text>
+  <circle cx="492.0" cy="270.0" r="26" fill="#a855f7" fill-opacity=".12" stroke="#a855f7" stroke-opacity=".45"/>
+  <text x="492.0" y="280.0" font-size="26" fill="#f8fafc" text-anchor="middle">♑</text>
+  <circle cx="509.1" cy="206.0" r="26" fill="#a855f7" fill-opacity=".12" stroke="#a855f7" stroke-opacity=".45"/>
+  <text x="509.1" y="216.0" font-size="26" fill="#f8fafc" text-anchor="middle">♒</text>
+  <circle cx="556.0" cy="159.1" r="26" fill="#a855f7" fill-opacity=".12" stroke="#a855f7" stroke-opacity=".45"/>
+  <text x="556.0" y="169.1" font-size="26" fill="#f8fafc" text-anchor="middle">♓</text>
+  <circle cx="620" cy="270" r="92" fill="none" stroke="#22d3ee" stroke-opacity=".30" stroke-dasharray="4 7"/>
+  <text x="54" y="210" font-family="Verdana,sans-serif" font-size="15" fill="#22d3ee">Fire &#183; Earth &#183; Air &#183; Water</text>
+  <text x="54" y="248" font-family="Verdana,sans-serif" font-size="15" fill="#94a3b8">Three signs to each element</text>
+  <text x="54" y="300" font-family="Verdana,sans-serif" font-size="15" fill="#94a3b8">Only Libra has no living figure</text>
+
+  <rect x="1" y="1" width="798" height="448" fill="none" stroke="#a855f7" stroke-opacity=".22"/>
+</svg>

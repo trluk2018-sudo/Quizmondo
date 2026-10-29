@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140a2e"/>
+      <stop offset="55%" stop-color="#0a0620"/>
+      <stop offset="100%" stop-color="#05030f"/>
+    </linearGradient>
+    <radialGradient id="glowA"><stop offset="0%" stop-color="#fbbf24" stop-opacity=".40"/><stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB"><stop offset="0%" stop-color="#a855f7" stop-opacity=".38"/><stop offset="100%" stop-color="#a855f7" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <ellipse cx="120" cy="70" rx="300" ry="210" fill="url(#glowA)"/>
+  <ellipse cx="690" cy="390" rx="320" ry="220" fill="url(#glowB)"/>
+  <text x="54" y="70" font-family="Verdana,DejaVu Sans,sans-serif" font-size="40" font-weight="bold" fill="#f8fafc">Au, Pb, Hg, W</text>
+  <text x="56" y="98" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" fill="#94a3b8">Symbols that look nothing like the element</text>
+  <rect x="54" y="180" width="150" height="110" rx="12" fill="#fbbf24" fill-opacity=".10" stroke="#fbbf24" stroke-opacity=".45" stroke-width="2"/>
+  <text x="72" y="242" font-family="Verdana,sans-serif" font-size="44" font-weight="bold" fill="#f8fafc">Au</text>
+  <text x="72" y="270" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8">Gold</text>
+  <rect x="234" y="180" width="150" height="110" rx="12" fill="#fbbf24" fill-opacity=".10" stroke="#fbbf24" stroke-opacity=".45" stroke-width="2"/>
+  <text x="252" y="242" font-family="Verdana,sans-serif" font-size="44" font-weight="bold" fill="#f8fafc">Pb</text>
+  <text x="252" y="270" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8">Lead</text>
+  <rect x="414" y="180" width="150" height="110" rx="12" fill="#fbbf24" fill-opacity=".10" stroke="#fbbf24" stroke-opacity=".45" stroke-width="2"/>
+  <text x="432" y="242" font-family="Verdana,sans-serif" font-size="44" font-weight="bold" fill="#f8fafc">Fe</text>
+  <text x="432" y="270" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8">Iron</text>
+  <rect x="594" y="180" width="150" height="110" rx="12" fill="#fbbf24" fill-opacity=".10" stroke="#fbbf24" stroke-opacity=".45" stroke-width="2"/>
+  <text x="612" y="242" font-family="Verdana,sans-serif" font-size="44" font-weight="bold" fill="#f8fafc">Hg</text>
+  <text x="612" y="270" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8">Mercury</text>
+  <rect x="54" y="310" width="150" height="110" rx="12" fill="#fbbf24" fill-opacity=".10" stroke="#fbbf24" stroke-opacity=".45" stroke-width="2"/>
+  <text x="72" y="372" font-family="Verdana,sans-serif" font-size="44" font-weight="bold" fill="#f8fafc">Na</text>
+  <text x="72" y="400" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8">Sodium</text>
+  <rect x="234" y="310" width="150" height="110" rx="12" fill="#fbbf24" fill-opacity=".10" stroke="#fbbf24" stroke-opacity=".45" stroke-width="2"/>
+  <text x="252" y="372" font-family="Verdana,sans-serif" font-size="44" font-weight="bold" fill="#f8fafc">W</text>
+  <text x="252" y="400" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8">Tungsten</text>
+  <rect x="414" y="310" width="150" height="110" rx="12" fill="#fbbf24" fill-opacity=".10" stroke="#fbbf24" stroke-opacity=".45" stroke-width="2"/>
+  <text x="432" y="372" font-family="Verdana,sans-serif" font-size="44" font-weight="bold" fill="#f8fafc">Sn</text>
+  <text x="432" y="400" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8">Tin</text>
+  <rect x="594" y="310" width="150" height="110" rx="12" fill="#fbbf24" fill-opacity=".10" stroke="#fbbf24" stroke-opacity=".45" stroke-width="2"/>
+  <text x="612" y="372" font-family="Verdana,sans-serif" font-size="44" font-weight="bold" fill="#f8fafc">K</text>
+  <text x="612" y="400" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8">Potassium</text>
+
+  <rect x="1" y="1" width="798" height="448" fill="none" stroke="#fbbf24" stroke-opacity=".22"/>
+</svg>

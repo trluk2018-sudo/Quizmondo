@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140a2e"/>
+      <stop offset="55%" stop-color="#0a0620"/>
+      <stop offset="100%" stop-color="#05030f"/>
+    </linearGradient>
+    <radialGradient id="glowA"><stop offset="0%" stop-color="#22d3ee" stop-opacity=".40"/><stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB"><stop offset="0%" stop-color="#a855f7" stop-opacity=".38"/><stop offset="100%" stop-color="#a855f7" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <ellipse cx="120" cy="70" rx="300" ry="210" fill="url(#glowA)"/>
+  <ellipse cx="690" cy="390" rx="320" ry="220" fill="url(#glowB)"/>
+  <text x="54" y="70" font-family="Verdana,DejaVu Sans,sans-serif" font-size="40" font-weight="bold" fill="#f8fafc">Capitals of Europe</text>
+  <text x="56" y="98" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" fill="#94a3b8">All 44, and the ones that catch people out</text>
+  <rect x="54" y="170" width="400" height="36" rx="8" fill="#22d3ee" fill-opacity=".10" stroke="#22d3ee" stroke-opacity=".35"/>
+  <text x="70" y="194" font-family="Verdana,DejaVu Sans,sans-serif" font-size="17" font-weight="bold" fill="#f8fafc">Bern</text>
+  <text x="250" y="194" font-family="Verdana,DejaVu Sans,sans-serif" font-size="14" fill="#94a3b8">Switzerland</text>
+  <rect x="54" y="218" width="400" height="36" rx="8" fill="#22d3ee" fill-opacity=".10" stroke="#22d3ee" stroke-opacity=".35"/>
+  <text x="70" y="242" font-family="Verdana,DejaVu Sans,sans-serif" font-size="17" font-weight="bold" fill="#f8fafc">Vaduz</text>
+  <text x="250" y="242" font-family="Verdana,DejaVu Sans,sans-serif" font-size="14" fill="#94a3b8">Liechtenstein</text>
+  <rect x="54" y="266" width="400" height="36" rx="8" fill="#22d3ee" fill-opacity=".10" stroke="#22d3ee" stroke-opacity=".35"/>
+  <text x="70" y="290" font-family="Verdana,DejaVu Sans,sans-serif" font-size="17" font-weight="bold" fill="#f8fafc">Valletta</text>
+  <text x="250" y="290" font-family="Verdana,DejaVu Sans,sans-serif" font-size="14" fill="#94a3b8">Malta</text>
+  <rect x="54" y="314" width="400" height="36" rx="8" fill="#22d3ee" fill-opacity=".10" stroke="#22d3ee" stroke-opacity=".35"/>
+  <text x="70" y="338" font-family="Verdana,DejaVu Sans,sans-serif" font-size="17" font-weight="bold" fill="#f8fafc">Pristina</text>
+  <text x="250" y="338" font-family="Verdana,DejaVu Sans,sans-serif" font-size="14" fill="#94a3b8">Kosovo</text>
+  <rect x="54" y="362" width="400" height="36" rx="8" fill="#22d3ee" fill-opacity=".10" stroke="#22d3ee" stroke-opacity=".35"/>
+  <text x="70" y="386" font-family="Verdana,DejaVu Sans,sans-serif" font-size="17" font-weight="bold" fill="#f8fafc">Kyiv</text>
+  <text x="250" y="386" font-family="Verdana,DejaVu Sans,sans-serif" font-size="14" fill="#94a3b8">Ukraine</text>
+  <g fill="none" stroke="#a855f7" stroke-width="2.5" opacity=".55">
+    <path d="M600 154 a26 26 0 1 0 0.01 0 Z"/>
+    <path d="M600 206 L600 220"/>
+    <path d="M680 230 a20 20 0 1 0 0.01 0 Z"/>
+    <path d="M680 270 L680 284"/>
+    <path d="M580 304 a16 16 0 1 0 0.01 0 Z"/>
+    <path d="M580 336 L580 350"/>
+    <path d="M700 137 a13 13 0 1 0 0.01 0 Z"/>
+    <path d="M700 163 L700 177"/>
+  </g>
+
+  <rect x="1" y="1" width="798" height="448" fill="none" stroke="#22d3ee" stroke-opacity=".22"/>
+</svg>

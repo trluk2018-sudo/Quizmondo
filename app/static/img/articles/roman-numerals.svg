@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140a2e"/>
+      <stop offset="55%" stop-color="#0a0620"/>
+      <stop offset="100%" stop-color="#05030f"/>
+    </linearGradient>
+    <radialGradient id="glowA"><stop offset="0%" stop-color="#22d3ee" stop-opacity=".40"/><stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB"><stop offset="0%" stop-color="#a855f7" stop-opacity=".38"/><stop offset="100%" stop-color="#a855f7" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <ellipse cx="120" cy="70" rx="300" ry="210" fill="url(#glowA)"/>
+  <ellipse cx="690" cy="390" rx="320" ry="220" fill="url(#glowB)"/>
+  <text x="54" y="70" font-family="Verdana,DejaVu Sans,sans-serif" font-size="40" font-weight="bold" fill="#f8fafc">Roman Numerals</text>
+  <text x="56" y="98" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" fill="#94a3b8">Seven letters, two rules</text>
+  <rect x="54" y="170" width="86" height="104" rx="10" fill="#22d3ee" fill-opacity=".10" stroke="#22d3ee" stroke-opacity=".45" stroke-width="2"/>
+  <text x="97" y="232" font-family="Georgia,serif" font-size="42" font-weight="bold" fill="#f8fafc" text-anchor="middle">I</text>
+  <text x="97" y="260" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">1</text>
+  <rect x="156" y="170" width="86" height="104" rx="10" fill="#22d3ee" fill-opacity=".10" stroke="#22d3ee" stroke-opacity=".45" stroke-width="2"/>
+  <text x="199" y="232" font-family="Georgia,serif" font-size="42" font-weight="bold" fill="#f8fafc" text-anchor="middle">V</text>
+  <text x="199" y="260" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">5</text>
+  <rect x="258" y="170" width="86" height="104" rx="10" fill="#22d3ee" fill-opacity=".10" stroke="#22d3ee" stroke-opacity=".45" stroke-width="2"/>
+  <text x="301" y="232" font-family="Georgia,serif" font-size="42" font-weight="bold" fill="#f8fafc" text-anchor="middle">X</text>
+  <text x="301" y="260" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">10</text>
+  <rect x="360" y="170" width="86" height="104" rx="10" fill="#22d3ee" fill-opacity=".10" stroke="#22d3ee" stroke-opacity=".45" stroke-width="2"/>
+  <text x="403" y="232" font-family="Georgia,serif" font-size="42" font-weight="bold" fill="#f8fafc" text-anchor="middle">L</text>
+  <text x="403" y="260" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">50</text>
+  <rect x="462" y="170" width="86" height="104" rx="10" fill="#22d3ee" fill-opacity=".10" stroke="#22d3ee" stroke-opacity=".45" stroke-width="2"/>
+  <text x="505" y="232" font-family="Georgia,serif" font-size="42" font-weight="bold" fill="#f8fafc" text-anchor="middle">C</text>
+  <text x="505" y="260" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">100</text>
+  <rect x="564" y="170" width="86" height="104" rx="10" fill="#22d3ee" fill-opacity=".10" stroke="#22d3ee" stroke-opacity=".45" stroke-width="2"/>
+  <text x="607" y="232" font-family="Georgia,serif" font-size="42" font-weight="bold" fill="#f8fafc" text-anchor="middle">D</text>
+  <text x="607" y="260" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">500</text>
+  <rect x="666" y="170" width="86" height="104" rx="10" fill="#22d3ee" fill-opacity=".10" stroke="#22d3ee" stroke-opacity=".45" stroke-width="2"/>
+  <text x="709" y="232" font-family="Georgia,serif" font-size="42" font-weight="bold" fill="#f8fafc" text-anchor="middle">M</text>
+  <text x="709" y="260" font-family="Verdana,sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">1000</text>
+  <text x="54" y="350" font-family="Georgia,serif" font-size="30" fill="#fbbf24">MCMXCIX</text>
+  <text x="290" y="350" font-family="Verdana,sans-serif" font-size="22" fill="#f8fafc">= 1999</text>
+  <text x="54" y="392" font-family="Verdana,sans-serif" font-size="15" fill="#94a3b8">never MIM &#8212; you cannot take I from M</text>
+
+  <rect x="1" y="1" width="798" height="448" fill="none" stroke="#22d3ee" stroke-opacity=".22"/>
+</svg>

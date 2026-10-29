@@ -1494,6 +1494,48 @@ def seed_quizmondo_full_environment():
         if p_item.get('featured_image') and is_seeder_cover(post.featured_image):
             post.featured_image = p_item['featured_image']
 
+    db.session.commit()
+
+    # 4b. Synchronize the reference and fact articles.
+    # Same contract as the guides above: matched on slug so the wording keeps
+    # improving on each deploy rather than spawning duplicates, never pinned
+    # because they belong in the ordinary feed, and a cover picked by hand in
+    # admin is left alone.
+    try:
+        from .articles import ARTICLES, ARTICLE_CATEGORIES
+        cat_ids = {}
+        for cat_name, cat_slug in ARTICLE_CATEGORIES:
+            cat = Category.query.filter_by(slug=cat_slug).first() or \
+                Category.query.filter_by(name=cat_name).first()
+            if not cat:
+                cat = Category(name=cat_name, slug=cat_slug)
+                db.session.add(cat)
+                db.session.flush()
+            cat_ids[cat_name] = cat.id
+
+        for offset, item in enumerate(ARTICLES):
+            article = Post.query.filter_by(slug=item['slug']).first()
+            if not article:
+                article = Post.query.filter_by(title=item['title']).first()
+            if not article:
+                # Spaced out so the feed does not show thirty identical timestamps
+                when = datetime.utcnow() - timedelta(days=30, hours=offset * 6)
+                article = Post(slug=item['slug'], created_at=when, published_at=when)
+                db.session.add(article)
+            article.title = item['title']
+            article.excerpt = item['excerpt']
+            article.content = item['content']
+            article.status = 'publish'
+            article.meta_description = item['meta_description']
+            if item['category'] in cat_ids:
+                article.category_id = cat_ids[item['category']]
+            if is_seeder_cover(article.featured_image):
+                article.featured_image = item['featured_image']
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print('Error seeding articles:', e)
+
     # 5. Seed the homepage layout, but only on a site that has none.
     # This used to delete every home module and rebuild the default ten on every
     # boot, so each deploy threw away whatever had been set up in Appearance >
