@@ -118,6 +118,24 @@ def create_app(test_config=None):
     app.register_blueprint(games_bp)
     app.register_blueprint(account_bp)
 
+    @app.after_request
+    def never_cache_pages(response):
+        """Serve pages fresh, and let static files keep their caching.
+
+        Every mini game's JavaScript is inline in its own page, so a cached
+        page is cached gameplay: a deploy that fixes a game changes nothing on
+        a phone still holding yesterday's HTML, and the fix looks as though it
+        did not work. That has already cost an afternoon of chasing a bug that
+        was fixed on the server the whole time.
+
+        Only HTML is covered. Caching earns its keep on the CSS, the images
+        and the word list, and none of those are touched here.
+        """
+        if response.mimetype == 'text/html':
+            response.headers['Cache-Control'] = 'no-store, max-age=0, must-revalidate'
+            response.headers['Pragma'] = 'no-cache'
+        return response
+
     import re
     @app.template_filter('youtube_id')
     def youtube_id_filter(url):
