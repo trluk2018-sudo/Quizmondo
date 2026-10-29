@@ -412,69 +412,70 @@ def trivia_clues(min_len=3, max_len=9, limit=400, rng=None, difficulties=None):
     return out
 
 
-def crossword_puzzle(rng=None, size=9, target_words=7, difficulties=None, deterministic=False):
-    """Compile a small interlocking crossword from real trivia clues.
+def _place_fits(grid, size, word, row, col, horizontal):
+    """How many letters this placement would share with words already down.
 
-    Classic greedy compiler: seed with one long word, then keep trying to hook
-    the next word onto a letter already on the grid, rejecting any placement
-    that would create accidental adjacent lettering.
+    Returns False when the placement is illegal, otherwise the number of
+    crossings (0 for a word that touches nothing).
     """
-    rng = rng or random
-    # Nothing longer than the grid itself, or the seed word runs off the edge.
-    longest = min(9, size)
-    pool = [c for c in trivia_clues(min_len=4, max_len=longest, limit=260,
-                                    rng=(rng if deterministic else None),
-                                    difficulties=difficulties)
-            if 4 <= len(c['answer']) <= longest]
-    if len(pool) < 4:
-        return None
-    rng.shuffle(pool)
-    pool.sort(key=lambda c: -len(c['answer']))
+    length = len(word)
+    if horizontal:
+        if col < 0 or col + length > size or not (0 <= row < size):
+            return False
+    else:
+        if row < 0 or row + length > size or not (0 <= col < size):
+            return False
 
+    crossings = 0
+    for i, ch in enumerate(word):
+        r = row + (0 if horizontal else i)
+        c = col + (i if horizontal else 0)
+        cell = grid[r][c]
+        if cell is not None:
+            if cell != ch:
+                return False
+            crossings += 1
+        else:
+            # A new letter must not brush up against a parallel word
+            if horizontal:
+                if r > 0 and grid[r - 1][c] is not None:
+                    return False
+                if r < size - 1 and grid[r + 1][c] is not None:
+                    return False
+            else:
+                if c > 0 and grid[r][c - 1] is not None:
+                    return False
+                if c < size - 1 and grid[r][c + 1] is not None:
+                    return False
+
+    # The cells immediately before and after the word must be empty
+    if horizontal:
+        if col > 0 and grid[row][col - 1] is not None:
+            return False
+        if col + length < size and grid[row][col + length] is not None:
+            return False
+    else:
+        if row > 0 and grid[row - 1][col] is not None:
+            return False
+        if row + length < size and grid[row + length][col] is not None:
+            return False
+    return crossings
+
+
+def _compile_attempt(pool, size, target_words, rng):
+    """One go at building a grid. Returns (placed, quality) or (None, -1).
+
+    Where the old compiler took each word in turn and hooked it onto the first
+    thing that would take it, this looks at every remaining word at every step
+    and places whichever one interlocks best. That difference is the whole
+    point: hooking words onto the first long one in order produces a comb -
+    one spine with teeth hanging off it, every word crossing exactly once and
+    no word helping you with any other. Choosing the best available placement
+    each time lets short words bridge two long ones, which is what makes
+    guessing one answer worth something for the next.
+    """
     grid = [[None] * size for _ in range(size)]
     placed = []
-
-    def fits(word, row, col, horizontal):
-        length = len(word)
-        if horizontal:
-            if col < 0 or col + length > size or not (0 <= row < size):
-                return False
-        else:
-            if row < 0 or row + length > size or not (0 <= col < size):
-                return False
-        crossings = 0
-        for i, ch in enumerate(word):
-            r = row + (0 if horizontal else i)
-            c = col + (i if horizontal else 0)
-            cell = grid[r][c]
-            if cell is not None:
-                if cell != ch:
-                    return False
-                crossings += 1
-            else:
-                # A new letter must not brush up against a parallel word
-                if horizontal:
-                    if r > 0 and grid[r - 1][c] is not None:
-                        return False
-                    if r < size - 1 and grid[r + 1][c] is not None:
-                        return False
-                else:
-                    if c > 0 and grid[r][c - 1] is not None:
-                        return False
-                    if c < size - 1 and grid[r][c + 1] is not None:
-                        return False
-        # The cells immediately before and after the word must be empty
-        if horizontal:
-            if col > 0 and grid[row][col - 1] is not None:
-                return False
-            if col + length < size and grid[row][col + length] is not None:
-                return False
-        else:
-            if row > 0 and grid[row - 1][col] is not None:
-                return False
-            if row + length < size and grid[row + length][col] is not None:
-                return False
-        return crossings
 
     def write(word, row, col, horizontal):
         for i, ch in enumerate(word):
@@ -482,42 +483,113 @@ def crossword_puzzle(rng=None, size=9, target_words=7, difficulties=None, determ
             c = col + (i if horizontal else 0)
             grid[r][c] = ch
 
-    # Seed: longest available word across the middle
-    seed = pool.pop(0)
+    remaining = list(pool)
+    if not remaining:
+        return None, -1
+
+    # Seed with a long word across the middle; everything else grows off it.
+    long_enough = [c for c in remaining if len(c['answer']) >= min(6, size)]
+    seed = rng.choice(long_enough) if long_enough else remaining[0]
+    remaining.remove(seed)
     seed_row = size // 2
     seed_col = max(0, (size - len(seed['answer'])) // 2)
     write(seed['answer'], seed_row, seed_col, True)
-    placed.append({'entry': seed, 'row': seed_row, 'col': seed_col, 'horizontal': True})
+    placed.append({'entry': seed, 'row': seed_row, 'col': seed_col,
+                   'horizontal': True, 'crossings': 0})
 
-    for cand in pool:
-        if len(placed) >= target_words:
+    centre = (size - 1) / 2.0
+
+    while len(placed) < target_words and remaining:
+        best = None
+        for cand in remaining:
+            word = cand['answer']
+            for p in placed:
+                p_word = p['entry']['answer']
+                for pi, p_ch in enumerate(p_word):
+                    pr = p['row'] + (0 if p['horizontal'] else pi)
+                    pc = p['col'] + (pi if p['horizontal'] else 0)
+                    for wi, w_ch in enumerate(word):
+                        if w_ch != p_ch:
+                            continue
+                        horizontal = not p['horizontal']
+                        row = pr if horizontal else pr - wi
+                        col = pc - wi if horizontal else pc
+                        crossings = _place_fits(grid, size, word, row, col, horizontal)
+                        if not crossings:
+                            continue
+                        # Crossings dominate everything else, then length, then
+                        # staying near the middle so the grid does not sprawl.
+                        mid_r = row + (0 if horizontal else len(word) / 2.0)
+                        mid_c = col + (len(word) / 2.0 if horizontal else 0)
+                        drift = abs(mid_r - centre) + abs(mid_c - centre)
+                        score = crossings * 1000 + len(word) * 8 - drift
+                        if best is None or score > best[0]:
+                            best = (score, cand, row, col, horizontal, crossings)
+        if best is None:
             break
-        word = cand['answer']
-        options = []
-        for p in placed:
-            p_word = p['entry']['answer']
-            for pi, p_ch in enumerate(p_word):
-                pr = p['row'] + (0 if p['horizontal'] else pi)
-                pc = p['col'] + (pi if p['horizontal'] else 0)
-                for wi, w_ch in enumerate(word):
-                    if w_ch != p_ch:
-                        continue
-                    horizontal = not p['horizontal']
-                    row = pr if horizontal else pr - wi
-                    col = pc - wi if horizontal else pc
-                    crossings = fits(word, row, col, horizontal)
-                    if crossings:
-                        options.append((crossings, row, col, horizontal))
-        if not options:
-            continue
-        rng.shuffle(options)
-        options.sort(key=lambda o: -o[0])
-        _, row, col, horizontal = options[0]
-        write(word, row, col, horizontal)
-        placed.append({'entry': cand, 'row': row, 'col': col, 'horizontal': horizontal})
+        _, cand, row, col, horizontal, crossings = best
+        write(cand['answer'], row, col, horizontal)
+        placed.append({'entry': cand, 'row': row, 'col': col,
+                       'horizontal': horizontal, 'crossings': crossings})
+        remaining.remove(cand)
 
     if len(placed) < 4:
+        return None, -1
+
+    # How well knitted together it came out. Words that cross more than once
+    # are what a solver actually feels, so they count for most.
+    total = sum(p['crossings'] for p in placed)
+    multi = sum(1 for p in placed if p['crossings'] >= 2)
+    quality = total * 3 + multi * 10 + len(placed)
+    return placed, quality
+
+
+def crossword_puzzle(rng=None, size=9, target_words=7, difficulties=None,
+                     deterministic=False, attempts=14, easy_mix=0.35):
+    """Compile a small interlocking crossword from real trivia clues.
+
+    Builds the grid several times over and keeps the best knitted one. A
+    single greedy pass is at the mercy of which word it happened to start
+    with, and a bad start cannot be recovered from once words are down.
+
+    easy_mix salts the pool with easier questions whatever band was asked for,
+    so a hard grid still has a way in rather than being uniformly obscure.
+    """
+    rng = rng or random
+    # Nothing longer than the grid itself, or the seed word runs off the edge.
+    longest = min(9, size)
+    seeded = rng if deterministic else None
+
+    def fetch(bands):
+        return [c for c in trivia_clues(min_len=3, max_len=longest, limit=900,
+                                        rng=seeded, difficulties=bands)
+                if 3 <= len(c["answer"]) <= longest]
+
+    pool = fetch(difficulties)
+    if difficulties and easy_mix > 0 and 'easy' not in difficulties:
+        easy = fetch(['easy'])
+        want = int(len(pool) * easy_mix)
+        if easy and want:
+            rng.shuffle(easy)
+            known = {c['answer'] for c in pool}
+            pool += [c for c in easy if c['answer'] not in known][:want]
+    if len(pool) < 4:
         return None
+
+    best_placed, best_quality = None, -1
+    for attempt in range(max(1, attempts)):
+        shuffled = list(pool)
+        rng.shuffle(shuffled)
+        # Longer words first within the shuffle: they give later words more
+        # letters to hook onto, without fixing the order the way sorting did.
+        shuffled.sort(key=lambda c: -len(c['answer']) if attempt % 2 == 0 else 0)
+        placed, quality = _compile_attempt(shuffled, size, target_words, rng)
+        if placed and quality > best_quality:
+            best_placed, best_quality = placed, quality
+
+    if not best_placed:
+        return None
+    placed = best_placed
 
     # Crop to the used area so the grid is tight on a phone screen
     rows_used = [p['row'] for p in placed] + [
@@ -560,19 +632,19 @@ def crossword_puzzle(rng=None, size=9, target_words=7, difficulties=None, determ
 # Monday is a warm-up, Saturday is the brute, Sunday is a big friendly one.
 
 DAILY_LADDER = {
-    0: {'name': 'Monday',    'size': 7,  'words': 5,  'tier': 'Warm-up',   'difficulties': ['easy'],
+    0: {'name': 'Monday',    'size': 7,  'words': 6,  'tier': 'Warm-up',   'difficulties': ['easy'],
         'seconds': 300, 'blurb': 'A gentle start to the week.'},
-    1: {'name': 'Tuesday',   'size': 8,  'words': 6,  'tier': 'Steady',    'difficulties': ['easy', 'medium'],
+    1: {'name': 'Tuesday',   'size': 8,  'words': 7,  'tier': 'Steady',    'difficulties': ['easy', 'medium'],
         'seconds': 330, 'blurb': 'A little more to chew on.'},
-    2: {'name': 'Wednesday', 'size': 9,  'words': 7,  'tier': 'Midweek',   'difficulties': ['easy', 'medium'],
+    2: {'name': 'Wednesday', 'size': 9,  'words': 8,  'tier': 'Midweek',   'difficulties': ['easy', 'medium'],
         'seconds': 360, 'blurb': 'Halfway, and it knows it.'},
-    3: {'name': 'Thursday',  'size': 9,  'words': 8,  'tier': 'Tricky',    'difficulties': ['medium'],
+    3: {'name': 'Thursday',  'size': 9,  'words': 9,  'tier': 'Tricky',    'difficulties': ['medium'],
         'seconds': 390, 'blurb': 'The clues stop being generous.'},
-    4: {'name': 'Friday',    'size': 10, 'words': 9,  'tier': 'Testing',   'difficulties': ['medium', 'hard'],
+    4: {'name': 'Friday',    'size': 10, 'words': 10,  'tier': 'Testing',   'difficulties': ['medium', 'hard'],
         'seconds': 420, 'blurb': 'Earn your weekend.'},
-    5: {'name': 'Saturday',  'size': 11, 'words': 10, 'tier': 'The Brute', 'difficulties': ['medium', 'hard'],
+    5: {'name': 'Saturday',  'size': 11, 'words': 11, 'tier': 'The Brute', 'difficulties': ['medium', 'hard'],
         'seconds': 480, 'blurb': 'The hardest grid of the week.'},
-    6: {'name': 'Sunday',    'size': 10, 'words': 9,  'tier': 'The Big One', 'difficulties': ['easy', 'medium', 'hard'],
+    6: {'name': 'Sunday',    'size': 10, 'words': 10,  'tier': 'The Big One', 'difficulties': ['easy', 'medium', 'hard'],
         'seconds': 480, 'blurb': 'A large one to do over a long breakfast.'},
 }
 
