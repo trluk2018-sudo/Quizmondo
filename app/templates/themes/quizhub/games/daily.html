@@ -76,6 +76,9 @@
     </button>
   </div>
 
+  <!-- Our own keys, so the device keyboard never covers the clue -->
+  <div id="cwKeys" class="sticky bottom-0 z-20 pt-2 pb-2 bg-[#090317]/95 backdrop-blur-sm"></div>
+
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
     <div class="p-4 rounded-2xl bg-slate-950/80 border border-purple-500/20 space-y-2">
       <div class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Across</div>
@@ -168,16 +171,13 @@
           gridEl.appendChild(holder);
           continue;
         }
-        var input = document.createElement('input');
-        input.type = 'text';
-        input.maxLength = 1;
-        input.autocomplete = 'off';
-        input.autocapitalize = 'characters';
-        input.spellcheck = false;
-        input.dataset.r = r;
-        input.dataset.c = c;
-        input.className = inputClass('idle');
-        holder.appendChild(input);
+        // A div, not an input: nothing here should summon the device
+        // keyboard or let iOS zoom the board because the text is under 16px.
+        var box = document.createElement('div');
+        box.dataset.r = r;
+        box.dataset.c = c;
+        box.className = inputClass('idle');
+        holder.appendChild(box);
         if (numbers[key(r, c)]) {
           var tag = document.createElement('span');
           tag.className = 'absolute top-0 left-[2px] text-[8px] font-mono font-black text-amber-300/80 pointer-events-none leading-none';
@@ -185,7 +185,7 @@
           holder.appendChild(tag);
         }
         gridEl.appendChild(holder);
-        cells[key(r, c)] = { input: input, entries: [] };
+        cells[key(r, c)] = { el: box, letter: '', locked: false, entries: [] };
       }
     }
     entries.forEach(function (entry) {
@@ -194,8 +194,8 @@
   }
 
   function inputClass(state) {
-    var base = 'w-full h-full rounded-[3px] text-center font-mono font-black uppercase ' +
-      'text-[13px] sm:text-base focus:outline-none transition-colors caret-transparent ';
+    var base = 'w-full h-full rounded-[3px] flex items-center justify-center font-mono ' +
+      'font-black uppercase text-[13px] sm:text-base transition-colors cursor-pointer ';
     if (state === 'solved') return base + 'bg-emerald-500 text-slate-950 border border-emerald-300';
     if (state === 'active') return base + 'bg-cyan-900/70 text-white border-2 border-cyan-400';
     if (state === 'inword') return base + 'bg-purple-800/70 text-white border border-purple-300/50';
@@ -208,13 +208,14 @@
     Object.keys(cells).forEach(function (k) {
       var cell = cells[k];
       var solved = cell.entries.some(isSolved);
-      cell.input.className = inputClass(solved ? 'solved' : 'idle');
-      cell.input.readOnly = solved;
+      cell.locked = solved;
+      cell.el.className = inputClass(solved ? 'solved' : 'idle');
+      cell.el.textContent = cell.letter;
     });
     if (active) {
       entryCells(active).forEach(function (cell, i) {
         if (!cell || cell.entries.some(isSolved)) return;
-        cell.input.className = inputClass(i === activeIndex ? 'active' : 'inword');
+        cell.el.className = inputClass(i === activeIndex ? 'active' : 'inword');
       });
     }
     renderClueLists();
@@ -227,8 +228,6 @@
     dirEl.textContent = entry.dir + ' • ' + entry.answer.length + ' letters';
     clueEl.textContent = entry.clue;
     paint();
-    var cell = entryCells(entry)[activeIndex];
-    if (cell) cell.input.focus({ preventScroll: true });
   }
 
   function focusCell(r, c, preferDir) {
@@ -240,11 +239,13 @@
     setActive(entry, entry.dir === 'across' ? (c - entry.col) : (r - entry.row));
   }
 
-  gridEl.addEventListener('focusin', function (ev) {
-    var input = ev.target;
-    if (!input.dataset || input.dataset.r === undefined) return;
-    var r = parseInt(input.dataset.r, 10), c = parseInt(input.dataset.c, 10);
-    if (active && cells[key(r, c)].entries.indexOf(active) !== -1) {
+  gridEl.addEventListener('click', function (ev) {
+    var box = ev.target.closest('[data-r]');
+    if (!box) return;
+    var r = parseInt(box.dataset.r, 10), c = parseInt(box.dataset.c, 10);
+    var cell = cells[key(r, c)];
+    if (!cell) return;
+    if (active && cell.entries.indexOf(active) !== -1) {
       activeIndex = active.dir === 'across' ? (c - active.col) : (r - active.row);
       paint();
       return;
@@ -252,34 +253,40 @@
     focusCell(r, c, active ? active.dir : 'across');
   });
 
-  gridEl.addEventListener('input', function (ev) {
-    var input = ev.target;
-    if (!input.dataset || input.dataset.r === undefined || !active) return;
-    var ch = (input.value || '').toUpperCase().replace(/[^A-Z]/g, '');
-    input.value = ch;
-    if (ch) {
-      QMG.audio.tick();
-      checkEntries(parseInt(input.dataset.r, 10), parseInt(input.dataset.c, 10));
-      advance(1);
-    }
-  });
+  function press(k) {
+    if (!running) return;
+    if (!active) { jumpToNextUnsolved(); if (!active) return; }
 
-  gridEl.addEventListener('keydown', function (ev) {
-    if (!active) return;
-    if (ev.key === 'Backspace' && !ev.target.value) { ev.preventDefault(); advance(-1); }
-    else if (ev.key === 'ArrowRight' || ev.key === 'ArrowDown') { ev.preventDefault(); advance(1); }
-    else if (ev.key === 'ArrowLeft' || ev.key === 'ArrowUp') { ev.preventDefault(); advance(-1); }
-  });
+    if (k === 'BACK') {
+      var here = entryCells(active)[activeIndex];
+      if (here && !here.locked && here.letter) { here.letter = ''; paint(); }
+      else { advance(-1); var prev = entryCells(active)[activeIndex];
+             if (prev && !prev.locked) { prev.letter = ''; paint(); } }
+      return;
+    }
+    if (k === 'ENTER') { jumpToNextUnsolved(); return; }
+    if (k === 'ArrowRight' || k === 'ArrowDown') { advance(1); return; }
+    if (k === 'ArrowLeft' || k === 'ArrowUp') { advance(-1); return; }
+    if (!/^[A-Z]$/.test(k)) return;
+
+    var cell = entryCells(active)[activeIndex];
+    if (!cell || cell.locked) { advance(1); return; }
+    // Always overwrites, so a filled square can simply be typed over.
+    cell.letter = k;
+    QMG.audio.tick();
+    paint();
+    checkEntries(parseInt(cell.el.dataset.r, 10), parseInt(cell.el.dataset.c, 10));
+    advance(1);
+  }
 
   function advance(step) {
     if (!active) return;
     var list = entryCells(active);
     var i = activeIndex + step;
-    while (i >= 0 && i < list.length && list[i] && list[i].input.readOnly) { i += step; }
+    while (i >= 0 && i < list.length && list[i] && list[i].locked) { i += step; }
     if (i < 0 || i >= list.length) { if (step > 0) jumpToNextUnsolved(); return; }
     activeIndex = i;
     paint();
-    list[i].input.focus({ preventScroll: true });
   }
 
   function jumpToNextUnsolved() {
@@ -293,17 +300,17 @@
     if (!cell) return;
     cell.entries.forEach(function (entry) {
       if (isSolved(entry)) return;
-      var text = entryCells(entry).map(function (x) { return x ? (x.input.value || '') : ''; }).join('');
+      var text = entryCells(entry).map(function (x) { return x ? (x.letter || '') : ''; }).join('');
       if (text.toUpperCase() !== entry.answer) return;
       entry.solved = true;
       solvedCount += 1;
       QMG.bumpCombo();
       var points = Math.round((80 + entry.answer.length * 30) * QMG.comboMultiplier());
-      QMG.addScore(points, cell.input);
+      QMG.addScore(points, cell.el);
       QMG.audio.correct();
       QMG.haptic(25);
       document.getElementById('cwSolved').textContent = solvedCount + '/' + entries.length;
-      entryCells(entry).forEach(function (x) { if (x) QMG.flashOk(x.input); });
+      entryCells(entry).forEach(function (x) { if (x) QMG.flashOk(x.el); });
     });
     paint();
     if (solvedCount >= entries.length) { finish(true); }
@@ -332,7 +339,7 @@
     if (!cell) return;
     var other = cell.entries.find(function (e) { return e !== active && !isSolved(e); });
     if (other) {
-      var r = parseInt(cell.input.dataset.r, 10), c = parseInt(cell.input.dataset.c, 10);
+      var r = parseInt(cell.el.dataset.r, 10), c = parseInt(cell.el.dataset.c, 10);
       setActive(other, other.dir === 'across' ? (c - other.col) : (r - other.row));
     } else { jumpToNextUnsolved(); }
   });
@@ -403,7 +410,15 @@
     running = true;
     elapsed = QMG.stopwatch();
     QMG.startTimer(ROUND_SECONDS, function () { finish(false); });
+    // Start on the first clue, so the keys do something straight away.
+    setActive(entries[0], 0);
   }
+
+  var keys = QMG.keyboard(document.getElementById('cwKeys'), {
+    onKey: press,
+    enterLabel: 'NEXT'
+  });
+  keys.bindPhysical();
 
   start();
 })();

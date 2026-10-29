@@ -463,6 +463,138 @@ window.QMG = (function () {
       .catch(function () { return true; });
   }
 
+  // -------------------------------------------------------------------------
+  // On screen keyboard
+  //
+  // Games that take letters draw their own rather than asking for the device
+  // keyboard. On a phone the system keyboard costs far more than it gives: it
+  // covers half the screen, it zooms the page in on any input whose text is
+  // under 16px, and it shrinks the visual viewport enough to confuse anything
+  // measuring the window. None of that happens with buttons.
+  // -------------------------------------------------------------------------
+
+  var KEY_ROWS = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+
+  function keyboard(host, opts) {
+    opts = opts || {};
+    var onKey = opts.onKey || function () {};
+    var states = {};
+
+    function keyClass(state) {
+      var base = 'flex-1 min-w-0 h-11 rounded-lg font-mono font-black text-sm transition select-none ';
+      if (state === 'hit') return base + 'bg-emerald-500 text-slate-950';
+      if (state === 'near') return base + 'bg-amber-500 text-slate-950';
+      if (state === 'miss') return base + 'bg-slate-800 text-slate-600';
+      return base + 'bg-slate-900 border border-purple-500/30 text-slate-100 active:bg-purple-900/70';
+    }
+
+    function wideKey(label, value, tone) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'px-2.5 h-11 rounded-lg bg-slate-900 border border-purple-500/30 font-mono ' +
+        'font-black text-[10px] active:bg-purple-900/70 transition shrink-0 select-none ' +
+        (tone || 'text-cyan-300');
+      btn.textContent = label;
+      tap(btn, value);
+      return btn;
+    }
+
+    // Keys fire on pointerdown so a fast typist is not waiting on the 300ms
+    // the browser spends deciding whether a tap was a double tap.
+    function tap(btn, value) {
+      btn.addEventListener('pointerdown', function (ev) {
+        ev.preventDefault();
+        onKey(value);
+      });
+      btn.addEventListener('click', function (ev) { ev.preventDefault(); });
+    }
+
+    function render() {
+      host.innerHTML = '';
+      host.className = 'space-y-1.5 qmg-nosel';
+      KEY_ROWS.forEach(function (row, idx) {
+        var line = document.createElement('div');
+        line.className = 'flex gap-1.5 justify-center';
+        if (idx === 2 && opts.enter !== false) {
+          line.appendChild(wideKey(opts.enterLabel || 'ENTER', 'ENTER'));
+        }
+        row.split('').forEach(function (ch) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = keyClass(states[ch] || 'idle');
+          btn.textContent = ch;
+          tap(btn, ch);
+          line.appendChild(btn);
+        });
+        if (idx === 2) {
+          line.appendChild(wideKey('⌫', 'BACK', 'text-rose-300'));
+        }
+        host.appendChild(line);
+      });
+    }
+
+    render();
+
+    return {
+      el: host,
+      render: render,
+      setStates: function (map) { states = map || {}; render(); },
+      // Physical keyboards still work, for anyone on a desktop.
+      bindPhysical: function () {
+        document.addEventListener('keydown', function (ev) {
+          if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+          if (ev.key === 'Enter') { ev.preventDefault(); onKey('ENTER'); return; }
+          if (ev.key === 'Backspace') { ev.preventDefault(); onKey('BACK'); return; }
+          if (/^[a-zA-Z]$/.test(ev.key)) { ev.preventDefault(); onKey(ev.key.toUpperCase()); return; }
+          if (ev.key.indexOf('Arrow') === 0) { ev.preventDefault(); onKey(ev.key); }
+        });
+      }
+    };
+  }
+
+  // -------------------------------------------------------------------------
+  // Board gestures
+  //
+  // Locks the board against the page: touch-action none is what actually stops
+  // a phone scrolling the page while a finger is dragging across a grid, since
+  // preventDefault on a pointer event cannot do it on its own.
+  //
+  // Then a tap and a swipe both count. On a sliding puzzle a tile next to the
+  // gap can only go one way, so the direction of the swipe does not need
+  // reading: starting the gesture on a tile is enough to say which one to move.
+  // -------------------------------------------------------------------------
+
+  // Put the cursor in a box, but only where that is a kindness. On a desktop
+  // it saves a click. On a phone it throws the keyboard up over the game
+  // without being asked, which is what used to happen after every submit.
+  function softFocus(el) {
+    if (!el) return;
+    var fine = window.matchMedia && window.matchMedia('(pointer: fine)').matches;
+    if (fine) el.focus({ preventScroll: true });
+  }
+
+  function boardGestures(el, onPick) {
+    if (!el) return;
+    el.style.touchAction = 'none';
+    var startNode = null;
+
+    el.addEventListener('pointerdown', function (ev) {
+      startNode = ev.target.closest('[data-pos]');
+      if (startNode) ev.preventDefault();
+    });
+
+    el.addEventListener('pointerup', function (ev) {
+      var endNode = ev.target.closest('[data-pos]');
+      var node = startNode || endNode;
+      startNode = null;
+      if (!node) return;
+      ev.preventDefault();
+      onPick(parseInt(node.dataset.pos, 10), node);
+    });
+
+    el.addEventListener('pointercancel', function () { startNode = null; });
+  }
+
   function init(opts) {
     gameKey = (opts && opts.gameKey) || '';
     best = (opts && opts.best) || 0;
@@ -485,6 +617,7 @@ window.QMG = (function () {
     startStopwatch: startStopwatch, stopwatch: stopwatch, formatClock: formatClock,
     finish: finish, replay: replay, onReplay: onReplay, hideOverlay: hideOverlay,
     shuffle: shuffle, pick: pick, normalise: normalise, sleep: sleep,
-    squareImage: squareImage, loadWords: loadWords, checkWord: checkWord
+    squareImage: squareImage, loadWords: loadWords, checkWord: checkWord,
+    keyboard: keyboard, boardGestures: boardGestures, softFocus: softFocus
   };
 })();
