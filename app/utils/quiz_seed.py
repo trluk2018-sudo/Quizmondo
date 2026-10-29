@@ -1494,9 +1494,87 @@ def seed_quizmondo_full_environment():
         if p_item.get('featured_image') and is_seeder_cover(post.featured_image):
             post.featured_image = p_item['featured_image']
 
-    # 5. Synchronize Homepage PageModules for 'quizhub' theme
-    PageModule.query.filter_by(is_home=True).delete()
-    
+    # 5. Seed the homepage layout, but only on a site that has none.
+    # This used to delete every home module and rebuild the default ten on every
+    # boot, so each deploy threw away whatever had been set up in Appearance >
+    # Home Page Layout: modules added there, titles edited, sections disabled and
+    # the running order. The admin screen is the owner of this layout; the seeder
+    # only supplies a starting point for a site that is empty.
+    if PageModule.query.filter_by(is_home=True).first() is None:
+        _seed_default_home_layout()
+
+    # 6. Seed the navigation, on the same terms.
+    if MenuItem.query.filter(MenuItem.location.in_(['header', 'footer'])).first() is None:
+        _seed_default_navigation()
+
+    # Put the hero's existing featured game into the manager, once.
+    # The marker makes this a one-time thing, so deleting the slide does not
+    # bring it back on the next deploy.
+    if not SiteSetting.query.filter_by(key='featured_games_seeded').first():
+        if FeaturedGame.query.count() == 0:
+            db.session.add(FeaturedGame(
+                label='FEATURED GAME',
+                title='Retro Arcade & Video Game Trivia',
+                image_url='/static/img/quizhub_hero.jpg',
+                link_url='/arena/packs',
+                cta_text='PLAY NOW',
+                category_slug='gaming-esports',
+                sort_order=1,
+                is_active=True
+            ))
+        db.session.add(SiteSetting(key='featured_games_seeded', value='1'))
+        db.session.commit()
+
+    _restore_game_arcade_module()
+
+    print("QUIZMONDO_SEED_SYNCHRONIZED_SUCCESSFULLY")
+
+
+def _restore_game_arcade_module():
+    """Put the Game Arcade Picks module back, once.
+
+    It was added in admin and then deleted by the layout reset this seeder used
+    to perform on every boot. The marker means this runs a single time: if it is
+    removed deliberately afterwards, it stays removed.
+    """
+    if SiteSetting.query.filter_by(key='game_arcade_restored').first():
+        return
+    try:
+        theme = SiteSetting.get('active_theme', 'quizhub')
+        has_modules = PageModule.query.filter_by(is_home=True).first() is not None
+        already = PageModule.query.filter_by(
+            is_home=True, module_type='game_arcade').first()
+        if has_modules and not already:
+            # just under the daily quiz, where it sat before
+            daily = PageModule.query.filter_by(
+                is_home=True, module_type='daily_quiz').first()
+            after = (daily.sort_order if daily else 1)
+            for later in PageModule.query.filter(
+                    PageModule.is_home == True,
+                    PageModule.sort_order > after).all():
+                later.sort_order = later.sort_order + 1
+            mod = PageModule(
+                is_home=True,
+                theme=theme,
+                module_type='game_arcade',
+                title=MODULE_DEFINITIONS.get('game_arcade', {}).get(
+                    'name', 'Game Arcade Picks'),
+                placement='above',
+                sort_order=after + 1,
+                is_enabled=True,
+            )
+            mod.set_config(get_default_config('game_arcade'))
+            db.session.add(mod)
+            print('GAME_ARCADE_MODULE_RESTORED')
+        db.session.add(SiteSetting(key='game_arcade_restored', value='1'))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print('Could not restore the game arcade module:', e)
+
+
+def _seed_default_home_layout():
+    """The starting homepage for a site that has no layout yet."""
     home_order = [
         'hero',
         'daily_quiz',
@@ -1524,9 +1602,11 @@ def seed_quizmondo_full_environment():
         pm.set_config(get_default_config(m_type))
         db.session.add(pm)
 
-    # 6. Synchronize Header & Footer Navigation
-    MenuItem.query.filter(MenuItem.location.in_(['header', 'footer'])).delete()
+    db.session.commit()
 
+
+def _seed_default_navigation():
+    """The starting header and footer links for a site that has none."""
     nav_links = [
         ('Arena Home', '/', False),
         ('Play Duels', '/arena/', False),
@@ -1544,26 +1624,3 @@ def seed_quizmondo_full_environment():
         db.session.add(f_item)
 
     db.session.commit()
-
-    # 6. Put the hero's existing featured game into the manager, once.
-    # The hero used to hard-code this slide and the gallery only took over once
-    # something was added, which meant the admin screen was empty while the homepage
-    # was plainly showing a featured game. Seeding it means what is on the page is
-    # what is in the manager, and editable. The marker makes this a one-time thing,
-    # so deleting the slide does not bring it back on the next deploy.
-    if not SiteSetting.query.filter_by(key='featured_games_seeded').first():
-        if FeaturedGame.query.count() == 0:
-            db.session.add(FeaturedGame(
-                label='FEATURED GAME',
-                title='Retro Arcade & Video Game Trivia',
-                image_url='/static/img/quizhub_hero.jpg',
-                link_url='/arena/packs',
-                cta_text='PLAY NOW',
-                category_slug='gaming-esports',
-                sort_order=1,
-                is_active=True
-            ))
-        db.session.add(SiteSetting(key='featured_games_seeded', value='1'))
-        db.session.commit()
-
-    print("QUIZMONDO_SEED_SYNCHRONIZED_SUCCESSFULLY")
