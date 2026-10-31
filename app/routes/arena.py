@@ -61,11 +61,66 @@ def playable_questions():
     )
 
 
+# What this player has been asked lately, so the next game does not open with
+# the same questions. Kept in the session rather than a table: it has to work
+# for guests too, and sixty ids is a few hundred bytes of cookie.
+RECENT_QIDS = 'qm_recent_qids'
+RECENT_MEMORY = 60
+
+
+def _recent_qids():
+    from flask import has_request_context
+    if not has_request_context():
+        return []
+    try:
+        return [int(qid) for qid in (session.get(RECENT_QIDS) or [])]
+    except (TypeError, ValueError):
+        return []
+
+
+def _remember_qids(ids):
+    from flask import has_request_context
+    if not has_request_context() or not ids:
+        return
+    recent = [qid for qid in _recent_qids() if qid not in ids]
+    session[RECENT_QIDS] = (list(ids) + recent)[:RECENT_MEMORY]
+
+
 def get_random_questions(category_slug=None, count=3, exclude_ids=None, difficulty=None):
-    """Fetch randomized questions for duels, pub leagues, and rounds.
+    """Questions for duels, pub leagues and rounds, avoiding recent repeats.
+
+    Picking at random is not enough on its own. Ten categories hold only a
+    dozen approved questions each, so a three-question duel in one of them
+    draws from twelve, and nothing used to stop the same ones coming back the
+    very next game: exclude_ids only ever covered the match in progress.
+
+    So this skips what the player has seen lately as well. The memory is a
+    preference, not a rule -- a thin category would otherwise run dry and
+    hand back nothing -- so anything still missing is topped up from the full
+    pool afterwards.
+    """
+    hard_exclude = list(exclude_ids or [])
+    recent = _recent_qids()
+
+    questions = _select_questions(category_slug, count, hard_exclude + recent, difficulty)
+    if len(questions) < count:
+        seen = [q.id for q in questions]
+        questions += _select_questions(category_slug, count - len(questions),
+                                       hard_exclude + seen, difficulty)
+
+    random.shuffle(questions)
+    _remember_qids([q.id for q in questions])
+    return questions
+
+
+def _select_questions(category_slug=None, count=3, exclude_ids=None, difficulty=None):
+    """One pass of the selection, with no memory of earlier games.
+
     For visual categories (flags, badges, logos, country shapes), ALWAYS prioritize visual image matching questions first,
     and avoid Expert ('hard') text-only questions in standard rounds unless explicitly requested.
     """
+    if count <= 0:
+        return []
     base_query = playable_questions()
     if category_slug:
         base_query = base_query.filter_by(category_slug=category_slug)
@@ -74,13 +129,16 @@ def get_random_questions(category_slug=None, count=3, exclude_ids=None, difficul
 
     # A thin category cannot afford to hold its Expert questions back: sitting on them
     # means the same handful of easy/medium ones come round every single game.
+    # count * 3 alone was far too generous -- a three-question duel cleared the
+    # bar with nine, so the ten categories holding a dozen questions narrowed
+    # to the same handful every time. Twenty is the floor now.
     spare_easy_medium = True
     if category_slug:
         easy_med_pool = playable_questions().filter(
             QuizQuestion.category_slug == category_slug,
             QuizQuestion.difficulty.in_(['easy', 'medium'])
         ).count()
-        spare_easy_medium = easy_med_pool >= count * 3
+        spare_easy_medium = easy_med_pool >= max(count * 3, 20)
 
     questions = []
     if category_slug in VISUAL_PRIORITY_CATEGORIES and difficulty != 'hard':
