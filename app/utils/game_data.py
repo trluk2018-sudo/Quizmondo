@@ -617,7 +617,9 @@ def crossword_puzzle(rng=None, size=9, target_words=7, difficulties=None,
     """
     rng = rng or random
     # Nothing longer than the grid itself, or the seed word runs off the edge.
-    longest = min(9, size)
+    # The 9 was a cap on the old trivia-only pool; the everyday bank now runs
+    # to eleven letters, which is what fills the spine of a Saturday grid.
+    longest = min(11, size)
     seeded = rng if deterministic else None
     skip = SPECIALIST_CATEGORIES if avoid_specialist else None
 
