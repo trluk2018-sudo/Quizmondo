@@ -3,6 +3,11 @@
 {% block title %}{{ league.name }} • Round {{ current_round }} • Quizmondo{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/qmg-fx.css') }}">
+<!-- The shared reward layer, as used by the mini games and the duel. -->
+<div id="qmgPopLayer" class="fixed inset-0 z-40 pointer-events-none overflow-hidden"></div>
+<div id="qmgGlow" class="qmg-glow"></div>
+<div id="qmgBanner" class="qmg-banner"></div>
 <div class="min-h-screen bg-[#090317] text-slate-100 font-sans py-8 sm:py-12 relative overflow-hidden flex flex-col justify-center">
   <!-- Glowing nebula orb -->
   <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
@@ -376,6 +381,7 @@
 </div>
 
 <script src="/static/js/quiz-audio.js"></script>
+<script src="{{ url_for('static', filename='js/games-fx.js') }}"></script>
 <script>
 var rawQuestions = {{ questions_json|tojson|safe }};
 var currentRound = {{ current_round }};
@@ -403,6 +409,8 @@ var recordedAnswers = [];
 var timer = timeLimitPerQuestion;
 var timerInterval = null;
 var answered = false;
+// Consecutive questions locked in with over half the clock left.
+var snapStreak = 0;
 var CIRCUMFERENCE = 264;
 var pollInterval = null;
 
@@ -655,6 +663,30 @@ function choosePubAnswer(choice) {
       }
       totalScore += ptsEarned;
     }
+
+    // The page knows isCorrect, but a pub quiz does not tell you until the
+    // round is scored -- that is the format, and the line right above this
+    // says so to the table. So nothing here may hint either way: the reward
+    // is for locking in quickly, which is what the speed bonus already pays
+    // for. The correct-answer streak gets its moment at the reveal.
+    if (window.QMG) {
+      var qLimit = (q.time_limit || 20);
+      var wasSnap = timer > qLimit * 0.55;
+      if (chosenBtn) QMG.burst(chosenBtn, { count: wasSnap ? 12 : 7 });
+      QMG.haptic(wasSnap ? 25 : 12);
+      if (wasSnap) {
+        snapStreak += 1;
+        if (snapStreak === 2) {
+          QMG.banner('QUICK DRAW ×2', '⚡', 'hot');
+        } else if (snapStreak >= 3) {
+          QMG.banner('LIGHTNING ×' + snapStreak, '⚡', 'gold');
+          QMG.glow('gold');
+        }
+        QMG.audio.tone(560 + Math.min(snapStreak, 6) * 70, 130, 'triangle');
+      } else {
+        snapStreak = 0;
+      }
+    }
   } else {
     box.className = 'p-4 rounded-2xl border border-slate-700 bg-slate-900 text-slate-400 font-mono text-xs';
     document.getElementById('feedbackText').textContent = '⏱️ Time Expired on Question ' + (currentIndex + 1);
@@ -760,6 +792,40 @@ function finishRound() {
   });
 }
 
+// The intermission is where the round is finally scored in public, so this is
+// the first honest moment to celebrate getting things right.
+function celebratePubRound() {
+  if (!window.QMG) return;
+  var best = 0, run = 0, right = 0;
+  recordedAnswers.forEach(function (a) {
+    run = a.is_correct ? run + 1 : 0;
+    if (a.is_correct) right += 1;
+    if (run > best) best = run;
+  });
+  var total = recordedAnswers.length;
+  setTimeout(function () {
+    if (total && right === total) {
+      QMG.banner('CLEAN SWEEP', '🏆', 'gold');
+      QMG.glow('gold');
+      QMG.confetti(80);
+      QMG.audio.victory();
+      QMG.haptic(70);
+    } else if (best >= 3) {
+      QMG.banner(best + ' IN A ROW', '🔥', 'gold');
+      QMG.glow('gold');
+      QMG.confetti(45);
+      QMG.audio.victory();
+      QMG.haptic(50);
+    } else if (best >= 2) {
+      QMG.banner(best + ' IN A ROW', '🔥', 'hot');
+      QMG.glow('ok');
+      QMG.haptic(35);
+    } else if (right > 0) {
+      QMG.glow('ok');
+    }
+  }, 400);
+}
+
 function showIntermission(data) {
   var quizScreen = document.getElementById('activeQuizScreen');
   var lockScreen = document.getElementById('submissionsLockedScreen');
@@ -776,6 +842,10 @@ function showIntermission(data) {
   document.getElementById('modalRoundScore').textContent = '+' + (data.round_score || totalScore);
   document.getElementById('modalTotalScore').textContent = data.total_score || totalScore;
   document.getElementById('modalRank').textContent = '#' + (data.rank || 1);
+  if (window.QMG) {
+    QMG.countUp(document.getElementById('modalTotalScore'), data.total_score || totalScore);
+  }
+  celebratePubRound();
 
   // 1. RENDER OFFICIAL ROUND ANSWERS REVEALED ACCORDION (With real visual graphics if question has image)
   var answersContainer = document.getElementById('revealedAnswersList');

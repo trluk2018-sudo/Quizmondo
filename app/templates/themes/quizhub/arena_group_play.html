@@ -3,6 +3,11 @@
 {% block title %}Group Challenge {{ game.code }} • Quizmondo{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/qmg-fx.css') }}">
+<!-- The shared reward layer, as used by the mini games and the duel. -->
+<div id="qmgPopLayer" class="fixed inset-0 z-40 pointer-events-none overflow-hidden"></div>
+<div id="qmgGlow" class="qmg-glow"></div>
+<div id="qmgBanner" class="qmg-banner"></div>
 <div class="min-h-screen bg-[#090317] text-slate-100 font-sans py-8 sm:py-12 relative overflow-hidden">
   <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -99,6 +104,7 @@
 </div>
 
 <script src="/static/js/quiz-audio.js"></script>
+<script src="{{ url_for('static', filename='js/games-fx.js') }}"></script>
 <script>
 var roomCode = "{{ game.code }}";
 var secondsPerQuestion = {{ game.seconds_per_question }};
@@ -106,6 +112,10 @@ var CIRC = 264;
 var lastStatus = null;
 var lastIndex = -1;
 var answered = false;
+// Right answers in a row, and the question the streak was last shown for:
+// the poll redraws the reveal every second, so it must only fire once.
+var groupStreak = 0;
+var celebratedQuestion = null;
 
 function el(id) { return document.getElementById(id); }
 function show(id) { el(id).classList.remove('hidden'); }
@@ -171,6 +181,8 @@ function choose(letter, btn) {
       show('lockedNote');
     });
   if (window.quizAudio) window.quizAudio.playTick();
+  // Locking in is worth a flourish; whether it was right comes at the reveal.
+  if (window.QMG) { QMG.burst(btn, { count: 9 }); QMG.haptic(18); }
 }
 
 function drawQuestion(d) {
@@ -208,6 +220,29 @@ function drawReveal(d) {
   el('revealAnswer').textContent = 'Answer: ' + d.reveal.correct_option + ' — ' + (d.reveal.prompt || '');
   el('revealWhy').textContent = d.reveal.explanation || '';
   el('revealBoard').innerHTML = (d.standings || []).map(function(r){ return boardRow(r); }).join('');
+
+  // Unlike the duel and the pub quiz, a group game reveals each question as it
+  // goes, so the streak can be celebrated question by question. The poll
+  // redraws this every second or so, hence the guard: fire once per question.
+  if (!window.QMG || celebratedQuestion === d.question_number) return;
+  celebratedQuestion = d.question_number;
+  if (right) {
+    groupStreak += 1;
+    if (groupStreak >= 3) {
+      QMG.banner(groupStreak + ' IN A ROW', '🔥', 'gold');
+      QMG.glow('gold');
+      QMG.confetti(groupStreak >= 5 ? 50 : 25);
+      QMG.audio.tone(700 + Math.min(groupStreak, 6) * 60, 200, 'triangle');
+      QMG.haptic(50);
+    } else {
+      QMG.glow('ok');
+      QMG.audio.correct();
+      QMG.haptic(25);
+    }
+  } else {
+    groupStreak = 0;
+    if (mine.choice) { QMG.glow('bad'); QMG.haptic(45); }
+  }
 }
 
 function tickTimer(seconds) {
