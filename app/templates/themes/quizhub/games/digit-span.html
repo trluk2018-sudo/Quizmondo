@@ -125,7 +125,7 @@
     if (typed === target) {
       bestSpan = Math.max(bestSpan, digits);
       bestSpanEl.textContent = bestSpan;
-      QMG.bumpCombo();
+      QMG.reward();
       var points = Math.round(digits * digits * 12 * QMG.comboMultiplier());
       QMG.addScore(points, numberEl);
       QMG.audio.correct();

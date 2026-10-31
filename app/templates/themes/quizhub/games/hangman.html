@@ -128,7 +128,7 @@
     var hits = (current.phrase.match(new RegExp(letter, 'g')) || []).length;
 
     if (hits > 0) {
-      QMG.bumpCombo();
+      QMG.reward();
       var points = Math.round(hits * 25 * QMG.comboMultiplier());
       QMG.addScore(points, btn);
       QMG.audio.correct();

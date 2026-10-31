@@ -123,7 +123,7 @@
     if (guess === QMG.normalise(current.answer)) {
       got += 1; done += 1;
       gotEl.textContent = got;
-      QMG.bumpCombo();
+      QMG.reward();
       var points = Math.round((60 + current.answer.replace(/[^A-Za-z]/g, '').length * 5) * QMG.comboMultiplier());
       QMG.addScore(points, puzzleEl);
       QMG.audio.correct();

@@ -261,7 +261,7 @@
 
       entry.solved = true;
       solvedCount += 1;
-      QMG.bumpCombo();
+      QMG.reward();
       var points = Math.round((80 + entry.answer.length * 30) * QMG.comboMultiplier());
       QMG.addScore(points, cell.el);
       QMG.audio.correct();

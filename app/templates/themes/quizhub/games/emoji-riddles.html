@@ -111,7 +111,7 @@
     if (guess === QMG.normalise(current.answer)) {
       got += 1; done += 1;
       gotEl.textContent = got;
-      QMG.bumpCombo();
+      QMG.reward();
       var base = 100 - revealed.length * 15;
       var points = Math.max(20, Math.round(base * QMG.comboMultiplier()));
       QMG.addScore(points, emojiEl);

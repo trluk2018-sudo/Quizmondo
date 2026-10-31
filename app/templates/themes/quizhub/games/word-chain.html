@@ -120,7 +120,7 @@
         QMG.shake(inputEl);
         return;
       }
-      QMG.bumpCombo();
+      QMG.reward();
       var points = Math.round((word.length * word.length * 8) * QMG.comboMultiplier());
       QMG.addScore(points, letterEl);
       QMG.audio.correct();

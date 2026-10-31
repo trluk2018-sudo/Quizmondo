@@ -100,7 +100,7 @@
       matched[a.id] = true;
       pairsFound += 1;
       foundEl.textContent = pairsFound;
-      QMG.bumpCombo();
+      QMG.reward();
       var points = Math.round(120 * QMG.comboMultiplier());
       QMG.addScore(points, boardEl);
       QMG.audio.correct();

@@ -116,7 +116,7 @@
       var got = Object.keys(picked).filter(function (k) { return pattern.indexOf(+k) !== -1; }).length;
       if (got >= pattern.length) {
         accepting = false;
-        QMG.bumpCombo();
+        QMG.reward();
         var points = Math.round(pattern.length * 60 * QMG.comboMultiplier());
         QMG.addScore(points, gridEl);
         QMG.audio.correct();

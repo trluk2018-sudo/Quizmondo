@@ -117,7 +117,7 @@
     if (pic.url === target.url) {
       right += 1;
       rightEl.textContent = right;
-      QMG.bumpCombo();
+      QMG.reward();
       var points = Math.round((80 + round * 20) * QMG.comboMultiplier());
       QMG.addScore(points, btn);
       QMG.audio.correct();

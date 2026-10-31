@@ -200,7 +200,7 @@
       if (p.word === forward || p.word === backward) {
         foundWords[p.word] = true;
         markFound(p.path);
-        QMG.bumpCombo();
+        QMG.reward();
         var gained = Math.round(100 * QMG.comboMultiplier());
         QMG.addScore(gained, cells[path[Math.floor(path.length / 2)]]);
         QMG.audio.correct();

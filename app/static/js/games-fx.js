@@ -208,6 +208,113 @@ window.QMG = (function () {
     }
   }
 
+  // A burst of sparks out of one element, for the moment a tap pays off.
+  // Confetti rains on the whole screen and belongs to the end of a game; this
+  // is the small, cheap reward you get dozens of times inside one.
+  function burst(target, opts) {
+    var layer = $('qmgPopLayer');
+    if (!layer || !target || !target.getBoundingClientRect) return;
+    opts = opts || {};
+    var r = target.getBoundingClientRect();
+    var x = r.left + r.width / 2;
+    var y = r.top + r.height / 2;
+    var colours = opts.colours || ['#22d3ee', '#a855f7', '#fbbf24', '#34d399'];
+    var n = opts.count || 10;
+    for (var i = 0; i < n; i++) {
+      var spark = document.createElement('span');
+      spark.className = 'qmg-spark';
+      var angle = (Math.PI * 2 * i) / n + Math.random() * 0.4;
+      var dist = (opts.spread || 42) * (0.6 + Math.random() * 0.7);
+      spark.style.left = x + 'px';
+      spark.style.top = y + 'px';
+      spark.style.background = colours[i % colours.length];
+      spark.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+      spark.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+      layer.appendChild(spark);
+      (function (node) {
+        setTimeout(function () { if (node.parentNode) node.parentNode.removeChild(node); }, 700);
+      })(spark);
+    }
+  }
+
+  // A wash of colour in from the screen edges. Felt rather than read, so it
+  // carries right or wrong even when your eyes are on the board.
+  function glow(kind) {
+    var el = $('qmgGlow');
+    if (!el) return;
+    el.className = 'qmg-glow qmg-glow-' + (kind === 'bad' ? 'bad' : (kind === 'gold' ? 'gold' : 'ok'));
+    void el.offsetWidth;
+    el.classList.add('qmg-glow-on');
+    setTimeout(function () { el.classList.remove('qmg-glow-on'); }, 480);
+  }
+
+  // The streak banner. A pill counting up is information; this is a reward,
+  // so it only fires at the milestones and gets louder as they climb.
+  var STREAK_TIERS = [
+    { at: 3, label: 'NICE RUN', icon: '✨', pitch: 620 },
+    { at: 5, label: 'ON FIRE', icon: '🔥', pitch: 720 },
+    { at: 8, label: 'UNSTOPPABLE', icon: '⚡', pitch: 840 },
+    { at: 12, label: 'LEGENDARY', icon: '👑', pitch: 980 }
+  ];
+
+  function streakTier(n) {
+    var tier = null;
+    for (var i = 0; i < STREAK_TIERS.length; i++) {
+      if (n === STREAK_TIERS[i].at) tier = STREAK_TIERS[i];
+    }
+    return tier;
+  }
+
+  function banner(text, icon, kind) {
+    var el = $('qmgBanner');
+    if (!el) return;
+    el.innerHTML = '';
+    var span = document.createElement('span');
+    span.textContent = (icon ? icon + ' ' : '') + text;
+    el.appendChild(span);
+    el.className = 'qmg-banner qmg-banner-' + (kind || 'hot');
+    void el.offsetWidth;
+    el.classList.add('qmg-banner-on');
+    setTimeout(function () { el.classList.remove('qmg-banner-on'); }, 1100);
+  }
+
+  // Call instead of bumpCombo where the game wants the celebration too.
+  function reward(target) {
+    var n = bumpCombo();
+    var tier = streakTier(n);
+    if (tier) {
+      banner(tier.label + ' ×' + n, tier.icon, n >= 8 ? 'gold' : 'hot');
+      glow(n >= 8 ? 'gold' : 'ok');
+      confetti(n >= 8 ? 40 : 18);
+      audio.tone(tier.pitch, 220, 'triangle');
+      haptic(45);
+    } else if (target) {
+      burst(target);
+    }
+    return n;
+  }
+
+  // Count a number up rather than printing it. The end of a game is the one
+  // moment worth drawing out, and a ticking total reads as a reward where the
+  // finished figure reads as a receipt.
+  function countUp(el, to, ms) {
+    if (!el) return;
+    var target = Math.max(0, Math.round(to));
+    if (!target) { el.textContent = '0'; return; }
+    var duration = ms || 900;
+    var started = 0;
+    function frame(now) {
+      if (!started) started = now;
+      var t = Math.min(1, (now - started) / duration);
+      // Ease out, so it races away and settles rather than crawling.
+      var eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = Math.round(target * eased);
+      if (t < 1) requestAnimationFrame(frame);
+      else el.textContent = target;
+    }
+    requestAnimationFrame(frame);
+  }
+
   // --- countdown ---------------------------------------------------------
   function startTimer(seconds, onEnd) {
     stopTimer();
@@ -290,7 +397,7 @@ window.QMG = (function () {
     $('qmgOverlayIcon').textContent = opts.icon || (opts.win === false ? '⏱️' : '🏆');
     $('qmgOverlayTitle').textContent = opts.title || (opts.win === false ? 'Time Up' : 'Nice One!');
     $('qmgOverlaySub').textContent = opts.sub || '';
-    $('qmgOverlayScore').textContent = finalScore;
+    countUp($('qmgOverlayScore'), finalScore);
     $('qmgOverlayBest').textContent = '';
     $('qmgOverlayRewards').classList.add('hidden');
 
@@ -312,9 +419,11 @@ window.QMG = (function () {
 
     if (opts.win === false) {
       audio.wrong();
+      glow('bad');
     } else {
       audio.victory();
       confetti(finalScore > 0 ? 80 : 30);
+      glow('gold');
     }
     haptic(opts.win === false ? 60 : 30);
 
@@ -347,7 +456,19 @@ window.QMG = (function () {
           $('qmgOverlayCoins').textContent = '+' + data.coins;
           $('qmgOverlayRank').textContent = '#' + data.rank;
         }
-        if (data.improved) { confetti(50); }
+        if (data.improved) {
+          confetti(50);
+          banner('NEW PERSONAL BEST', '🏅', 'gold');
+          haptic(70);
+        }
+        if (data.xp > 0) {
+          countUp($('qmgOverlayXp'), data.xp, 700);
+          var xpEl = $('qmgOverlayXp');
+          // countUp writes the bare number, so put the plus back after it.
+          setTimeout(function () {
+            if (xpEl) xpEl.textContent = '+' + data.xp;
+          }, 760);
+        }
         submitted = true;
       })
       .catch(function () { /* a lost score should never break the game */ });
@@ -662,6 +783,7 @@ window.QMG = (function () {
     setMid: setMid, setMidLabel: setMidLabel, setMidBar: setMidBar,
     bumpCombo: bumpCombo, resetCombo: resetCombo, getCombo: getCombo, comboMultiplier: comboMultiplier,
     pop: pop, shake: shake, flashOk: flashOk, confetti: confetti,
+    burst: burst, glow: glow, banner: banner, reward: reward, countUp: countUp,
     startTimer: startTimer, stopTimer: stopTimer, addTime: addTime, timeLeft: timeLeft,
     startStopwatch: startStopwatch, stopwatch: stopwatch, formatClock: formatClock,
     finish: finish, replay: replay, onReplay: onReplay, hideOverlay: hideOverlay,

@@ -143,7 +143,7 @@
 
     found[word] = true;
     foundCount += 1;
-    QMG.bumpCombo();
+    QMG.reward();
     var points = Math.round((word.length * word.length * 10) * QMG.comboMultiplier());
     if (word.length === 9 && !nineFound) {
       nineFound = true;

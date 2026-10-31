@@ -216,7 +216,7 @@
     if (solved) {
       running = false;
       solvedCount += 1;
-      QMG.bumpCombo();
+      QMG.reward();
       var left = MAX_GUESSES - guesses.length;
       var points = Math.round((200 + left * 120) * QMG.comboMultiplier()) - revealsUsed * 80;
       points = Math.max(40, points);

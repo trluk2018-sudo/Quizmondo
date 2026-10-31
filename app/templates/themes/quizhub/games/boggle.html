@@ -140,7 +140,7 @@
       }
 
       foundCount += 1;
-      QMG.bumpCombo();
+      QMG.reward();
       var points = Math.round(wordPoints(word.length) * QMG.comboMultiplier());
       QMG.addScore(points, gridEl);
       QMG.audio.correct();

@@ -110,7 +110,7 @@
         accepting = false;
         longest = Math.max(longest, sequence.length);
         longestEl.textContent = longest;
-        QMG.bumpCombo();
+        QMG.reward();
         var points = Math.round(sequence.length * 50 * QMG.comboMultiplier());
         QMG.addScore(points, padsEl);
         QMG.audio.correct();

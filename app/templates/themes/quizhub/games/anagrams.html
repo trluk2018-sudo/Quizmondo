@@ -123,7 +123,7 @@
     if (guess === current.word) {
       solved += 1;
       solvedEl.textContent = solved;
-      QMG.bumpCombo();
+      QMG.reward();
       var points = Math.round((40 + current.word.length * 12) * QMG.comboMultiplier());
       QMG.addScore(points, lettersEl);
       QMG.audio.correct();

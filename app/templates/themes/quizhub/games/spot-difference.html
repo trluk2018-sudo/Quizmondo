@@ -86,7 +86,7 @@
       accepting = false;
       found += 1;
       foundEl.textContent = found;
-      QMG.bumpCombo();
+      QMG.reward();
       var points = Math.round((50 + round * 25) * QMG.comboMultiplier());
       QMG.addScore(points, gridEl.children[i]);
       QMG.audio.correct();

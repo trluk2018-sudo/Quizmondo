@@ -78,7 +78,7 @@
     if (bucket === currentItem.bucket) {
       right += 1;
       rightEl.textContent = right;
-      QMG.bumpCombo();
+      QMG.reward();
       var points = Math.round(60 * QMG.comboMultiplier());
       QMG.addScore(points, btn);
       QMG.audio.correct();
