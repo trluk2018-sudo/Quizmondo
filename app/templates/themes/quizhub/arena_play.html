@@ -4,6 +4,12 @@
 {% block title %}Playing Round {{ active_round.round_number }} • Quizmondo Arena{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/qmg-fx.css') }}">
+<!-- The mini games' reward layer, reused here rather than rebuilt: QMG draws
+     its sparks, confetti, edge glow and streak banner into these three. -->
+<div id="qmgPopLayer" class="fixed inset-0 z-40 pointer-events-none overflow-hidden"></div>
+<div id="qmgGlow" class="qmg-glow"></div>
+<div id="qmgBanner" class="qmg-banner"></div>
 <div class="min-h-screen bg-[#090317] text-slate-100 font-sans py-8 sm:py-12 relative overflow-hidden flex flex-col justify-center">
   <!-- Dynamic Glow lights -->
   <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-purple-600/15 rounded-full blur-3xl pointer-events-none"></div>
@@ -264,6 +270,7 @@
 </div>
 
 <script src="/static/js/quiz-audio.js"></script>
+<script src="{{ url_for('static', filename='js/games-fx.js') }}"></script>
 <script>
 var questions = {{ questions_json|safe }};
 var matchCode = {{ match.match_code|tojson }};
@@ -279,6 +286,48 @@ var comboStreak = 0;
 var recordedAnswers = [];
 
 var CIRCUMFERENCE = 264; // 2 * PI * 42
+
+// The reveal is where the round is actually worth celebrating: the server has
+// now said who got what right, so this can be honest about it where the
+// mid-round feedback could only go on speed.
+function celebrateRound(data, diff) {
+  if (!window.QMG) return;
+  var comparison = data.round_comparison || [];
+  var mine = comparison.map(function (q) {
+    return data.is_player1 ? q.p1_correct : q.p2_correct;
+  });
+
+  // The longest run of right answers in the round, not just the total.
+  var best = 0, run = 0;
+  mine.forEach(function (ok) {
+    run = ok ? run + 1 : 0;
+    if (run > best) best = run;
+  });
+  var allRight = mine.length > 0 && best === mine.length;
+
+  setTimeout(function () {
+    if (allRight) {
+      QMG.banner('PERFECT ROUND', '🎯', 'gold');
+      QMG.glow('gold');
+      QMG.confetti(70);
+      QMG.audio.victory();
+      QMG.haptic(70);
+    } else if (best >= 2) {
+      QMG.banner(best + ' IN A ROW', '🔥', 'hot');
+      QMG.glow('ok');
+      QMG.haptic(40);
+    } else if (diff > 0) {
+      QMG.glow('ok');
+    } else if (diff < 0) {
+      QMG.glow('bad');
+    }
+    // Winning the round is worth its own confetti even on a scrappy one.
+    if (diff > 0 && !allRight) {
+      QMG.confetti(45);
+      QMG.audio.victory();
+    }
+  }, 350);
+}
 
 // The answer review folds away so the next round stays on screen. Opening it
 // is its own little moment: the cards deal in one after another rather than
@@ -336,6 +385,11 @@ function initQuestion() {
     finishRound();
     return;
   }
+
+  // The streak banner outlives the pause between questions, so clear it here
+  // rather than leaving it sitting over the next question for half a second.
+  var banner = document.getElementById('qmgBanner');
+  if (banner) banner.classList.remove('qmg-banner-on');
 
   // Smoothly scroll to the start of the question card
   var card = document.getElementById('quizCard');
@@ -418,6 +472,14 @@ function updateTimerDisplay() {
   }
 }
 
+// The page never learns which answer was right -- the server masks that so a
+// duel cannot be read out of the page source -- so there is nothing honest to
+// celebrate mid-round except how fast you locked in. Speed is already what
+// the bonus points are for, so rewarding it reinforces the real mechanic
+// instead of inventing one. The correct-answer streak gets its moment at the
+// reveal, where the server has told us the truth.
+var SNAP_FRACTION = 0.55;   // answered with over half the clock left
+
 function selectAnswer(choice) {
   if (answered) return;
   answered = true;
@@ -431,13 +493,34 @@ function selectAnswer(choice) {
   });
 
   // Temporarily highlight chosen button
+  var chosenBtn = null;
   ['A', 'B', 'C', 'D'].forEach(function(opt) {
     var btn = document.getElementById('btn' + opt);
     btn.disabled = true;
     if (opt === choice) {
+      chosenBtn = btn;
       btn.className = 'opt-btn p-4 rounded-2xl border-2 border-cyan-400 bg-cyan-950/60 text-left flex items-center gap-3';
     }
   });
+
+  if (window.QMG) {
+    var limit = (q.time_limit || 15);
+    var snap = currentTimer > limit * SNAP_FRACTION;
+    if (chosenBtn) QMG.burst(chosenBtn, { count: snap ? 12 : 7 });
+    QMG.haptic(snap ? 25 : 12);
+    if (snap) {
+      comboStreak += 1;
+      if (comboStreak === 2) {
+        QMG.banner('QUICK DRAW ×2', '⚡', 'hot');
+      } else if (comboStreak >= 3) {
+        QMG.banner('LIGHTNING ×' + comboStreak, '⚡', 'gold');
+        QMG.glow('gold');
+      }
+      QMG.audio.tone(560 + Math.min(comboStreak, 6) * 70, 130, 'triangle');
+    } else {
+      comboStreak = 0;
+    }
+  }
 
   // Brief thinking pause before reveal
   setTimeout(function() {
@@ -726,6 +809,7 @@ function showRocketAnimation(data) {
           '</div>';
         });
         compList.innerHTML = html;
+        celebrateRound(data, diff);
       }
 
       wireAnswerReveal();
