@@ -205,12 +205,35 @@
           </div>
         </div>
 
-        <!-- STAGE-GATED QUESTION-BY-QUESTION COMPARISON (Full native layout, no inner scrollbar!) -->
-        <div id="stageComparisonContainer" class="hidden space-y-2 text-left pt-2 border-t border-purple-500/30">
-          <div class="text-[11px] font-black uppercase text-emerald-400 tracking-wider text-center">
-            Head-to-Head Answers
-          </div>
-          <div id="stageComparisonList" class="space-y-2.5">
+        <!-- Action Buttons.
+             These sit above the answer review on purpose. Starting the next
+             round is what nearly everybody wants next, and when it lived
+             under the three head-to-head cards you had to scroll past every
+             answer to reach it. -->
+        <div class="space-y-3 pt-1">
+          <button type="button" id="btnStageWhatsApp" onclick="triggerStageWhatsApp()" class="hidden w-full py-4 px-5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-2xl transition transform hover:scale-[1.01] active:scale-95">
+            📲 Send Score &amp; Nudge Friend on WhatsApp
+          </button>
+          <a id="btnNextBotRound" href="#" class="block w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-2xl transition transform hover:scale-[1.02] active:scale-95">
+            🚀 Continue &rarr;
+          </a>
+        </div>
+
+        <!-- STAGE-GATED QUESTION-BY-QUESTION COMPARISON.
+             Folded away behind its own button so the round's outcome and the
+             next round both fit on a phone screen without scrolling. The tick
+             strip gives you the gist at a glance; tapping opens the detail. -->
+        <div id="stageComparisonContainer" class="hidden space-y-2 text-left pt-3 border-t border-purple-500/30">
+          <button type="button" id="btnRevealAnswers" class="w-full flex items-center justify-between gap-3 py-3 px-4 rounded-2xl bg-slate-900/90 border border-purple-500/40 hover:border-cyan-400/70 transition active:scale-[.99]">
+            <span class="flex items-center gap-2 text-[11px] font-black uppercase text-cyan-300 tracking-wider">
+              <span>🔍</span> <span id="revealAnswersLabel">Check The Answers</span>
+            </span>
+            <span class="flex items-center gap-2">
+              <span id="stageTickStrip" class="flex items-center gap-1"></span>
+              <span id="revealAnswersChevron" class="text-slate-400 text-xs transition-transform">▾</span>
+            </span>
+          </button>
+          <div id="stageComparisonList" class="hidden space-y-2.5 pt-1">
           </div>
         </div>
 
@@ -227,19 +250,10 @@
           </a>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="space-y-3 pt-2">
-          <button type="button" id="btnStageWhatsApp" onclick="triggerStageWhatsApp()" class="hidden w-full py-4 px-5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-2xl transition transform hover:scale-[1.01] active:scale-95">
-            📲 Send Score &amp; Nudge Friend on WhatsApp
-          </button>
-          <a id="btnNextBotRound" href="#" class="block w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-2xl transition transform hover:scale-[1.02] active:scale-95">
-            🚀 Continue &rarr;
-          </a>
-          <div class="flex items-center justify-center gap-4 text-xs text-slate-400">
-            <a href="{{ url_for('arena.match_lobby', match_code=match.match_code) }}" class="hover:text-cyan-300 transition">📊 Match Scoreboard</a>
-            <span>&bull;</span>
-            <a href="{{ url_for('arena.dashboard') }}" class="hover:text-purple-300 transition">🏠 Arena Hub</a>
-          </div>
+        <div class="flex items-center justify-center gap-4 text-xs text-slate-400">
+          <a href="{{ url_for('arena.match_lobby', match_code=match.match_code) }}" class="hover:text-cyan-300 transition">📊 Match Scoreboard</a>
+          <span>&bull;</span>
+          <a href="{{ url_for('arena.dashboard') }}" class="hover:text-purple-300 transition">🏠 Arena Hub</a>
         </div>
 
       </div>
@@ -265,6 +279,35 @@ var comboStreak = 0;
 var recordedAnswers = [];
 
 var CIRCUMFERENCE = 264; // 2 * PI * 42
+
+// The answer review folds away so the next round stays on screen. Opening it
+// is its own little moment: the cards deal in one after another rather than
+// all appearing at once.
+function wireAnswerReveal() {
+  var btn = document.getElementById('btnRevealAnswers');
+  var list = document.getElementById('stageComparisonList');
+  if (!btn || !list || btn.dataset.wired === '1') return;
+  btn.dataset.wired = '1';
+  btn.addEventListener('click', function () {
+    var opening = list.classList.contains('hidden');
+    list.classList.toggle('hidden', !opening);
+    var label = document.getElementById('revealAnswersLabel');
+    var chev = document.getElementById('revealAnswersChevron');
+    if (label) label.textContent = opening ? 'Hide The Answers' : 'Check The Answers';
+    if (chev) chev.style.transform = opening ? 'rotate(180deg)' : '';
+    if (opening) {
+      // Restart the deal animation each time it is opened.
+      Array.prototype.forEach.call(list.querySelectorAll('.qm-answer-card'), function (card) {
+        card.style.animation = 'none';
+        void card.offsetWidth;
+        card.style.animation = '';
+      });
+      try {
+        if (window.quizAudio && window.quizAudio.playTick) window.quizAudio.playTick();
+      } catch (e) { /* sound is a nicety */ }
+    }
+  });
+}
 
 function extractYouTubeId(url) {
   if (!url) return null;
@@ -608,6 +651,7 @@ function showRocketAnimation(data) {
     var badge = document.getElementById('roundOutcomeBadge');
     var title = document.getElementById('roundOutcomeTitle');
     var desc = document.getElementById('roundOutcomeDesc');
+    wireAnswerReveal();
     var compBox = document.getElementById('stageComparisonContainer');
     var compList = document.getElementById('stageComparisonList');
     var waBtn = document.getElementById('btnStageWhatsApp');
@@ -649,15 +693,26 @@ function showRocketAnimation(data) {
       // Render Stage-Gated Answer Comparison now that BOTH players have answered!
       if (compBox && compList && data.round_comparison && data.round_comparison.length > 0) {
         compBox.classList.remove('hidden');
+        // The tick strip: how you did, readable without opening anything.
+        var strip = document.getElementById('stageTickStrip');
+        if (strip) {
+          strip.innerHTML = data.round_comparison.map(function (q) {
+            var got = data.is_player1 ? q.p1_correct : q.p2_correct;
+            return '<span class="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black ' +
+              (got ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/40'
+                   : 'bg-rose-500/25 text-rose-300 border border-rose-500/40') +
+              '">' + (got ? '✓' : '✗') + '</span>';
+          }).join('');
+        }
         var html = '';
-        data.round_comparison.forEach(function(q) {
+        data.round_comparison.forEach(function(q, qi) {
           var myText = data.is_player1 ? q.p1_text : q.p2_text;
           var myCorr = data.is_player1 ? q.p1_correct : q.p2_correct;
           var myTime = data.is_player1 ? q.p1_time : q.p2_time;
           var oppText = data.is_player1 ? q.p2_text : q.p1_text;
           var oppCorr = data.is_player1 ? q.p2_correct : q.p1_correct;
           var oppTime = data.is_player1 ? q.p2_time : q.p1_time;
-          html += '<div class="p-2.5 rounded-xl bg-slate-900/90 border border-purple-500/30 text-left text-[11px] space-y-1">' +
+          html += '<div class="qm-answer-card p-2.5 rounded-xl bg-slate-900/90 border border-purple-500/30 text-left text-[11px] space-y-1" style="animation-delay:' + (qi * 90) + 'ms">' +
             '<div class="font-bold text-white">Q' + q.q_num + ': ' + q.prompt + '</div>' +
             '<div class="text-emerald-300 font-bold">✓ Correct: ' + q.correct_option + ' — ' + q.correct_text + '</div>' +
             '<div class="grid grid-cols-2 gap-2 pt-1">' +
@@ -672,6 +727,8 @@ function showRocketAnimation(data) {
         });
         compList.innerHTML = html;
       }
+
+      wireAnswerReveal();
 
       if (waBtn) waBtn.classList.add('hidden');
       if (nextBtn) {
@@ -802,6 +859,18 @@ initQuestion();
     left: 2%;
     transition: left 2.1s cubic-bezier(0.22, 1, 0.36, 1);
     filter: drop-shadow(0 0 14px rgba(236, 72, 153, 0.95));
+  }
+  /* The answer cards deal in one after another when the review is opened */
+  .qm-answer-card {
+    animation: qmDealIn 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes qmDealIn {
+    0% { opacity: 0; transform: translateY(14px) scale(0.97); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  #revealAnswersChevron { display: inline-block; }
+  @media (prefers-reduced-motion: reduce) {
+    .qm-answer-card { animation: none; }
   }
 </style>
 {% endblock %}
