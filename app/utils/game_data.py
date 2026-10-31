@@ -370,7 +370,8 @@ def word_ladder(rng=None, steps=4):
 # Trivia clues & crossword
 # ---------------------------------------------------------------------------
 
-def trivia_clues(min_len=3, max_len=9, limit=400, rng=None, difficulties=None):
+def trivia_clues(min_len=3, max_len=9, limit=400, rng=None, difficulties=None,
+                 exclude_categories=None, max_clue_chars=0):
     """Single-word trivia answers paired with their question, for word puzzles.
 
     Pass an rng to make the selection repeatable: the rows come back in id
@@ -387,6 +388,8 @@ def trivia_clues(min_len=3, max_len=9, limit=400, rng=None, difficulties=None):
     )
     if difficulties:
         query = query.filter(QuizQuestion.difficulty.in_(list(difficulties)))
+    if exclude_categories:
+        query = query.filter(~QuizQuestion.category_slug.in_(list(exclude_categories)))
 
     if rng is not None:
         rows = query.order_by(QuizQuestion.id.asc()).all()
@@ -406,10 +409,54 @@ def trivia_clues(min_len=3, max_len=9, limit=400, rng=None, difficulties=None):
             continue
         seen.add(key)
         clue = re.sub(r'\s+', ' ', (q.prompt or '')).strip()
+        # Some prompts run to two hundred characters. That is fine in a duel,
+        # where one question fills the screen, but a crossword shows every
+        # clue at once and a wall of prose is unreadable on a phone.
+        if max_clue_chars and len(clue) > max_clue_chars:
+            continue
         out.append({'answer': key, 'clue': clue, 'category': q.category_name or 'Trivia'})
         if len(out) >= limit:
             break
     return out
+
+
+_COMMON_WORDS_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'crossword_words.json'
+)
+
+
+@lru_cache(maxsize=1)
+def _common_words():
+    """Everyday words with plain clues, loaded once.
+
+    The trivia bank only yields about 550 usable single-word answers, and the
+    bulk of them are nutrition, anatomy and linguistics questions, so a grid
+    built from it alone reads like a medical exam. It is also desperately
+    short of three- and four-letter words — fifteen of the former in the whole
+    bank — which are exactly what interlocks a grid.
+    """
+    try:
+        with open(_COMMON_WORDS_PATH, encoding='utf-8') as fh:
+            raw = json.load(fh).get('words') or []
+    except (OSError, ValueError):
+        return []
+    out = []
+    for item in raw:
+        answer = (item.get('a') or '').strip().upper()
+        clue = (item.get('c') or '').strip()
+        if not answer or not clue:
+            continue
+        out.append({'answer': answer, 'clue': clue,
+                    'category': 'Everyday', 'band': item.get('b') or 'easy'})
+    return out
+
+
+def common_clues(min_len=3, max_len=9, bands=None):
+    """The everyday words that fit a grid of this size."""
+    wanted = set(bands) if bands else None
+    return [dict(c) for c in _common_words()
+            if min_len <= len(c['answer']) <= max_len
+            and (wanted is None or c['band'] in wanted)]
 
 
 def _place_fits(grid, size, word, row, col, horizontal):
@@ -544,9 +591,16 @@ def _compile_attempt(pool, size, target_words, rng):
     return placed, quality
 
 
+# Trivia categories whose single-word answers are almost all specialist terms.
+# Nutrition, anatomy and linguistics between them supply a third of the whole
+# clue pool, which is why grids kept coming out readable only by a doctor.
+SPECIALIST_CATEGORIES = ('nutrition-diet', 'human-body', 'languages-linguistics')
+
+
 def crossword_puzzle(rng=None, size=9, target_words=7, difficulties=None,
-                     deterministic=False, attempts=14, easy_mix=0.35):
-    """Compile a small interlocking crossword from real trivia clues.
+                     deterministic=False, attempts=14, easy_mix=0.35,
+                     everyday=0.6, avoid_specialist=True):
+    """Compile a small interlocking crossword from trivia and everyday clues.
 
     Builds the grid several times over and keeps the best knitted one. A
     single greedy pass is at the mercy of which word it happened to start
@@ -554,15 +608,24 @@ def crossword_puzzle(rng=None, size=9, target_words=7, difficulties=None,
 
     easy_mix salts the pool with easier questions whatever band was asked for,
     so a hard grid still has a way in rather than being uniformly obscure.
+
+    everyday is the share of the pool drawn from the plain-English clue bank
+    instead of the trivia questions. That bank is what makes a grid solvable
+    by someone who is not a specialist, and it is also where nearly all the
+    short words come from, so turning it down costs interlocking as well as
+    approachability.
     """
     rng = rng or random
     # Nothing longer than the grid itself, or the seed word runs off the edge.
     longest = min(9, size)
     seeded = rng if deterministic else None
+    skip = SPECIALIST_CATEGORIES if avoid_specialist else None
 
     def fetch(bands):
         return [c for c in trivia_clues(min_len=3, max_len=longest, limit=900,
-                                        rng=seeded, difficulties=bands)
+                                        rng=seeded, difficulties=bands,
+                                        exclude_categories=skip,
+                                        max_clue_chars=110)
                 if 3 <= len(c["answer"]) <= longest]
 
     pool = fetch(difficulties)
@@ -573,6 +636,46 @@ def crossword_puzzle(rng=None, size=9, target_words=7, difficulties=None,
             rng.shuffle(easy)
             known = {c['answer'] for c in pool}
             pool += [c for c in easy if c['answer'] not in known][:want]
+
+    if everyday > 0:
+        # A share of the grid, not a top-up: the trivia pool is big enough to
+        # crowd these out entirely if they are merely appended.
+        bands = ['easy'] if (difficulties == ['easy']) else None
+        plain = common_clues(3, longest, bands=bands)
+        if plain:
+            rng.shuffle(plain)
+            known = {c['answer'] for c in pool}
+            plain = [c for c in plain if c['answer'] not in known]
+            if everyday >= 1:
+                pool = plain
+            else:
+                # Trim the trivia side so the everyday words really are that
+                # share of what the compiler gets to choose from — and do it
+                # length by length. Blending on the whole pool is not enough:
+                # the compiler reaches for long words first, and the trivia
+                # answers are much the longer of the two sets, so every long
+                # slot in the grid went to a trivia clue however the overall
+                # ratio was set.
+                by_len = {}
+                for clue in plain:
+                    by_len.setdefault(len(clue['answer']), 0)
+                    by_len[len(clue['answer'])] += 1
+                buckets = {}
+                rng.shuffle(pool)
+                for clue in pool:
+                    buckets.setdefault(len(clue['answer']), []).append(clue)
+                trimmed = []
+                for length, clues in buckets.items():
+                    # No everyday words this long means the trivia bank is the
+                    # only source for the slot, so keep them all.
+                    available = by_len.get(length, 0)
+                    if not available:
+                        trimmed += clues
+                        continue
+                    keep = int(available * (1 - everyday) / everyday) or 1
+                    trimmed += clues[:keep]
+                pool = trimmed + plain
+
     if len(pool) < 4:
         return None
 
@@ -631,21 +734,24 @@ def crossword_puzzle(rng=None, size=9, target_words=7, difficulties=None,
 # unsolvable within a few months, so this follows the newspaper convention:
 # Monday is a warm-up, Saturday is the brute, Sunday is a big friendly one.
 
+# 'everyday' is the share of the clue pool taken from the plain-English bank
+# rather than the trivia questions. It is the week's real difficulty dial:
+# Monday is almost all everyday words, Saturday leans on the trivia bank.
 DAILY_LADDER = {
     0: {'name': 'Monday',    'size': 7,  'words': 6,  'tier': 'Warm-up',   'difficulties': ['easy'],
-        'seconds': 300, 'blurb': 'A gentle start to the week.'},
+        'everyday': 0.95, 'seconds': 300, 'blurb': 'A gentle start to the week.'},
     1: {'name': 'Tuesday',   'size': 8,  'words': 7,  'tier': 'Steady',    'difficulties': ['easy', 'medium'],
-        'seconds': 330, 'blurb': 'A little more to chew on.'},
+        'everyday': 0.8, 'seconds': 330, 'blurb': 'A little more to chew on.'},
     2: {'name': 'Wednesday', 'size': 9,  'words': 8,  'tier': 'Midweek',   'difficulties': ['easy', 'medium'],
-        'seconds': 360, 'blurb': 'Halfway, and it knows it.'},
+        'everyday': 0.7, 'seconds': 360, 'blurb': 'Halfway, and it knows it.'},
     3: {'name': 'Thursday',  'size': 9,  'words': 9,  'tier': 'Tricky',    'difficulties': ['medium'],
-        'seconds': 390, 'blurb': 'The clues stop being generous.'},
+        'everyday': 0.55, 'seconds': 390, 'blurb': 'The clues stop being generous.'},
     4: {'name': 'Friday',    'size': 10, 'words': 10,  'tier': 'Testing',   'difficulties': ['medium', 'hard'],
-        'seconds': 420, 'blurb': 'Earn your weekend.'},
+        'everyday': 0.45, 'seconds': 420, 'blurb': 'Earn your weekend.'},
     5: {'name': 'Saturday',  'size': 11, 'words': 11, 'tier': 'The Brute', 'difficulties': ['medium', 'hard'],
-        'seconds': 480, 'blurb': 'The hardest grid of the week.'},
+        'everyday': 0.35, 'seconds': 480, 'blurb': 'The hardest grid of the week.'},
     6: {'name': 'Sunday',    'size': 10, 'words': 10,  'tier': 'The Big One', 'difficulties': ['easy', 'medium', 'hard'],
-        'seconds': 480, 'blurb': 'A large one to do over a long breakfast.'},
+        'everyday': 0.6, 'seconds': 480, 'blurb': 'A large one to do over a long breakfast.'},
 }
 
 
@@ -658,25 +764,29 @@ def daily_spec(day):
 
 
 @lru_cache(maxsize=8)
-def _daily_crossword_cached(iso_date: str, size: int, words: int, difficulties: tuple):
+def _daily_crossword_cached(iso_date: str, size: int, words: int, difficulties: tuple,
+                            everyday: float = 0.6):
     # Seeded from the date, so every web worker builds the identical grid and
     # the puzzle only has to be compiled once a day rather than once a request.
     seed = int(iso_date.replace('-', ''))
     rng = random.Random(seed)
     puzzle = crossword_puzzle(rng, size=size, target_words=words,
-                              difficulties=list(difficulties), deterministic=True)
+                              difficulties=list(difficulties), deterministic=True,
+                              everyday=everyday)
     if not puzzle:
         # A thin difficulty band can starve the compiler; fall back to the
         # whole question bank rather than showing nobody a puzzle.
         rng = random.Random(seed)
-        puzzle = crossword_puzzle(rng, size=size, target_words=words, deterministic=True)
+        puzzle = crossword_puzzle(rng, size=size, target_words=words,
+                                  deterministic=True, everyday=everyday)
     return puzzle
 
 
 def daily_crossword(day):
     spec = daily_spec(day)
     puzzle = _daily_crossword_cached(
-        day.isoformat(), spec['size'], spec['words'], tuple(spec['difficulties'])
+        day.isoformat(), spec['size'], spec['words'], tuple(spec['difficulties']),
+        spec.get('everyday', 0.6)
     )
     return spec, puzzle
 
