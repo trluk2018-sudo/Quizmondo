@@ -136,9 +136,38 @@
 
     </div>
 
-    <!-- ORGANIZED DUELS & CHALLENGES SECTIONS -->
-    <div class="space-y-6">
+    <!-- DUELS & CHALLENGES, SORTED BY WHO IT IS WAITING ON.
+         Three lists used to sit stacked down the page, so finding out whether
+         anything needed you meant scrolling past everything that did not.
+         Incoming and outgoing are the same question asked from both ends, so
+         they are two tabs rather than two sections you read in turn. The strip
+         scrolls on a phone, the same way the main nav does. -->
+    <div class="space-y-4" id="duelTabs">
 
+      <div class="flex items-center gap-2 overflow-x-auto no-scrollbar border-b border-purple-500/20 pb-2 font-mono">
+        <button type="button" data-duel-tab="turn"
+                class="qm-tab shrink-0 px-2.5 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wide sm:tracking-wider whitespace-nowrap transition flex items-center gap-1.5 sm:gap-2">
+          <span>⚡</span><span>Your turn</span>
+          {% if incoming_challenges or bot_matches %}
+          <span class="px-1.5 py-0.5 rounded-full bg-emerald-400 text-slate-950 text-[10px] font-black">{{ (incoming_challenges|length) + (bot_matches|length) }}</span>
+          {% endif %}
+        </button>
+        <button type="button" data-duel-tab="waiting"
+                class="qm-tab shrink-0 px-2.5 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wide sm:tracking-wider whitespace-nowrap transition flex items-center gap-1.5 sm:gap-2">
+          {# "Waiting on them" pushes Friends off the edge of a 375px screen,
+             and three tabs should all be visible without scrolling for one. #}
+          <span>⏳</span><span class="sm:hidden">Waiting</span><span class="hidden sm:inline">Waiting on them</span>
+          {% if outgoing_invites %}
+          <span class="px-1.5 py-0.5 rounded-full bg-slate-700 text-slate-200 text-[10px] font-black">{{ outgoing_invites|length }}</span>
+          {% endif %}
+        </button>
+        <button type="button" data-duel-tab="friends"
+                class="qm-tab shrink-0 px-2.5 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wide sm:tracking-wider whitespace-nowrap transition flex items-center gap-1.5 sm:gap-2">
+          <span>👥</span><span>Friends</span>
+        </button>
+      </div>
+
+      <div data-duel-panel="turn" class="space-y-6">
       <!-- SECTION 1: INCOMING CHALLENGES (People Who Invited You) -->
       {% if incoming_challenges %}
       <div class="space-y-3 font-mono">
@@ -195,6 +224,50 @@
       </div>
       {% endif %}
 
+
+      <!-- SECTION 3: BOT NOVA PRACTICE DUELS -->
+      {% if bot_matches %}
+      <div class="space-y-3 font-mono">
+        <div class="flex items-center justify-between border-b border-purple-500/20 pb-2">
+          <h3 class="text-base font-black text-purple-300 flex items-center gap-2">
+            <span>🤖</span> BOT NOVA PRACTICE DUELS ({{ bot_matches|length }})
+          </h3>
+          <span class="text-[11px] text-slate-400">Solo speed training</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {% for m in bot_matches %}
+          {% set is_completed = (m.status == 'completed') %}
+          <div data-duel-card="{{ m.match_code }}" class="p-4 rounded-2xl bg-slate-950/80 border border-purple-500/30 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3 min-w-0">
+              {{ render_avatar_badge('nova', 'Cyber Bot Nova', 'md') }}
+              <div class="space-y-0.5 min-w-0">
+                <div class="font-mono font-bold text-sm text-white truncate">vs Cyber Bot Nova</div>
+                <div data-duel-meta="{{ m.match_code }}" class="text-xs font-mono text-slate-400">
+                  {% if is_completed %}
+                  Completed (6/6) &bull; Final: {{ m.p1_total_score }} - {{ m.p2_total_score }}
+                  {% else %}
+                  Round {{ m.current_round }}/6 &bull; Score: {{ m.p1_total_score }} - {{ m.p2_total_score }}
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <a href="{{ url_for('arena.match_lobby', match_code=m.match_code) }}" class="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-slate-950 font-mono font-black text-xs uppercase tracking-wider">
+              {% if is_completed %}🏆 Results{% else %}Play 🚀{% endif %}
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+        {% if not incoming_challenges and not bot_matches %}
+        <p class="p-5 rounded-2xl bg-slate-950/70 border border-purple-500/20 text-xs font-mono text-slate-400 text-center">
+          Nothing is waiting on you. Challenge a friend above, or take on Cyber Bot Nova.
+        </p>
+        {% endif %}
+      </div>
+
+      <div data-duel-panel="waiting" class="space-y-6 hidden">
       <!-- SECTION 2: OUTGOING CHALLENGES & INVITES (WhatsApp & Online Invites You Sent) -->
       <div class="space-y-3 font-mono">
         <div class="flex items-center justify-between border-b border-purple-500/20 pb-2">
@@ -262,47 +335,9 @@
         </div>
         {% endif %}
       </div>
-
-      <!-- SECTION 3: BOT NOVA PRACTICE DUELS -->
-      {% if bot_matches %}
-      <div class="space-y-3 font-mono">
-        <div class="flex items-center justify-between border-b border-purple-500/20 pb-2">
-          <h3 class="text-base font-black text-purple-300 flex items-center gap-2">
-            <span>🤖</span> BOT NOVA PRACTICE DUELS ({{ bot_matches|length }})
-          </h3>
-          <span class="text-[11px] text-slate-400">Solo speed training</span>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {% for m in bot_matches %}
-          {% set is_completed = (m.status == 'completed') %}
-          <div data-duel-card="{{ m.match_code }}" class="p-4 rounded-2xl bg-slate-950/80 border border-purple-500/30 flex items-center justify-between gap-4">
-            <div class="flex items-center gap-3 min-w-0">
-              {{ render_avatar_badge('nova', 'Cyber Bot Nova', 'md') }}
-              <div class="space-y-0.5 min-w-0">
-                <div class="font-mono font-bold text-sm text-white truncate">vs Cyber Bot Nova</div>
-                <div data-duel-meta="{{ m.match_code }}" class="text-xs font-mono text-slate-400">
-                  {% if is_completed %}
-                  Completed (6/6) &bull; Final: {{ m.p1_total_score }} - {{ m.p2_total_score }}
-                  {% else %}
-                  Round {{ m.current_round }}/6 &bull; Score: {{ m.p1_total_score }} - {{ m.p2_total_score }}
-                  {% endif %}
-                </div>
-              </div>
-            </div>
-            <a href="{{ url_for('arena.match_lobby', match_code=m.match_code) }}" class="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-slate-950 font-mono font-black text-xs uppercase tracking-wider">
-              {% if is_completed %}🏆 Results{% else %}Play 🚀{% endif %}
-            </a>
-          </div>
-          {% endfor %}
-        </div>
       </div>
-      {% endif %}
 
-    </div>
-
-    <!-- FRIENDS ROSTER & GROUP CHALLENGE LOBBY -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+      <div data-duel-panel="friends" class="space-y-6 hidden">
       <!-- REGISTERED FRIENDS ROSTER (Direct 1-Tap Challenge, No WhatsApp Needed!) -->
       <div class="p-6 rounded-3xl bg-slate-950/90 border border-emerald-500/30 shadow-xl space-y-4 font-mono">
         <div class="flex items-center justify-between border-b border-emerald-500/20 pb-3">
@@ -368,6 +403,12 @@
         </div>
         {% endif %}
       </div>
+      </div>
+
+    </div>
+
+    <!-- FRIENDS ROSTER & GROUP CHALLENGE LOBBY -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
 
       <!-- GROUP CHALLENGE: up to six players, same question at the same time -->
       <div class="relative p-6 rounded-3xl bg-slate-950/90 border-2 border-cyan-400/50 shadow-2xl shadow-cyan-500/10 space-y-5 font-mono overflow-hidden">
@@ -601,8 +642,50 @@
   </div>
 </div>
 
+<style>
+  /* Tabs, not a menu: the same strip scrolls on a phone and sits in a row on
+     a desktop, so there is one thing to style rather than two. */
+  .qm-tab { background: rgba(15, 23, 42, .8); border: 1px solid rgba(168, 85, 247, .25); color: #cbd5e1; min-height: 44px; }
+  .qm-tab:hover { border-color: rgba(34, 211, 238, .55); color: #fff; }
+  .qm-tab.qm-tab-on { background: linear-gradient(90deg, rgba(168, 85, 247, .35), rgba(34, 211, 238, .3)); border-color: rgba(34, 211, 238, .7); color: #fff; }
+</style>
 <script src="/static/js/quiz-audio.js"></script>
 <script>
+// Duels tabs: one list visible at a time, chosen by who it is waiting on.
+(function () {
+  var root = document.getElementById('duelTabs');
+  if (!root) return;
+  var tabs = root.querySelectorAll('[data-duel-tab]');
+  var panels = root.querySelectorAll('[data-duel-panel]');
+  var REMEMBER = 'qm_duel_tab';
+
+  function select(name) {
+    var found = false;
+    panels.forEach(function (p) {
+      var on = p.getAttribute('data-duel-panel') === name;
+      p.classList.toggle('hidden', !on);
+      if (on) found = true;
+    });
+    if (!found) return false;
+    tabs.forEach(function (t) {
+      t.classList.toggle('qm-tab-on', t.getAttribute('data-duel-tab') === name);
+    });
+    try { localStorage.setItem(REMEMBER, name); } catch (e) { /* private window */ }
+    return true;
+  }
+
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () { select(t.getAttribute('data-duel-tab')); });
+  });
+
+  // Open on whatever is waiting on you, since that is the reason to look. Only
+  // fall back to the remembered tab when there is nothing of yours to do.
+  var hasTurn = root.querySelector('[data-duel-panel="turn"] [data-duel-card], [data-duel-panel="turn"] a[href*="/arena/match/"]');
+  var remembered = null;
+  try { remembered = localStorage.getItem(REMEMBER); } catch (e) { /* ignore */ }
+  if (hasTurn || !remembered || !select(remembered)) select('turn');
+})();
+
 // Sound Toggle logic
 function updateSoundBtn() {
   var isMuted = localStorage.getItem('qm_audio_muted') === 'true';
