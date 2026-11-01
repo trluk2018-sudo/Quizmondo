@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, flash, current_app, Response
 from sqlalchemy.sql.expression import func
 from ..models import db, User, PlayerProfile, ArenaMatch, ArenaRound, QuizQuestion, QuizPack, PubLeague, PubLeagueResult, pub_season_label, SiteSetting, slugify, GroupGame, GroupPlayer
+from ..models_quiz_memory import QuestionMemory, MEMORY_LIMIT
 from ..utils.share_card import generate_duel_card_png, generate_pub_card_png
 
 arena_bp = Blueprint('arena', __name__, url_prefix='/arena')
@@ -62,25 +63,61 @@ def playable_questions():
 
 
 # What this player has been asked lately, so the next game does not open with
-# the same questions. Kept in the session rather than a table: it has to work
-# for guests too, and sixty ids is a few hundred bytes of cookie.
+# the same questions.
+#
+# A signed-in player gets a row in question_memory, so the list follows the
+# account between devices. A guest keeps it in the session, because there is
+# no account to hang a row on; it still works, but only in that browser.
 RECENT_QIDS = 'qm_recent_qids'
-RECENT_MEMORY = 60
+RECENT_MEMORY = MEMORY_LIMIT
 
 
 def _recent_qids():
     from flask import has_request_context
     if not has_request_context():
         return []
+    user_id = session.get('user_id')
+    if user_id:
+        return QuestionMemory.recent(user_id)
     try:
         return [int(qid) for qid in (session.get(RECENT_QIDS) or [])]
     except (TypeError, ValueError):
         return []
 
 
+@arena_bp.before_app_request
+def adopt_guest_question_memory():
+    """Carry a guest's recently-seen list onto their new account.
+
+    Without this, making an account would hand you back the very questions you
+    had just played as a guest -- the opposite of the reward signing up is
+    supposed to be.
+    """
+    user_id = session.get('user_id')
+    if not user_id or RECENT_QIDS not in session:
+        return
+    guest_ids = session.pop(RECENT_QIDS) or []
+    if not guest_ids:
+        return
+    try:
+        # Oldest first, so the newest end up at the front of the merged list.
+        QuestionMemory.remember(user_id, list(reversed(guest_ids)), RECENT_MEMORY)
+    except Exception:
+        db.session.rollback()
+
+
 def _remember_qids(ids):
     from flask import has_request_context
     if not has_request_context() or not ids:
+        return
+    user_id = session.get('user_id')
+    if user_id:
+        try:
+            QuestionMemory.remember(user_id, ids, RECENT_MEMORY)
+        except Exception:
+            # Losing the memory means a repeat eventually, which is a far
+            # smaller thing than losing the player's game.
+            db.session.rollback()
         return
     recent = [qid for qid in _recent_qids() if qid not in ids]
     session[RECENT_QIDS] = (list(ids) + recent)[:RECENT_MEMORY]
