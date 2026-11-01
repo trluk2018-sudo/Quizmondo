@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140a2e"/>
+      <stop offset="55%" stop-color="#0a0620"/>
+      <stop offset="100%" stop-color="#05030f"/>
+    </linearGradient>
+    <radialGradient id="glowA"><stop offset="0%" stop-color="#fbbf24" stop-opacity=".40"/><stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB"><stop offset="0%" stop-color="#f472b6" stop-opacity=".38"/><stop offset="100%" stop-color="#f472b6" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <ellipse cx="120" cy="70" rx="300" ry="210" fill="url(#glowA)"/>
+  <ellipse cx="690" cy="390" rx="320" ry="220" fill="url(#glowB)"/>
+  <text x="400" y="74" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="36" font-weight="bold" fill="#f8fafc">Sounds Like a Joke</text>
+  <text x="400" y="104" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" fill="#94a3b8">Ten things that really happened</text>
+  <g transform="rotate(-4 400 280)">
+    <rect x="170" y="150" width="460" height="265" rx="6" fill="#f8fafc" opacity=".94"/>
+    <rect x="170" y="150" width="460" height="44" rx="6" fill="#1e1b4b"/>
+    <text x="400" y="180" font-family="Verdana,DejaVu Sans,sans-serif" font-size="20" font-weight="bold" fill="#fbbf24" text-anchor="middle">THE DAILY RECORD</text>
+    <line x1="192" y1="206" x2="608" y2="206" stroke="#94a3b8" stroke-width="1"/>
+    <text x="196" y="236" font-family="Verdana,DejaVu Sans,sans-serif" font-size="17" font-weight="bold" fill="#0f172a">ARMY DEFEATED BY BIRDS</text>
+    <rect x="196" y="245" width="430" height="4" rx="2" fill="#cbd5e1"/>
+    <rect x="196" y="254" width="340" height="4" rx="2" fill="#cbd5e1"/>
+    <text x="196" y="280" font-family="Verdana,DejaVu Sans,sans-serif" font-size="17" font-weight="bold" fill="#0f172a">CITY FLOODED WITH MOLASSES</text>
+    <rect x="196" y="289" width="430" height="4" rx="2" fill="#cbd5e1"/>
+    <rect x="196" y="298" width="340" height="4" rx="2" fill="#cbd5e1"/>
+    <text x="196" y="324" font-family="Verdana,DejaVu Sans,sans-serif" font-size="17" font-weight="bold" fill="#0f172a">POPE PUTS CORPSE ON TRIAL</text>
+    <rect x="196" y="333" width="430" height="4" rx="2" fill="#cbd5e1"/>
+    <rect x="196" y="342" width="340" height="4" rx="2" fill="#cbd5e1"/>
+    <text x="196" y="368" font-family="Verdana,DejaVu Sans,sans-serif" font-size="17" font-weight="bold" fill="#0f172a">MARATHON WON FROM A CAR</text>
+    <rect x="196" y="377" width="430" height="4" rx="2" fill="#cbd5e1"/>
+    <rect x="196" y="386" width="340" height="4" rx="2" fill="#cbd5e1"/>
+  </g>
+</svg>
