@@ -1,0 +1,142 @@
+{% extends "themes/quizhub/base.html" %}
+{% block title %}Games Challenge {{ challenge.code }} • Quizmondo{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#090317] text-slate-100 font-sans py-8 sm:py-12 relative overflow-hidden">
+  <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 w-full space-y-5 relative z-10">
+
+    <div class="flex items-center justify-between gap-3 border-b border-purple-500/20 pb-3 font-mono">
+      <a href="{{ url_for('games.hub') }}" class="text-xs text-cyan-400 hover:text-cyan-300">&larr; Mini Games</a>
+      <div class="flex items-center gap-2 text-xs">
+        <span class="text-slate-400">CHALLENGE</span>
+        <strong class="text-amber-400 tracking-[0.25em] font-black">{{ challenge.code }}</strong>
+      </div>
+    </div>
+
+    <div class="p-6 sm:p-8 rounded-3xl bg-slate-950/95 border-2 border-purple-500/40 shadow-2xl space-y-6">
+
+      <div class="text-center space-y-1.5 font-mono">
+        <h1 class="text-2xl sm:text-3xl font-black text-white">Games Challenge</h1>
+        <p class="text-xs text-slate-400">
+          Five games. Highest score takes each one. Best of five wins.
+        </p>
+        {% if challenge.status == 'complete' %}
+        <span class="inline-block mt-1 px-3 py-1 rounded-full bg-slate-700 text-slate-200 text-[11px] font-bold">Finished</span>
+        {% else %}
+        <span class="inline-block mt-1 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[11px] font-bold">
+          {{ days_left }} day{{ '' if days_left == 1 else 's' }} left
+        </span>
+        {% endif %}
+      </div>
+
+      <!-- Who is winning -->
+      <div class="grid grid-cols-2 gap-3 sm:gap-4 font-mono">
+        <div class="p-4 rounded-2xl text-center space-y-1 border-2 {% if leader == 'creator' %}bg-emerald-950/40 border-emerald-400/60{% else %}bg-slate-900/70 border-purple-500/30{% endif %}">
+          <div class="text-[10px] uppercase text-slate-400 font-bold">{% if is_creator %}You{% else %}Challenger{% endif %}</div>
+          <div class="text-sm font-bold text-white truncate">{{ challenge.creator_name }}</div>
+          <div class="text-3xl font-black text-cyan-300">{{ table.creator_wins }}</div>
+          <div class="text-[10px] text-slate-500">games won</div>
+        </div>
+        <div class="p-4 rounded-2xl text-center space-y-1 border-2 {% if leader == 'opponent' %}bg-emerald-950/40 border-emerald-400/60{% else %}bg-slate-900/70 border-purple-500/30{% endif %}">
+          <div class="text-[10px] uppercase text-slate-400 font-bold">{% if is_player and not is_creator %}You{% else %}Opponent{% endif %}</div>
+          <div class="text-sm font-bold text-white truncate">{{ challenge.opponent_name or 'Nobody yet' }}</div>
+          <div class="text-3xl font-black text-pink-300">{{ table.opponent_wins }}</div>
+          <div class="text-[10px] text-slate-500">games won</div>
+        </div>
+      </div>
+
+      {% if not challenge.opponent_key %}
+      <div class="p-5 rounded-2xl bg-cyan-950/30 border border-cyan-400/40 text-center space-y-3 font-mono">
+        <p class="text-xs text-slate-200">
+          Send this link to whoever you want to take on. The first person to open it
+          with an account takes the other seat.
+        </p>
+        <button type="button" onclick="shareChallenge()"
+                class="w-full py-3.5 px-5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider transition active:scale-95">
+          📲 Send the challenge
+        </button>
+      </div>
+      {% elif not has_account %}
+      <div class="p-5 rounded-2xl bg-purple-950/40 border border-purple-400/40 text-center space-y-3 font-mono">
+        <p class="text-xs text-slate-200">Make an account to take the other seat and play.</p>
+        <a href="{{ url_for('arena.player_register', next=request.path) }}"
+           class="block w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-pink-500 to-indigo-600 text-white font-black text-xs uppercase tracking-wider">
+          🚀 Quick setup &amp; play &rarr;
+        </a>
+      </div>
+      {% endif %}
+
+      <!-- The five games -->
+      <div class="space-y-2.5">
+        <div class="text-[11px] font-black uppercase text-slate-400 tracking-wider font-mono">The five games</div>
+        {% for row in table.rows %}
+        {% set mine = row.creator_score if is_creator else row.opponent_score %}
+        {% set theirs = row.opponent_score if is_creator else row.creator_score %}
+        {% set i_won = (row.winner == 'creator' and is_creator) or (row.winner == 'opponent' and not is_creator) %}
+        <div class="p-3.5 rounded-2xl border font-mono flex items-center justify-between gap-3
+                    {% if row.winner == 'tie' %}bg-slate-900/80 border-slate-600
+                    {% elif row.winner and is_player and i_won %}bg-emerald-950/40 border-emerald-500/40
+                    {% elif row.winner and is_player %}bg-rose-950/30 border-rose-500/30
+                    {% else %}bg-slate-900/80 border-purple-500/25{% endif %}">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="text-xl shrink-0">{{ row.meta.icon }}</span>
+            <div class="min-w-0">
+              <div class="text-xs font-bold text-white truncate">{{ row.meta.title }}</div>
+              <div class="text-[11px] text-slate-400">
+                {% if is_player %}
+                  You: {% if mine is not none %}<strong class="text-cyan-300">{{ mine }}</strong>{% else %}—{% endif %}
+                  &nbsp;·&nbsp;
+                  Them: {% if theirs is not none %}<strong class="text-pink-300">{{ theirs }}</strong>{% else %}not yet{% endif %}
+                {% else %}
+                  {{ row.creator_score if row.creator_score is not none else '—' }}
+                  vs
+                  {{ row.opponent_score if row.opponent_score is not none else '—' }}
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% if is_player and mine is none and challenge.status != 'complete' %}
+          {# Each game is its own route at /games/<key>; there is no single
+             play view to url_for. #}
+          <a href="/games/{{ row.game_key }}"
+             class="shrink-0 px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-purple-600 text-slate-950 font-black text-[11px] uppercase tracking-wider">
+            Play
+          </a>
+          {% elif row.winner == 'tie' %}
+          <span class="shrink-0 text-[11px] font-black text-slate-300">Tied</span>
+          {% elif row.winner %}
+          <span class="shrink-0 text-lg">{% if is_player %}{{ '✅' if i_won else '❌' }}{% else %}🏁{% endif %}</span>
+          {% else %}
+          <span class="shrink-0 text-[11px] text-slate-500">Waiting</span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if challenge.status == 'complete' %}
+      <div class="p-5 rounded-2xl bg-slate-900/80 border border-amber-500/40 text-center font-mono space-y-1">
+        <div class="text-3xl">🏆</div>
+        <div class="text-sm font-black text-white">
+          {% if leader == 'creator' %}{{ challenge.creator_name }} wins
+          {% elif leader == 'opponent' %}{{ challenge.opponent_name }} wins
+          {% else %}Dead heat{% endif %}
+        </div>
+        <div class="text-[11px] text-slate-400">{{ table.creator_wins }} &ndash; {{ table.opponent_wins }}</div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+<script>
+function shareChallenge() {
+  var url = window.location.href;
+  var text = 'I have set you a Quizmondo Games Challenge — five mini games, best of five, one week. ' + url;
+  if (navigator.share) { navigator.share({ text: text, url: url }).catch(function () {}); }
+  else { window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank'); }
+}
+</script>
+{% endblock %}

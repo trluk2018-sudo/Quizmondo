@@ -71,6 +71,30 @@
       </div>
     </a>
 
+    <!-- Games Challenge: five games against one person, over a week -->
+    <div class="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-cyan-950/50 via-slate-950 to-purple-950/50 border-2 border-cyan-400/45 shadow-2xl relative overflow-hidden">
+      <div class="absolute -top-10 -right-6 text-[6rem] opacity-10 pointer-events-none select-none">⚔️</div>
+      <div class="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="min-w-0 space-y-1.5">
+          <span class="inline-block px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-black uppercase font-mono border border-cyan-400/30">
+            New
+          </span>
+          <h3 class="text-lg sm:text-xl font-black font-mono text-white">Games Challenge</h3>
+          <p class="text-[11px] font-mono text-slate-400 leading-relaxed">
+            Five games drawn at random, one week to play them, one go at each.
+            Highest score takes each game and best of five wins it, so a bad
+            round costs you one game rather than the lot.
+          </p>
+        </div>
+        <form method="POST" action="{{ url_for('games.challenge_new') }}" class="shrink-0">
+          <button type="submit"
+                  class="w-full sm:w-auto py-3.5 px-6 rounded-2xl bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 hover:from-cyan-300 hover:to-purple-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition transform hover:-translate-y-0.5 active:scale-95">
+            ⚔️ Challenge someone &rarr;
+          </button>
+        </form>
+      </div>
+    </div>
+
     <!-- Game groups -->
     {% for group_key, group_name, group_icon, group_tag in groups %}
     {% set group_games = games|selectattr('group', 'equalto', group_key)|list %}

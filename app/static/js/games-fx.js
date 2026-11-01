@@ -461,6 +461,20 @@ window.QMG = (function () {
           banner('NEW PERSONAL BEST', '🏅', 'gold');
           haptic(70);
         }
+        // That run may also have been one of the five in a Games Challenge.
+        var chNote = $('qmgChallengeNote');
+        if (chNote) {
+          var ch = data.challenge;
+          if (ch) {
+            chNote.href = ch.url;
+            chNote.innerHTML = '⚔️ <strong>Games Challenge</strong> &bull; ' +
+              ch.played + ' of ' + ch.total + ' played &bull; you ' + ch.you +
+              ' &ndash; ' + ch.them + ' ' + ch.opponent + ' &rarr;';
+            chNote.classList.remove('hidden');
+          } else {
+            chNote.classList.add('hidden');
+          }
+        }
         if (data.xp > 0) {
           countUp($('qmgOverlayXp'), data.xp, 700);
           var xpEl = $('qmgOverlayXp');

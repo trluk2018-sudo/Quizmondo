@@ -13,6 +13,8 @@ from flask import (Blueprint, abort, flash, jsonify, redirect, render_template,
 
 from ..models import db, PlayerProfile, SiteSetting
 from ..models_games import MiniGameScore, DailyChallengeScore
+from ..models_challenge import (GameChallenge, GameChallengeScore,
+                                GAMES_PER_CHALLENGE, new_challenge_code)
 from ..utils import game_data as gd
 from .arena import get_current_player, AVATAR_LOOKUP
 from .public import inject_global_data
@@ -608,6 +610,11 @@ def submit_score():
 
     db.session.commit()
 
+    # If this game belongs to a challenge they are in, that run is their go at
+    # it. Recorded off the ordinary score submission rather than a separate
+    # endpoint, so a challenge game is played exactly like any other.
+    challenge_note = _record_challenge_run(player.session_key, key, score)
+
     rank = MiniGameScore.query.filter(
         MiniGameScore.game_key == key,
         MiniGameScore.best_score > (row.best_score or 0),
@@ -623,7 +630,117 @@ def submit_score():
         'level': player.level,
         'rank': rank,
         'plays': row.plays,
+        'challenge': challenge_note,
     })
+
+
+# ---------------------------------------------------------------------------
+# Games Challenge: five games, two players, one week
+# ---------------------------------------------------------------------------
+
+def _live_challenges(player_key):
+    """Challenges this player is in that are still running."""
+    if not player_key:
+        return []
+    rows = GameChallenge.query.filter(
+        GameChallenge.status != 'complete',
+        db.or_(GameChallenge.creator_key == player_key,
+               GameChallenge.opponent_key == player_key),
+    ).order_by(GameChallenge.created_at.desc()).all()
+    return [c for c in rows if not c.expired]
+
+
+def _record_challenge_run(player_key, game_key, score):
+    """Put this run against every live challenge that wants it.
+
+    Returns something for the end-of-game overlay to show, or None. A player
+    can be in more than one challenge at once, and the same game can be in
+    both, so this is a loop rather than a lookup.
+    """
+    noted = None
+    for ch in _live_challenges(player_key):
+        if game_key not in ch.games():
+            continue
+        if not GameChallengeScore.record(ch, player_key, game_key, score):
+            continue        # already had their go at this one
+        table = ch.standings()
+        mine_wins = table['creator_wins'] if player_key == ch.creator_key else table['opponent_wins']
+        their_wins = table['opponent_wins'] if player_key == ch.creator_key else table['creator_wins']
+        done = len(ch.scores_for(player_key))
+        noted = {
+            'code': ch.code,
+            'url': url_for('games.challenge', code=ch.code),
+            'played': done,
+            'total': len(ch.games()),
+            'you': mine_wins,
+            'them': their_wins,
+            'opponent': (ch.opponent_name if player_key == ch.creator_key else ch.creator_name) or 'your opponent',
+        }
+    return noted
+
+
+@games_bp.route('/challenge/new', methods=['POST'])
+def challenge_new():
+    """Open a challenge: five games drawn at random, a week on the clock."""
+    if not _has_account():
+        return redirect(url_for('arena.player_register', next=url_for('games.hub')))
+    player = get_current_player()
+    keys = [g['key'] for g in GAMES]
+    random.shuffle(keys)
+    picked = keys[:GAMES_PER_CHALLENGE]
+
+    challenge = GameChallenge(
+        code=new_challenge_code(),
+        status='waiting',
+        creator_key=player.session_key,
+        creator_name=player.display_name,
+        creator_avatar=player.avatar_key,
+    )
+    challenge.set_games(picked)
+    db.session.add(challenge)
+    db.session.commit()
+    return redirect(url_for('games.challenge', code=challenge.code))
+
+
+@games_bp.route('/challenge/<code>')
+def challenge(code):
+    """The challenge itself: who is winning, and what you have left to play."""
+    ch = GameChallenge.query.filter_by(code=code.upper()).first_or_404()
+    player = get_current_player(persist=False)
+    me = player.session_key if player else None
+
+    # Whoever opens the link second and is not already in it takes the seat.
+    if (_has_account() and me and not ch.opponent_key and me != ch.creator_key
+            and not ch.expired):
+        player = get_current_player()
+        me = player.session_key
+        ch.opponent_key = me
+        ch.opponent_name = player.display_name
+        ch.opponent_avatar = player.avatar_key
+        ch.status = 'active'
+        db.session.commit()
+
+    if ch.expired and ch.status != 'complete':
+        ch.status = 'complete'
+        db.session.commit()
+
+    rates = {g['key']: g.get('xp_rate', 0.1) for g in GAMES}
+    table = ch.standings()
+    for row in table['rows']:
+        row['meta'] = GAME_BY_KEY.get(row['game_key'], {'title': row['game_key'], 'icon': '🎮'})
+
+    return render_template(
+        'themes/quizhub/games/challenge.html',
+        challenge=ch,
+        table=table,
+        leader=ch.leader(rates),
+        me=me,
+        is_creator=(me == ch.creator_key),
+        is_player=ch.is_player(me),
+        my_scores=ch.scores_for(me) if me else {},
+        days_left=ch.days_left(),
+        has_account=_has_account(),
+    )
 
 
 # ---------------------------------------------------------------------------
