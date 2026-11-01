@@ -1,0 +1,46 @@
+{% extends "themes/quizhub/base.html" %}
+{% block title %}Pick a new PIN • Quizmondo{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#090317] text-slate-100 font-sans py-10 sm:py-16 relative overflow-hidden">
+  <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-md mx-auto px-4 sm:px-6 w-full relative z-10">
+    <div class="p-6 sm:p-8 rounded-3xl bg-slate-950/95 border-2 border-emerald-500/40 shadow-2xl space-y-5 font-mono">
+
+      <div class="text-center space-y-1.5">
+        <div class="text-4xl">🔒</div>
+        <h1 class="text-xl sm:text-2xl font-black text-white">Pick a new PIN</h1>
+        <p class="text-[11px] text-slate-400">Six digits. You will use it to sign in from now on.</p>
+      </div>
+
+      <form method="POST" class="space-y-3">
+        <div class="space-y-1.5">
+          <label for="pin" class="block text-[11px] font-bold text-slate-300 uppercase">New PIN</label>
+          <input type="password" id="pin" name="pin" required inputmode="numeric" pattern="[0-9]{6}"
+                 maxlength="6" minlength="6" autocomplete="new-password"
+                 class="w-full bg-slate-950 border border-emerald-500/30 rounded-xl p-3 text-white text-center text-xl tracking-[0.5em] focus:outline-none focus:border-cyan-400"
+                 placeholder="••••••">
+        </div>
+        <div class="space-y-1.5">
+          <label for="pin_confirm" class="block text-[11px] font-bold text-slate-300 uppercase">And again</label>
+          <input type="password" id="pin_confirm" name="pin_confirm" required inputmode="numeric" pattern="[0-9]{6}"
+                 maxlength="6" minlength="6" autocomplete="new-password"
+                 class="w-full bg-slate-950 border border-emerald-500/30 rounded-xl p-3 text-white text-center text-xl tracking-[0.5em] focus:outline-none focus:border-cyan-400"
+                 placeholder="••••••">
+        </div>
+        <button type="submit"
+                class="w-full py-3.5 px-5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider transition active:scale-95">
+          Save my new PIN
+        </button>
+      </form>
+
+      <p class="text-[11px] text-slate-500 text-center">
+        This link works once. If it has already been used, ask for
+        <a href="{{ url_for('account.forgot_pin') }}" class="text-cyan-400 hover:text-cyan-300">a fresh one</a>.
+      </p>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

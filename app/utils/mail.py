@@ -171,3 +171,30 @@ def send_confirmation(to, display_name, link):
         """) % (name, conf['smtp_from_name'], link, conf['smtp_from_name'])
     return deliver(message(to, 'Confirm your %s account' % conf['smtp_from_name'],
                            body, conf), conf)
+
+
+def send_pin_reset(to, display_name, link, hours):
+    """A way back in for somebody who has forgotten their six digit PIN.
+
+    Shorter lived than the confirmation link: this one can take an account
+    over, so it should not be sitting in an inbox for two days.
+    """
+    conf = config()
+    name = (display_name or 'there').split()[0]
+    body = textwrap.dedent("""\
+        Hi %s,
+
+        Someone asked to reset the PIN on your %s account. If that was you,
+        open this link and pick a new one:
+
+        %s
+
+        It works once and expires in %d hours.
+
+        If it was not you, ignore this email. Your PIN has not changed and
+        nobody can get in without this link.
+
+        %s
+        """) % (name, conf['smtp_from_name'], link, hours, conf['smtp_from_name'])
+    return deliver(message(to, 'Reset your %s PIN' % conf['smtp_from_name'],
+                           body, conf), conf)

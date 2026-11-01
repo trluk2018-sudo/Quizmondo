@@ -1,0 +1,50 @@
+{% extends "themes/quizhub/base.html" %}
+{% block title %}Forgot your PIN • Quizmondo{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-[#090317] text-slate-100 font-sans py-10 sm:py-16 relative overflow-hidden">
+  <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-md mx-auto px-4 sm:px-6 w-full relative z-10">
+    <div class="p-6 sm:p-8 rounded-3xl bg-slate-950/95 border-2 border-purple-500/40 shadow-2xl space-y-5 font-mono">
+
+      <div class="text-center space-y-1.5">
+        <div class="text-4xl">🔑</div>
+        <h1 class="text-xl sm:text-2xl font-black text-white">Forgotten your PIN?</h1>
+        <p class="text-[11px] text-slate-400 leading-relaxed">
+          Put in the email address on your account and we will send you a link to pick a new one.
+        </p>
+      </div>
+
+      {% if not mail_ready %}
+      <p class="p-3 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-200 text-[11px] text-center">
+        Email is not set up on this site yet, so no link can be sent. Please get in touch instead.
+      </p>
+      {% endif %}
+
+      <form method="POST" class="space-y-3">
+        <div class="space-y-1.5">
+          <label for="email" class="block text-[11px] font-bold text-slate-300 uppercase">Email address</label>
+          <input type="email" id="email" name="email" required autocomplete="email" inputmode="email"
+                 class="w-full bg-slate-950 border border-purple-500/30 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-cyan-400"
+                 placeholder="you@example.com">
+        </div>
+        <button type="submit"
+                class="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-cyan-400 to-purple-600 text-slate-950 font-black text-xs uppercase tracking-wider transition active:scale-95">
+          Send me a reset link
+        </button>
+      </form>
+
+      <p class="text-[11px] text-slate-500 text-center leading-relaxed">
+        This only works for an address you have confirmed &mdash; that is what confirming is for.
+        If you never confirmed yours, we cannot prove the account is yours.
+      </p>
+
+      <div class="text-center">
+        <a href="{{ url_for('arena.player_login') }}" class="text-[11px] text-cyan-400 hover:text-cyan-300">&larr; Back to sign in</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

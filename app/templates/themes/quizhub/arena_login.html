@@ -86,6 +86,9 @@
           New player?
           <a href="{{ url_for('arena.player_register', next=request.args.get('next')) }}" class="text-cyan-400 hover:underline font-bold">Quick 3-Step Challenge Setup &rarr;</a>
         </p>
+        <p class="text-slate-500">
+          <a href="{{ url_for('account.forgot_pin') }}" class="hover:text-cyan-300 underline">Forgotten your PIN?</a>
+        </p>
       </div>
     </div>
 
