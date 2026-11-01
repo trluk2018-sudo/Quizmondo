@@ -2395,6 +2395,26 @@ def new_pub_pin(exclude_id=None):
     return '%06d' % random.randint(100000, 999999)
 
 
+def start_pub_night(state):
+    """Put a league back to the start line, ready for the next quiz night.
+
+    Everything that says 'this night is over' has to go, not just the round
+    number — leaving tournament_completed behind is what made a reset look like
+    it had worked while the lounge still showed the night as finished.
+    """
+    state['current_round'] = 1
+    state['round_status'] = 'waiting'
+    state['answers_revealed'] = False
+    state['teams'] = []
+    state['round_questions'] = {}
+    state['tournament_completed'] = False
+    for key in ('round_ends_at', 'break_ends_at', 'results_recorded',
+                'results_recorded_at', 'night_closed_at', 'previous_pin'):
+        state.pop(key, None)
+    state['reset_ts'] = datetime.utcnow().isoformat()
+    pub_touch(state)
+
+
 def close_pub_night(league, state, rotate_pin=True):
     """Freeze a finished night, bank the results and retire the room PIN.
 
@@ -2777,25 +2797,27 @@ def league_manager_action(slug):
         db.session.commit()
         return respond("Tournament parameters & bar promos saved!")
 
-    elif action in ('reset', 'reset_quiz'):
-        state['current_round'] = 1
-        state['round_status'] = 'waiting'
-        state['answers_revealed'] = False
-        state['teams'] = []
-        state['round_questions'] = {}
-        state.pop('round_ends_at', None)
-        state.pop('break_ends_at', None)
-        state.pop('results_recorded', None)
-        state.pop('results_recorded_at', None)
-        state['reset_ts'] = datetime.utcnow().isoformat()
+    elif action in ('reset', 'reset_quiz', 'new_night'):
+        # The finished night's results are already in the league table — closing
+        # it banks them — so starting the next one loses nothing.
+        was_finished = state.get('round_status') == 'finished' or state.get('tournament_completed')
+        start_pub_night(state)
         league.set_state(state)
         db.session.commit()
+        if action == 'new_night' or was_finished:
+            return respond(f"New quiz night open at {league.name}! Last night's results are in the league "
+                           f"table, the board is clear and the Room PIN for tonight is {league.pin_code}.")
         return respond("Tournament reset to Round 1! All tables cleared and player screens auto-notified.")
 
     elif action == 'clear_tables':
         state['teams'] = []
         # Clearing every table ends the live round too, or nobody could ever check in again
         state['round_status'] = 'waiting'
+        # ...and takes the night off 'finished', or the room stays shut to the
+        # tables the host has just cleared the way for.
+        state['tournament_completed'] = False
+        state.pop('night_closed_at', None)
+        pub_touch(state)
         state['answers_revealed'] = False
         state.pop('round_ends_at', None)
         state.pop('break_ends_at', None)

@@ -131,6 +131,18 @@
           
           <!-- 1. Primary Unified Start / Next Round Button: Automatically updates to "Start Round R+1" once all tables finish! -->
           {% set start_ready = (approved_teams|length > 0 and (state.round_status == 'waiting' or can_advance) and state.round_status != 'finished') %}
+          {% if state.round_status == 'finished' %}
+          {# A finished night is not a dead end: the results are banked in the league
+             table, so the only thing left to do here is open the next one. #}
+          <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="mgr-action-form"
+                onsubmit="return confirm('Start a new quiz night? Last night\'s results stay in the league table and the board is cleared for tonight.');">
+            <input type="hidden" name="action" value="new_night">
+            <button type="submit" class="w-full py-4 px-3 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 shadow-lg shadow-emerald-950/40 ring-4 ring-emerald-400/50 font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition active:scale-95">
+              <span>▶ Start New Quiz Night</span>
+              <span class="text-[9px] font-bold opacity-85">Last night is saved &bull; clears the board &bull; new Room PIN</span>
+            </button>
+          </form>
+          {% else %}
           <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" id="formStartRound" class="mgr-action-form">
             <input type="hidden" name="action" id="inputStartRoundAction" value="{% if can_advance and is_final_round %}finish_tournament{% else %}start_round{% endif %}">
             <input type="hidden" name="round" id="inputStartRoundNum" value="{% if can_advance and not is_final_round %}{{ state.current_round + 1 }}{% else %}{{ state.current_round }}{% endif %}">
@@ -167,6 +179,7 @@
               </span>
             </button>
           </form>
+          {% endif %}
 
           <!-- 2. Force Lock / Time's Up (Only needed if a table abandoned the game): Crimson Rose -->
           <form action="{{ url_for('arena.league_manager_action', slug=league.slug) }}" method="POST" class="mgr-action-form">
@@ -794,7 +807,9 @@ function pollManagerState() {
         if (data.round_status === 'finished') {
           btnStart.className = 'w-full py-4 px-3 rounded-2xl bg-slate-900 border border-slate-800 text-slate-500 cursor-not-allowed font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition';
           btnStartTitle.textContent = '🏆 Tournament Complete';
-          btnStartSub.textContent = 'All rounds finished';
+          // The Start New Quiz Night button is rendered server side, so the console
+          // needs one reload before the host can open the next one from here.
+          btnStartSub.textContent = 'Refresh to start the next quiz night';
         } else if (approvedTeams.length === 0) {
           btnStart.className = 'w-full py-4 px-3 rounded-2xl bg-slate-900 border border-amber-500/30 text-amber-300/80 cursor-not-allowed font-black text-xs uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition';
           btnStartTitle.textContent = '🔒 Start Round ' + data.current_round;
