@@ -1,0 +1,106 @@
+{% extends "admin/base.html" %}
+{% block title %}Game Notifications{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-3xl">
+
+  <div>
+    <h1 class="text-2xl font-black text-white">Game Notifications</h1>
+    <p class="text-sm text-slate-400 mt-1">
+      Email a player when a duel has been sitting on their turn for a few days.
+    </p>
+  </div>
+
+  {% if not mail_ready %}
+  <div class="p-4 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-200 text-sm">
+    No outgoing mail account is set up, so nothing can be sent yet.
+    <a href="{{ url_for('admin.settings_email') }}" class="underline font-bold">Set up Email / SMTP</a>.
+  </div>
+  {% endif %}
+
+  <form method="post" class="space-y-5 p-5 rounded-2xl bg-slate-900/80 border border-slate-700">
+
+    <label class="flex items-start gap-3 cursor-pointer">
+      <input type="checkbox" name="game_notify_enabled" value="1"
+             {% if conf.enabled %}checked{% endif %}
+             class="mt-1 w-4 h-4 rounded border-slate-600 bg-slate-800">
+      <span>
+        <span class="block text-sm font-bold text-white">Send reminders about quiet duels</span>
+        <span class="block text-xs text-slate-400 mt-0.5">
+          Off by default. Nothing is sent while this is unticked, including by the cron URL below.
+        </span>
+      </span>
+    </label>
+
+    <div>
+      <label class="block text-xs font-bold text-slate-300 uppercase tracking-wide mb-1.5">
+        Remind after
+      </label>
+      <div class="flex items-center gap-2">
+        <input type="number" name="game_notify_stale_days" min="1" max="60"
+               value="{{ conf.stale_days }}"
+               class="w-24 px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white text-sm">
+        <span class="text-sm text-slate-400">days with no activity</span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 pt-1">
+      <button type="submit"
+              class="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-sm transition">
+        Save
+      </button>
+      <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+        <input type="checkbox" name="rotate_token" value="1" class="w-3.5 h-3.5 rounded border-slate-600 bg-slate-800">
+        Also issue a new cron URL
+      </label>
+    </div>
+  </form>
+
+  <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-700 space-y-3">
+    <h2 class="text-sm font-black text-white">Who would be emailed right now</h2>
+    <p class="text-xs text-slate-400">
+      Only duels where <strong>both</strong> players have a confirmed address, and only the player whose
+      turn it is. The same duel is never chased twice in a week, or more than twice in all.
+    </p>
+
+    {% if preview['items'] %}
+    <div class="divide-y divide-slate-800 border border-slate-800 rounded-xl overflow-hidden">
+      {% for row in preview['items'] %}
+      <div class="p-3 text-xs font-mono flex flex-wrap items-center justify-between gap-2 bg-slate-950/60">
+        <span class="text-white font-bold">{{ row.name }}</span>
+        <span class="text-slate-400">waiting on them vs {{ row.opponent }}</span>
+        <span class="text-amber-300">{{ row.idle_days }}d idle</span>
+        <span class="text-slate-500">{{ row.match }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-xs text-slate-500 p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+      Nothing qualifies. Either no duel has gone quiet, or none of the quiet ones has two players
+      with a confirmed email address.
+    </p>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('admin.settings_notifications_send') }}">
+      <button type="submit" {% if not preview['items'] or not mail_ready %}disabled{% endif %}
+              class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-700 disabled:text-slate-500 text-slate-950 font-black text-sm transition">
+        Send now ({{ preview['items']|length }})
+      </button>
+    </form>
+  </div>
+
+  <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-700 space-y-2">
+    <h2 class="text-sm font-black text-white">Sending automatically</h2>
+    <p class="text-xs text-slate-400">
+      Quizmondo has no scheduler of its own. Point a daily cron job at this URL to send reminders
+      without anyone pressing a button. It does nothing while the toggle above is off.
+    </p>
+    <code class="block p-3 rounded-lg bg-slate-950 border border-slate-800 text-[11px] text-cyan-300 break-all">{{ cron_url }}</code>
+    <p class="text-[11px] text-slate-500">
+      Anyone with this URL can trigger a send, so treat it as a password. Tick
+      &ldquo;issue a new cron URL&rdquo; above to retire the old one.
+    </p>
+  </div>
+
+</div>
+{% endblock %}

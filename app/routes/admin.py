@@ -5,6 +5,9 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from werkzeug.utils import secure_filename
 from ..models import db, User, Post, Category, Page, Media, MenuItem, SidebarWidget, SiteSetting, PageModule, slugify, QuizQuestion, QuizPack, PlayerProfile, ArenaMatch, ArenaRound, PubLeague, PubLeagueResult, pub_season_label, FeaturedGame
 from ..utils.modules import get_default_config, get_module_definition, MODULE_DEFINITIONS
+# Imported here rather than inside the view, so the table is registered before
+# create_all runs at start-up. A lazy import means no table.
+from ..models_notify import MatchNudge  # noqa: F401
 from .auth import login_required
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -1520,6 +1523,80 @@ def settings_email_test():
     else:
         flash('Not sent: %s' % why, 'error')
     return redirect(url_for('admin.settings_email'))
+
+
+@admin_bp.route('/system/game-notifications', methods=['GET', 'POST'])
+@login_required
+def settings_notifications():
+    """Reminders about duels that have gone quiet.
+
+    Off by default. Almost every player is still a guest with no address, and
+    a reminder needs both players to have confirmed one, so this is worth very
+    little until far more people have accounts -- and worth a good deal once
+    they do. Leaving it switched off until then is the point of the toggle.
+    """
+    from ..utils import game_notify, mail
+    import secrets as _secrets
+
+    if request.method == 'POST':
+        SiteSetting.set('game_notify_enabled',
+                        '1' if request.form.get('game_notify_enabled') else '')
+        SiteSetting.set('game_notify_stale_days',
+                        (request.form.get('game_notify_stale_days') or '3').strip())
+        if request.form.get('rotate_token') or not SiteSetting.get('game_notify_token'):
+            SiteSetting.set('game_notify_token', _secrets.token_urlsafe(24))
+        flash('Game notification settings saved.', 'success')
+        return redirect(url_for('admin.settings_notifications'))
+
+    conf = game_notify.settings()
+    if not conf['cron_token']:
+        SiteSetting.set('game_notify_token', _secrets.token_urlsafe(24))
+        conf = game_notify.settings()
+
+    # A dry run, always: an operator should see exactly who would be written
+    # to before anything is sent.
+    preview = game_notify.run(request.url_root, dry_run=True)
+    return render_template(
+        'admin/settings_notifications.html',
+        settings=SiteSetting.get_all(),
+        conf=conf,
+        preview=preview,
+        mail_ready=mail.mail_ready(),
+        cron_url=url_for('admin.notifications_cron', token=conf['cron_token'], _external=True),
+    )
+
+
+@admin_bp.route('/system/game-notifications/send', methods=['POST'])
+@login_required
+def settings_notifications_send():
+    """Send the reminders now, by hand."""
+    from ..utils import game_notify
+    result = game_notify.run(request.url_root)
+    if result['errors']:
+        flash('; '.join(result['errors'][:3]), 'error')
+    if result['sent'] or result['failed']:
+        flash('Sent %d reminder(s), %d failed.' % (result['sent'], result['failed']),
+              'success' if result['sent'] else 'error')
+    elif not result['errors']:
+        flash('Nothing to send: no stalled duel has two confirmed addresses.', 'info')
+    return redirect(url_for('admin.settings_notifications'))
+
+
+@admin_bp.route('/system/game-notifications/cron/<token>', methods=['GET', 'POST'])
+def notifications_cron(token):
+    """The URL a cron job calls. The app has no scheduler of its own.
+
+    Deliberately outside @login_required, so the token is the whole of the
+    authentication -- compared in constant time, and useless once rotated.
+    """
+    import hmac
+    from ..utils import game_notify
+    expected = SiteSetting.get('game_notify_token') or ''
+    if not expected or not hmac.compare_digest(str(token), str(expected)):
+        return jsonify({'ok': False, 'error': 'bad token'}), 403
+    result = game_notify.run(request.url_root)
+    return jsonify({'ok': True, 'sent': result['sent'], 'failed': result['failed'],
+                    'errors': result['errors']})
 
 
 @admin_bp.route('/system/security', methods=['GET', 'POST'])
