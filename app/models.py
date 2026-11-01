@@ -840,6 +840,7 @@ class PubLeagueResult(db.Model):
 # ======================================================================
 
 AD_SLOTS = [
+    ('hero', 'Hero carousel (rotates with the featured games)'),
     ('sidebar', 'Sidebar (right column)'),
     ('leaderboard', 'Leaderboard (wide banner, top of page)'),
     ('in_feed', 'In feed (between article or quiz cards)'),

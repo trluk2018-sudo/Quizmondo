@@ -89,14 +89,35 @@
 
 
 {% macro ad_tracking_script() %}
-{# Include once per page, after the slots. #}
+{# Safe to include more than once per page: the guard below means only the
+   first copy runs, so a page with a hero ad and a slot module does not count
+   every impression twice. #}
 <script>
 (function () {
+  if (window.__qmAdTracker) return;
+  window.__qmAdTracker = true;
+
   var ads = document.querySelectorAll('.qm-ad[data-ad-id]');
   if (!ads.length) return;
 
+  // A carousel keeps its hidden slides in the layout at opacity 0, where an
+  // IntersectionObserver still sees them. Billing for a slide nobody has been
+  // shown yet is exactly the thing this whole module exists to avoid.
+  function reallyVisible(el) {
+    var node = el;
+    while (node && node !== document.body) {
+      var style = window.getComputedStyle(node);
+      if (style.display === 'none' || style.visibility === 'hidden') return false;
+      if (parseFloat(style.opacity) < 0.1) return false;
+      node = node.parentElement;
+    }
+    var box = el.getBoundingClientRect();
+    return box.width > 0 && box.height > 0;
+  }
+
   function count(el) {
     if (el.dataset.counted === '1') return;
+    if (!reallyVisible(el)) return;
     el.dataset.counted = '1';
     var body = new FormData();
     body.append('n', el.dataset.adNonce || '');
@@ -130,6 +151,15 @@
   }, { threshold: [0, 0.5, 1] });
 
   Array.prototype.forEach.call(ads, function (el) { io.observe(el); });
+
+  // The hero carousel calls this when an ad slide becomes the visible one.
+  // The observer alone cannot see that, because nothing moves or resizes when
+  // a slide fades in — only its opacity changes.
+  window.qmCountAd = function (el) {
+    if (!el) return;
+    var ad = el.classList && el.classList.contains('qm-ad') ? el : el.querySelector('.qm-ad');
+    if (ad) { setTimeout(function () { count(ad); }, 1000); }
+  };
 })();
 </script>
 {% endmacro %}

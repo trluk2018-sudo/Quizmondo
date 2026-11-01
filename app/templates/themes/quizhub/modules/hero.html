@@ -1,5 +1,12 @@
 {# QuizHub Module: Hero Banner #}
+{% from "themes/quizhub/modules/ad_slot.html" import ad_tracking_script with context %}
 {% set cfg = mod.get_config() if mod and mod.get_config else (module_cfg or {}) %}
+
+{# Sponsored slides ride in the same carousel as the featured games, so the
+   hero can carry a video ad or an AdSense unit without a second component.
+   They are counted only when their slide is actually the one on show. #}
+{% set hero_ads = pick_ads('hero', 2) if pick_ads else [] %}
+{% set slide_total = (featured_games|length if featured_games else 0) + hero_ads|length %}
 <section class="relative overflow-hidden bg-gradient-to-b from-slate-950 via-[#1e1438] to-slate-900 border-b-2 border-purple-500/30 py-16 lg:py-24 text-white">
   <!-- Glowing Arcade Lighting Overlay -->
   <div class="absolute -top-24 -left-24 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
@@ -73,6 +80,7 @@
       <div class="lg:col-span-5 relative">
         <div id="heroGallery" class="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-purple-500/40 group">
 
+          {% if featured_games or hero_ads %}
           {% if featured_games %}
           {% for g in featured_games %}
           <a href="{{ g.link_url or '/arena/' }}"
@@ -102,11 +110,74 @@
             </div>
           </a>
           {% endfor %}
+          {% endif %}
 
-          {% if featured_games|length > 1 %}
+          {% for ad in hero_ads %}
+          {% set slide_no = (featured_games|length if featured_games else 0) + loop.index0 %}
+          {% set is_first_slide = (slide_no == 0) %}
+          <div class="hero-slide qm-ad block absolute inset-0 transition-opacity duration-700{% if not is_first_slide %} opacity-0 pointer-events-none{% endif %}"
+               {% if is_first_slide %}style="position:relative"{% endif %}
+               data-slide="{{ slide_no }}" data-ad-id="{{ ad.id }}" data-ad-nonce="{{ range(100000, 999999) | random }}">
+            {% if ad.kind == 'youtube' %}
+              <div class="w-full h-80 sm:h-96 bg-black">
+                <iframe class="w-full h-full" src="{{ ad.youtube_embed_url() }}"
+                        title="{{ ad.headline or ad.name }}" loading="lazy" frameborder="0"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+              </div>
+            {% elif ad.kind == 'adsense' %}
+              {# Requested once on load, never re-requested as the carousel turns:
+                 a unit that refetches on every rotation inflates its own numbers. #}
+              <div class="w-full h-80 sm:h-96 bg-slate-950 flex items-center justify-center overflow-hidden">
+                <ins class="adsbygoogle block w-full h-full" style="display:block"
+                     data-ad-client="{{ adsense_client or '' }}"
+                     data-ad-slot="{{ ad.adsense_slot_id }}"
+                     data-ad-format="auto" data-full-width-responsive="true"></ins>
+                <script>
+                  (adsbygoogle = window.adsbygoogle || []).requestNonPersonalizedAds = 1;
+                  (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+              </div>
+            {% else %}
+              <a href="{{ url_for('ads.ad_click', ad_id=ad.id) }}" rel="nofollow sponsored noopener"
+                 target="{{ '_self' if ad.kind == 'house' else '_blank' }}" class="block">
+                <img src="{{ ad.image_url }}" alt="{{ ad.alt_text or ad.headline or ad.name }}"
+                     class="w-full h-80 sm:h-96 object-cover">
+              </a>
+            {% endif %}
+
+            <div class="absolute top-4 left-4 px-2 py-0.5 rounded-full bg-slate-950/85 border border-slate-600/60
+                        text-[9px] font-mono font-bold uppercase tracking-widest text-slate-300 z-10">
+              {% if ad.kind == 'house' %}Quizmondo{% else %}Ad{% endif %}
+            </div>
+
+            {% if ad.headline and ad.kind != 'adsense' %}
+            <div class="absolute bottom-4 left-4 right-4 p-4 rounded-xl bg-slate-900/90 backdrop-blur border border-purple-400/30 flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider">
+                  {{ 'SPONSORED' if ad.kind != 'house' else 'FROM QUIZMONDO' }}
+                </span>
+                <p class="text-sm font-black text-white truncate">{{ ad.headline }}</p>
+                {% if ad.advertiser and ad.kind != 'house' %}
+                  <span class="text-[9px] text-slate-500">{{ ad.advertiser }}</span>
+                {% endif %}
+              </div>
+              {% if ad.link_url %}
+              <a href="{{ url_for('ads.ad_click', ad_id=ad.id) }}" rel="nofollow sponsored noopener"
+                 target="{{ '_self' if ad.kind == 'house' else '_blank' }}"
+                 class="px-3 py-1 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-xs font-black shrink-0 pointer-events-auto">
+                {{ 'SEE MORE' if ad.kind != 'house' else 'PLAY NOW' }}
+              </a>
+              {% endif %}
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+
+          {% if slide_total > 1 %}
           <div class="absolute top-4 right-4 flex items-center gap-1.5 z-10">
-            {% for g in featured_games %}
-            <button type="button" onclick="heroShow({{ loop.index0 }})" aria-label="Show featured game {{ loop.index }}"
+            {% for i in range(slide_total) %}
+            <button type="button" onclick="heroShow({{ i }})" aria-label="Show slide {{ i + 1 }}"
                     class="hero-dot w-2 h-2 rounded-full transition {% if loop.first %}bg-amber-400 w-5{% else %}bg-white/40 hover:bg-white/70{% endif %}"></button>
             {% endfor %}
           </div>
@@ -199,7 +270,8 @@
 })();
 </script>
 
-{% if featured_games and featured_games|length > 1 %}
+{% if slide_total > 1 %}
+{{ ad_tracking_script() }}
 <script>
 (function () {
   var slides = document.querySelectorAll('#heroGallery .hero-slide');
@@ -222,6 +294,8 @@
       d.classList.toggle('w-5', i === at);
       d.classList.toggle('bg-white/40', i !== at);
     });
+    // An ad slide is only "seen" once it is the one on show.
+    if (window.qmCountAd) { window.qmCountAd(slides[at]); }
     restart();
   };
 
@@ -230,6 +304,7 @@
     timer = setInterval(function () { window.heroShow(at + 1); }, 6000);
   }
 
+  if (window.qmCountAd) { window.qmCountAd(slides[0]); }
   restart();
 })();
 </script>
