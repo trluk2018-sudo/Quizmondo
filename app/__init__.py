@@ -116,6 +116,7 @@ def create_app(test_config=None):
     from .routes.arena import arena_bp
     from .routes.games import games_bp
     from .routes.account import account_bp
+    from .routes.ads import ads_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
@@ -123,6 +124,7 @@ def create_app(test_config=None):
     app.register_blueprint(arena_bp)
     app.register_blueprint(games_bp)
     app.register_blueprint(account_bp)
+    app.register_blueprint(ads_bp)
 
     @app.after_request
     def never_cache_pages(response):
@@ -189,6 +191,15 @@ def _ensure_schema():
     """Ensure newly introduced columns exist in SQLite without requiring manual migrations."""
     try:
         from sqlalchemy import text
+
+        # Age columns on users, for the 13+ signup rule.
+        cols_users = [row[1] for row in db.session.execute(text("PRAGMA table_info(users)")).fetchall()]
+        if cols_users:
+            if 'date_of_birth' not in cols_users:
+                db.session.execute(text("ALTER TABLE users ADD COLUMN date_of_birth DATE"))
+            if 'age_confirmed_at' not in cols_users:
+                db.session.execute(text("ALTER TABLE users ADD COLUMN age_confirmed_at DATETIME"))
+
         cols_pages = [row[1] for row in db.session.execute(text("PRAGMA table_info(pages)")).fetchall()]
         if cols_pages:
             if 'excerpt' not in cols_pages:

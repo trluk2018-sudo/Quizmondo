@@ -105,6 +105,23 @@
             <div id="emailFeedback" class="text-[11px] min-h-[18px] text-rose-400 font-bold"></div>
           </div>
 
+          {# Date of birth, not a tickbox. UK law puts the age of consent for an
+             online service at 13, and a date is the only thing that can be
+             checked against later. #}
+          <div class="space-y-2">
+            <label class="block font-bold text-slate-300 uppercase tracking-wider text-[11px]">
+              Your Date of Birth <span class="text-rose-400">*</span>
+            </label>
+            <input type="date" id="step2Dob" name="date_of_birth" required
+              max="{{ max_dob }}"
+              class="w-full bg-slate-900 border-2 border-purple-500/40 rounded-2xl p-3.5 text-base font-bold text-white focus:border-cyan-400 focus:outline-none transition">
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              You need to be at least {{ minimum_age }} to have a Quizmondo account. You can play
+              as a guest at any age without signing up.
+            </p>
+            <div id="dobFeedback" class="text-[11px] min-h-[18px] text-rose-400 font-bold"></div>
+          </div>
+
           <div class="flex items-center gap-3 pt-2">
             <button type="button" onclick="showStep(1)" class="w-1/3 py-3.5 px-4 rounded-2xl bg-slate-900 border border-purple-500/30 text-slate-300 hover:text-white font-bold text-xs uppercase transition">
               &larr; Back

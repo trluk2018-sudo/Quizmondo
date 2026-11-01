@@ -191,6 +191,9 @@
         <a href="{{ url_for('admin.media') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if 'media' in request.endpoint %}bg-amber-400 text-slate-950 font-black shadow{% else %}text-slate-100 hover:bg-amber-500/25 hover:text-white font-semibold{% endif %}">
           <span>🖼️</span> <span>Media Library</span>
         </a>
+        <a href="{{ url_for('admin.ads') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if 'ad' == request.endpoint.split('.')[-1][:2] or 'ads' in request.endpoint %}bg-amber-400 text-slate-950 font-black shadow{% else %}text-slate-100 hover:bg-amber-500/25 hover:text-white font-semibold{% endif %}">
+          <span>📣</span> <span>Advertising</span>
+        </a>
         <div class="pt-1.5 mt-1.5 border-t border-white/10 space-y-0.5">
           <div class="px-3 pb-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">Site Pages</div>
           {% for slug, label, icon in [('contact', 'Contact Page', '✉️'), ('privacy', 'Privacy Policy', '🔒'), ('terms', 'Terms & Conditions', '📜')] %}

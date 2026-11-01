@@ -1,0 +1,21 @@
+{# The ad_slot homepage module: one advertising slot, placed like any other section.
+
+   Nothing is rendered at all when the slot has nothing booked and no fallback,
+   so an empty slot leaves no gap and no stray heading. #}
+
+{# "with context" matters: an imported macro cannot see pick_ads or
+   adsense_client without it, and the slot would render empty. #}
+{% from "themes/quizhub/modules/ad_slot.html" import ad_slot, ad_tracking_script with context %}
+
+{% set cfg = mod.get_config() %}
+{% set slot_key = cfg.get('slot', 'leaderboard') %}
+{% set how_many = (cfg.get('count', '1') | int) or 1 %}
+
+{% if pick_ads(slot_key, how_many) %}
+<section class="py-6">
+  <div class="max-w-6xl mx-auto px-4">
+    {{ ad_slot(slot_key, how_many, cfg.get('heading', '')) }}
+  </div>
+</section>
+{{ ad_tracking_script() }}
+{% endif %}

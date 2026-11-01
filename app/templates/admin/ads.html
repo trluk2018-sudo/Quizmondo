@@ -1,0 +1,130 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Advertising{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl space-y-6">
+
+  <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Advertising</h1>
+      <p class="text-xs text-slate-500 mt-1">
+        Banners, video and AdSense. Nothing is shown to players until it has been approved as family safe.
+      </p>
+    </div>
+    <a href="{{ url_for('admin.ad_edit') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded shadow-sm transition">
+      + Add New Ad
+    </a>
+  </div>
+
+  <!-- Headline numbers -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div class="p-4 rounded-lg bg-white border border-slate-200">
+      <div class="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Live now</div>
+      <div class="text-2xl font-bold text-slate-900">{{ totals.live }}</div>
+    </div>
+    <div class="p-4 rounded-lg bg-white border {% if totals.awaiting %}border-amber-300 bg-amber-50{% else %}border-slate-200{% endif %}">
+      <div class="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Awaiting review</div>
+      <div class="text-2xl font-bold {% if totals.awaiting %}text-amber-700{% else %}text-slate-900{% endif %}">{{ totals.awaiting }}</div>
+    </div>
+    <div class="p-4 rounded-lg bg-white border border-slate-200">
+      <div class="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Impressions</div>
+      <div class="text-2xl font-bold text-slate-900">{{ '{:,}'.format(totals.impressions) }}</div>
+      <div class="text-[10px] text-slate-400 mt-0.5">counted when actually on screen</div>
+    </div>
+    <div class="p-4 rounded-lg bg-white border border-slate-200">
+      <div class="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Clicks</div>
+      <div class="text-2xl font-bold text-slate-900">{{ '{:,}'.format(totals.clicks) }}</div>
+    </div>
+  </div>
+
+  <div class="flex items-center space-x-3 text-xs text-slate-500 border-b border-slate-200 pb-2">
+    <a href="{{ url_for('admin.ads') }}" class="{% if not current_status %}font-bold text-blue-600{% else %}hover:text-slate-800{% endif %}">All ({{ ads|length }})</a>
+    <span>|</span>
+    <a href="{{ url_for('admin.ads', status='live') }}" class="{% if current_status == 'live' %}font-bold text-blue-600{% else %}hover:text-slate-800{% endif %}">Approved &amp; active</a>
+    <span>|</span>
+    <a href="{{ url_for('admin.ads', status='review') }}" class="{% if current_status == 'review' %}font-bold text-blue-600{% else %}hover:text-slate-800{% endif %}">Awaiting review</a>
+  </div>
+
+  {% if not ads %}
+    <div class="p-8 text-center bg-white border border-slate-200 rounded-lg">
+      <p class="text-sm text-slate-600 font-semibold">No ads yet.</p>
+      <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+        Add one and it will appear in the slot you choose, in rotation with anything else booked
+        for that slot. Unsold slots fall back to AdSense, then to house ads for our own games.
+      </p>
+    </div>
+  {% else %}
+    <div class="bg-white border border-slate-200 rounded-lg overflow-hidden">
+      <table class="w-full text-xs">
+        <thead class="bg-slate-50 text-slate-600 uppercase tracking-wider text-[10px]">
+          <tr>
+            <th class="text-left px-4 py-2.5 font-semibold">Ad</th>
+            <th class="text-left px-4 py-2.5 font-semibold">Slot</th>
+            <th class="text-left px-4 py-2.5 font-semibold">Status</th>
+            <th class="text-right px-4 py-2.5 font-semibold">Impr.</th>
+            <th class="text-right px-4 py-2.5 font-semibold">Clicks</th>
+            <th class="text-right px-4 py-2.5 font-semibold">CTR</th>
+            <th class="text-right px-4 py-2.5 font-semibold">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for ad in ads %}
+          <tr class="hover:bg-slate-50">
+            <td class="px-4 py-3">
+              <div class="font-semibold text-slate-900">{{ ad.name }}</div>
+              <div class="text-[11px] text-slate-500">
+                {{ ad.kind|capitalize }}{% if ad.advertiser %} &bull; {{ ad.advertiser }}{% endif %}
+              </div>
+              {% if warnings.get(ad.id) %}
+                <div class="mt-1 text-[11px] {% if warnings[ad.id].ok %}text-amber-700{% else %}text-red-700 font-semibold{% endif %}">
+                  {% if warnings[ad.id].ok %}⚠{% else %}⛔{% endif %}
+                  {{ warnings[ad.id].notes[0] }}
+                  {% if warnings[ad.id].notes|length > 1 %}
+                    <span class="text-slate-400">(+{{ warnings[ad.id].notes|length - 1 }} more)</span>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3 text-slate-600">
+              {% for key, label in slots %}{% if key == ad.slot %}{{ label }}{% endif %}{% endfor %}
+            </td>
+            <td class="px-4 py-3">
+              {% set label = ad.status_label() %}
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider
+                {% if label == 'Live' %}bg-emerald-100 text-emerald-800
+                {% elif label == 'Awaiting review' %}bg-amber-100 text-amber-800
+                {% elif label == 'Scheduled' %}bg-blue-100 text-blue-800
+                {% else %}bg-slate-100 text-slate-600{% endif %}">{{ label }}</span>
+            </td>
+            <td class="px-4 py-3 text-right text-slate-700">{{ '{:,}'.format(ad.impressions or 0) }}</td>
+            <td class="px-4 py-3 text-right text-slate-700">{{ '{:,}'.format(ad.clicks or 0) }}</td>
+            <td class="px-4 py-3 text-right text-slate-700">{{ ad.click_rate() }}%</td>
+            <td class="px-4 py-3 text-right whitespace-nowrap">
+              <a href="{{ url_for('admin.ad_report', ad_id=ad.id) }}" class="text-blue-600 hover:underline">Report</a>
+              <span class="text-slate-300 mx-1">|</span>
+              <a href="{{ url_for('admin.ad_edit', ad_id=ad.id) }}" class="text-blue-600 hover:underline">Edit</a>
+              <span class="text-slate-300 mx-1">|</span>
+              <form action="{{ url_for('admin.ad_delete', ad_id=ad.id) }}" method="POST" class="inline"
+                    onsubmit="return confirm('Delete {{ ad.name }} and its stats?');">
+                <button type="submit" class="text-red-600 hover:underline">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+
+  <div class="p-4 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600 leading-relaxed">
+    <strong class="text-slate-800">How the slots fill.</strong>
+    A slot shows a direct-sold ad first, because that is the one somebody is paying for.
+    If none is booked it falls back to an AdSense unit, and if that is not set either it shows a
+    house ad for our own games rather than leaving a gap. Every ad carries a visible "Ad" label.
+    AdSense is requested non-personalised, which is the right default for a site children use —
+    which categories can appear is set in the AdSense account itself, not here.
+  </div>
+
+</div>
+{% endblock %}

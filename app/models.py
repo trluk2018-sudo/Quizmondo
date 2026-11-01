@@ -6,6 +6,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
+# Minimum age to hold an account. The Data Protection Act 2018 sets 13 as the
+# age of consent for an information society service in the UK.
+MINIMUM_SIGNUP_AGE = 13
+
 
 def slugify(text: str) -> str:
     """Convert text into URL-friendly slug."""
@@ -26,7 +30,27 @@ class User(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Age. Under the Data Protection Act 2018 a child in the UK can consent to an
+    # online service at 13, so that is the floor for signing up here. The date of
+    # birth is kept rather than a bare tickbox, because a tickbox tells you
+    # nothing later and the date is what any check has to be made against.
+    date_of_birth = db.Column(db.Date, nullable=True)
+    age_confirmed_at = db.Column(db.DateTime, nullable=True)
+
     posts = db.relationship('Post', backref='author', lazy='dynamic')
+
+    def age_years(self, on=None):
+        """Age in whole years, or None if no date of birth was given."""
+        if not self.date_of_birth:
+            return None
+        on = on or datetime.utcnow().date()
+        born = self.date_of_birth
+        return on.year - born.year - ((on.month, on.day) < (born.month, born.day))
+
+    def is_minor(self) -> bool:
+        """Under 18, so advertising stays non-personalised and nothing is profiled."""
+        age = self.age_years()
+        return age is None or age < 18
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
@@ -800,3 +824,163 @@ class PubLeagueResult(db.Model):
     def league_points(self) -> int:
         """Table points for the night: 3 for a win, 2 for second, 1 for third, 1 for turning up."""
         return {1: 3, 2: 2, 3: 1}.get(self.position, 1)
+
+
+# ======================================================================
+# Advertising
+#
+# Ads are entered by an admin, never by the advertiser, so nothing reaches a
+# page without somebody here having looked at it. Three kinds fill a slot, in
+# this order of preference: a direct-sold ad that somebody is paying for, then
+# an AdSense unit filling what is unsold, then a house ad for Quizmondo's own
+# games rather than a hole in the layout.
+#
+# The site is for all ages, so every ad carries a family-safety decision and
+# nothing runs until that decision is a yes.
+# ======================================================================
+
+AD_SLOTS = [
+    ('sidebar', 'Sidebar (right column)'),
+    ('leaderboard', 'Leaderboard (wide banner, top of page)'),
+    ('in_feed', 'In feed (between article or quiz cards)'),
+    ('interstitial', 'Between rounds (pub quiz and duel breaks)'),
+]
+
+AD_KINDS = [
+    ('image', 'Image banner'),
+    ('youtube', 'YouTube video'),
+    ('adsense', 'Google AdSense unit'),
+    ('house', 'House ad (our own games)'),
+]
+
+
+class Advertisement(db.Model):
+    __tablename__ = 'advertisements'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # What it is, and who it is for
+    name = db.Column(db.String(150), nullable=False)          # internal label
+    advertiser = db.Column(db.String(150), default='')
+    advertiser_email = db.Column(db.String(200), default='')
+    notes = db.Column(db.Text, default='')                    # rate agreed, invoice ref
+
+    kind = db.Column(db.String(20), default='image', index=True)
+    slot = db.Column(db.String(30), default='sidebar', index=True)
+
+    # Creative
+    image_url = db.Column(db.String(500), default='')
+    link_url = db.Column(db.String(500), default='')
+    headline = db.Column(db.String(150), default='')
+    body_text = db.Column(db.String(300), default='')
+    alt_text = db.Column(db.String(200), default='')
+    video_url = db.Column(db.String(500), default='')
+    video_start = db.Column(db.Integer, default=0)
+    video_end = db.Column(db.Integer, default=0)
+    video_title = db.Column(db.String(300), default='')       # fetched from YouTube, for the safety check
+    adsense_slot_id = db.Column(db.String(60), default='')
+
+    # When it runs. Null either side means open-ended.
+    starts_at = db.Column(db.DateTime, nullable=True)
+    ends_at = db.Column(db.DateTime, nullable=True)
+    weight = db.Column(db.Integer, default=10)                # rotation share within a slot
+    is_active = db.Column(db.Boolean, default=True, index=True)
+
+    # Family-safety. approved_family is the human decision and the thing that
+    # actually gates serving; safety_notes is what the automated check found.
+    approved_family = db.Column(db.Boolean, default=False, index=True)
+    safety_notes = db.Column(db.Text, default='')
+    reviewed_by = db.Column(db.String(80), default='')
+    reviewed_at = db.Column(db.DateTime, nullable=True)
+
+    # Running totals. The per-day detail lives in AdStat.
+    impressions = db.Column(db.Integer, default=0)
+    clicks = db.Column(db.Integer, default=0)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def youtube_id(self) -> str:
+        """The video id out of whatever YouTube URL was pasted in."""
+        src = (self.video_url or '').strip()
+        if not src:
+            return ''
+        patterns = (
+            r'(?:youtube\.com/watch\?v=)([A-Za-z0-9_-]{6,20})',
+            r'(?:youtu\.be/)([A-Za-z0-9_-]{6,20})',
+            r'(?:youtube\.com/embed/)([A-Za-z0-9_-]{6,20})',
+            r'(?:youtube\.com/shorts/)([A-Za-z0-9_-]{6,20})',
+        )
+        for pattern in patterns:
+            found = re.search(pattern, src)
+            if found:
+                return found.group(1)
+        if re.fullmatch(r'[A-Za-z0-9_-]{6,20}', src):
+            return src
+        return ''
+
+    def youtube_embed_url(self) -> str:
+        """Player URL for the slot, clipped if a start or end was given.
+
+        youtube-nocookie.com, and never autoplaying with sound: an ad that
+        shouts at somebody mid-quiz is worse than no ad.
+        """
+        vid = self.youtube_id()
+        if not vid:
+            return ''
+        params = [
+            'rel=0', 'modestbranding=1', 'playsinline=1', 'iv_load_policy=3',
+        ]
+        start = max(0, int(self.video_start or 0))
+        end = max(0, int(self.video_end or 0))
+        if start:
+            params.append('start=%d' % start)
+        if end and end > start:
+            params.append('end=%d' % end)
+        return 'https://www.youtube-nocookie.com/embed/%s?%s' % (vid, '&'.join(params))
+
+    def is_live(self, now=None) -> bool:
+        """Should this be served right now?"""
+        now = now or datetime.utcnow()
+        if not self.is_active or not self.approved_family:
+            return False
+        if self.starts_at and now < self.starts_at:
+            return False
+        if self.ends_at and now > self.ends_at:
+            return False
+        if self.kind == 'image' and not self.image_url:
+            return False
+        if self.kind == 'youtube' and not self.youtube_id():
+            return False
+        if self.kind == 'adsense' and not self.adsense_slot_id:
+            return False
+        return True
+
+    def click_rate(self) -> float:
+        """Clicks per hundred impressions, which is what an advertiser asks for."""
+        if not self.impressions:
+            return 0.0
+        return round((self.clicks or 0) * 100.0 / self.impressions, 2)
+
+    def status_label(self) -> str:
+        if not self.approved_family:
+            return 'Awaiting review'
+        if not self.is_active:
+            return 'Paused'
+        now = datetime.utcnow()
+        if self.starts_at and now < self.starts_at:
+            return 'Scheduled'
+        if self.ends_at and now > self.ends_at:
+            return 'Finished'
+        return 'Live'
+
+
+class AdStat(db.Model):
+    """One row per ad per day, so a report can show a run rather than a total."""
+    __tablename__ = 'ad_stats'
+    __table_args__ = (db.UniqueConstraint('ad_id', 'day', name='uq_ad_stat_day'),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    ad_id = db.Column(db.Integer, db.ForeignKey('advertisements.id'), index=True, nullable=False)
+    day = db.Column(db.Date, index=True, nullable=False)
+    impressions = db.Column(db.Integer, default=0)
+    clicks = db.Column(db.Integer, default=0)

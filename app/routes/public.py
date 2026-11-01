@@ -62,7 +62,13 @@ def inject_global_data():
     except Exception:
         featured_games = []
 
+    # Ad serving, available to every public and arena template. pick_ads is passed
+    # as a callable rather than a list, so a page asks for the slot it wants
+    # instead of every page querying for ads it will not show.
+    from ..utils.ads import pick_ads
     return {
+        'pick_ads': pick_ads,
+        'adsense_client': settings.get('adsense_client', '') if hasattr(settings, 'get') else '',
         'settings': settings,
         'featured_games': featured_games,
         'header_nav': header_nav,

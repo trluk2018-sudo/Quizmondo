@@ -1,0 +1,231 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{% if ad %}Edit Ad{% else %}New Ad{% endif %}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl space-y-6">
+
+  <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">{% if ad %}Edit ad{% else %}New ad{% endif %}</h1>
+      <p class="text-xs text-slate-500 mt-1">Players see nothing until the family-safe box at the bottom is ticked.</p>
+    </div>
+    <a href="{{ url_for('admin.ads') }}" class="text-xs text-slate-500 hover:text-slate-800">&larr; Back to ads</a>
+  </div>
+
+  {% if ad and warn_notes %}
+    <div class="p-4 rounded-lg border {% if warn_ok %}bg-amber-50 border-amber-300{% else %}bg-red-50 border-red-300{% endif %}">
+      <div class="text-xs font-bold {% if warn_ok %}text-amber-800{% else %}text-red-800{% endif %} uppercase tracking-wider">
+        {% if warn_ok %}Worth a look{% else %}Cannot be approved{% endif %}
+      </div>
+      <ul class="mt-2 space-y-1 text-xs {% if warn_ok %}text-amber-900{% else %}text-red-900{% endif %} list-disc list-inside">
+        {% for note in warn_notes %}<li>{{ note }}</li>{% endfor %}
+      </ul>
+      <p class="mt-2 text-[11px] text-slate-600">
+        This check is a tripwire, not a decision. It catches the obvious; you are still the one
+        who looks at the creative and the landing page.
+      </p>
+    </div>
+  {% endif %}
+
+  <form method="POST" class="space-y-6">
+
+    <div class="bg-white border border-slate-200 rounded-lg p-5 space-y-4">
+      <h2 class="text-sm font-bold text-slate-900">The booking</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Internal name *</label>
+          <input name="name" required value="{{ ad.name if ad else '' }}" placeholder="Red Lion — autumn quiz push"
+                 class="w-full border border-slate-300 rounded px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Advertiser</label>
+          <input name="advertiser" value="{{ ad.advertiser if ad else '' }}"
+                 class="w-full border border-slate-300 rounded px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Contact email</label>
+          <input name="advertiser_email" type="email" value="{{ ad.advertiser_email if ad else '' }}"
+                 class="w-full border border-slate-300 rounded px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Rotation weight</label>
+          <input name="weight" type="number" min="1" max="100" value="{{ ad.weight if ad else 10 }}"
+                 class="w-full border border-slate-300 rounded px-3 py-2 text-sm">
+          <p class="text-[11px] text-slate-500 mt-1">Share of the slot against others booked for it. 10 is normal.</p>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Notes (rate agreed, invoice reference)</label>
+        <textarea name="notes" rows="2" class="w-full border border-slate-300 rounded px-3 py-2 text-sm">{{ ad.notes if ad else '' }}</textarea>
+      </div>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-lg p-5 space-y-4">
+      <h2 class="text-sm font-bold text-slate-900">Where and what</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Slot</label>
+          <select name="slot" class="w-full border border-slate-300 rounded px-3 py-2 text-sm">
+            {% for key, label in slots %}
+              <option value="{{ key }}" {% if ad and ad.slot == key %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Kind</label>
+          <select name="kind" id="adKind" class="w-full border border-slate-300 rounded px-3 py-2 text-sm">
+            {% for key, label in kinds %}
+              <option value="{{ key }}" {% if ad and ad.kind == key %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Starts</label>
+          <input name="starts_at" type="datetime-local"
+                 value="{{ ad.starts_at.strftime('%Y-%m-%dT%H:%M') if ad and ad.starts_at else '' }}"
+                 class="w-full border border-slate-300 rounded px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Ends</label>
+          <input name="ends_at" type="datetime-local"
+                 value="{{ ad.ends_at.strftime('%Y-%m-%dT%H:%M') if ad and ad.ends_at else '' }}"
+                 class="w-full border border-slate-300 rounded px-3 py-2 text-sm">
+          <p class="text-[11px] text-slate-500 mt-1">Leave both blank to run until you pause it.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-lg p-5 space-y-4" data-for="image house">
+      <h2 class="text-sm font-bold text-slate-900">Banner</h2>
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Image URL</label>
+        <input name="image_url" value="{{ ad.image_url if ad else '' }}" placeholder="/static/img/ads/red-lion.jpg"
+               class="w-full border border-slate-300 rounded px-3 py-2 text-sm">
+        <p class="text-[11px] text-slate-500 mt-1">Upload through Media first, then paste the path here.</p>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Alt text</label>
+        <input name="alt_text" value="{{ ad.alt_text if ad else '' }}"
+               placeholder="The Red Lion, Thursday quiz night, 8pm"
+               class="w-full border border-slate-300 rounded px-3 py-2 text-sm">
+        <p class="text-[11px] text-slate-500 mt-1">
+          Needed for screen readers, and it makes the advertiser describe the picture in words.
+        </p>
+      </div>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-lg p-5 space-y-4" data-for="youtube">
+      <h2 class="text-sm font-bold text-slate-900">Video</h2>
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">YouTube URL</label>
+        <input name="video_url" value="{{ ad.video_url if ad else '' }}"
+               class="w-full border border-slate-300 rounded px-3 py-2 text-sm">
+        {% if ad and ad.video_title %}
+          <p class="text-[11px] text-slate-600 mt-1">Reads as: <strong>{{ ad.video_title }}</strong></p>
+        {% endif %}
+        <p class="text-[11px] text-slate-500 mt-1">
+          Never autoplays and never plays with sound. Watch it through before approving.
+        </p>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Start (seconds)</label>
+          <input name="video_start" type="number" min="0" value="{{ ad.video_start if ad else 0 }}"
+                 class="w-full border border-slate-300 rounded px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">End (seconds)</label>
+          <input name="video_end" type="number" min="0" value="{{ ad.video_end if ad else 0 }}"
+                 class="w-full border border-slate-300 rounded px-3 py-2 text-sm">
+          <p class="text-[11px] text-slate-500 mt-1">0 for both means the whole thing.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-lg p-5 space-y-4" data-for="adsense">
+      <h2 class="text-sm font-bold text-slate-900">AdSense</h2>
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Ad slot id</label>
+        <input name="adsense_slot_id" value="{{ ad.adsense_slot_id if ad else '' }}" placeholder="1234567890"
+               class="w-full border border-slate-300 rounded px-3 py-2 text-sm">
+        <p class="text-[11px] text-slate-500 mt-1">
+          The publisher id goes in Settings once, as <code>adsense_client</code>. Ads are requested
+          non-personalised; block categories in the AdSense account, not here.
+        </p>
+      </div>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-lg p-5 space-y-4">
+      <h2 class="text-sm font-bold text-slate-900">Copy and link</h2>
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Headline</label>
+        <input name="headline" value="{{ ad.headline if ad else '' }}"
+               class="w-full border border-slate-300 rounded px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Body</label>
+        <textarea name="body_text" rows="2" class="w-full border border-slate-300 rounded px-3 py-2 text-sm">{{ ad.body_text if ad else '' }}</textarea>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">Click-through URL</label>
+        <input name="link_url" value="{{ ad.link_url if ad else '' }}" placeholder="https://..."
+               class="w-full border border-slate-300 rounded px-3 py-2 text-sm">
+        <p class="text-[11px] text-slate-500 mt-1">
+          Clicks go through Quizmondo so they can be counted, then straight on to this address.
+        </p>
+      </div>
+    </div>
+
+    <div class="bg-white border-2 border-slate-300 rounded-lg p-5 space-y-4">
+      <h2 class="text-sm font-bold text-slate-900">Review</h2>
+      <label class="flex items-start gap-3 cursor-pointer">
+        {# Checkbox first, hidden fallback second: Werkzeug keeps the first value
+           for a duplicated key, so a ticked box must come first to win. #}
+        <input type="checkbox" name="approved_family" value="1" class="mt-0.5"
+               {% if ad and ad.approved_family %}checked{% endif %}>
+        <span class="text-xs text-slate-700 leading-relaxed">
+          <strong class="text-slate-900">I have seen this ad and its landing page, and both are suitable
+          for all ages.</strong><br>
+          No alcohol, gambling, vaping, dating, weight loss, crypto or adult content. Quizmondo is played
+          by children, and this is the box that puts the ad in front of them.
+        </span>
+      </label>
+      <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" name="is_active" value="1" {% if not ad or ad.is_active %}checked{% endif %}>
+        <span class="text-xs text-slate-700">Active (untick to pause without deleting)</span>
+      </label>
+      {% if ad and ad.reviewed_at %}
+        <p class="text-[11px] text-slate-500">
+          Last approved by {{ ad.reviewed_by or 'admin' }} on {{ ad.reviewed_at.strftime('%d %b %Y at %H:%M') }}.
+        </p>
+      {% endif %}
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded shadow-sm transition">
+        {% if ad %}Save ad{% else %}Create ad{% endif %}
+      </button>
+      <a href="{{ url_for('admin.ads') }}" class="text-xs text-slate-500 hover:text-slate-800">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+// Show only the fields the chosen kind actually uses.
+(function () {
+  var kind = document.getElementById('adKind');
+  if (!kind) return;
+  function sync() {
+    document.querySelectorAll('[data-for]').forEach(function (box) {
+      box.style.display = box.dataset.for.split(' ').indexOf(kind.value) >= 0 ? '' : 'none';
+    });
+  }
+  kind.addEventListener('change', sync);
+  sync();
+})();
+</script>
+{% endblock %}

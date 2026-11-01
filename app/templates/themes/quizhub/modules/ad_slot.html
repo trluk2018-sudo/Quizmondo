@@ -1,0 +1,135 @@
+{# One advertising slot.
+
+   Import it WITH CONTEXT, or the macro cannot see pick_ads and renders nothing:
+     {% from 'themes/quizhub/modules/ad_slot.html' import ad_slot with context %}
+   then {{ ad_slot('sidebar') }}, or {{ ad_slot('leaderboard', 1, 'Our sponsors') }}.
+
+   Every ad is labelled. Children are using this site, and an advert dressed up
+   as part of the page is not something we are prepared to serve; the CAP code
+   expects the distinction to be obvious and so do we.
+
+   An impression is only counted once the slot is genuinely on screen, which is
+   what the IntersectionObserver below is for. #}
+
+{% macro ad_slot(slot, limit=1, heading='') %}
+  {% set ads = pick_ads(slot, limit) %}
+  {% if ads %}
+  <aside class="qm-ads qm-ads-{{ slot }} space-y-3" aria-label="Advertisements">
+    {% if heading %}
+      <div class="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500">{{ heading }}</div>
+    {% endif %}
+    {% for ad in ads %}
+      {% set nonce = range(100000, 999999) | random %}
+      <div class="qm-ad relative rounded-2xl overflow-hidden bg-slate-900/70 border border-purple-500/20"
+           data-ad-id="{{ ad.id }}" data-ad-nonce="{{ nonce }}">
+
+        <div class="absolute top-2 right-2 z-10 px-2 py-0.5 rounded-full bg-slate-950/80 border border-slate-600/60
+                    text-[9px] font-mono font-bold uppercase tracking-widest text-slate-400 pointer-events-none">
+          {% if ad.kind == 'house' %}Quizmondo{% else %}Ad{% endif %}
+        </div>
+
+        {% if ad.kind == 'youtube' %}
+          {# Never autoplaying, never with sound: an ad that shouts over a quiz
+             round is worse for the advertiser than one nobody clicked. #}
+          <div class="aspect-video bg-black">
+            <iframe class="w-full h-full" src="{{ ad.youtube_embed_url() }}"
+                    title="{{ ad.headline or ad.name }}" loading="lazy"
+                    frameborder="0" referrerpolicy="strict-origin-when-cross-origin"
+                    allow="accelerometer; encrypted-media; picture-in-picture"
+                    allowfullscreen></iframe>
+          </div>
+          {% if ad.headline %}
+            <div class="p-3 space-y-1">
+              <div class="font-mono text-xs font-bold text-white">{{ ad.headline }}</div>
+              {% if ad.body_text %}<p class="text-[11px] text-slate-400 leading-relaxed">{{ ad.body_text }}</p>{% endif %}
+              {% if ad.link_url %}
+                <a href="{{ url_for('ads.ad_click', ad_id=ad.id) }}" rel="nofollow sponsored noopener"
+                   target="_blank" class="inline-block mt-1 text-[11px] font-mono font-bold text-cyan-300 hover:text-cyan-200">
+                  Find out more &rarr;
+                </a>
+              {% endif %}
+            </div>
+          {% endif %}
+
+        {% elif ad.kind == 'adsense' %}
+          {# Non-personalised, because the audience includes children and the
+             Children's code expects profiling to be off by default for them.
+             What categories can appear is set in the AdSense account itself. #}
+          <ins class="adsbygoogle block w-full"
+               style="display:block"
+               data-ad-client="{{ adsense_client or '' }}"
+               data-ad-slot="{{ ad.adsense_slot_id }}"
+               data-ad-format="auto"
+               data-full-width-responsive="true"></ins>
+          <script>
+            (adsbygoogle = window.adsbygoogle || []).requestNonPersonalizedAds = 1;
+            (adsbygoogle = window.adsbygoogle || []).push({});
+          </script>
+
+        {% else %}
+          <a href="{{ url_for('ads.ad_click', ad_id=ad.id) }}" rel="nofollow sponsored noopener"
+             target="{{ '_self' if ad.kind == 'house' else '_blank' }}" class="block group">
+            {% if ad.image_url %}
+              <img src="{{ ad.image_url }}" alt="{{ ad.alt_text or ad.headline or ad.name }}"
+                   loading="lazy" class="w-full h-auto block transition group-hover:opacity-90">
+            {% endif %}
+            {% if ad.headline or ad.body_text %}
+              <div class="p-3 space-y-1">
+                {% if ad.headline %}<div class="font-mono text-xs font-bold text-white">{{ ad.headline }}</div>{% endif %}
+                {% if ad.body_text %}<p class="text-[11px] text-slate-400 leading-relaxed">{{ ad.body_text }}</p>{% endif %}
+              </div>
+            {% endif %}
+          </a>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </aside>
+  {% endif %}
+{% endmacro %}
+
+
+{% macro ad_tracking_script() %}
+{# Include once per page, after the slots. #}
+<script>
+(function () {
+  var ads = document.querySelectorAll('.qm-ad[data-ad-id]');
+  if (!ads.length) return;
+
+  function count(el) {
+    if (el.dataset.counted === '1') return;
+    el.dataset.counted = '1';
+    var body = new FormData();
+    body.append('n', el.dataset.adNonce || '');
+    // sendBeacon survives the page being closed; fetch is the fallback.
+    var url = '/ads/' + el.dataset.adId + '/seen';
+    if (navigator.sendBeacon) { navigator.sendBeacon(url, body); }
+    else { fetch(url, { method: 'POST', body: body, keepalive: true }).catch(function () {}); }
+  }
+
+  if (!('IntersectionObserver' in window)) {
+    // Old browser: count on load rather than not at all.
+    Array.prototype.forEach.call(ads, count);
+    return;
+  }
+
+  // Half the ad, for one second. Short of the IAB's standard but honest, and
+  // well clear of "the page happened to load".
+  var timers = new WeakMap();
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      var el = entry.target;
+      if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+        if (!timers.has(el)) {
+          timers.set(el, setTimeout(function () { count(el); io.unobserve(el); }, 1000));
+        }
+      } else if (timers.has(el)) {
+        clearTimeout(timers.get(el));
+        timers.delete(el);
+      }
+    });
+  }, { threshold: [0, 0.5, 1] });
+
+  Array.prototype.forEach.call(ads, function (el) { io.observe(el); });
+})();
+</script>
+{% endmacro %}

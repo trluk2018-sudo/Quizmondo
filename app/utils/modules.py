@@ -195,6 +195,22 @@ MODULE_DEFINITIONS = {
             'button_text': 'Inquire About Venue Hosting →',
         }
     },
+    'ad_slot': {
+        'type': 'ad_slot',
+        'name': 'Advertising Slot',
+        'icon': 'megaphone',
+        'badge': 'Ads',
+        'description': 'A labelled advertising slot. Shows whatever is booked for the chosen slot in '
+                       'Advertising, falling back to AdSense and then to a house ad, so it is never a '
+                       'blank space. Nothing appears here until it has been approved as family safe.',
+        'default_placement': 'below',
+        'default_config': {
+            'slot': 'leaderboard',
+            'count': '1',
+            'heading': 'Our sponsors',
+        },
+    },
+
     'game_arcade': {
         'type': 'game_arcade',
         'name': 'Game Arcade Picks',

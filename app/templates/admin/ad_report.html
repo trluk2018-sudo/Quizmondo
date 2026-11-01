@@ -1,0 +1,91 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Ad report{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl space-y-6">
+
+  <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">{{ ad.name }}</h1>
+      <p class="text-xs text-slate-500 mt-1">
+        {% if ad.advertiser %}{{ ad.advertiser }} &bull; {% endif %}{{ ad.status_label() }}
+        &bull; last {{ period.days }} days
+      </p>
+    </div>
+    <a href="{{ url_for('admin.ads') }}" class="text-xs text-slate-500 hover:text-slate-800">&larr; Back to ads</a>
+  </div>
+
+  <div class="flex items-center gap-3 text-xs">
+    {% for d in [7, 30, 90] %}
+      <a href="{{ url_for('admin.ad_report', ad_id=ad.id, days=d) }}"
+         class="{% if period.days == d %}font-bold text-blue-600{% else %}text-slate-500 hover:text-slate-800{% endif %}">
+        Last {{ d }} days
+      </a>
+      {% if not loop.last %}<span class="text-slate-300">|</span>{% endif %}
+    {% endfor %}
+  </div>
+
+  <div class="grid grid-cols-3 gap-3">
+    <div class="p-4 rounded-lg bg-white border border-slate-200">
+      <div class="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Impressions</div>
+      <div class="text-2xl font-bold text-slate-900">{{ '{:,}'.format(period.impressions) }}</div>
+      <div class="text-[10px] text-slate-400 mt-0.5">on screen, not just served</div>
+    </div>
+    <div class="p-4 rounded-lg bg-white border border-slate-200">
+      <div class="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Clicks</div>
+      <div class="text-2xl font-bold text-slate-900">{{ '{:,}'.format(period.clicks) }}</div>
+    </div>
+    <div class="p-4 rounded-lg bg-white border border-slate-200">
+      <div class="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Click rate</div>
+      <div class="text-2xl font-bold text-slate-900">{{ period.ctr }}%</div>
+      <div class="text-[10px] text-slate-400 mt-0.5">lifetime {{ ad.click_rate() }}%</div>
+    </div>
+  </div>
+
+  {% if rows %}
+    {% set peak = rows | map(attribute='impressions') | select('number') | list %}
+    {% set top = (peak | max) if peak else 1 %}
+    <div class="bg-white border border-slate-200 rounded-lg p-5">
+      <h2 class="text-sm font-bold text-slate-900 mb-3">Day by day</h2>
+      <div class="space-y-1.5">
+        {% for r in rows %}
+          <div class="flex items-center gap-3 text-[11px]">
+            <div class="w-20 shrink-0 text-slate-500 font-mono">{{ r.day.strftime('%d %b') }}</div>
+            <div class="flex-1 bg-slate-100 rounded h-4 relative overflow-hidden">
+              <div class="absolute inset-y-0 left-0 bg-blue-500/70"
+                   style="width: {{ ((r.impressions or 0) * 100 / top) | round(1) }}%"></div>
+            </div>
+            <div class="w-16 text-right text-slate-700 font-mono">{{ '{:,}'.format(r.impressions or 0) }}</div>
+            <div class="w-12 text-right text-slate-500 font-mono">{{ r.clicks or 0 }}</div>
+          </div>
+        {% endfor %}
+      </div>
+      <div class="flex items-center gap-3 text-[10px] text-slate-400 mt-3 pt-3 border-t border-slate-100">
+        <div class="w-20">&nbsp;</div><div class="flex-1">impressions</div>
+        <div class="w-16 text-right">impr.</div><div class="w-12 text-right">clicks</div>
+      </div>
+    </div>
+  {% else %}
+    <div class="p-8 text-center bg-white border border-slate-200 rounded-lg">
+      <p class="text-sm text-slate-600 font-semibold">Nothing recorded in this period.</p>
+      <p class="text-xs text-slate-500 mt-1">
+        {% if not ad.approved_family %}
+          This ad has not been approved as family safe, so it is not being shown.
+        {% else %}
+          Impressions are only counted once the ad is genuinely on screen for a second.
+        {% endif %}
+      </p>
+    </div>
+  {% endif %}
+
+  <div class="p-4 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600 leading-relaxed">
+    <strong class="text-slate-800">What these numbers mean.</strong>
+    An impression is counted when at least half the ad has been on screen for a full second —
+    not when the page was sent. A banner nobody scrolled to is not counted, which is the number
+    you want when an advertiser asks what they got. Clicks are counted as the visitor leaves.
+    Nothing about the visitor is stored.
+  </div>
+
+</div>
+{% endblock %}

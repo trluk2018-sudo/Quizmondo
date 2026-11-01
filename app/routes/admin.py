@@ -2450,3 +2450,154 @@ def league_results(league_id):
         hall=hall,
         night_count=len(nights)
     )
+
+
+# ======================================================================
+# Advertising
+#
+# Every ad is entered here by a member of staff, and nothing serves until
+# somebody has ticked the family-safe box. The automated check runs on save and
+# leaves its findings on the record, so the person ticking knows what they are
+# agreeing to.
+# ======================================================================
+
+@admin_bp.route('/ads')
+@login_required
+def ads():
+    from ..models import Advertisement, AD_SLOTS
+    from ..utils.ads import check_family_safe
+
+    status = request.args.get('status') or ''
+    query = Advertisement.query
+    if status == 'review':
+        query = query.filter(Advertisement.approved_family.is_(False))
+    elif status == 'live':
+        query = query.filter(Advertisement.approved_family.is_(True),
+                             Advertisement.is_active.is_(True))
+    all_ads = query.order_by(Advertisement.created_at.desc()).all()
+
+    warnings = {}
+    for ad in all_ads:
+        ok, notes = check_family_safe(ad)
+        if notes:
+            warnings[ad.id] = {'ok': ok, 'notes': notes}
+
+    totals = {
+        'impressions': sum(a.impressions or 0 for a in all_ads),
+        'clicks': sum(a.clicks or 0 for a in all_ads),
+        'awaiting': len([a for a in all_ads if not a.approved_family]),
+        'live': len([a for a in all_ads if a.is_live()]),
+    }
+    return render_template('admin/ads.html', ads=all_ads, slots=AD_SLOTS,
+                           warnings=warnings, totals=totals, current_status=status)
+
+
+@admin_bp.route('/ads/new', methods=['GET', 'POST'])
+@admin_bp.route('/ads/<int:ad_id>/edit', methods=['GET', 'POST'])
+@login_required
+def ad_edit(ad_id=None):
+    from ..models import Advertisement, AD_SLOTS, AD_KINDS
+    from ..utils.ads import check_family_safe, refresh_video_title
+
+    ad = Advertisement.query.get_or_404(ad_id) if ad_id else None
+
+    if request.method == 'POST':
+        def field(name, default=''):
+            return (request.form.get(name) or default).strip()
+
+        def when(name):
+            raw = field(name)
+            if not raw:
+                return None
+            for fmt in ('%Y-%m-%dT%H:%M', '%Y-%m-%d'):
+                try:
+                    return datetime.strptime(raw, fmt)
+                except ValueError:
+                    continue
+            return None
+
+        if not ad:
+            ad = Advertisement()
+            db.session.add(ad)
+
+        ad.name = field('name') or 'Untitled ad'
+        ad.advertiser = field('advertiser')
+        ad.advertiser_email = field('advertiser_email')
+        ad.notes = field('notes')
+        ad.kind = field('kind', 'image')
+        ad.slot = field('slot', 'sidebar')
+        ad.image_url = field('image_url')
+        ad.link_url = field('link_url')
+        ad.headline = field('headline')
+        ad.body_text = field('body_text')
+        ad.alt_text = field('alt_text')
+        ad.video_url = field('video_url')
+        ad.video_start = int(field('video_start', '0') or 0)
+        ad.video_end = int(field('video_end', '0') or 0)
+        ad.adsense_slot_id = field('adsense_slot_id')
+        ad.starts_at = when('starts_at')
+        ad.ends_at = when('ends_at')
+        ad.weight = max(1, int(field('weight', '10') or 10))
+        ad.is_active = bool(request.form.get('is_active'))
+
+        # Read the video's real title before judging it: the URL says nothing.
+        refresh_video_title(ad)
+
+        was_approved = bool(ad.approved_family)
+        wants_approval = bool(request.form.get('approved_family'))
+        ok, notes = check_family_safe(ad)
+        ad.safety_notes = '\n'.join(notes)
+
+        if wants_approval and not ok:
+            ad.approved_family = False
+            flash('Not approved: the check found something that rules this out for an '
+                  'all-ages site. See the notes on the ad.', 'error')
+        else:
+            ad.approved_family = wants_approval
+            if wants_approval and not was_approved:
+                ad.reviewed_by = session.get('username') or 'admin'
+                ad.reviewed_at = datetime.utcnow()
+
+        db.session.commit()
+        if ad.approved_family:
+            flash('Ad saved and approved as family safe. It is in rotation now.', 'success')
+        else:
+            flash('Ad saved. It will not be shown until it is approved as family safe.', 'success')
+        return redirect(url_for('admin.ads'))
+
+    warn_ok, warn_notes = (True, [])
+    if ad:
+        warn_ok, warn_notes = check_family_safe(ad)
+    return render_template('admin/ad_edit.html', ad=ad, slots=AD_SLOTS, kinds=AD_KINDS,
+                           warn_ok=warn_ok, warn_notes=warn_notes)
+
+
+@admin_bp.route('/ads/<int:ad_id>/delete', methods=['POST'])
+@login_required
+def ad_delete(ad_id):
+    from ..models import Advertisement, AdStat
+    ad = Advertisement.query.get_or_404(ad_id)
+    AdStat.query.filter_by(ad_id=ad.id).delete()
+    db.session.delete(ad)
+    db.session.commit()
+    flash('Ad deleted.', 'success')
+    return redirect(url_for('admin.ads'))
+
+
+@admin_bp.route('/ads/<int:ad_id>/report')
+@login_required
+def ad_report(ad_id):
+    from ..models import Advertisement, AdStat
+    ad = Advertisement.query.get_or_404(ad_id)
+    days = int(request.args.get('days') or 30)
+    since = (datetime.utcnow() - timedelta(days=days)).date()
+    rows = AdStat.query.filter(AdStat.ad_id == ad.id, AdStat.day >= since) \
+                       .order_by(AdStat.day.asc()).all()
+    period = {
+        'impressions': sum(r.impressions or 0 for r in rows),
+        'clicks': sum(r.clicks or 0 for r in rows),
+        'days': days,
+    }
+    period['ctr'] = round(period['clicks'] * 100.0 / period['impressions'], 2) \
+        if period['impressions'] else 0.0
+    return render_template('admin/ad_report.html', ad=ad, rows=rows, period=period)

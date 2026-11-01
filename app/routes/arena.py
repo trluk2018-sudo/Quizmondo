@@ -4,7 +4,7 @@ import secrets
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, flash, current_app, Response
 from sqlalchemy.sql.expression import func
-from ..models import db, User, PlayerProfile, ArenaMatch, ArenaRound, QuizQuestion, QuizPack, PubLeague, PubLeagueResult, pub_season_label, SiteSetting, slugify, GroupGame, GroupPlayer
+from ..models import db, User, PlayerProfile, MINIMUM_SIGNUP_AGE, ArenaMatch, ArenaRound, QuizQuestion, QuizPack, PubLeague, PubLeagueResult, pub_season_label, SiteSetting, slugify, GroupGame, GroupPlayer
 from ..models_quiz_memory import QuestionMemory, MEMORY_LIMIT
 from ..utils.share_card import generate_duel_card_png, generate_pub_card_png
 
@@ -16,6 +16,14 @@ from .public import inject_global_data
 def inject_arena_global_data():
     data = inject_global_data()
     data['avatar_lookup'] = AVATAR_LOOKUP
+    # The signup form needs the age rule and the latest date of birth that
+    # satisfies it, so the date picker will not even offer a younger one.
+    data['minimum_age'] = MINIMUM_SIGNUP_AGE
+    today = datetime.utcnow().date()
+    try:
+        data['max_dob'] = today.replace(year=today.year - MINIMUM_SIGNUP_AGE).isoformat()
+    except ValueError:  # 29 February
+        data['max_dob'] = today.replace(month=2, day=28, year=today.year - MINIMUM_SIGNUP_AGE).isoformat()
     return data
 
 # 24 Player Avatars (Note: 'nova' is reserved exclusively for Cyber Bot Nova!)
@@ -1615,6 +1623,34 @@ def player_register():
             flash("PIN / Passwords do not match.", "error")
             return render_template('themes/quizhub/arena_register.html', player=player)
 
+        # Age gate. UK law (Data Protection Act 2018) puts the age of consent for
+        # an online service at 13, so that is the floor. The date of birth is
+        # asked for rather than a 'yes I am old enough' box, because a box tells
+        # nobody anything afterwards and cannot be checked against.
+        dob_raw = (request.form.get('date_of_birth') or '').strip()
+        if not dob_raw:
+            flash("Please enter your date of birth. You must be at least "
+                  f"{MINIMUM_SIGNUP_AGE} to have a Quizmondo account.", "error")
+            return render_template('themes/quizhub/arena_register.html', player=player)
+        try:
+            dob = datetime.strptime(dob_raw, '%Y-%m-%d').date()
+        except ValueError:
+            flash("That date of birth did not make sense. Use the date picker.", "error")
+            return render_template('themes/quizhub/arena_register.html', player=player)
+
+        today = datetime.utcnow().date()
+        if dob > today:
+            flash("That date of birth is in the future.", "error")
+            return render_template('themes/quizhub/arena_register.html', player=player)
+        age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+        if age > 120:
+            flash("Please check your date of birth.", "error")
+            return render_template('themes/quizhub/arena_register.html', player=player)
+        if age < MINIMUM_SIGNUP_AGE:
+            flash(f"Sorry — you need to be at least {MINIMUM_SIGNUP_AGE} to sign up for "
+                  "Quizmondo. You can still play as a guest without an account.", "error")
+            return render_template('themes/quizhub/arena_register.html', player=player)
+
         if User.query.filter(func.lower(User.username) == username.lower()).first():
             flash("That player name is already taken. Try picking a Superhero Name!", "error")
             return render_template('themes/quizhub/arena_register.html', player=player)
@@ -1626,6 +1662,8 @@ def player_register():
         # Default role hierarchy: all newly registered users are strictly 'player'
         assigned_role = 'player'
         user = User(username=username, email=email, role=assigned_role)
+        user.date_of_birth = dob
+        user.age_confirmed_at = datetime.utcnow()
         user.set_password(password)
         db.session.add(user)
         db.session.flush()
