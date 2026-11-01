@@ -1614,11 +1614,16 @@ def settings_security():
                         (request.form.get('login_lockout_minutes') or '15').strip())
         SiteSetting.set('staff_require_password',
                         '1' if request.form.get('staff_require_password') else '')
+        SiteSetting.set('age_gate_enabled',
+                        '1' if request.form.get('age_gate_enabled') else '')
+        SiteSetting.set('minimum_signup_age', (request.form.get('minimum_signup_age') or '13').strip())
         flash('Security settings updated.', 'success')
         return redirect(url_for('admin.settings_security'))
 
     accounts = User.query.filter(User.email.isnot(None)).count()
     confirmed = AccountEmail.query.filter(AccountEmail.confirmed_at.isnot(None)).count()
+    from ..models import age_gate_config
+    age_gate = age_gate_config()
     # Staff on a six digit PIN are the real exposure: a player's PIN protects
     # a score, an admin's protects the whole site.
     staff = User.query.filter(User.role.in_(('admin', 'super_admin', 'quizmaster', 'creator'))).all()
@@ -1631,6 +1636,7 @@ def settings_security():
         confirmed=confirmed,
         unconfirmed=max(0, accounts - confirmed),
         staff=staff,
+        age_gate=age_gate,
         mail_ready=mail.mail_ready(),
     )
 

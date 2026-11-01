@@ -6,9 +6,24 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
-# Minimum age to hold an account. The Data Protection Act 2018 sets 13 as the
-# age of consent for an information society service in the UK.
+# Minimum age to hold an account, unless admin says otherwise. The Data
+# Protection Act 2018 sets 13 as the age of consent for an information society
+# service in the UK, so that is the default and the sensible floor.
 MINIMUM_SIGNUP_AGE = 13
+
+
+def age_gate_config():
+    """Whether signup asks for an age, and what the minimum is.
+
+    Both are set in Settings > Security. The gate is on unless it has been
+    turned off deliberately, so a fresh install is never accidentally open.
+    """
+    enabled = (SiteSetting.get('age_gate_enabled', '1') or '') != ''
+    try:
+        minimum = int(SiteSetting.get('minimum_signup_age', '') or MINIMUM_SIGNUP_AGE)
+    except (TypeError, ValueError):
+        minimum = MINIMUM_SIGNUP_AGE
+    return {'enabled': enabled, 'minimum': max(0, min(21, minimum))}
 
 
 def slugify(text: str) -> str:
