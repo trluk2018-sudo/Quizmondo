@@ -3262,23 +3262,61 @@ def group_new():
             flash('Those game settings did not look right.', 'error')
             return redirect(url_for('arena.group_new'))
 
-        slug = (request.form.get('category_slug') or '').strip()
-        match = next((c for c in categories if c[0] == slug), None)
-        if not match:
-            match = random.choice(categories) if categories else ('world-history', 'World Trivia')
+        # More than one subject can be ticked now, so the questions are drawn
+        # a few at a time from each in turn rather than all from one. Nothing
+        # ticked means the whole bank, which is the sensible default for a
+        # lobby of friends who have not agreed on a subject.
+        wanted = [s.strip() for s in request.form.getlist('category_slug') if s.strip()]
+        # Deduplicated by slug: the categories query is DISTINCT over the slug
+        # AND the name, so a slug stored under two spellings comes back twice
+        # and would otherwise be counted as two subjects.
+        chosen, seen_slugs = [], set()
+        for c in categories:
+            if c[0] in wanted and c[0] not in seen_slugs:
+                seen_slugs.add(c[0])
+                chosen.append(c)
 
-        questions = get_random_questions(category_slug=match[0], count=total_questions)
+        questions, used = [], []
+        if chosen:
+            # Round robin, so a thin category cannot crowd out the rest and a
+            # fat one cannot take over.
+            i = 0
+            while len(questions) < total_questions and i < total_questions * 2:
+                cat = chosen[i % len(chosen)]
+                picked = get_random_questions(category_slug=cat[0], count=1, exclude_ids=used)
+                for q in picked:
+                    if q.id not in used:
+                        questions.append(q)
+                        used.append(q.id)
+                i += 1
+        # Top up from the whole bank when the chosen subjects run dry, and use
+        # it outright when nothing was ticked.
         if len(questions) < total_questions:
-            questions = get_random_questions(count=total_questions)
+            questions += get_random_questions(count=total_questions - len(questions),
+                                              exclude_ids=used)
+        random.shuffle(questions)
+        questions = questions[:total_questions]
+
         if not questions:
             flash('There are not enough questions to start a game right now.', 'error')
             return redirect(url_for('arena.dashboard'))
 
+        if not chosen:
+            cat_slug, cat_name = 'mixed', 'Mixed Bag'
+        elif len(chosen) == 1:
+            cat_slug, cat_name = chosen[0][0], chosen[0][1]
+        else:
+            # One name and a count. These titles run long -- "Silicon Pioneers
+            # & Coding Legends" is one of them -- so listing two blows out
+            # every badge the name appears in.
+            cat_slug = 'mixed'
+            cat_name = '%s +%d more' % (chosen[0][1], len(chosen) - 1)
+
         game = GroupGame(
             code=new_group_code(),
             status='lobby',
-            category_slug=match[0],
-            category_name=match[1],
+            category_slug=cat_slug,
+            category_name=cat_name,
             min_players=min_players,
             max_players=max_players,
             total_questions=len(questions),

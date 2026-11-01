@@ -27,13 +27,25 @@
         </h2>
 
         <form method="POST" class="space-y-5 font-mono text-xs">
-          <div class="space-y-1.5">
-            <label class="block font-bold text-slate-300 uppercase">Subject</label>
-            <select name="category_slug" class="w-full bg-slate-950 border border-purple-500/30 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400">
+          {# Chips rather than a dropdown, because more than one can be picked
+             now. Tick nothing and the questions come from the whole bank,
+             which is what most people opening a lobby for friends want. #}
+          <div class="space-y-2">
+            <div class="flex items-baseline justify-between gap-3">
+              <label class="block font-bold text-slate-300 uppercase">Subjects</label>
+              <span id="catHint" class="text-[11px] text-slate-500 normal-case font-normal">Pick any, or leave blank for a mix of everything</span>
+            </div>
+            <div id="catChips" class="flex flex-wrap gap-2 max-h-52 overflow-y-auto p-1">
               {% for slug, name in categories %}
-              <option value="{{ slug }}">{{ name }}</option>
+              <label class="cursor-pointer">
+                <input type="checkbox" name="category_slug" value="{{ slug }}" class="peer sr-only">
+                <span class="inline-flex items-center min-h-[36px] px-3 py-1.5 rounded-xl border border-purple-500/30 bg-slate-900/80 text-slate-300 text-[11px] font-bold transition
+                             hover:border-cyan-400/60 peer-checked:bg-cyan-500/20 peer-checked:border-cyan-400 peer-checked:text-white">
+                  {{ name }}
+                </span>
+              </label>
               {% endfor %}
-            </select>
+            </div>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
