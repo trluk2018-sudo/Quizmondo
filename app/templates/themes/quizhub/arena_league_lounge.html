@@ -190,12 +190,17 @@
           </form>
           {% endif %}
 
+          {# Inviting a squad only means something when the squad is somewhere else.
+             In a venue your table is sitting with you, and the night is already over
+             by the time a finished lounge is on screen. #}
+          {% if is_virtual and not night_over %}
           <!-- WhatsApp Invite Squad Link -->
           <div class="pt-4 border-t border-purple-500/20 text-center">
             <button type="button" onclick="shareTableInvite()" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 font-mono text-xs font-bold transition flex items-center justify-center gap-2">
-              <span>💬 Invite Table Squad on WhatsApp</span>
+              <span>💬 Invite Your Squad on WhatsApp</span>
             </button>
           </div>
+          {% endif %}
         </div>
 
         <!-- Right: Current Venue Table Leaderboard (7 cols) -->
