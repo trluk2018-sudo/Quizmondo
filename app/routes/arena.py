@@ -1912,7 +1912,13 @@ def league_lounge(slug):
     state = league.get_state()
     apply_pub_auto_progression(league, state)
     is_virtual = league.is_virtual_league()
-    is_started = (state.get('current_round', 1) > 1 or state.get('round_status') in ('active', 'break', 'closed', 'finished'))
+    # A finished night is not an in-play one: offering "reconnect your table" on a
+    # quiz that ended on Thursday just bounces people off the closed room.
+    night_over = pub_night_is_over(league, state)
+    is_started = (not night_over) and (
+        state.get('current_round', 1) > 1
+        or state.get('round_status') in ('active', 'break', 'closed')
+    )
     # Only display approved real teams on lounge scoreboard (no mock demo teams!)
     teams = [t for t in league.get_teams() if t.get('status') != 'pending']
     # Advertise the rounds this league actually plays, not a hardcoded 5-round venue card
@@ -1931,6 +1937,8 @@ def league_lounge(slug):
         state=state,
         is_virtual=is_virtual,
         is_started=is_started,
+        night_over=night_over,
+        next_pub_date=get_next_weekly_pub_date(),
         teams=teams,
         rounds_overview=rounds_overview
     )
@@ -1994,7 +2002,7 @@ def is_pub_host():
     )
 
 
-def resolve_pub_team(state, player, table_num, team_name, is_virtual):
+def resolve_pub_team(state, player, table_num, team_name, is_virtual, require_pin=None):
     """Find the squad row that belongs to this browser session.
 
     In a physical venue a table number is deliberately shared, so the table
@@ -2005,6 +2013,10 @@ def resolve_pub_team(state, player, table_num, team_name, is_virtual):
     teams = state.get('teams', [])
     owner_key = getattr(player, 'session_key', None)
     name_l = (team_name or '').strip().lower()
+    # A physical table number is shared on purpose, so the number alone cannot be
+    # proof of anything: without this, typing ?table=1 made a stranger that table.
+    # Holding the venue PIN, or having checked the table in yourself, is the proof.
+    holds_pin = bool(require_pin and session.get(f'pub_pin_{require_pin}'))
 
     def owned():
         if not owner_key:
@@ -2027,6 +2039,15 @@ def resolve_pub_team(state, player, table_num, team_name, is_virtual):
                 return t
         return None
 
+    mine = owned()
+    if mine:
+        return mine
+
+    if require_pin and not holds_pin:
+        # No PIN and not a table this browser checked in: start a fresh one instead
+        # of adopting somebody else's scorecard.
+        return None
+
     for t in teams:
         matches_table = table_num and str(t.get('table', '')).strip() == str(table_num)
         matches_name = name_l and t.get('name', '').strip().lower() == name_l
@@ -2037,10 +2058,6 @@ def resolve_pub_team(state, player, table_num, team_name, is_virtual):
     if mine:
         return mine
 
-    # Fallback: if there is only 1 approved table in the venue, match it so single-table tests never miss
-    approved_only = [t for t in teams if t.get('status') != 'pending']
-    if len(approved_only) == 1:
-        return approved_only[0]
     return None
 
 
@@ -2094,6 +2111,11 @@ def free_pub_squad_slot(teams, table_num, team_name):
 
 
 PUB_QUESTIONS_PER_ROUND = 5
+
+# How long a quiz night can sit untouched before it counts as over. A pub quiz
+# runs two or three hours, so six is generous even for a long night with a slow
+# raffle in the middle. Override per league with config['night_timeout_hours'].
+PUB_NIGHT_TIMEOUT_HOURS = 6
 PUB_MIN_QUESTION_SECS = 15
 PUB_MAX_QUESTION_SECS = 30
 
@@ -2286,9 +2308,115 @@ def apply_pub_auto_progression(league, state):
         changed = True
 
     if changed:
+        pub_touch(state)
         league.set_state(state)
         db.session.commit()
+
+    # A night nobody has touched for hours is over, whatever the console says.
+    # Hosts close the till and go home without pressing Finalize, and until this
+    # ran, last week's quiz stayed 'active' with its PIN and its tables live.
+    if state.get('round_status') != 'finished':
+        if pub_last_activity(state) is None:
+            # Nothing to date it by: start the clock now rather than close a
+            # night that may be about to start.
+            pub_touch(state)
+            league.set_state(state)
+            db.session.commit()
+            changed = True
+        elif pub_night_is_over(league, state):
+            close_pub_night(league, state)
+            changed = True
+
     return changed
+
+
+def pub_touch(state):
+    """Mark the league as having just done something.
+
+    This is what tells a stale night from a live one. A quiz night that nobody
+    has touched for hours is over whether or not the host remembered to press
+    Finalize, and in a real venue they usually do not.
+    """
+    state['last_activity_at'] = datetime.utcnow().isoformat()
+
+
+def pub_last_activity(state):
+    """When this league last did anything, as best we can tell.
+
+    Leagues created before last_activity_at existed still carry round and break
+    deadlines, a reset stamp or a results stamp, so an old night is still
+    datable. One with none of them returns None and gets stamped instead, so the
+    clock starts from now rather than closing a night nobody can date.
+    """
+    newest = None
+    for key in ('last_activity_at', 'night_closed_at', 'results_recorded_at',
+                'round_ends_at', 'break_ends_at', 'reset_ts'):
+        raw = state.get(key)
+        if not raw:
+            continue
+        try:
+            ts = datetime.fromisoformat(str(raw))
+        except Exception:
+            continue
+        if newest is None or ts > newest:
+            newest = ts
+    return newest
+
+
+def pub_night_is_over(league, state):
+    """Has this quiz night ended, by the host's hand or by the clock?"""
+    if state.get('round_status') == 'finished' or state.get('tournament_completed'):
+        return True
+    cfg = state.get('config', {})
+    try:
+        hours = float(cfg.get('night_timeout_hours', PUB_NIGHT_TIMEOUT_HOURS))
+    except (TypeError, ValueError):
+        hours = PUB_NIGHT_TIMEOUT_HOURS
+    if hours <= 0:
+        return False
+    last = pub_last_activity(state)
+    if last is None:
+        return False
+    return (datetime.utcnow() - last) > timedelta(hours=hours)
+
+
+def new_pub_pin(exclude_id=None):
+    """A room PIN no other venue is using."""
+    taken = set()
+    for other in PubLeague.query.all():
+        if exclude_id is not None and other.id == exclude_id:
+            continue
+        if other.pin_code:
+            taken.add(str(other.pin_code).upper())
+    for _ in range(80):
+        pin = '%04d' % random.randint(1000, 9999)
+        if pin not in taken:
+            return pin
+    return '%06d' % random.randint(100000, 999999)
+
+
+def close_pub_night(league, state, rotate_pin=True):
+    """Freeze a finished night, bank the results and retire the room PIN.
+
+    The PIN is the venue's door key for one night. Leaving it up afterwards
+    means last week's players — and anyone who reads the page — can still walk
+    into the room, so a closed night always gets a new one.
+    """
+    state['round_status'] = 'finished'
+    state['answers_revealed'] = True
+    state['tournament_completed'] = True
+    state.pop('round_ends_at', None)
+    state.pop('break_ends_at', None)
+    state.setdefault('night_closed_at', datetime.utcnow().isoformat())
+    saved = record_pub_results(league, state)
+    if rotate_pin:
+        old = league.pin_code
+        league.pin_code = new_pub_pin(exclude_id=league.id)
+        state['previous_pin'] = old
+    pub_touch(state)
+    league.set_state(state)
+    db.session.commit()
+    return saved
 
 
 def pub_round_deadline(cfg, now=None):
@@ -2374,6 +2502,7 @@ def league_progress(slug):
                 state['round_status'] = 'closed'
 
         state['teams'] = teams
+        pub_touch(state)
         league.set_state(state)
         db.session.commit()
 
@@ -2443,6 +2572,9 @@ def league_manager_action(slug):
 
     action = request.form.get('action')
     state = league.get_state()
+    # Any host command means somebody is running the night, so the stale-night
+    # clock starts again from here. Actions that change nothing never commit it.
+    pub_touch(state)
     teams = state.get('teams', [])
     cfg = state.get('config', {})
 
@@ -2607,16 +2739,11 @@ def league_manager_action(slug):
             db.session.commit()
             return respond(f"Round {state['current_round']} launched! Questions broadcast to all phones.")
         else:
-            state['round_status'] = 'finished'
-            state['answers_revealed'] = True
-            state['tournament_completed'] = True
-            state.pop('round_ends_at', None)
-            state.pop('break_ends_at', None)
-            saved = record_pub_results(league, state)
-            league.set_state(state)
-            db.session.commit()
+            saved = close_pub_night(league, state)
             tail = f" {saved} results saved to the league table." if saved else ""
-            return respond(f"🏆 Tournament finalized! Champions crowned and final standings displayed on all screens.{tail}")
+            return respond(f"🏆 Tournament finalized! Champions crowned and final standings displayed on all "
+                           f"screens. The room is now closed and the new PIN for next time is "
+                           f"{league.pin_code}.{tail}")
 
     elif action == 'save_pin':
         new_pin = (request.form.get('pin_code') or '').strip().upper()
@@ -2694,6 +2821,17 @@ def league_room(slug):
     apply_pub_auto_progression(league, state)
     cfg = state.get('config', {})
 
+    # The room is the live game. Once the night is over there is nothing to play,
+    # and letting people back in is how a week-old quiz ends up handing out its
+    # PIN and its tables. Send them to the lounge, where the final table is.
+    if pub_night_is_over(league, state):
+        session.pop(f'pub_pin_{slug}', None)
+        if request.method == 'POST':
+            return jsonify({'success': False, 'error': 'This quiz night has finished.'}), 403
+        flash(f"{league.name} has finished for the night. The final scores are below, "
+              f"and the Quizmaster will give out a new Room PIN for the next one.", "info")
+        return redirect(url_for('arena.league_lounge', slug=slug))
+
     total_rounds = int(cfg.get('total_rounds', 3 if is_virtual else 5))
     current_round = int(state.get('current_round', 1))
     if current_round < 1 or current_round > total_rounds:
@@ -2708,7 +2846,7 @@ def league_room(slug):
         round_score = score_pub_answers(state, current_round, request.form.get('answers'), cfg, total_rounds)
         if round_score is None:
             return jsonify({'success': False, 'error': 'Answers required to score this round'}), 400
-        team_entry = resolve_pub_team(state, player, table_num, team_name, is_virtual)
+        team_entry = resolve_pub_team(state, player, table_num, team_name, is_virtual, require_pin=slug)
 
         # Only an approved squad may bank a score, and only while the host has the round open.
         # A score that arrives late (host already locked the round) is already banked by close_round.
@@ -2737,6 +2875,7 @@ def league_room(slug):
             state['round_status'] = 'closed'
 
         state['teams'] = teams
+        pub_touch(state)
         league.set_state(state)
         db.session.commit()
         player.add_xp(100 + round_score)
@@ -2772,7 +2911,7 @@ def league_room(slug):
     # Check table capacity & Digital Bouncer approval (for BOTH physical and virtual pub quizzes)
     teams = state.get('teams', [])
     max_tables = int(cfg.get('max_tables', 20))
-    team_entry = resolve_pub_team(state, player, table_num, team_name, is_virtual)
+    team_entry = resolve_pub_team(state, player, table_num, team_name, is_virtual, require_pin=slug)
 
     # A squad mate on another phone joins the same scorecard with the squad's join code
     squad_code = (request.args.get('squad_code') or request.form.get('squad_code') or '').strip()
@@ -2829,6 +2968,14 @@ def league_room(slug):
     session['pub_table_num'] = str(table_num)
     session['pub_team_name'] = team_name
 
+    # Rounds this table was not here for. They stay unscored rather than being
+    # skipped or back-filled, so the board stays honest — but the table is told,
+    # instead of quietly wondering why it is bottom.
+    missed_rounds = []
+    if team_entry and current_round > 1:
+        missed_rounds = [str(r) for r in range(1, current_round)
+                         if team_entry.get(f'round_{r}') is None]
+
     # Check if this table has already submitted answers for the active round
     has_submitted_round = False
     submitted_round_score = 0
@@ -2883,6 +3030,7 @@ def league_room(slug):
         join_code=team_entry.get('join_code') if team_entry else None,
         has_submitted_round=has_submitted_round,
         submitted_round_score=submitted_round_score,
+        missed_rounds=missed_rounds,
         config=cfg,
         next_pub_date=get_next_weekly_pub_date(),
         state=state

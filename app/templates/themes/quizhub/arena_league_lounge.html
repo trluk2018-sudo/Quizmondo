@@ -105,14 +105,16 @@
           <div class="space-y-1">
             <div class="flex items-center justify-between">
               <h3 class="text-sm font-black font-mono text-white uppercase tracking-wider flex items-center gap-2">
-                <span>👥</span> {% if is_virtual %}Request Virtual Squad Entry{% else %}Check In Your Venue Table{% endif %}
+                <span>👥</span> {% if night_over %}Quiz Night Closed{% elif is_virtual %}Request Virtual Squad Entry{% else %}Check In Your Venue Table{% endif %}
               </h3>
               <span class="px-2 py-0.5 rounded-full bg-purple-900/60 border border-purple-500/30 text-[10px] text-cyan-300 font-bold">
                 {{ teams|length }} / {{ (league.get_state().get('config') or {}).get('max_tables', 20) }} Tables
               </span>
             </div>
             <p class="text-[11px] font-mono text-slate-400 leading-relaxed">
-              {% if is_virtual %}
+              {% if night_over %}
+              Check-in is closed for this session. The board below is how the night finished.
+              {% elif is_virtual %}
               Enter your Squad Name below to request entry. Once the Quizmaster/Admin approves your request, your Room PIN is issued and your buzzer unlocks automatically!
               {% else %}
               Enter your Table # and Team Name (plus the Venue PIN if announced by the Quizmaster). Once verified by the Quizmaster on the host console, your phone buzzer unlocks!
@@ -120,7 +122,19 @@
             </p>
           </div>
 
-          {% if is_started %}
+          {% if night_over %}
+          <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-600/50 text-slate-200 font-mono text-xs flex items-start gap-3 shadow-md">
+            <span class="text-xl">🏁</span>
+            <div>
+              <strong class="text-slate-100 uppercase block tracking-wider">This Quiz Night Has Finished</strong>
+              <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                The final scores are below. The room is closed and the Room PIN has been retired, so
+                the Quizmaster will give out a new one at the venue next time{% if next_pub_date %} &mdash;
+                {{ next_pub_date }}{% endif %}.
+              </p>
+            </div>
+          </div>
+          {% elif is_started %}
           <div class="p-3.5 rounded-2xl bg-amber-950/60 border border-amber-500/40 text-amber-200 font-mono text-xs flex items-center gap-3 shadow-md">
             <span class="text-xl">🔒</span>
             <div>
@@ -130,6 +144,7 @@
           </div>
           {% endif %}
 
+          {% if not night_over %}
           <form action="{{ url_for('arena.league_room', slug=league.slug) }}" method="GET" class="space-y-4 font-mono text-xs">
             {% if not is_virtual %}
             <div class="space-y-1.5">
@@ -173,6 +188,7 @@
               {% endif %}
             </button>
           </form>
+          {% endif %}
 
           <!-- WhatsApp Invite Squad Link -->
           <div class="pt-4 border-t border-purple-500/20 text-center">
