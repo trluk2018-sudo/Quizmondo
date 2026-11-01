@@ -837,7 +837,22 @@ function showRocketAnimation(data) {
       if (bScore) bScore.textContent = '⏳';
       if (bMeta) bMeta.textContent = 'Waiting for turn...';
       if (bTotal) bTotal.textContent = 'Match Total: ' + (data.opponent_total_score || 0) + ' PTS';
-      if (waBtn) waBtn.classList.add('hidden');
+
+      // This is the one moment a nudge is natural: you have just played, the
+      // screen says you are waiting on them, and the server has already built
+      // the message with your round score in it. The button was here all
+      // along but started hidden and was never shown, so nobody ever saw it.
+      // Not for a bot: Cyber Bot Nova does not need chasing on WhatsApp.
+      if (waBtn) {
+        if (!data.is_bot && latestWhatsAppNudgeText) {
+          waBtn.textContent = data.opponent_assigned
+            ? ('📲 Nudge ' + (data.opponent_name || 'them') + ' — it’s their turn')
+            : '📲 Send the challenge on WhatsApp';
+          waBtn.classList.remove('hidden');
+        } else {
+          waBtn.classList.add('hidden');
+        }
+      }
 
       if (badge) {
         badge.className = 'inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40';
