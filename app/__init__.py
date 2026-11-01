@@ -26,7 +26,13 @@ def create_app(test_config=None):
         APP_PUBLIC_URL=os.environ.get('APP_PUBLIC_URL', 'http://localhost:8000'),
         APP_SSO_SECRET=os.environ.get('APP_SSO_SECRET') or os.environ.get('SSO_SECRET', ''),
         UPLOAD_FOLDER=upload_dir,
-        PERMANENT_SESSION_LIFETIME=timedelta(days=30),
+        # An hour of doing nothing ends the session. It used to be thirty
+        # days, which is why nobody was ever signed out: a phone that keeps
+        # the tab alive kept the cookie alive with it, so the "next time you
+        # log in" prompts -- the email confirmation among them -- never came
+        # round again. Flask re-sends the cookie on every request, so this is
+        # an hour of inactivity rather than an hour of use.
+        PERMANENT_SESSION_LIFETIME=timedelta(minutes=60),
         SESSION_COOKIE_SAMESITE='Lax',
         SESSION_COOKIE_PATH='/'
     )

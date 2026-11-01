@@ -1647,6 +1647,18 @@ def player_register():
         session['is_creator'] = False
         session['qm_player_key'] = player.session_key
 
+        # Send the confirmation now, while the address is fresh in their mind.
+        # They are not made to act on it: confirmation_state leaves a brand new
+        # account alone for the whole signup session, so this lands in the
+        # inbox and the prompt waits until their next visit.
+        try:
+            from .account import send_confirmation as _send_confirm
+            _send_confirm(user)
+        except Exception:
+            # No mail account set up yet, or the server refused it. Signing up
+            # must not fail over an email nobody has asked for.
+            db.session.rollback()
+
         flash(f"🎉 Welcome to Quizmondo, {username}! Your challenge profile and 6-digit PIN are set up!", "success")
         if next_url and next_url.startswith('/'):
             return redirect(next_url)

@@ -49,11 +49,11 @@ def send_confirmation(user) -> tuple:
 
 
 # Somebody who has just signed up is not asked to go and read their email: they
-# came here to play. An account younger than this, first seen in this browser
-# session, is treated as a fresh sign up and left alone for the whole session.
-FRESH_SIGNUP_MINUTES = 30
+# came here to play. They get this long to play first, and then they are asked
+# -- in the same session, rather than waiting for a sign-in that may never come
+# round again.
+FRESH_SIGNUP_MINUTES = 15
 
-SIGNUP_SESSION = 'qm_signup_session'
 ASKED = 'qm_confirm_asked'
 
 
@@ -72,16 +72,14 @@ def confirmation_state():
 
     row = AccountEmail.query.filter_by(user_id=user.id).first()
     if row and row.confirmed:
-        session.pop(SIGNUP_SESSION, None)
         session.pop(ASKED, None)
         return None
 
-    # First sight of this account in this browser session decides whether this
-    # is the sign up itself or a later visit.
-    if SIGNUP_SESSION not in session:
-        age = datetime.utcnow() - (user.created_at or datetime.utcnow())
-        session[SIGNUP_SESSION] = (age.total_seconds() < FRESH_SIGNUP_MINUTES * 60)
-    if session.get(SIGNUP_SESSION):
+    # How long ago they signed up, not whether this is the signing-up session.
+    # Deciding it once per session meant a browser that never closed never
+    # asked at all, which is how an account could play for weeks unconfirmed.
+    age = (datetime.utcnow() - (user.created_at or datetime.utcnow())).total_seconds()
+    if age < FRESH_SIGNUP_MINUTES * 60:
         return None            # they only just signed up: let them play
 
     if session.get(ASKED):
@@ -120,6 +118,80 @@ def prepare_confirm_prompt():
 def inject_confirmation():
     """Available on every page, so the prompt can live in the base template."""
     return {'confirm_prompt': getattr(g, 'confirm_prompt', None)}
+
+
+# A reset link can take an account over, so it lives a fraction as long as a
+# confirmation link.
+RESET_HOURS = 2
+
+
+@account_bp.route('/forgot', methods=['GET', 'POST'])
+def forgot_pin():
+    """Ask for a reset link. This is what confirming an address buys you.
+
+    The answer is the same whether or not the address is on an account, and
+    whether or not it was ever confirmed. Anything else turns this page into a
+    way of asking the site which addresses it knows.
+    """
+    SAME_ANSWER = ('If that address is on a confirmed account, a reset link is '
+                   'on its way. It expires in %d hours.' % RESET_HOURS)
+
+    if request.method == 'POST':
+        email = (request.form.get('email') or '').strip().lower()
+        if email:
+            row = AccountEmail.query.filter(
+                db.func.lower(AccountEmail.email) == email,
+                AccountEmail.confirmed_at.isnot(None),
+            ).first()
+            # An unconfirmed address gets nothing: the whole point of
+            # confirming is that this is what it unlocks.
+            if row and row.may_resend and mail.mail_ready():
+                user = db.session.get(User, row.user_id)
+                if user and user.is_active:
+                    raw = EmailToken.issue(user.id, 'reset', hours=RESET_HOURS)
+                    link = url_for('account.reset_pin', token=raw, _external=True)
+                    sent, _why = mail.send_pin_reset(row.email, user.username,
+                                                     link, RESET_HOURS)
+                    if sent:
+                        row.last_sent_at = datetime.utcnow()
+                        db.session.commit()
+        flash(SAME_ANSWER, 'success')
+        return redirect(url_for('account.forgot_pin'))
+
+    return render_template('themes/quizhub/account_forgot.html',
+                           mail_ready=mail.mail_ready())
+
+
+@account_bp.route('/reset/<token>', methods=['GET', 'POST'])
+def reset_pin(token):
+    """Set a new PIN from a link. One use, then the link is spent."""
+    # The token is only spent on POST. Checking it on GET as well would burn a
+    # one-use link just by opening the page.
+    if request.method == 'POST':
+        claimed = EmailToken.claim(token, 'reset')
+        if not claimed:
+            flash('That link has expired or has already been used. Ask for a new one.', 'error')
+            return redirect(url_for('account.forgot_pin'))
+        user = db.session.get(User, claimed.user_id)
+        if not user or not user.is_active:
+            flash('That account is no longer available.', 'error')
+            return redirect(url_for('account.forgot_pin'))
+
+        pin = (request.form.get('pin') or '').strip()
+        again = (request.form.get('pin_confirm') or '').strip()
+        if not (pin.isdigit() and len(pin) == 6):
+            flash('A PIN is six digits.', 'error')
+            return redirect(url_for('account.reset_pin', token=token))
+        if pin != again:
+            flash('Those two PINs did not match.', 'error')
+            return redirect(url_for('account.reset_pin', token=token))
+
+        user.set_password(pin)
+        db.session.commit()
+        flash('That is your new PIN. Sign in with it now.', 'success')
+        return redirect(url_for('arena.player_login'))
+
+    return render_template('themes/quizhub/account_reset.html', token=token)
 
 
 @account_bp.route('/confirm/send', methods=['POST'])
