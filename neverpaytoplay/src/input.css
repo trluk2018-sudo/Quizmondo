@@ -1,0 +1,68 @@
+/* source(none) turns off Tailwind's automatic scanning. Without it the build
+   walks the whole repository - every Flask template in the app next door - and
+   the stylesheet for this one page comes out ten times the size it needs. */
+@import "tailwindcss" source(none);
+@source "../index.html";
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: #ffffff;
+  }
+}
+
+@layer utilities {
+  /* The strip and the headline both move a little. Both stop for anyone who
+     has told their device they would rather things did not. */
+  .npt-drift {
+    background-size: 220% 100%;
+    animation: nptDrift 9s ease-in-out infinite;
+  }
+  .npt-shine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, .5) 45%,
+                rgba(255, 255, 255, .5) 55%, transparent 80%);
+    background-size: 220% 100%;
+    animation: nptShine 6s ease-in-out infinite;
+  }
+  .npt-float {
+    animation: nptFloat 7s ease-in-out infinite;
+  }
+  /* A faint grid, light enough to read as paper rather than graph paper. */
+  .npt-grid {
+    background-image:
+      linear-gradient(rgba(15, 23, 42, .035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15, 23, 42, .035) 1px, transparent 1px);
+    background-size: 46px 46px;
+  }
+}
+
+@keyframes nptDrift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@keyframes nptShine {
+  0% { background-position: 140% 0; }
+  55%, 100% { background-position: -40% 0; }
+}
+@keyframes nptFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .npt-drift, .npt-shine::after, .npt-float {
+    animation: none;
+  }
+  .npt-shine::after {
+    display: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}

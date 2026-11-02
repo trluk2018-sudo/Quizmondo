@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" width="1200" height="600">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a0b2e"/>
+      <stop offset="55%" stop-color="#0a0620"/>
+      <stop offset="100%" stop-color="#05030f"/>
+    </linearGradient>
+    <linearGradient id="strip" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="50%" stop-color="#ec4899"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
+    </linearGradient>
+    <radialGradient id="glowA"><stop offset="0%" stop-color="#ec4899" stop-opacity=".40"/><stop offset="100%" stop-color="#ec4899" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB"><stop offset="0%" stop-color="#22d3ee" stop-opacity=".34"/><stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+  </defs>
+
+  <rect width="1200" height="600" fill="url(#bg)"/>
+  <ellipse cx="200" cy="90" rx="420" ry="280" fill="url(#glowA)"/>
+  <ellipse cx="1020" cy="520" rx="420" ry="280" fill="url(#glowB)"/>
+
+  <!-- the strip across the top, the same promise as the site's own -->
+  <rect x="0" y="0" width="1200" height="8" fill="url(#strip)"/>
+
+  <!-- the machine, unplugged -->
+  <g transform="translate(748 118)">
+    <rect x="0" y="0" width="300" height="360" rx="26" fill="#140a2e" stroke="#3b2d63" stroke-width="3"/>
+    <rect x="26" y="34" width="248" height="120" rx="12" fill="#05030f" stroke="#3b2d63" stroke-width="2"/>
+    <!-- three dead reels -->
+    <g fill="#1b1340" stroke="#2e2357" stroke-width="2">
+      <rect x="42" y="50" width="70" height="88" rx="8"/>
+      <rect x="120" y="50" width="70" height="88" rx="8"/>
+      <rect x="198" y="50" width="70" height="88" rx="8"/>
+    </g>
+    <g font-family="Verdana,DejaVu Sans,sans-serif" font-size="34" font-weight="bold" fill="#564a7d" text-anchor="middle">
+      <text x="77" y="106">&#215;</text>
+      <text x="155" y="106">&#215;</text>
+      <text x="233" y="106">&#215;</text>
+    </g>
+    <!-- dark buttons -->
+    <g fill="#1b1340" stroke="#2e2357" stroke-width="2">
+      <circle cx="72" cy="206" r="22"/>
+      <circle cx="150" cy="206" r="22"/>
+      <circle cx="228" cy="206" r="22"/>
+    </g>
+    <!-- the lever, hanging down -->
+    <g stroke="#3b2d63" stroke-width="7" stroke-linecap="round">
+      <line x1="300" y1="130" x2="340" y2="186"/>
+    </g>
+    <circle cx="343" cy="193" r="15" fill="#2e2357"/>
+    <!-- the plug, pulled out -->
+    <path d="M150 300 q0 44 -58 54" fill="none" stroke="#3b2d63" stroke-width="6" stroke-linecap="round"/>
+    <g transform="translate(74 348) rotate(-18)">
+      <rect x="0" y="0" width="34" height="22" rx="5" fill="#2e2357"/>
+      <line x1="34" y1="7" x2="46" y2="7" stroke="#2e2357" stroke-width="5" stroke-linecap="round"/>
+      <line x1="34" y1="15" x2="46" y2="15" stroke="#2e2357" stroke-width="5" stroke-linecap="round"/>
+    </g>
+    <text x="150" y="330" font-family="Verdana,DejaVu Sans,sans-serif" font-size="15" font-weight="bold"
+          fill="#564a7d" text-anchor="middle" letter-spacing="2">OUT OF ORDER</text>
+  </g>
+
+  <!-- price tags, falling away and fading -->
+    <g transform="translate(120 486) rotate(-14)" opacity="0.85">
+    <path d="M0 0 h104 a12 12 0 0 1 12 12 v30 a12 12 0 0 1 -12 12 h-104 l-20 -27 z"
+          fill="#2a1a4a" stroke="#4c3a7d" stroke-width="2"/>
+    <circle cx="-4" cy="27" r="5" fill="#4c3a7d"/>
+    <text x="58" y="34" font-family="Verdana,DejaVu Sans,sans-serif" font-size="20" font-weight="bold"
+          fill="#8b7bb8" text-anchor="middle">£4.99</text>
+  </g>
+  <g transform="translate(258 520) rotate(9)" opacity="0.62">
+    <path d="M0 0 h104 a12 12 0 0 1 12 12 v30 a12 12 0 0 1 -12 12 h-104 l-20 -27 z"
+          fill="#2a1a4a" stroke="#4c3a7d" stroke-width="2"/>
+    <circle cx="-4" cy="27" r="5" fill="#4c3a7d"/>
+    <text x="58" y="34" font-family="Verdana,DejaVu Sans,sans-serif" font-size="20" font-weight="bold"
+          fill="#8b7bb8" text-anchor="middle">£9.99</text>
+  </g>
+  <g transform="translate(404 498) rotate(-7)" opacity="0.42">
+    <path d="M0 0 h104 a12 12 0 0 1 12 12 v30 a12 12 0 0 1 -12 12 h-104 l-20 -27 z"
+          fill="#2a1a4a" stroke="#4c3a7d" stroke-width="2"/>
+    <circle cx="-4" cy="27" r="5" fill="#4c3a7d"/>
+    <text x="58" y="34" font-family="Verdana,DejaVu Sans,sans-serif" font-size="20" font-weight="bold"
+          fill="#8b7bb8" text-anchor="middle">£19.99</text>
+  </g>
+  <g transform="translate(548 532) rotate(16)" opacity="0.24">
+    <path d="M0 0 h104 a12 12 0 0 1 12 12 v30 a12 12 0 0 1 -12 12 h-104 l-20 -27 z"
+          fill="#2a1a4a" stroke="#4c3a7d" stroke-width="2"/>
+    <circle cx="-4" cy="27" r="5" fill="#4c3a7d"/>
+    <text x="58" y="34" font-family="Verdana,DejaVu Sans,sans-serif" font-size="20" font-weight="bold"
+          fill="#8b7bb8" text-anchor="middle">£49.99</text>
+  </g>
+
+  <!-- the words -->
+  <text x="80" y="214" font-family="Verdana,DejaVu Sans,sans-serif" font-size="78" font-weight="bold" fill="#f8fafc">Never Pay</text>
+  <text x="80" y="298" font-family="Verdana,DejaVu Sans,sans-serif" font-size="78" font-weight="bold" fill="#fbbf24">To Play</text>
+  <rect x="80" y="330" width="120" height="6" rx="3" fill="url(#strip)"/>
+  <text x="80" y="382" font-family="Verdana,DejaVu Sans,sans-serif" font-size="21" fill="#cbd5e1">Games should not be built to take money</text>
+  <text x="80" y="414" font-family="Verdana,DejaVu Sans,sans-serif" font-size="21" fill="#cbd5e1">from the people least able to see it coming.</text>
+  <text x="80" y="470" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" font-weight="bold" fill="#22d3ee"
+        letter-spacing="3">QUIZMONDO.COM</text>
+</svg>

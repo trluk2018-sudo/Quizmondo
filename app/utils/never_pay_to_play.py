@@ -32,7 +32,13 @@ NPTP_META = (
     'advertising — and what that means for brands advertising to a family audience.'
 )
 
+NPTP_IMAGE = '/static/img/never-pay-to-play.svg'
+
 NPTP_CONTENT = """
+<p><img src="/static/img/never-pay-to-play.svg"
+        alt="A slot machine, switched off and unplugged, with price tags falling away from it"
+        style="width:100%; height:auto; border-radius:16px; display:block; margin-bottom:1.5rem;"></p>
+
 <p class="lead"><strong>Somewhere along the way, playing a game stopped being a thing you did
 and started being a thing you bought, repeatedly, in small amounts, for ever.</strong></p>
 
@@ -68,6 +74,29 @@ boosts, welcome offers. Served next to things made for ten-year-olds, and normal
 sheer repetition.</li>
 </ul>
 
+<h2>And it runs the other way too</h2>
+
+<p>While games were learning from gambling, gambling was learning from games — and it has
+been the faster student.</p>
+
+<p>Open a betting app now and it does not look like a bookmaker. It looks like a game.
+There is a level and a progress bar. There are daily missions and a streak you will lose if
+you do not come back tomorrow. There are tokens, free spins awarded for activity rather than
+for staking, a wheel to spin, a mystery bonus to reveal, a leaderboard, a tier you can climb
+to unlock a better one. The language is achievements and rewards. The visual grammar is
+lifted wholesale from mobile gaming, because that grammar is what a generation grew up
+reading.</p>
+
+<p>What it does is blur the line until there is no line. A child who has spent three years
+opening chests in a game recognises every one of those mechanics on sight, and recognises
+none of them as betting. The skills transfer; the warning does not. By the time the
+mechanics are attached to real money, they have been made to feel like play.</p>
+
+<p>This is the bit we find hardest to be calm about. It is one thing to design a game that
+takes money from adults who can see it coming. It is another to spend a decade teaching
+children the exact interface language of a gambling product, and then put a gambling
+product behind it.</p>
+
 <p>The common thread is not the money. It is that the game is no longer on your side.
 Every one of those mechanics works by making the experience slightly worse until you pay
 to make it better again. Once you see it, you cannot unsee it.</p>
@@ -80,8 +109,8 @@ anybody anything. That is not a trial, a tier or a tactic. It is the product.</p
 <p>Specifically, and permanently:</p>
 
 <ul>
-<li><strong>No purchases.</strong> No coins, gems, passes, chests, boosters, lives,
-continues or currencies. There is nothing to buy because there is nothing withheld.</li>
+<li><strong>Nothing to buy.</strong> No passes, chests, boosters, lives, continues or
+paid currency. Nothing is withheld from you and then sold back.</li>
 <li><strong>No loot boxes, and nothing that behaves like one.</strong> No paid randomised
 rewards of any kind.</li>
 <li><strong>No pay-to-win.</strong> Every player sits down to the same questions with the
@@ -97,6 +126,26 @@ An account saves your scores; it is not a toll gate.</li>
 
 <p>Nobody has to take that on trust. Open any game on this site and count the buttons that
 ask you for money. The number is zero, and it stays zero.</p>
+
+<h3>Coins, and which way they point</h3>
+
+<p>Quizmondo has coins. They matter enough to be clear about, because a currency is exactly
+the thing this page has spent several paragraphs objecting to — so here is the difference,
+and it is the whole difference.</p>
+
+<p><strong>You earn coins by playing. You cannot buy them. Not now, not later, not for any
+amount of money.</strong> There is no top-up, no bundle, no "best value" pack. The only way
+to hold a hundred coins is to have played well enough to be given a hundred coins.</p>
+
+<p>And they are going to be worth something. When our store opens, coins will be redeemable
+against real items in it, and against credit with partner sites we work with. Not another
+cosmetic to show off inside the game that gave it to you — actual things, which is the point
+of a reward.</p>
+
+<p>So the arrow points the other way round from everywhere else. On most sites, money flows
+from the player into the game, and the "rewards" exist to pull more of it through. Here,
+value flows out to the player, paid for by advertising, in return for nothing but their
+attention and their general knowledge. That is what we think a free game is supposed to be.</p>
 
 <h2>How it is paid for, honestly</h2>
 
@@ -145,6 +194,10 @@ that never autoplays with sound. Nothing interrupts a round in progress.</li>
 If a campaign underperforms you will see it here first, from us.</li>
 <li><strong>Local as well as national.</strong> A venue advertising its Thursday quiz night
 and a national brand sit in the same system, on the same terms.</li>
+<li><strong>A reward loop you can sit inside.</strong> Players earn coins by playing, and
+those coins will be redeemable in our store and against credit with partner sites. If you
+would rather reach people through what they can win than through a banner, there is a
+conversation to have about that.</li>
 </ul>
 
 <p>We are a particularly good fit if your brand has its own reasons to avoid gambling

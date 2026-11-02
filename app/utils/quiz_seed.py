@@ -1592,7 +1592,7 @@ def seed_quizmondo_full_environment():
     # removing it in admin does not bring it back on the next boot.
     try:
         from .never_pay_to_play import (
-            NPTP_SLUG, NPTP_TITLE, NPTP_EXCERPT, NPTP_META, NPTP_CONTENT)
+            NPTP_SLUG, NPTP_TITLE, NPTP_EXCERPT, NPTP_META, NPTP_CONTENT, NPTP_IMAGE)
         page = Page.query.filter_by(slug=NPTP_SLUG).first()
         if not page:
             page = Page(slug=NPTP_SLUG)
@@ -1603,6 +1603,7 @@ def seed_quizmondo_full_environment():
         page.meta_description = NPTP_META
         page.status = 'publish'
         page.template = 'default'
+        page.og_image = NPTP_IMAGE
         # It lives in the footer and on the hero strip, not in the main nav
         page.show_in_nav = False
         db.session.commit()
