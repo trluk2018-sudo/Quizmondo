@@ -64,14 +64,26 @@
   var roundNo = 0;
   var running = false;
 
+  // The board gets warmer as the lives go. Six lives and the blanks sit cool
+  // and cyan; one life and they are red. The number was already on screen, but
+  // a number is something you read -- this you notice without looking.
+  var DANGER = ['#f43f5e', '#f43f5e', '#fb7185', '#fb923c', '#fbbf24', '#22d3ee', '#22d3ee'];
+  function dangerTone() { return DANGER[Math.max(0, Math.min(MAX_LIVES, lives))]; }
+
   function setLives(n) {
     lives = n;
-    QMG.setMid('❤️ ' + Math.max(0, n));
+    var left = Math.max(0, n);
+    // Pips rather than a digit: six hearts going out one at a time reads
+    // faster than a number counting down.
+    QMG.setMid('♥'.repeat(left) + '·'.repeat(MAX_LIVES - left));
     QMG.setMidBar(n / MAX_LIVES);
     PARTS.forEach(function (id, i) {
       var el = document.getElementById(id);
       if (el) el.classList.toggle('opacity-0', i >= (MAX_LIVES - n));
     });
+    var mid = document.getElementById('qmgMid');
+    if (mid) mid.style.color = dangerTone();
+    if (current) renderPhrase();   // setLives can run before a word is loaded
   }
 
   function renderPhrase() {
@@ -84,8 +96,11 @@
         var isLetter = /[A-Z]/.test(ch);
         var shown = !isLetter || guessed[ch];
         slot.className = 'w-6 h-9 sm:w-7 sm:h-10 flex items-center justify-center font-mono font-black text-base sm:text-lg ' +
-          (isLetter ? 'border-b-2 ' + (shown ? 'border-emerald-400 text-emerald-300' : 'border-purple-500/50 text-transparent')
+          (isLetter ? 'border-b-2 transition-colors ' + (shown ? 'border-emerald-400 text-emerald-300' : 'text-transparent')
                     : 'text-slate-500');
+        // Blanks carry the danger colour; letters you have already won stay
+        // green, because those are safe whatever happens next.
+        if (isLetter && !shown) slot.style.borderBottomColor = dangerTone();
         slot.textContent = shown ? ch : '•';
         if (!isLetter) slot.textContent = ch;
         group.appendChild(slot);
