@@ -11,6 +11,14 @@ MODULE_DEFINITIONS = {
         'description': 'Full-width arcade header with headline, subtext, dual game buttons, and verified player metrics.',
         'default_placement': 'above',
         'default_config': {
+            # A strip across the very top of the hero, under the menu. Its own
+            # thing rather than an ad: it is ours, it never rotates, and it is
+            # the first promise the site makes.
+            'strip_enabled': '1',
+            'strip_text': 'Never pay to play ...',
+            'strip_subtext': 'Every game, quiz and duel on Quizmondo is free.',
+            'strip_cta': 'neverpaytoplay.co.uk',
+            'strip_url': 'https://neverpaytoplay.co.uk',
             'badge': 'ARCADE TRIVIA & MULTIPLAYER DUELS',
             'headline': 'The Cosmic Brain Arena: Challenge Friends & Climb the Leaderboards',
             'subtext': 'Battle head-to-head in turn-based trivia duels, join weekly live pub quiz leagues, and author community quiz decks. 100% free with instant WhatsApp invitations!',

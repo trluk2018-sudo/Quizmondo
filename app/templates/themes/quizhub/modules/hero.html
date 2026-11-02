@@ -12,6 +12,38 @@
   <div class="absolute -top-24 -left-24 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
   <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none"></div>
 
+  {# The promise strip, across the top of the hero and hard under the menu.
+     The negative margin cancels the section's own top padding so it sits at
+     the very top edge rather than floating in the middle of it. #}
+  {% if cfg.get('strip_enabled', '1') != '0' and cfg.get('strip_text', 'Never pay to play ...') %}
+  <a href="{{ cfg.get('strip_url') or 'https://neverpaytoplay.co.uk' }}"
+     {% if (cfg.get('strip_url') or 'https://neverpaytoplay.co.uk').startswith('http') %}target="_blank" rel="noopener"{% endif %}
+     class="group relative z-20 block -mt-16 lg:-mt-24 mb-10 lg:mb-14 w-full
+            bg-gradient-to-r from-amber-500 via-orange-500 to-pink-600
+            hover:from-amber-400 hover:via-orange-400 hover:to-pink-500 transition">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5
+                flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center">
+      <span class="font-mono text-sm sm:text-base font-black uppercase tracking-wider text-slate-950">
+        {{ cfg.get('strip_text', 'Never pay to play ...') }}
+      </span>
+      {% set strip_sub = cfg.get('strip_subtext', 'Every game, quiz and duel on Quizmondo is free.') %}
+      {% if strip_sub %}
+        <span class="font-mono text-[11px] sm:text-xs font-bold text-slate-900/80">
+          {{ strip_sub }}
+        </span>
+      {% endif %}
+      {% set strip_cta = cfg.get('strip_cta', 'neverpaytoplay.co.uk') %}
+      {% if strip_cta %}
+        <span class="inline-flex items-center gap-1 font-mono text-[11px] sm:text-xs font-black
+                     text-slate-950 underline decoration-slate-900/40 underline-offset-2">
+          {{ strip_cta }}
+          <span class="transition group-hover:translate-x-0.5">&rarr;</span>
+        </span>
+      {% endif %}
+    </div>
+  </a>
+  {% endif %}
+
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
       <!-- Left Content -->
