@@ -3417,7 +3417,10 @@ def group_new():
     open_games = GroupGame.query.filter_by(status='lobby').order_by(GroupGame.created_at.desc()).limit(10).all()
     return render_template('themes/quizhub/arena_group_new.html',
                            player=player, categories=sorted(categories, key=lambda c: c[1]),
-                           open_games=open_games)
+                           open_games=open_games,
+                           # So the list can say which of these are yours, and
+                           # offer to close them rather than to join them.
+                           my_key=player.session_key)
 
 
 @arena_bp.route('/group/<code>')
@@ -3443,6 +3446,57 @@ def group_lobby(code):
                            player=player, game=game, seat=seat,
                            questions_json=[q.to_dict(include_answer=False) for q in questions],
                            total_questions=len(questions))
+
+
+@arena_bp.route('/match/<match_code>/withdraw', methods=['POST'])
+def match_withdraw(match_code):
+    """Take back a duel invite nobody has accepted.
+
+    Only the player who sent it, and only while the other seat is empty. Once
+    somebody is in it they may have played a round, and a duel in progress is
+    not one person's to delete.
+    """
+    player = get_current_player(persist=False)
+    match = ArenaMatch.query.filter_by(match_code=match_code).first_or_404()
+    me = player.session_key if player else None
+
+    if not me or me != match.player1_session:
+        flash('Only whoever sent that invite can take it back.', 'error')
+        return redirect(url_for('arena.dashboard'))
+    if match.player2_session:
+        flash('Someone has already accepted that duel, so it has to play out.', 'error')
+        return redirect(url_for('arena.match_lobby', match_code=match.match_code))
+
+    ArenaRound.query.filter_by(match_id=match.id).delete()
+    db.session.delete(match)
+    db.session.commit()
+    flash('Invite withdrawn.', 'success')
+    return redirect(url_for('arena.dashboard'))
+
+
+@arena_bp.route('/group/<code>/cancel', methods=['POST'])
+def group_cancel(code):
+    """Close a lobby you opened and nobody has started playing.
+
+    Only the host, and only while it is still a lobby: once the questions are
+    live, other people are mid-game and it is not one person's to end.
+    """
+    player = get_current_player(persist=False)
+    game = GroupGame.query.filter_by(code=code.upper()).first_or_404()
+    me = player.session_key if player else None
+
+    if not me or me != game.host_key:
+        flash('Only whoever opened that lobby can close it.', 'error')
+        return redirect(url_for('arena.group_new'))
+    if game.status != 'lobby':
+        flash('That game has already started, so it has to play out.', 'error')
+        return redirect(url_for('arena.group_lobby', code=game.code))
+
+    GroupPlayer.query.filter_by(game_id=game.id).delete()
+    db.session.delete(game)
+    db.session.commit()
+    flash('Lobby closed.', 'success')
+    return redirect(url_for('arena.group_new'))
 
 
 @arena_bp.route('/group/<code>/state')

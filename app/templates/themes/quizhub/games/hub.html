@@ -93,6 +93,41 @@
           </button>
         </form>
       </div>
+
+      {# Your challenges, so one you opened and forgot is findable without the
+         original link, and callable off while nobody has taken it up. #}
+      {% if challenges %}
+      <div class="relative mt-5 pt-4 border-t border-cyan-500/20 space-y-2">
+        <div class="text-[10px] font-black uppercase text-cyan-300 tracking-wider font-mono">Your challenges</div>
+        {% for c in challenges %}
+        <div class="p-3 rounded-xl bg-slate-950/70 border border-purple-500/25 font-mono flex items-center justify-between gap-3">
+          <a href="{{ url_for('games.challenge', code=c.code) }}" class="min-w-0 block group">
+            <span class="text-xs font-bold text-white block truncate group-hover:text-cyan-300 transition">
+              {% if c.waiting %}Waiting for someone to accept{% else %}vs {{ c.opponent }}{% endif %}
+            </span>
+            <span class="text-[10px] text-slate-400">
+              {{ c.code }} &bull; {{ c.played }}/{{ c.total }} played
+              {% if not c.waiting %}&bull; you {{ c.you }}&ndash;{{ c.them }}{% endif %}
+              &bull; {{ c.days_left }}d left
+            </span>
+          </a>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <a href="{{ url_for('games.challenge', code=c.code) }}"
+               class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-600 text-slate-200 font-black text-[11px]">OPEN</a>
+            {% if c.can_cancel %}
+            <form method="POST" action="{{ url_for('games.challenge_cancel', code=c.code) }}"
+                  onsubmit="return confirm('Call off this challenge? Nobody has taken it up yet.');">
+              <button type="submit"
+                      class="px-3 py-1.5 rounded-lg bg-rose-950/60 text-rose-300 border border-rose-500/40 font-black text-[11px] hover:bg-rose-900/60 transition">
+                CANCEL
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
     </div>
 
     <!-- Game groups -->

@@ -324,6 +324,18 @@
                 WAITING ⏳
               </a>
               {% endif %}
+
+              {# An invite with an empty other seat is still yours to take
+                 back. Once somebody is in it, it plays out. #}
+              {% if not m.player2_session %}
+              <form method="POST" action="{{ url_for('arena.match_withdraw', match_code=m.match_code) }}"
+                    onsubmit="return confirm('Withdraw this invite? Nobody has accepted it yet.');">
+                <button type="submit" title="Withdraw this invite"
+                        class="px-3 py-2 rounded-xl bg-rose-950/60 text-rose-300 border border-rose-500/40 font-mono font-black text-xs hover:bg-rose-900/60 transition">
+                  ✕
+                </button>
+              </form>
+              {% endif %}
             </div>
           </div>
           {% endfor %}

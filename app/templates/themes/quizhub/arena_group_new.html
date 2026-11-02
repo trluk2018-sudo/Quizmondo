@@ -105,21 +105,39 @@
         </h2>
 
         <div class="space-y-2.5 font-mono text-xs">
+          {# Your own lobby is not something to join, so it says so and offers
+             the way out instead. Before this you could open a lobby, lose the
+             tab and have no way to find it again, let alone close it. #}
           {% for g in open_games %}
-          <a href="{{ url_for('arena.group_lobby', code=g.code) }}" class="block p-3.5 rounded-xl bg-slate-950/70 border border-purple-500/25 hover:border-cyan-400/60 transition">
+          {% set mine = (my_key and g.host_key == my_key) %}
+          <div class="p-3.5 rounded-xl border transition {% if mine %}bg-cyan-950/30 border-cyan-400/50{% else %}bg-slate-950/70 border-purple-500/25 hover:border-cyan-400/60{% endif %}">
             <div class="flex items-center justify-between gap-3">
-              <div class="min-w-0">
-                <span class="font-bold text-white block truncate">{{ g.category_name }}</span>
+              <a href="{{ url_for('arena.group_lobby', code=g.code) }}" class="min-w-0 block group">
+                <span class="font-bold text-white block truncate group-hover:text-cyan-300 transition">
+                  {% if mine %}<span class="text-cyan-400">Yours &bull;</span> {% endif %}{{ g.category_name }}
+                </span>
                 <span class="text-[10px] text-slate-400">
                   {{ g.players.count() }} / {{ g.max_players }} in &bull;
                   {{ g.total_questions }} questions &bull; {{ g.seconds_per_question }}s each
                 </span>
+              </a>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <a href="{{ url_for('arena.group_lobby', code=g.code) }}"
+                   class="px-3 py-1.5 rounded-lg font-black text-[11px] border {% if mine %}bg-slate-900 text-slate-200 border-slate-600{% else %}bg-cyan-500/20 text-cyan-300 border-cyan-500/40{% endif %}">
+                  {% if mine %}OPEN{% else %}JOIN{% endif %}
+                </a>
+                {% if mine %}
+                <form method="POST" action="{{ url_for('arena.group_cancel', code=g.code) }}"
+                      onsubmit="return confirm('Close this lobby? Anyone waiting in it will be sent back.');">
+                  <button type="submit" title="Close this lobby"
+                          class="px-3 py-1.5 rounded-lg bg-rose-950/60 text-rose-300 border border-rose-500/40 font-black text-[11px] hover:bg-rose-900/60 transition">
+                    CLOSE
+                  </button>
+                </form>
+                {% endif %}
               </div>
-              <span class="px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 font-black text-[11px] border border-cyan-500/40 shrink-0">
-                JOIN
-              </span>
             </div>
-          </a>
+          </div>
           {% else %}
           <div class="py-10 text-center space-y-2">
             <div class="text-3xl">🫥</div>

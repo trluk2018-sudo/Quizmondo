@@ -359,6 +359,26 @@ def hub():
         player_session=player.session_key, challenge_key=today_spec['key']
     ).first())
 
+    # Challenges you are in, so one opened and then forgotten is findable
+    # again. Without this the link was the only way back to it.
+    my_key = player.session_key if player else None
+    challenges = []
+    for ch in _live_challenges(my_key):
+        table = ch.standings()
+        is_creator = (my_key == ch.creator_key)
+        done = len(ch.scores_for(my_key))
+        challenges.append({
+            'code': ch.code,
+            'opponent': (ch.opponent_name if is_creator else ch.creator_name),
+            'waiting': not ch.opponent_key,
+            'can_cancel': is_creator and not ch.opponent_key,
+            'played': done,
+            'total': len(ch.games()),
+            'you': table['creator_wins'] if is_creator else table['opponent_wins'],
+            'them': table['opponent_wins'] if is_creator else table['creator_wins'],
+            'days_left': ch.days_left(),
+        })
+
     return render_template(
         'themes/quizhub/games/hub.html',
         player=player,
@@ -369,6 +389,7 @@ def hub():
         bests=bests,
         total_plays=total_plays,
         played_count=played_count,
+        challenges=challenges,
     )
 
 
@@ -677,6 +698,32 @@ def _record_challenge_run(player_key, game_key, score):
             'opponent': (ch.opponent_name if player_key == ch.creator_key else ch.creator_name) or 'your opponent',
         }
     return noted
+
+
+@games_bp.route('/challenge/<code>/cancel', methods=['POST'])
+def challenge_cancel(code):
+    """Call off a challenge nobody has taken up yet.
+
+    Only the person who opened it, and only while it is still waiting: once
+    someone has taken the other seat they have started playing games for it,
+    and it is no longer one person's to cancel.
+    """
+    ch = GameChallenge.query.filter_by(code=code.upper()).first_or_404()
+    player = get_current_player(persist=False)
+    me = player.session_key if player else None
+
+    if not me or me != ch.creator_key:
+        flash('Only whoever opened that challenge can call it off.', 'error')
+        return redirect(url_for('games.hub'))
+    if ch.opponent_key:
+        flash('Someone has already taken that challenge on, so it has to play out.', 'error')
+        return redirect(url_for('games.challenge', code=ch.code))
+
+    GameChallengeScore.query.filter_by(challenge_id=ch.id).delete()
+    db.session.delete(ch)
+    db.session.commit()
+    flash('Challenge called off.', 'success')
+    return redirect(url_for('games.hub'))
 
 
 @games_bp.route('/challenge/new', methods=['POST'])
