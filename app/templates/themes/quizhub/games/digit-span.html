@@ -38,6 +38,22 @@
 
   var statusEl = document.getElementById('dsStatus');
   var numberEl = document.getElementById('dsNumber');
+
+  // A colour per digit. A flat white run of nine numbers is genuinely hard to
+  // hold in your head -- colour gives each position something to hang on to,
+  // and the same digit is always the same colour, so the string has a shape.
+  var DIGIT_COLOURS = ['#f87171', '#fb923c', '#fbbf24', '#a3e635', '#34d399',
+                       '#2dd4bf', '#38bdf8', '#a78bfa', '#f472b6', '#e879f9'];
+
+  function paintDigits(text) {
+    numberEl.innerHTML = '';
+    String(text).split('').forEach(function (ch) {
+      var span = document.createElement('span');
+      span.textContent = ch;
+      if (ch >= '0' && ch <= '9') span.style.color = DIGIT_COLOURS[+ch];
+      numberEl.appendChild(span);
+    });
+  }
   var entryEl = document.getElementById('dsEntry');
   var typedEl = document.getElementById('dsTyped');
   var padEl = document.getElementById('dsPad');
@@ -81,7 +97,7 @@
     QMG.setMid(digits);
     QMG.setMidBar(Math.min(1, digits / 14));
     statusEl.textContent = 'Memorise';
-    numberEl.textContent = target;
+    paintDigits(target);
     numberEl.classList.remove('qmg-grow');
     void numberEl.offsetWidth;
     numberEl.classList.add('qmg-grow');
@@ -131,7 +147,7 @@
       QMG.audio.correct();
       QMG.haptic(25);
       statusEl.textContent = '✅ Correct — +' + points;
-      numberEl.textContent = target;
+      paintDigits(target);
       digits += 1;
       setTimeout(showNumber, 1100);
       return;
@@ -144,7 +160,7 @@
     QMG.shake(numberEl);
     QMG.haptic(60);
     statusEl.textContent = 'It was ' + target;
-    numberEl.textContent = target;
+    paintDigits(target);
 
     if (lives <= 0) {
       setTimeout(function () {

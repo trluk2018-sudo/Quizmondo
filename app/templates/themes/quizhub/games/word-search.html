@@ -99,9 +99,26 @@
     return { grid: g, placed: placed };
   }
 
+  // A colour per word rather than one green for all of them. Eight words all
+  // marked the same made a solved grid a green blob, and you could not see
+  // which letters belonged to which word. Inline styles, not Tailwind
+  // classes: the build is purged against the templates and would strip
+  // classes that only ever exist in JavaScript.
+  var WORD_COLOURS = [
+    '#22d3ee', '#a855f7', '#f472b6', '#34d399', '#fbbf24',
+    '#fb7185', '#60a5fa', '#a3e635', '#fb923c', '#2dd4bf'
+  ];
+  function wordColour(i) { return WORD_COLOURS[i % WORD_COLOURS.length]; }
+
+  function paintFoundCell(cell, colour) {
+    cell.className = cellClass('found');
+    cell.style.backgroundColor = colour;
+    cell.style.color = '#0f172a';
+  }
+
   function cellClass(state) {
     var base = 'aspect-square flex items-center justify-center rounded-md font-mono font-black text-[12px] sm:text-sm transition-colors duration-100 ';
-    if (state === 'found') return base + 'bg-emerald-500/90 text-slate-950';
+    if (state === 'found') return base + 'text-slate-950';
     if (state === 'live') return base + 'bg-cyan-400 text-slate-950';
     if (state === 'anchor') return base + 'bg-purple-500 text-white';
     return base + 'bg-slate-900/90 text-slate-200 border border-purple-500/15';
@@ -115,6 +132,7 @@
         var i = idx(r, c);
         var cell = document.createElement('div');
         cell.className = cellClass('idle');
+        cell.style.backgroundColor = '';
         cell.textContent = grid[r][c];
         cell.dataset.i = i;
         gridEl.appendChild(cell);
@@ -126,12 +144,18 @@
 
   function renderWordList() {
     wordsEl.innerHTML = '';
-    placements.forEach(function (p) {
+    placements.forEach(function (p, i) {
       var pill = document.createElement('span');
       var done = !!foundWords[p.word];
       pill.className = 'px-2.5 py-1 rounded-full font-mono text-[10px] sm:text-[11px] font-black border transition ' +
-        (done ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40 line-through opacity-60'
-              : 'bg-slate-900/90 text-slate-300 border-purple-500/25');
+        (done ? 'line-through' : 'bg-slate-900/90 text-slate-300 border-purple-500/25');
+      if (done) {
+        // The same colour it has in the grid, so the list is a key to it.
+        var colour = wordColour(i);
+        pill.style.backgroundColor = colour;
+        pill.style.borderColor = colour;
+        pill.style.color = '#0f172a';
+      }
       pill.textContent = p.word;
       wordsEl.appendChild(pill);
     });
@@ -139,17 +163,19 @@
     totalEl.textContent = placements.length;
   }
 
-  function markFound(path) {
-    path.forEach(function (i) { cells[i].className = cellClass('found'); });
+  function markFound(path, which) {
+    var colour = wordColour(which || 0);
+    path.forEach(function (i) { paintFoundCell(cells[i], colour); });
   }
 
   function repaintFound() {
-    placements.forEach(function (p) { if (foundWords[p.word]) markFound(p.path); });
+    placements.forEach(function (p, i) { if (foundWords[p.word]) markFound(p.path, i); });
   }
 
   function clearHighlight() {
     highlighted.forEach(function (i) {
       cells[i].className = cellClass('idle');
+      cells[i].style.backgroundColor = '';
     });
     highlighted = [];
     repaintFound();
@@ -174,7 +200,7 @@
     clearHighlight();
     if (!path) return;
     path.forEach(function (i) {
-      if (!isFoundCell(i)) { cells[i].className = cellClass('live'); }
+      if (!isFoundCell(i)) { cells[i].className = cellClass('live'); cells[i].style.backgroundColor = ''; }
     });
     highlighted = path.slice();
   }
@@ -199,7 +225,7 @@
       if (foundWords[p.word]) continue;
       if (p.word === forward || p.word === backward) {
         foundWords[p.word] = true;
-        markFound(p.path);
+        markFound(p.path, i);
         QMG.reward();
         var gained = Math.round(100 * QMG.comboMultiplier());
         QMG.addScore(gained, cells[path[Math.floor(path.length / 2)]]);
@@ -246,7 +272,7 @@
     anchor = i;
     dragging = true;
     clearHighlight();
-    if (!isFoundCell(i)) cells[i].className = cellClass('anchor');
+    if (!isFoundCell(i)) { cells[i].className = cellClass('anchor'); cells[i].style.backgroundColor = ''; }
     highlighted = [i];
     QMG.audio.tick();
   });
