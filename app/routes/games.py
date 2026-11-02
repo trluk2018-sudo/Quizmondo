@@ -736,17 +736,26 @@ def challenge_new():
     random.shuffle(keys)
     picked = keys[:GAMES_PER_CHALLENGE]
 
+    # Who it is meant for, if they said. Only a label until somebody actually
+    # takes the seat, at which point their real name replaces it -- but it
+    # makes the invite and the waiting state read like a person rather than a
+    # blank. Anyone with the link can still accept; this is not a lock.
+    friend = (request.form.get('friend_name') or '').strip()[:30]
+
     challenge = GameChallenge(
         code=new_challenge_code(),
         status='waiting',
         creator_key=player.session_key,
         creator_name=player.display_name,
         creator_avatar=player.avatar_key,
+        opponent_name=friend or None,
     )
     challenge.set_games(picked)
     db.session.add(challenge)
     db.session.commit()
-    return redirect(url_for('games.challenge', code=challenge.code))
+    # share=1 tells the page to open the invite straight away, since inviting
+    # is the whole reason they pressed the button.
+    return redirect(url_for('games.challenge', code=challenge.code, share=1))
 
 
 @games_bp.route('/challenge/<code>')

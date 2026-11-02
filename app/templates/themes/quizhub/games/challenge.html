@@ -50,13 +50,23 @@
       {% if not challenge.opponent_key %}
       <div class="p-5 rounded-2xl bg-cyan-950/30 border border-cyan-400/40 text-center space-y-3 font-mono">
         <p class="text-xs text-slate-200">
+          {% if challenge.opponent_name %}
+          Send this to <strong class="text-cyan-300">{{ challenge.opponent_name }}</strong>. The first person
+          to open it with an account takes the other seat.
+          {% else %}
           Send this link to whoever you want to take on. The first person to open it
           with an account takes the other seat.
+          {% endif %}
         </p>
-        <button type="button" onclick="shareChallenge()"
+        <button type="button" onclick="inviteOnWhatsApp()"
                 class="w-full py-3.5 px-5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider transition active:scale-95">
-          📲 Send the challenge
+          📲 Invite on WhatsApp
         </button>
+        <div class="flex items-center justify-center gap-3 text-[11px] text-slate-400">
+          <button type="button" onclick="shareChallenge()" class="hover:text-cyan-300 underline">Share another way</button>
+          <span>&bull;</span>
+          <button type="button" onclick="copyChallengeLink(this)" class="hover:text-cyan-300 underline">Copy link</button>
+        </div>
       </div>
       {% elif not has_account %}
       <div class="p-5 rounded-2xl bg-purple-950/40 border border-purple-400/40 text-center space-y-3 font-mono">
@@ -132,11 +142,50 @@
 </div>
 
 <script>
-function shareChallenge() {
-  var url = window.location.href;
-  var text = 'I have set you a Quizmondo Games Challenge — five mini games, best of five, one week. ' + url;
-  if (navigator.share) { navigator.share({ text: text, url: url }).catch(function () {}); }
-  else { window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank'); }
+var CHALLENGE_URL = window.location.href.split('?')[0];
+var CHALLENGE_FOR = {{ (challenge.opponent_name or '')|tojson }};
+
+function challengeText() {
+  var who = CHALLENGE_FOR ? (CHALLENGE_FOR + ', i') : 'I';
+  return who + "'ve set you a Quizmondo Games Challenge ⚔️\n\n" +
+    'Five mini games, one go at each, best of five wins. You have a week.\n\n' +
+    'Tap to accept:\n' + CHALLENGE_URL;
 }
+
+// Straight to WhatsApp. navigator.share is the polite option but it opens a
+// picker; this button says WhatsApp, so it goes to WhatsApp.
+function inviteOnWhatsApp() {
+  window.open('https://wa.me/?text=' + encodeURIComponent(challengeText()), '_blank');
+}
+
+function shareChallenge() {
+  if (navigator.share) {
+    navigator.share({ text: challengeText(), url: CHALLENGE_URL }).catch(function () {});
+  } else {
+    inviteOnWhatsApp();
+  }
+}
+
+function copyChallengeLink(btn) {
+  var done = function () {
+    var was = btn.textContent;
+    btn.textContent = 'Copied';
+    setTimeout(function () { btn.textContent = was; }, 1600);
+  };
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(CHALLENGE_URL).then(done).catch(function () { window.prompt('Copy this link:', CHALLENGE_URL); });
+  } else {
+    window.prompt('Copy this link:', CHALLENGE_URL);
+  }
+}
+
+// Opened straight from the Invite button, so offer the invite at once rather
+// than making them find it again. Only when nobody has taken the seat yet.
+(function () {
+  var wantsShare = /[?&]share=1/.test(window.location.search);
+  if (wantsShare && document.querySelector('[onclick="inviteOnWhatsApp()"]')) {
+    setTimeout(inviteOnWhatsApp, 400);
+  }
+})();
 </script>
 {% endblock %}
