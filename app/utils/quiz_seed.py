@@ -2,7 +2,7 @@
 import os
 import json
 from datetime import datetime, timedelta
-from ..models import db, QuizQuestion, QuizPack, PubLeague, PageModule, MenuItem, Post, Category, SiteSetting, FeaturedGame, ArenaMatch, ArenaRound
+from ..models import db, QuizQuestion, QuizPack, PubLeague, PageModule, MenuItem, Post, Category, Page, SiteSetting, FeaturedGame, ArenaMatch, ArenaRound
 from .modules import get_default_config, MODULE_DEFINITIONS
 
 SEED_PACKS = [
@@ -1585,6 +1585,39 @@ def seed_quizmondo_full_environment():
         _sync_articles(ARTICLES_FACTS, ARTICLE_CATEGORIES_FACTS, 7, 'fact articles')
     except Exception as e:
         print('Error importing fact articles:', e)
+
+    # 4d. The Never Pay To Play page, and one footer link to it.
+    # The page is kept in code and matched on slug, so the wording keeps
+    # improving on each deploy. The footer link is added once and marked, so
+    # removing it in admin does not bring it back on the next boot.
+    try:
+        from .never_pay_to_play import (
+            NPTP_SLUG, NPTP_TITLE, NPTP_EXCERPT, NPTP_META, NPTP_CONTENT)
+        page = Page.query.filter_by(slug=NPTP_SLUG).first()
+        if not page:
+            page = Page(slug=NPTP_SLUG)
+            db.session.add(page)
+        page.title = NPTP_TITLE
+        page.content = NPTP_CONTENT.strip()
+        page.excerpt = NPTP_EXCERPT
+        page.meta_description = NPTP_META
+        page.status = 'publish'
+        page.template = 'default'
+        # It lives in the footer and on the hero strip, not in the main nav
+        page.show_in_nav = False
+        db.session.commit()
+
+        if not SiteSetting.query.filter_by(key='nptp_footer_link').first():
+            exists = MenuItem.query.filter_by(location='footer', url='/' + NPTP_SLUG).first()
+            if not exists:
+                last = db.session.query(db.func.max(MenuItem.sort_order))                     .filter_by(location='footer').scalar() or 0
+                db.session.add(MenuItem(location='footer', title='Never Pay To Play',
+                                        url='/' + NPTP_SLUG, sort_order=last + 1))
+            db.session.add(SiteSetting(key='nptp_footer_link', value='1'))
+            db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print('Error seeding the Never Pay To Play page:', e)
 
     # 5. Seed the homepage layout, but only on a site that has none.
     # This used to delete every home module and rebuild the default ten on every

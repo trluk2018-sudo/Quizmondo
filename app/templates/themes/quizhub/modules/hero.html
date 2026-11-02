@@ -16,14 +16,37 @@
      The negative margin cancels the section's own top padding so it sits at
      the very top edge rather than floating in the middle of it. #}
   {% if cfg.get('strip_enabled', '1') != '0' and cfg.get('strip_text', 'Never pay to play ...') %}
+  <style>
+    /* The strip earns its place by moving a little: the gradient drifts, a
+       shine crosses it now and then, and the arrow nudges on hover. Anyone who
+       has asked their device for less motion gets a plain bar instead. */
+    .qm-strip { background-size: 220% 100%; animation: qmStripDrift 9s ease-in-out infinite; }
+    .qm-strip::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,.55) 45%,
+                  rgba(255,255,255,.55) 55%, transparent 80%);
+      background-size: 220% 100%; animation: qmStripShine 6s ease-in-out infinite;
+    }
+    .qm-strip-pulse { animation: qmStripPulse 2.6s ease-in-out infinite; }
+    @keyframes qmStripDrift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+    @keyframes qmStripShine { 0% { background-position: 140% 0; } 55%, 100% { background-position: -40% 0; } }
+    @keyframes qmStripPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+    @media (prefers-reduced-motion: reduce) {
+      .qm-strip, .qm-strip::after, .qm-strip-pulse { animation: none; }
+      .qm-strip::after { display: none; }
+    }
+  </style>
   <a href="{{ cfg.get('strip_url') or 'https://neverpaytoplay.co.uk' }}"
      {% if (cfg.get('strip_url') or 'https://neverpaytoplay.co.uk').startswith('http') %}target="_blank" rel="noopener"{% endif %}
-     class="group relative z-20 block -mt-16 lg:-mt-24 mb-10 lg:mb-14 w-full
-            bg-gradient-to-r from-amber-500 via-orange-500 to-pink-600
-            hover:from-amber-400 hover:via-orange-400 hover:to-pink-500 transition">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5
+     class="qm-strip group relative z-20 block overflow-hidden -mt-16 lg:-mt-24 mb-10 lg:mb-14 w-full
+            border-y border-amber-300/50 shadow-lg shadow-orange-900/30
+            bg-gradient-to-r from-amber-400 via-pink-500 via-40% to-amber-400
+            hover:brightness-110 transition">
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5
                 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center">
-      <span class="font-mono text-sm sm:text-base font-black uppercase tracking-wider text-slate-950">
+      <span class="qm-strip-pulse inline-block text-base sm:text-lg leading-none">🎮</span>
+      <span class="font-mono text-sm sm:text-base font-black uppercase tracking-wider text-slate-950
+                   drop-shadow-[0_1px_0_rgba(255,255,255,.35)]">
         {{ cfg.get('strip_text', 'Never pay to play ...') }}
       </span>
       {% set strip_sub = cfg.get('strip_subtext', 'Every game, quiz and duel on Quizmondo is free.') %}
@@ -34,10 +57,11 @@
       {% endif %}
       {% set strip_cta = cfg.get('strip_cta', 'neverpaytoplay.co.uk') %}
       {% if strip_cta %}
-        <span class="inline-flex items-center gap-1 font-mono text-[11px] sm:text-xs font-black
-                     text-slate-950 underline decoration-slate-900/40 underline-offset-2">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full
+                     bg-slate-950 text-amber-300 font-mono text-[11px] sm:text-xs font-black
+                     shadow group-hover:bg-slate-900 transition">
           {{ strip_cta }}
-          <span class="transition group-hover:translate-x-0.5">&rarr;</span>
+          <span class="transition group-hover:translate-x-1">&rarr;</span>
         </span>
       {% endif %}
     </div>
