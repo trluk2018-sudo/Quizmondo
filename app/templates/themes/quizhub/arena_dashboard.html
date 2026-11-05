@@ -87,6 +87,191 @@
       </div>
     </div>
 
+    <!-- COMPLETED BATTLES & DUELS SECTION (Logged-in Players with finished matches) -->
+    {% if completed_battles_summary and completed_battles_summary.total > 0 %}
+    <div id="completedBattlesSection" class="p-5 sm:p-7 rounded-3xl bg-gradient-to-br from-slate-950 via-purple-950/25 to-slate-950 border border-purple-500/30 shadow-2xl space-y-6">
+      
+      <!-- Section Header with Performance Meter -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-purple-500/20">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2.5">
+            <span class="text-xl sm:text-2xl">⚔️</span>
+            <h2 class="text-lg sm:text-xl font-black font-mono text-white tracking-wide">COMPLETED BATTLES &amp; DUELS</h2>
+            <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-black font-mono">
+              {{ completed_battles_summary.win_rate_pct }}% WIN RATE
+            </span>
+          </div>
+          <p class="text-xs font-mono text-slate-400">
+            Combat history &amp; instant rematches across Mini-Games and Quiz Arena. You are always listed first.
+          </p>
+        </div>
+
+        <!-- Combat Performance Indicator / Form Meter -->
+        <div class="flex items-center gap-4 bg-slate-900/90 border border-purple-500/30 rounded-2xl p-3 px-4 font-mono self-start md:self-auto">
+          <!-- Record Breakdown -->
+          <div class="text-left">
+            <div class="text-[10px] text-slate-400 font-bold uppercase">COMBAT RECORD</div>
+            <div class="text-xs font-black text-white">
+              <span class="text-emerald-400">{{ completed_battles_summary.wins }}W</span>
+              <span class="text-slate-500">•</span>
+              <span class="text-rose-400">{{ completed_battles_summary.losses }}L</span>
+              {% if completed_battles_summary.ties > 0 %}
+              <span class="text-slate-500">•</span>
+              <span class="text-amber-400">{{ completed_battles_summary.ties }}T</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="h-7 w-px bg-purple-500/30"></div>
+
+          <!-- Recent Form Tracker (e.g. W W L W W) -->
+          <div>
+            <div class="text-[10px] text-slate-400 font-bold uppercase mb-1">RECENT FORM</div>
+            <div class="flex items-center gap-1">
+              {% for f in completed_battles_summary.recent_form %}
+                {% if f == 'W' %}
+                <span class="w-5 h-5 rounded-md bg-emerald-500 text-slate-950 font-black text-[10px] flex items-center justify-center shadow-sm shadow-emerald-500/40" title="Victory">W</span>
+                {% elif f == 'L' %}
+                <span class="w-5 h-5 rounded-md bg-rose-500 text-white font-black text-[10px] flex items-center justify-center shadow-sm shadow-rose-500/40" title="Defeat">L</span>
+                {% else %}
+                <span class="w-5 h-5 rounded-md bg-amber-500 text-slate-950 font-black text-[10px] flex items-center justify-center shadow-sm shadow-amber-500/40" title="Tie">T</span>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dual-Tone Performance Meter Bar -->
+      <div class="space-y-1.5">
+        <div class="flex justify-between text-[11px] font-mono text-slate-400">
+          <span class="text-emerald-400 font-bold flex items-center gap-1">
+            <span>⚡ Momentum Meter</span>
+            <span>({{ completed_battles_summary.win_rate_pct }}% Win Ratio)</span>
+          </span>
+          <span class="text-slate-400">{{ completed_battles_summary.total }} Total Contests</span>
+        </div>
+        <div class="w-full h-2 rounded-full bg-slate-900 border border-purple-500/20 overflow-hidden flex">
+          <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500" style="width: {{ completed_battles_summary.win_rate_pct }}%;"></div>
+          <div class="h-full bg-gradient-to-r from-rose-500 to-rose-600 transition-all duration-500" style="width: {{ 100 - completed_battles_summary.win_rate_pct }}%;"></div>
+        </div>
+      </div>
+
+      <!-- Filter Tabs: All, 5 x Mini Game, Quiz & Trivia -->
+      <div class="flex flex-wrap items-center gap-2 pt-1">
+        <button type="button" onclick="filterCompletedBattles('all', this)" class="completed-filter-btn active px-3.5 py-1.5 rounded-xl font-mono font-bold text-xs bg-purple-600 text-white shadow-md border border-purple-400 transition">
+          All ({{ completed_battles_summary.total }})
+        </button>
+        <button type="button" onclick="filterCompletedBattles('games', this)" class="completed-filter-btn px-3.5 py-1.5 rounded-xl font-mono font-bold text-xs bg-slate-900 text-slate-300 hover:text-white border border-purple-500/30 transition">
+          5 x Mini Game
+        </button>
+        <button type="button" onclick="filterCompletedBattles('quiz', this)" class="completed-filter-btn px-3.5 py-1.5 rounded-xl font-mono font-bold text-xs bg-slate-900 text-slate-300 hover:text-white border border-purple-500/30 transition">
+          Quiz &amp; Trivia
+        </button>
+      </div>
+
+      <!-- Completed Duel Cards Container -->
+      <div id="completedDuelList" class="space-y-3">
+        {% for duel in completed_battles_summary.duels %}
+          {% if loop.index == 4 %}
+            <!-- Start of collapsed cards (4th match onwards) -->
+            <div id="completedDuelsExpanded" class="hidden space-y-3">
+          {% endif %}
+
+          <div class="completed-duel-item p-4 rounded-2xl bg-slate-900/80 border border-purple-500/20 hover:border-cyan-400/50 transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-4" data-type="{{ duel.type }}">
+            
+            <!-- Left & Center: Matchup Head-to-Head (YOU ALWAYS FIRST ON LEFT) -->
+            <div class="flex items-center gap-3 sm:gap-5 min-w-0 flex-1">
+              
+              <!-- You (Left) -->
+              <div class="flex items-center gap-2 min-w-0">
+                <div class="shrink-0">
+                  {{ render_avatar_badge(duel.you_avatar, duel.you_name, 'sm') }}
+                </div>
+                <div class="min-w-0">
+                  <div class="text-xs sm:text-sm font-black font-mono text-cyan-300 truncate max-w-[120px] sm:max-w-[160px]">
+                    {{ duel.you_name }}
+                  </div>
+                  <div class="text-[10px] font-mono text-slate-400 uppercase">You</div>
+                </div>
+              </div>
+
+              <!-- Center Score & Outcome Pill -->
+              <div class="shrink-0 flex flex-col items-center px-2 sm:px-3">
+                <div class="text-sm sm:text-base font-black font-mono px-3 py-1 rounded-xl bg-slate-950 border {% if duel.outcome == 'won' %}border-emerald-500/40 text-emerald-400{% elif duel.outcome == 'lost' %}border-rose-500/40 text-rose-400{% else %}border-amber-500/40 text-amber-300{% endif %} flex items-center gap-2">
+                  <span>{{ duel.you_score }}</span>
+                  <span class="text-slate-500 font-normal">-</span>
+                  <span class="text-slate-400">{{ duel.opp_score }}</span>
+                </div>
+                <div class="mt-1">
+                  {% if duel.outcome == 'won' %}
+                  <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-black font-mono uppercase tracking-wider">🏆 Won</span>
+                  {% elif duel.outcome == 'lost' %}
+                  <span class="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[9px] font-black font-mono uppercase tracking-wider">💀 Defeat</span>
+                  {% else %}
+                  <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-black font-mono uppercase tracking-wider">🤝 Tie</span>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Opponent (Right) -->
+              <div class="flex items-center gap-2 min-w-0">
+                <div class="shrink-0">
+                  {{ render_avatar_badge(duel.opp_avatar, duel.opp_name, 'sm') }}
+                </div>
+                <div class="min-w-0">
+                  <div class="text-xs sm:text-sm font-bold font-mono text-white truncate max-w-[120px] sm:max-w-[160px]">
+                    {{ duel.opp_name }}
+                  </div>
+                  <div class="text-[10px] font-mono text-slate-400 uppercase">Opponent</div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Right: Meta Tags & Actions -->
+            <div class="flex items-center justify-between md:justify-end gap-3 pt-2 md:pt-0 border-t md:border-t-0 border-purple-500/10">
+              <div class="flex flex-col text-left md:text-right font-mono">
+                <div class="flex items-center md:justify-end gap-1.5">
+                  <span class="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase {% if duel.type == 'games' %}bg-purple-900/50 text-purple-300 border border-purple-500/30{% else %}bg-cyan-900/50 text-cyan-300 border border-cyan-500/30{% endif %}">
+                    {{ duel.type_label }}
+                  </span>
+                  <span class="text-[10px] text-slate-400">{{ duel.date_str }}</span>
+                </div>
+                <div class="text-[10px] text-slate-500 mt-0.5">{{ duel.summary }}</div>
+              </div>
+
+              <div class="flex items-center gap-2 shrink-0">
+                <a href="{{ duel.details_url }}" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs font-bold transition">
+                  Standings
+                </a>
+                <a href="{{ duel.rematch_url }}" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-mono text-xs font-black uppercase tracking-wider shadow transition transform hover:scale-105 flex items-center gap-1">
+                  <span>Rematch</span>
+                  <span>⚔️</span>
+                </a>
+              </div>
+            </div>
+
+          </div>
+
+          {% if loop.last and loop.index > 3 %}
+            </div> <!-- End of collapsed cards container -->
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <!-- Expand / Collapse Accordion Button (Only if > 3 matches) -->
+      {% if completed_battles_summary.total > 3 %}
+      <div class="text-center pt-2">
+        <button id="toggleCompletedDuelsBtn" type="button" onclick="toggleCompletedDuels()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-purple-500/30 hover:border-cyan-400 text-cyan-300 font-mono text-xs font-bold transition transform hover:scale-105">
+          <span id="toggleCompletedDuelsText">View More Completed Duels ({{ completed_battles_summary.total - 3 }} More) ▾</span>
+        </button>
+      </div>
+      {% endif %}
+
+    </div>
+    {% endif %}
+
     <!-- PRIMARY ACTION CARDS -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       
@@ -148,8 +333,8 @@
         <button type="button" data-duel-tab="turn"
                 class="qm-tab shrink-0 px-2.5 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wide sm:tracking-wider whitespace-nowrap transition flex items-center gap-1.5 sm:gap-2">
           <span>⚡</span><span>Your turn</span>
-          {% if incoming_challenges or bot_matches %}
-          <span class="px-1.5 py-0.5 rounded-full bg-emerald-400 text-slate-950 text-[10px] font-black">{{ (incoming_challenges|length) + (bot_matches|length) }}</span>
+          {% if incoming_challenges or bot_matches or my_games_challenges.your_turn %}
+          <span class="px-1.5 py-0.5 rounded-full bg-emerald-400 text-slate-950 text-[10px] font-black">{{ (incoming_challenges|length) + (bot_matches|length) + (my_games_challenges.your_turn|length) }}</span>
           {% endif %}
         </button>
         <button type="button" data-duel-tab="waiting"
@@ -157,8 +342,8 @@
           {# "Waiting on them" pushes Friends off the edge of a 375px screen,
              and three tabs should all be visible without scrolling for one. #}
           <span>⏳</span><span class="sm:hidden">Waiting</span><span class="hidden sm:inline">Waiting on them</span>
-          {% if outgoing_invites %}
-          <span class="px-1.5 py-0.5 rounded-full bg-slate-700 text-slate-200 text-[10px] font-black">{{ outgoing_invites|length }}</span>
+          {% if outgoing_invites or my_games_challenges.waiting %}
+          <span class="px-1.5 py-0.5 rounded-full bg-slate-700 text-slate-200 text-[10px] font-black">{{ (outgoing_invites|length) + (my_games_challenges.waiting|length) }}</span>
           {% endif %}
         </button>
         <button type="button" data-duel-tab="friends"
@@ -260,7 +445,40 @@
         </div>
       </div>
       {% endif %}
-        {% if not incoming_challenges and not bot_matches %}
+
+      {# Games Challenges belong here too: somebody is waiting on somebody,
+         which is what these two lists are for. #}
+      {% if my_games_challenges.your_turn %}
+      <div class="space-y-3 font-mono">
+        <div class="flex items-center justify-between border-b border-purple-500/20 pb-2">
+          <h3 class="text-base font-black text-cyan-300 flex items-center gap-2">
+            <span>⚔️</span> GAMES CHALLENGES ({{ my_games_challenges.your_turn|length }})
+          </h3>
+          <span class="text-[11px] text-slate-400">Five mini games, best of five</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {% for c in my_games_challenges.your_turn %}
+          <div class="p-4 rounded-2xl bg-slate-950/80 border border-cyan-500/30 flex items-center justify-between gap-4">
+            <div class="min-w-0">
+              <div class="font-mono font-bold text-sm text-white truncate">
+                {% if c.accepted %}vs {{ c.opponent }}{% elif c.opponent %}Waiting for {{ c.opponent }}{% else %}Waiting for anyone{% endif %}
+              </div>
+              <div class="text-xs font-mono text-slate-400">
+                {{ c.played }}/{{ c.total }} played
+                {% if c.accepted %}&bull; you {{ c.you }}&ndash;{{ c.them }}{% endif %}
+                &bull; {{ c.days_left }}d left
+              </div>
+            </div>
+            <a href="{{ url_for('games.challenge', code=c.code) }}"
+               class="shrink-0 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-slate-950 font-mono font-black text-xs uppercase tracking-wider">
+              Play 🎮
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+        {% if not incoming_challenges and not bot_matches and not my_games_challenges.your_turn %}
         <p class="p-5 rounded-2xl bg-slate-950/70 border border-purple-500/20 text-xs font-mono text-slate-400 text-center">
           Nothing is waiting on you. Challenge a friend above, or take on Cyber Bot Nova.
         </p>
@@ -268,6 +486,39 @@
       </div>
 
       <div data-duel-panel="waiting" class="space-y-6 hidden">
+      {# Games Challenges belong here too: somebody is waiting on somebody,
+         which is what these two lists are for. #}
+      {% if my_games_challenges.waiting %}
+      <div class="space-y-3 font-mono">
+        <div class="flex items-center justify-between border-b border-purple-500/20 pb-2">
+          <h3 class="text-base font-black text-cyan-300 flex items-center gap-2">
+            <span>⚔️</span> GAMES CHALLENGES ({{ my_games_challenges.waiting|length }})
+          </h3>
+          <span class="text-[11px] text-slate-400">Five mini games, best of five</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {% for c in my_games_challenges.waiting %}
+          <div class="p-4 rounded-2xl bg-slate-950/80 border border-cyan-500/30 flex items-center justify-between gap-4">
+            <div class="min-w-0">
+              <div class="font-mono font-bold text-sm text-white truncate">
+                {% if c.accepted %}vs {{ c.opponent }}{% elif c.opponent %}Waiting for {{ c.opponent }}{% else %}Waiting for anyone{% endif %}
+              </div>
+              <div class="text-xs font-mono text-slate-400">
+                {{ c.played }}/{{ c.total }} played
+                {% if c.accepted %}&bull; you {{ c.you }}&ndash;{{ c.them }}{% endif %}
+                &bull; {{ c.days_left }}d left
+              </div>
+            </div>
+            <a href="{{ url_for('games.challenge', code=c.code) }}"
+               class="shrink-0 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-slate-950 font-mono font-black text-xs uppercase tracking-wider">
+              View
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
       <!-- SECTION 2: OUTGOING CHALLENGES & INVITES (WhatsApp & Online Invites You Sent) -->
       <div class="space-y-3 font-mono">
         <div class="flex items-center justify-between border-b border-purple-500/20 pb-2">
@@ -692,7 +943,7 @@
 
   // Open on whatever is waiting on you, since that is the reason to look. Only
   // fall back to the remembered tab when there is nothing of yours to do.
-  var hasTurn = root.querySelector('[data-duel-panel="turn"] [data-duel-card], [data-duel-panel="turn"] a[href*="/arena/match/"]');
+  var hasTurn = root.querySelector('[data-duel-panel="turn"] [data-duel-card], [data-duel-panel="turn"] a[href*="/arena/match/"], [data-duel-panel="turn"] a[href*="/games/challenge/"]');
   var remembered = null;
   try { remembered = localStorage.getItem(REMEMBER); } catch (e) { /* ignore */ }
   if (hasTurn || !remembered || !select(remembered)) select('turn');
@@ -774,6 +1025,53 @@ function selectAvatarCard(avatarKey, avatarName) {
     var form = document.getElementById('avatarForm');
     if (form) form.submit();
   });
+}
+
+// Filter Completed Battles: 'all', 'games', 'quiz'
+function filterCompletedBattles(type, btn) {
+  var btns = document.querySelectorAll('.completed-filter-btn');
+  btns.forEach(function(b) {
+    b.classList.remove('bg-purple-600', 'text-white', 'border-purple-400');
+    b.classList.add('bg-slate-900', 'text-slate-300', 'border-purple-500/30');
+  });
+  if (btn) {
+    btn.classList.add('bg-purple-600', 'text-white', 'border-purple-400');
+    btn.classList.remove('bg-slate-900', 'text-slate-300', 'border-purple-500/30');
+  }
+
+  // If a specific filter is clicked and items are in the expanded block, expand it so all filtered items are visible
+  var expanded = document.getElementById('completedDuelsExpanded');
+  if (expanded && type !== 'all') {
+    expanded.classList.remove('hidden');
+    var toggleText = document.getElementById('toggleCompletedDuelsText');
+    if (toggleText) toggleText.textContent = 'Show Less ▴';
+  }
+
+  var items = document.querySelectorAll('.completed-duel-item');
+  items.forEach(function(item) {
+    var itemType = item.getAttribute('data-type');
+    if (type === 'all' || itemType === type) {
+      item.style.display = '';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+}
+
+// Toggle Expanded Completed Duels
+function toggleCompletedDuels() {
+  var expanded = document.getElementById('completedDuelsExpanded');
+  var text = document.getElementById('toggleCompletedDuelsText');
+  if (!expanded) return;
+
+  if (expanded.classList.contains('hidden')) {
+    expanded.classList.remove('hidden');
+    if (text) text.textContent = 'Show Less ▴';
+  } else {
+    expanded.classList.add('hidden');
+    var remaining = {{ (completed_battles_summary.total - 3) if (completed_battles_summary and completed_battles_summary.total > 3) else 0 }};
+    if (text) text.textContent = 'View More Completed Duels (' + remaining + ' More) ▾';
+  }
 }
 
 // Register Service Worker

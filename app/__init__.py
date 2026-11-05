@@ -807,11 +807,12 @@ def _seed_defaults():
         from .models import QuizPack
         current_seed_ver = SiteSetting.get('quizmondo_seed_version')
         if current_seed_ver != '2026.10.26.v3' or QuizPack.query.count() < 15:
-            from app.utils.quiz_seed import seed_quizmondo_full_environment
+            from .utils.quiz_seed import seed_quizmondo_full_environment
             seed_quizmondo_full_environment()
             SiteSetting.set('quizmondo_seed_version', '2026.10.26.v3')
     except Exception as e:
-        app.logger.warning(f"Could not synchronize quizmondo seed environment: {e}")
+        import logging
+        logging.getLogger(__name__).warning(f"Could not synchronize quizmondo seed environment: {e}")
 
     # Enforce default role hierarchy: trevorl is a standard player, primary admin is super_admin/admin
     try:

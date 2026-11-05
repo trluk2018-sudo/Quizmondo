@@ -133,6 +133,206 @@ def _remember_qids(ids):
     session[RECENT_QIDS] = (list(ids) + recent)[:RECENT_MEMORY]
 
 
+def _dashboard_challenges(player_key):
+    """Games Challenges, shaped for the duels dashboard.
+
+    A challenge is a duel in every way that matters to somebody looking at
+    this page -- somebody is waiting on somebody -- so it belongs in the same
+    two lists rather than only on the mini games hub. Queried here rather than
+    imported from the games blueprint, which imports from this one.
+    """
+    from ..models_challenge import GameChallenge
+    if not player_key:
+        return {'your_turn': [], 'waiting': []}
+
+    rows = GameChallenge.query.filter(
+        GameChallenge.status != 'complete',
+        db.or_(GameChallenge.creator_key == player_key,
+               GameChallenge.opponent_key == player_key),
+    ).order_by(GameChallenge.created_at.desc()).all()
+
+    your_turn, waiting = [], []
+    for ch in rows:
+        if ch.expired:
+            continue
+        is_creator = (player_key == ch.creator_key)
+        table = ch.standings()
+        played = len(ch.scores_for(player_key))
+        total = len(ch.games())
+        item = {
+            'code': ch.code,
+            'opponent': (ch.opponent_name if is_creator else ch.creator_name),
+            'accepted': bool(ch.opponent_key),
+            'played': played,
+            'total': total,
+            'you': table['creator_wins'] if is_creator else table['opponent_wins'],
+            'them': table['opponent_wins'] if is_creator else table['creator_wins'],
+            'days_left': ch.days_left(),
+        }
+        # Games of yours left to play means it is on you; otherwise you are
+        # waiting, either for them to play or for anyone to accept at all.
+        (your_turn if played < total else waiting).append(item)
+    return {'your_turn': your_turn, 'waiting': waiting}
+
+
+def _dashboard_completed(player):
+    """Completed Battles & Duels across 5-Mini-Game Challenges and Arena Quiz Duels.
+
+    Only displayed for authenticated (logged-in) players who have completed matches.
+    The current player is ALWAYS positioned first on the left ('You') with their score
+    leading, regardless of whether they created the match or joined as a challenger.
+    """
+    if not player or not session.get('user_id'):
+        return None
+
+    from ..models_challenge import GameChallenge
+    completed_items = []
+
+    # 1. Fetch completed 5x Mini-Game Challenges
+    try:
+        challenges = GameChallenge.query.filter(
+            db.or_(GameChallenge.creator_key == player.session_key,
+                   GameChallenge.opponent_key == player.session_key)
+        ).order_by(GameChallenge.created_at.desc()).all()
+
+        for ch in challenges:
+            total_games = len(ch.games())
+            played_creator = len(ch.scores_for(ch.creator_key))
+            played_opponent = len(ch.scores_for(ch.opponent_key)) if ch.opponent_key else 0
+
+            is_both_done = bool(ch.opponent_key and total_games > 0 and played_creator >= total_games and played_opponent >= total_games)
+            is_expired_with_play = bool(ch.expired and (played_creator > 0 or played_opponent > 0))
+
+            if not (ch.status == 'complete' or is_both_done or is_expired_with_play):
+                continue
+
+            if is_both_done and ch.status != 'complete':
+                ch.status = 'complete'
+                db.session.commit()
+
+            is_creator = (player.session_key == ch.creator_key)
+            table = ch.standings()
+
+            opp_name = (ch.opponent_name if is_creator else ch.creator_name) or 'Challenger'
+            opp_avatar = (ch.opponent_avatar if is_creator else ch.creator_avatar) or 'quizzy'
+            opp_key = ch.opponent_key if is_creator else ch.creator_key
+
+            you_score = table['creator_wins'] if is_creator else table['opponent_wins']
+            opp_score = table['opponent_wins'] if is_creator else table['creator_wins']
+
+            if you_score > opp_score:
+                outcome = 'won'
+            elif opp_score > you_score:
+                outcome = 'lost'
+            else:
+                outcome = 'tie'
+
+            sort_dt = getattr(ch, 'updated_at', None) or getattr(ch, 'created_at', None) or datetime.utcnow()
+
+            completed_items.append({
+                'type': 'games',
+                'type_label': '5 x Mini-Game',
+                'code': ch.code,
+                'you_name': player.display_name or 'You',
+                'you_avatar': player.avatar_key or 'quizzy',
+                'opp_name': opp_name,
+                'opp_avatar': opp_avatar,
+                'opp_key': opp_key,
+                'you_score': you_score,
+                'opp_score': opp_score,
+                'outcome': outcome,
+                'summary': f"{total_games} Mini-Games",
+                'date_str': sort_dt.strftime('%b %d') if sort_dt else 'Recent',
+                'sort_date': sort_dt,
+                'details_url': url_for('games.challenge', code=ch.code),
+                'rematch_url': url_for('games.challenge_new', friend_name=opp_name),
+            })
+    except Exception:
+        db.session.rollback()
+
+    # 2. Fetch completed Quiz & Trivia Arena Matches
+    try:
+        finished_matches = ArenaMatch.query.filter(
+            (ArenaMatch.player1_session == player.session_key) | (ArenaMatch.player2_session == player.session_key),
+            ArenaMatch.status.in_(['completed', 'forfeited'])
+        ).order_by(ArenaMatch.updated_at.desc()).all()
+
+        for m in finished_matches:
+            is_p1 = (m.player1_session == player.session_key)
+            opp_name = (m.player2_name if is_p1 else m.player1_name) or ('Cyber Bot Nova' if m.is_bot else 'Opponent')
+            opp_avatar = (m.player2_avatar if is_p1 else m.player1_avatar) or ('nova' if m.is_bot else 'quizzy')
+            opp_session = m.player2_session if is_p1 else m.player1_session
+
+            you_score = m.p1_total_score if is_p1 else m.p2_total_score
+            opp_score = m.p2_total_score if is_p1 else m.p1_total_score
+
+            if m.status == 'forfeited':
+                if (m.winner == 1 and is_p1) or (m.winner == 2 and not is_p1):
+                    outcome = 'won'
+                else:
+                    outcome = 'lost'
+            else:
+                if you_score > opp_score:
+                    outcome = 'won'
+                elif opp_score > you_score:
+                    outcome = 'lost'
+                else:
+                    outcome = 'tie'
+
+            sort_dt = m.updated_at or m.created_at or datetime.utcnow()
+
+            if m.is_bot:
+                rematch_url = url_for('arena.create_match', opponent_mode='bot')
+            elif opp_session and opp_session not in ('pending_invite', 'online_matchmaking'):
+                rematch_url = url_for('arena.challenge_fresh', target_session=opp_session)
+            else:
+                rematch_url = url_for('arena.match_lobby', match_code=m.match_code)
+
+            completed_items.append({
+                'type': 'quiz',
+                'type_label': 'Quiz & Trivia',
+                'code': m.match_code,
+                'you_name': player.display_name or 'You',
+                'you_avatar': player.avatar_key or 'quizzy',
+                'opp_name': opp_name,
+                'opp_avatar': opp_avatar,
+                'opp_key': opp_session,
+                'you_score': you_score,
+                'opp_score': opp_score,
+                'outcome': outcome,
+                'summary': "6-Round Arena Duel" if m.current_round >= 6 else "Arena Quiz Duel",
+                'date_str': sort_dt.strftime('%b %d') if sort_dt else 'Recent',
+                'sort_date': sort_dt,
+                'details_url': url_for('arena.match_lobby', match_code=m.match_code),
+                'rematch_url': rematch_url,
+            })
+    except Exception:
+        db.session.rollback()
+
+    if not completed_items:
+        return None
+
+    # Chronological sort: newest completed first
+    completed_items.sort(key=lambda x: x['sort_date'] or datetime.min, reverse=True)
+
+    total = len(completed_items)
+    wins = sum(1 for item in completed_items if item['outcome'] == 'won')
+    losses = sum(1 for item in completed_items if item['outcome'] == 'lost')
+    ties = sum(1 for item in completed_items if item['outcome'] == 'tie')
+    win_rate_pct = round((wins / total) * 100) if total > 0 else 0
+    recent_form = [item['outcome'][0].upper() for item in completed_items[:5]]
+
+    return {
+        'total': total,
+        'wins': wins,
+        'losses': losses,
+        'ties': ties,
+        'win_rate_pct': win_rate_pct,
+        'recent_form': recent_form,
+        'duels': completed_items,
+    }
+
+
 def get_random_questions(category_slug=None, count=3, exclude_ids=None, difficulty=None):
     """Questions for duels, pub leagues and rounds, avoiding recent repeats.
 
@@ -681,9 +881,14 @@ def dashboard():
     # Available Packs
     packs = QuizPack.query.order_by(QuizPack.created_at.desc()).limit(6).all()
 
+    # Completed Battles & Duels Summary (Only for logged-in players with finished games)
+    completed_battles_summary = _dashboard_completed(player)
+
     return render_template(
         'themes/quizhub/arena_dashboard.html',
         player=player,
+        my_games_challenges=_dashboard_challenges(player.session_key),
+        completed_battles_summary=completed_battles_summary,
         active_matches=active_matches,
         incoming_challenges=incoming_challenges,
         outgoing_invites=outgoing_invites,
