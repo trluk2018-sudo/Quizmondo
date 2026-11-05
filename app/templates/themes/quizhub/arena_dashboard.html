@@ -215,18 +215,20 @@
               </div>
 
               <!-- Middle Versus Clash: You (Left) vs Center VS vs Opponent (Right) -->
-              <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 py-0.5">
-                <!-- You (Left) -->
-                <div class="flex items-center gap-2 min-w-0">
-                  <div class="shrink-0">
+              <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4 py-2">
+                <!-- You (Left: Avatar on top, full name, score) -->
+                <div class="flex flex-col items-center text-center min-w-0">
+                  <div class="shrink-0 mb-1.5">
                     {{ render_avatar_badge(duel.you_avatar, duel.you_name, 'sm') }}
                   </div>
-                  <div class="min-w-0 flex-1">
-                    <div class="text-xs sm:text-sm font-black font-mono text-cyan-300 leading-tight line-clamp-2" title="{{ duel.you_name }}">
+                  <div class="w-full min-w-0 px-1">
+                    <div class="text-xs sm:text-sm font-black font-mono text-cyan-300 leading-snug break-words" title="{{ duel.you_name }}">
                       {{ duel.you_name }}
                     </div>
-                    <div class="text-[10px] font-mono text-slate-400 uppercase font-bold">You</div>
-                    <div class="text-base sm:text-lg font-black font-mono {% if duel.outcome == 'won' %}text-emerald-400{% elif duel.outcome == 'lost' %}text-rose-400{% else %}text-amber-300{% endif %}">
+                    <div class="text-[9px] font-mono text-slate-400 uppercase font-bold tracking-wider mt-0.5">
+                      You
+                    </div>
+                    <div class="text-base sm:text-lg font-black font-mono mt-1 {% if duel.outcome == 'won' %}text-emerald-400{% elif duel.outcome == 'lost' %}text-rose-400{% else %}text-amber-300{% endif %}">
                       {{ duel.you_score }}
                     </div>
                   </div>
@@ -234,24 +236,26 @@
 
                 <!-- Center VS -->
                 <div class="shrink-0 flex flex-col items-center justify-center px-1">
-                  <span class="px-2 py-1 rounded-xl bg-slate-950 border border-purple-500/40 text-[10px] font-black font-mono text-slate-400 tracking-wider">
+                  <span class="px-2.5 py-1 rounded-xl bg-slate-950 border border-purple-500/40 text-[10px] font-black font-mono text-slate-400 tracking-wider shadow-inner">
                     VS
                   </span>
                 </div>
 
-                <!-- Opponent (Right) -->
-                <div class="flex items-center justify-end gap-2 min-w-0 text-right">
-                  <div class="min-w-0 flex-1">
-                    <div class="text-xs sm:text-sm font-bold font-mono text-white leading-tight line-clamp-2" title="{{ duel.opp_name }}">
+                <!-- Opponent (Right: Avatar on top, full name, score) -->
+                <div class="flex flex-col items-center text-center min-w-0">
+                  <div class="shrink-0 mb-1.5">
+                    {{ render_avatar_badge(duel.opp_avatar, duel.opp_name, 'sm') }}
+                  </div>
+                  <div class="w-full min-w-0 px-1">
+                    <div class="text-xs sm:text-sm font-bold font-mono text-white leading-snug break-words" title="{{ duel.opp_name }}">
                       {{ duel.opp_name }}
                     </div>
-                    <div class="text-[10px] font-mono text-slate-400 uppercase font-bold">Opponent</div>
-                    <div class="text-base sm:text-lg font-black font-mono text-slate-300">
+                    <div class="text-[9px] font-mono text-slate-400 uppercase font-bold tracking-wider mt-0.5">
+                      Opponent
+                    </div>
+                    <div class="text-base sm:text-lg font-black font-mono text-slate-300 mt-1">
                       {{ duel.opp_score }}
                     </div>
-                  </div>
-                  <div class="shrink-0">
-                    {{ render_avatar_badge(duel.opp_avatar, duel.opp_name, 'sm') }}
                   </div>
                 </div>
               </div>
