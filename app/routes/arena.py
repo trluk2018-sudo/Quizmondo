@@ -906,10 +906,16 @@ def dashboard():
 @arena_bp.route('/new', methods=['GET', 'POST'])
 def create_match():
     """Create a new head-to-head match or challenge (bot, friend, or online matchmaking)."""
-    player = get_current_player()
     opponent_mode = request.form.get('opponent_mode') or request.args.get('opponent_mode', 'friend')  # 'friend', 'bot', 'online'
     category_slug = request.form.get('category_slug') or request.args.get('category_slug')
     friend_invite_name = (request.form.get('friend_name') or request.args.get('friend_name') or '').strip()
+
+    if opponent_mode in ('friend', 'online'):
+        gate = needs_account_to_challenge('challenge a friend to a duel')
+        if gate:
+            return gate
+
+    player = get_current_player()
 
     # If opponent_mode is 'online', check if another player already has an open online_matchmaking duel waiting in Round 1!
     if opponent_mode == 'online':
@@ -2265,6 +2271,30 @@ def is_pub_host():
     )
 
 
+def needs_account_to_challenge(what='challenge'):
+    """Guests may play. Only account holders may start something involving somebody else.
+
+    A guest challenge is a dead end for everybody: the guest loses it the
+    moment their session goes, the friend accepts an invite from
+    "Challenger_7f3a1c", and the duel sits in the list for ever because nobody
+    is coming back to finish it. Playing alone or against the bot stays open,
+    because nobody else is waiting on it.
+
+    Returns a redirect to sign-up when the person has no account, or None when
+    they are fine to carry on.
+    """
+    if session.get('user_id'):
+        return None
+    flash(
+        "👋 Almost there! Grab a free account and you can {what} — it takes "
+        "about ten seconds, we only need a name and a PIN. Then your scores stick around, "
+        "your mates can find you, and whoever you invite knows who they are playing. "
+        "😊".format(what=what),
+        "info")
+    nxt = request.full_path if request.query_string else request.path
+    return redirect(url_for('arena.player_register', next=nxt))
+
+
 def resolve_pub_team(state, player, table_num, team_name, is_virtual, require_pin=None):
     """Find the squad row that belongs to this browser session.
 
@@ -3534,6 +3564,9 @@ def group_standings(game):
 @arena_bp.route('/group/new', methods=['GET', 'POST'])
 def group_new():
     """Open a lobby. Whoever opens it picks the size and the subject."""
+    gate = needs_account_to_challenge('open a group game')
+    if gate:
+        return gate
     player = get_current_player()
     categories = db.session.query(QuizQuestion.category_slug, QuizQuestion.category_name).distinct().all()
 
@@ -3973,6 +4006,9 @@ def create_question():
 @arena_bp.route('/challenge-fresh/<target_session>', methods=['GET', 'POST'])
 def challenge_fresh(target_session):
     """Start a direct Round 1 duel against a registered friend / past opponent (auto-notifies them in-app, no WhatsApp needed!)."""
+    gate = needs_account_to_challenge('challenge another player')
+    if gate:
+        return gate
     player = get_current_player()
     target_player = PlayerProfile.query.filter_by(session_key=target_session).first()
 
