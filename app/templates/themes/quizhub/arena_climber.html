@@ -98,6 +98,9 @@
         <div class="text-lg sm:text-xl font-bold text-cyan-300 font-mono flex items-baseline gap-1">
           <span>DAY </span><span id="hudDay">{{ progress.current_day }}</span><span class="text-xs text-slate-400">/ 30</span>
         </div>
+        <div class="text-[10px] text-cyan-400 font-mono font-medium">
+          Q<span id="hudQIndex">{{ progress.day_question_index }}</span> of <span id="hudQTotal">{{ progress.day_questions_total }}</span>
+        </div>
       </div>
       <div class="p-3 rounded-xl bg-slate-900/90 border border-blue-500/40 shadow">
         <div class="text-[10px] font-mono text-slate-400 uppercase font-semibold">ELEVATION</div>
@@ -310,14 +313,14 @@
       <!-- RIGHT: Interactive Terminal, Fact Card & Push-Your-Luck Console (7 Cols) -->
       <div class="lg:col-span-7 space-y-5">
 
-        <!-- Question Station Card (with Refined Typography & Media Image Rendering) -->
-        <div id="triviaCard" class="bg-slate-900/90 rounded-3xl border-2 border-purple-500/40 p-4 sm:p-6 shadow-2xl backdrop-blur space-y-4">
+        <!-- Question Station Card (Collapsible when day is completed) -->
+        <div id="triviaCard" class="{% if progress.is_day_completed %}hidden{% endif %} bg-slate-900/90 rounded-3xl border-2 border-purple-500/40 p-4 sm:p-6 shadow-2xl backdrop-blur space-y-4 transition-all duration-300">
 
           <!-- Terminal Header -->
           <div class="flex flex-wrap items-center justify-between gap-2 border-b border-purple-500/20 pb-3">
             <div class="flex items-center gap-2">
               <span id="tierBadge" class="px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 font-mono text-xs font-bold uppercase tracking-wider">
-                DAY <span id="currentDayNum">{{ progress.current_day }}</span> / 30 &bull; {{ day_meta.stage_name }}
+                DAY <span id="currentDayNum">{{ progress.current_day }}</span> / 30 &bull; QUESTION <span id="termQIdx">{{ progress.day_question_index }}</span>/<span id="termQTotal">{{ progress.day_questions_total }}</span> &bull; <span id="termStageName">{{ day_meta.stage_name }}</span>
               </span>
               <span id="diffBadge" class="px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 font-mono text-[10px] font-bold uppercase">
                 {{ day_meta.diff }}
@@ -325,14 +328,14 @@
             </div>
             <div class="text-xs font-mono text-amber-400 font-bold flex items-center gap-1">
               <span>Gain:</span>
-              <span id="stepCoinsReward" class="text-sm font-bold text-amber-300">+{{ day_meta.coins }} 🪙</span>
+              <span id="stepCoinsReward" class="text-sm font-bold text-amber-300">+{{ day_meta.coins // progress.day_questions_total }} 🪙</span>
             </div>
           </div>
 
           <!-- Question Prompt & Optional Visual Image -->
           <div class="space-y-3">
             <h2 id="qPrompt" class="text-base sm:text-lg font-bold text-white leading-snug break-words">
-              {% if question %}{{ question.prompt }}{% else %}Ready for your next expedition day? Press Resume to begin.{% endif %}
+              {% if question %}{{ question.prompt }}{% else %}Ready for your next expedition day? Push to the next day below.{% endif %}
             </h2>
 
             <!-- Media / Flag Image Rendering Slot -->
@@ -369,6 +372,50 @@
 
         </div>
 
+        <!-- Day Completed Milestone Card (Shown when all questions for the day are finished) -->
+        <div id="dayCompletedCard" class="{% if not progress.is_day_completed %}hidden{% endif %} p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-indigo-950 via-slate-900 to-emerald-950/40 border-2 border-emerald-400/50 shadow-2xl text-center space-y-4 transition-all duration-300">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-mono text-xs font-bold uppercase tracking-wider">
+            🎉 DAY <span id="completedDayNum">{{ progress.current_day }}</span> EXPEDITION COMPLETE
+          </div>
+
+          <div class="space-y-1">
+            <h3 class="text-lg sm:text-xl font-bold text-white font-mono">
+              Altitude Reached: <span id="completedAlt" class="text-cyan-300">{{ day_meta.altitude }}</span>m (<span id="completedStageName">{{ day_meta.stage_name }}</span>)
+            </h3>
+            <p class="text-xs sm:text-sm text-slate-300 font-normal max-w-md mx-auto">
+              All checkpoint questions for today have been conquered! Safe Haven push-your-luck rules apply:
+            </p>
+          </div>
+
+          <div id="completedRiskAlert" class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-400/40 text-amber-300 text-xs sm:text-sm font-mono flex items-center justify-center gap-2">
+            <span>⚠️</span>
+            <span id="completedRiskText">
+              {% if progress.unbanked_coins > 0 %}
+                You have <strong>+<span id="completedUnbanked">{{ progress.unbanked_coins }}</span> Coins</strong> at risk. Bank them safely before advancing, or push your luck to Day <span id="completedNextDayNum">{{ progress.current_day + 1 }}</span>!
+              {% else %}
+                All expedition coins are safely secured in your permanent wallet. Ready for tomorrow's ascent!
+              {% endif %}
+            </span>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <button type="button" id="cardBankBtn" onclick="bankCoins()"
+                    {% if progress.unbanked_coins <= 0 %}disabled{% endif %}
+                    class="w-full sm:w-auto py-3 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:cursor-not-allowed">
+              {% if progress.unbanked_coins > 0 %}
+                BANK COINS NOW 🪙 (+<span id="cardBankCoinsAmount">{{ progress.unbanked_coins }}</span>)
+              {% else %}
+                ✓ COINS SECURED IN WALLET
+              {% endif %}
+            </button>
+            <button type="button" id="cardPushDayBtn" onclick="advanceDay()"
+                    {% if progress.current_day >= 30 %}disabled{% endif %}
+                    class="w-full sm:w-auto py-3 px-6 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-cyan-500/20 transition transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:cursor-not-allowed">
+              PUSH TO DAY <span id="cardPushNextDayNum">{{ progress.current_day + 1 }}</span> 🧗
+            </button>
+          </div>
+        </div>
+
         <!-- Unlocked Mountain Lore & Fact Card (Tracked in DB to avoid repeats) -->
         <div id="factCard" class="p-4 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/40 border border-indigo-500/30 shadow-lg space-y-1.5">
           <div class="flex items-center justify-between text-[10px] font-mono font-bold uppercase text-indigo-300">
@@ -389,7 +436,7 @@
         </div>
 
         <!-- Push-Your-Luck Safe Haven Banking Console (Brushed Titanium & Gold Vault) -->
-        <div class="bg-gradient-to-br from-slate-950 via-slate-900 to-[#141226] rounded-2xl border-2 border-amber-400/40 p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div id="safeHavenConsole" class="bg-gradient-to-br from-slate-950 via-slate-900 to-[#141226] rounded-2xl border-2 border-amber-400/40 p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div class="space-y-1 text-center sm:text-left">
             <div class="flex items-center justify-center sm:justify-start gap-2 text-amber-400 font-mono text-xs font-bold uppercase tracking-wider">
               <span>🏦 SAFE HAVEN BANKING</span>
@@ -400,15 +447,20 @@
             </p>
           </div>
 
-          <div class="flex items-center gap-3 w-full sm:w-auto">
+          <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
             <button id="bankBtn" onclick="bankCoins()"
                     {% if progress.unbanked_coins <= 0 %}disabled{% endif %}
                     class="w-full sm:w-auto py-3 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:cursor-not-allowed">
-              BANK COINS NOW 🪙
+              {% if progress.unbanked_coins > 0 %}
+                BANK COINS NOW 🪙 (+<span id="bankCoinsAmount">{{ progress.unbanked_coins }}</span>)
+              {% else %}
+                ✓ COINS SECURED
+              {% endif %}
             </button>
-            <button id="restartBtn" onclick="restartClimb()"
-                    class="py-3 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-mono text-xs font-semibold uppercase tracking-wider border border-slate-700 transition">
-              🔄 RESUME
+            <button id="pushDayBtn" onclick="advanceDay()"
+                    {% if not progress.is_day_completed or progress.current_day >= 30 %}disabled{% endif %}
+                    class="w-full sm:w-auto py-3 px-5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-cyan-500/20 transition transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:cursor-not-allowed">
+              PUSH TO DAY <span id="pushNextDayNum">{{ progress.current_day + 1 }}</span> 🧗
             </button>
           </div>
         </div>
@@ -503,6 +555,7 @@
           document.getElementById('hudAltitude').textContent = '8848';
           document.getElementById('hudUnbanked').textContent = '0';
           document.getElementById('bankBtn').disabled = true;
+          document.getElementById('cardBankBtn').disabled = true;
           document.getElementById('optionsGrid').innerHTML = '<div class="col-span-full p-6 text-center text-amber-300 font-mono font-bold text-sm">Congratulations on standing atop the roof of the world! You have mastered the 30-day expedition.</div>';
           return;
         }
@@ -512,35 +565,80 @@
         if (puppet) puppet.classList.add('climber-pull');
         setTimeout(function() { if (puppet) puppet.classList.remove('climber-pull'); }, 500);
 
-        banner.classList.add('bg-emerald-950/80', 'border-emerald-400');
-        fbTitle.innerHTML = '<span class="text-emerald-300">✓ ASCENT SUCCESSFUL</span>';
-        fbDesc.textContent = data.explanation || 'Altitude gained safely.';
+        if (data.day_completed) {
+          // DAY COMPLETED! Collapse questions terminal, display Day Completed Card
+          banner.classList.add('bg-emerald-950/80', 'border-emerald-400');
+          fbTitle.innerHTML = '<span class="text-emerald-300">✓ DAY ' + data.current_day + ' CONQUERED!</span>';
+          fbDesc.textContent = data.explanation || 'Expedition checkpoints completed safely.';
 
-        currentDay = data.new_day;
-        updateClimberPosition(currentDay);
+          // Update HUD
+          document.getElementById('hudUnbanked').textContent = data.unbanked_coins;
+          document.getElementById('hudAltitude').textContent = data.new_altitude;
+          if (data.next_day_meta && data.next_day_meta.safe_haven) {
+            document.getElementById('hudSafeCamp').textContent = data.next_day_meta.safe_haven;
+          }
 
-        // Update HUD
-        document.getElementById('hudDay').textContent = currentDay;
-        document.getElementById('hudAltitude').textContent = data.new_altitude;
-        document.getElementById('hudUnbanked').textContent = data.unbanked_coins;
-        document.getElementById('hudSafeCamp').textContent = data.next_day_meta.safe_haven;
-        document.getElementById('bankBtn').disabled = false;
+          // Update Day Completed Card
+          document.getElementById('completedDayNum').textContent = data.current_day;
+          document.getElementById('completedAlt').textContent = data.new_altitude;
+          document.getElementById('completedUnbanked').textContent = data.unbanked_coins;
+          document.getElementById('completedNextDayNum').textContent = data.next_day;
+          document.getElementById('cardPushNextDayNum').textContent = data.next_day;
+          document.getElementById('pushNextDayNum').textContent = data.next_day;
+          if (data.day_meta && data.day_meta.stage_name) {
+            document.getElementById('completedStageName').textContent = data.day_meta.stage_name;
+          }
 
-        // Update Unlocked Fact Card if delivered
-        if (data.next_fact) {
-          document.getElementById('factIcon').textContent = data.next_fact.icon || '⛰️';
-          document.getElementById('factTitle').textContent = data.next_fact.title;
-          document.getElementById('factText').textContent = data.next_fact.text;
+          var riskText = document.getElementById('completedRiskText');
+          if (riskText) {
+            riskText.innerHTML = 'You have <strong>+' + data.unbanked_coins + ' Coins</strong> at risk. Bank them safely before advancing, or push your luck to Day ' + data.next_day + '!';
+          }
+
+          // Enable Bank buttons with current unbanked amount
+          var bankBtn = document.getElementById('bankBtn');
+          var cardBankBtn = document.getElementById('cardBankBtn');
+          bankBtn.disabled = false;
+          cardBankBtn.disabled = false;
+          bankBtn.innerHTML = 'BANK COINS NOW 🪙 (+<span id="bankCoinsAmount">' + data.unbanked_coins + '</span>)';
+          cardBankBtn.innerHTML = 'BANK COINS NOW 🪙 (+<span id="cardBankCoinsAmount">' + data.unbanked_coins + '</span>)';
+
+          // Enable Push to Day buttons
+          document.getElementById('pushDayBtn').disabled = false;
+          document.getElementById('cardPushDayBtn').disabled = false;
+
+          setTimeout(function() {
+            banner.classList.add('hidden');
+            // Collapse Trivia Card & Reveal Day Completed Card
+            document.getElementById('triviaCard').classList.add('hidden');
+            document.getElementById('dayCompletedCard').classList.remove('hidden');
+            isSubmitting = false;
+          }, 1000);
+
+        } else {
+          // INTERMEDIATE QUESTION FOR TODAY CLEARED!
+          banner.classList.add('bg-emerald-950/80', 'border-emerald-400');
+          fbTitle.innerHTML = '<span class="text-emerald-300">✓ CHECKPOINT ' + (data.day_question_index - 1) + ' CLEARED</span>';
+          fbDesc.textContent = data.explanation || 'One more question to secure today\'s climb.';
+
+          // Update HUD & Terminal Indicators
+          document.getElementById('hudQIndex').textContent = data.day_question_index;
+          document.getElementById('termQIdx').textContent = data.day_question_index;
+          document.getElementById('hudUnbanked').textContent = data.unbanked_coins;
+
+          // Update unbanked label in bank buttons
+          var bankAmt = document.getElementById('bankCoinsAmount');
+          if (bankAmt) bankAmt.textContent = data.unbanked_coins;
+          document.getElementById('bankBtn').disabled = false;
+
+          setTimeout(function() {
+            banner.classList.add('hidden');
+            renderNextQuestion(data.day_meta, data.next_question, data.day_question_index, data.day_questions_total);
+            isSubmitting = false;
+          }, 1000);
         }
 
-        setTimeout(function() {
-          banner.classList.add('hidden');
-          renderNextQuestion(data.next_day_meta, data.next_question);
-          isSubmitting = false;
-        }, 1200);
-
       } else {
-        // INCORRECT
+        // INCORRECT ANSWER
         if (data.shield_saved) {
           if (window.qmPlaySound) window.qmPlaySound('shield');
           banner.classList.add('bg-blue-950/80', 'border-blue-400');
@@ -559,13 +657,12 @@
           setTimeout(function() {
             banner.classList.add('hidden');
             if (data.next_question) {
-              renderNextQuestion(data.next_day_meta || stages[Math.floor((currentDay-1)/5)], data.next_question);
+              renderNextQuestion(data.day_meta || stages[Math.floor((currentDay-1)/5)], data.next_question, data.day_question_index, data.day_questions_total);
             }
             isSubmitting = false;
           }, 2000);
 
         } else if (data.fallen) {
-          // Slipped and retreated to Camp Safe Haven!
           if (window.qmPlaySound) window.qmPlaySound('slip');
           if (puppet) puppet.classList.add('climber-fall');
           setTimeout(function() {
@@ -581,6 +678,7 @@
 
           currentDay = data.new_day;
           document.getElementById('hudDay').textContent = currentDay;
+          document.getElementById('hudQIndex').textContent = '1';
           document.getElementById('hudAltitude').textContent = data.new_altitude;
           document.getElementById('hudUnbanked').textContent = '0';
           document.getElementById('bankBtn').disabled = true;
@@ -588,7 +686,7 @@
           setTimeout(function() {
             banner.classList.add('hidden');
             if (data.next_question) {
-              renderNextQuestion(data.next_day_meta, data.next_question);
+              renderNextQuestion(data.next_day_meta, data.next_question, 1, data.day_questions_total);
             }
             isSubmitting = false;
           }, 2400);
@@ -602,14 +700,20 @@
     });
   };
 
-  function renderNextQuestion(dayMeta, qData) {
+  function renderNextQuestion(dayMeta, qData, qIdx, qTotal) {
     if (!dayMeta || !qData) return;
     currentQuestionId = qData.id;
 
-    document.getElementById('currentDayNum').textContent = dayMeta.day;
-    document.getElementById('tierBadge').innerHTML = 'DAY ' + dayMeta.day + ' / 30 &bull; ' + dayMeta.stage_name;
+    var dayNum = dayMeta.day || currentDay;
+    var idx = qIdx || 1;
+    var total = qTotal || 2;
+
+    document.getElementById('currentDayNum').textContent = dayNum;
+    document.getElementById('termQIdx').textContent = idx;
+    document.getElementById('termQTotal').textContent = total;
+    document.getElementById('termStageName').textContent = dayMeta.stage_name;
     document.getElementById('diffBadge').textContent = dayMeta.diff;
-    document.getElementById('stepCoinsReward').textContent = '+' + dayMeta.coins + ' 🪙';
+    document.getElementById('stepCoinsReward').textContent = '+' + Math.floor(dayMeta.coins / total) + ' 🪙';
     document.getElementById('qPrompt').textContent = qData.prompt;
 
     // Media Image Handling (Flags, Maps, Badges)
@@ -638,7 +742,64 @@
     }
   }
 
+  window.advanceDay = function() {
+    var pushBtns = [document.getElementById('pushDayBtn'), document.getElementById('cardPushDayBtn')];
+    pushBtns.forEach(function(b) { if (b) b.disabled = true; });
+
+    fetch('{{ url_for("arena.climber_advance_day") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.success) {
+        if (window.qmPlaySound) window.qmPlaySound('climbStep');
+
+        currentDay = data.new_day;
+        updateClimberPosition(currentDay);
+
+        // Update HUD
+        document.getElementById('hudDay').textContent = currentDay;
+        document.getElementById('hudQIndex').textContent = '1';
+        document.getElementById('hudAltitude').textContent = data.new_altitude;
+        document.getElementById('hudSafeCamp').textContent = data.day_meta.safe_haven;
+        document.getElementById('hudUnbanked').textContent = data.unbanked_coins;
+
+        // Hide Day Completed Card & Reveal Trivia Card
+        document.getElementById('dayCompletedCard').classList.add('hidden');
+        document.getElementById('triviaCard').classList.remove('hidden');
+
+        // Render Day's First Question
+        if (data.next_question) {
+          renderNextQuestion(data.day_meta, data.next_question, 1, data.day_questions_total);
+        }
+
+        // Update Mountain Fact
+        if (data.next_fact) {
+          document.getElementById('factIcon').textContent = data.next_fact.icon || '⛰️';
+          document.getElementById('factTitle').textContent = data.next_fact.title;
+          document.getElementById('factText').textContent = data.next_fact.text;
+        }
+
+        // Keep push buttons disabled until this new day is completed
+        pushBtns.forEach(function(b) { if (b) b.disabled = true; });
+        isSubmitting = false;
+
+      } else {
+        alert(data.error || 'Failed to advance day');
+        pushBtns.forEach(function(b) { if (b) b.disabled = false; });
+      }
+    })
+    .catch(function(err) {
+      console.warn('Advance day error', err);
+      pushBtns.forEach(function(b) { if (b) b.disabled = false; });
+    });
+  };
+
   window.bankCoins = function() {
+    var bankBtns = [document.getElementById('bankBtn'), document.getElementById('cardBankBtn')];
+    bankBtns.forEach(function(b) { if (b) b.disabled = true; });
+
     fetch('{{ url_for("arena.climber_bank") }}', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }
@@ -648,48 +809,30 @@
       if (data.success) {
         if (window.qmPlaySound) window.qmPlaySound('bank');
         document.getElementById('hudUnbanked').textContent = '0';
-        document.getElementById('bankBtn').disabled = true;
+
+        var b1 = document.getElementById('bankBtn');
+        var b2 = document.getElementById('cardBankBtn');
+        if (b1) { b1.disabled = true; b1.innerHTML = '✓ COINS SECURED'; }
+        if (b2) { b2.disabled = true; b2.innerHTML = '✓ COINS SECURED IN WALLET'; }
+
+        var riskText = document.getElementById('completedRiskText');
+        if (riskText) {
+          riskText.innerHTML = '✓ ' + data.banked_amount + ' Coins safely transferred to your permanent wallet! Ready for next ascent.';
+        }
 
         var banner = document.getElementById('feedbackBanner');
         banner.className = 'p-3.5 rounded-xl text-center space-y-1 font-mono border-2 bg-emerald-950/80 border-emerald-400';
         document.getElementById('feedbackTitle').innerHTML = '<span class="text-emerald-300">🪙 ' + data.banked_amount + ' COINS SECURED IN WALLET!</span>';
-        document.getElementById('feedbackDesc').textContent = 'Stored safely in your permanent profile. Continue climbing with zero risk!';
+        document.getElementById('feedbackDesc').textContent = 'Stored safely in your permanent profile. Push forward with zero risk!';
         setTimeout(function() { banner.classList.add('hidden'); }, 3000);
       } else {
         alert(data.error || 'Banking error');
+        bankBtns.forEach(function(b) { if (b) b.disabled = false; });
       }
     })
     .catch(function(err) {
       console.warn('Bank error', err);
-    });
-  };
-
-  window.restartClimb = function() {
-    fetch('{{ url_for("arena.climber_restart") }}', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    })
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-      if (data.success) {
-        currentDay = data.day;
-        updateClimberPosition(currentDay);
-        document.getElementById('hudDay').textContent = currentDay;
-        document.getElementById('hudAltitude').textContent = data.altitude;
-        document.getElementById('hudUnbanked').textContent = '0';
-        document.getElementById('bankBtn').disabled = true;
-
-        var banner = document.getElementById('feedbackBanner');
-        if (banner) banner.classList.add('hidden');
-
-        if (data.next_question) {
-          renderNextQuestion(data.day_meta, data.next_question);
-        }
-        isSubmitting = false;
-      }
-    })
-    .catch(function(err) {
-      console.warn('Restart error', err);
+      bankBtns.forEach(function(b) { if (b) b.disabled = false; });
     });
   };
 

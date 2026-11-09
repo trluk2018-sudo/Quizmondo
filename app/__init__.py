@@ -269,6 +269,12 @@ def _ensure_schema():
                 db.session.execute(text("ALTER TABLE climber_progress ADD COLUMN current_stage INTEGER DEFAULT 1"))
             if 'current_day' not in cols_climber:
                 db.session.execute(text("ALTER TABLE climber_progress ADD COLUMN current_day INTEGER DEFAULT 1"))
+            if 'day_question_index' not in cols_climber:
+                db.session.execute(text("ALTER TABLE climber_progress ADD COLUMN day_question_index INTEGER DEFAULT 1"))
+            if 'day_questions_total' not in cols_climber:
+                db.session.execute(text("ALTER TABLE climber_progress ADD COLUMN day_questions_total INTEGER DEFAULT 2"))
+            if 'is_day_completed' not in cols_climber:
+                db.session.execute(text("ALTER TABLE climber_progress ADD COLUMN is_day_completed BOOLEAN DEFAULT 0"))
             if 'secured_camp_stage' not in cols_climber:
                 db.session.execute(text("ALTER TABLE climber_progress ADD COLUMN secured_camp_stage INTEGER DEFAULT 1"))
             if 'last_climbed_date' not in cols_climber:
