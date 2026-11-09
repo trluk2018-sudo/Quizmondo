@@ -525,6 +525,8 @@ class PlayerProfile(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_active_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('player_profile', uselist=False))
+
     def add_xp(self, amount: int):
         self.xp = (self.xp or 0) + max(0, amount)
         # 500 XP per level
@@ -1056,6 +1058,9 @@ class ClimberProgress(db.Model):
     last_climbed_date = db.Column(db.Date, nullable=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    player = db.relationship('PlayerProfile', foreign_keys=[player_profile_id], backref=db.backref('climber_progress', lazy='dynamic'))
+    season = db.relationship('ClimberSeason', foreign_keys=[season_id], backref=db.backref('climber_progresses', lazy='dynamic'))
 
 
 class UserPostRead(db.Model):

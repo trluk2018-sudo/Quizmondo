@@ -3,7 +3,7 @@ import json
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify, session
 from werkzeug.utils import secure_filename
-from ..models import db, User, Post, Category, Page, Media, MenuItem, SidebarWidget, SiteSetting, PageModule, slugify, QuizQuestion, QuizPack, PlayerProfile, ArenaMatch, ArenaRound, PubLeague, PubLeagueResult, pub_season_label, FeaturedGame
+from ..models import db, User, Post, Category, Page, Media, MenuItem, SidebarWidget, SiteSetting, PageModule, slugify, QuizQuestion, QuizPack, PlayerProfile, ArenaMatch, ArenaRound, PubLeague, PubLeagueResult, pub_season_label, FeaturedGame, ClimberSeason, ClimberProgress, ClimberFact, UserClimberFactSeen
 from ..utils.modules import get_default_config, get_module_definition, MODULE_DEFINITIONS
 # Imported here rather than inside the view, so the table is registered before
 # create_all runs at start-up. A lazy import means no table.
@@ -1921,7 +1921,25 @@ def system_clear():
         flash('Action blocked: Invalid Admin Password / PIN. Please enter your valid administrator password (or set one in Profile & Password) to confirm.', 'error')
         return redirect(request.referrer or url_for('admin.dashboard'))
 
-    if target == 'duels':
+    if target == 'climber':
+        cnt = ClimberProgress.query.count()
+        ClimberProgress.query.update({
+            ClimberProgress.current_day: 1,
+            ClimberProgress.current_step: 1,
+            ClimberProgress.day_question_index: 1,
+            ClimberProgress.day_questions_total: 2,
+            ClimberProgress.is_day_completed: False,
+            ClimberProgress.secured_camp_stage: 1,
+            ClimberProgress.altitude_m: 1000,
+            ClimberProgress.unbanked_coins: 0,
+            ClimberProgress.status: 'climbing',
+            ClimberProgress.last_climbed_date: None
+        })
+        db.session.commit()
+        flash(f'Reset all {cnt} player climb progress records to Day 1.', 'success')
+        return redirect(request.referrer or url_for('admin.challenges'))
+
+    elif target == 'duels':
         round_cnt = ArenaRound.query.delete()
         match_cnt = ArenaMatch.query.delete()
         for p in PlayerProfile.query.all():
@@ -2607,3 +2625,163 @@ def ad_report(ad_id):
     period['ctr'] = round(period['clicks'] * 100.0 / period['impressions'], 2) \
         if period['impressions'] else 0.0
     return render_template('admin/ad_report.html', ad=ad, rows=rows, period=period)
+
+
+
+# ==============================================================================
+# CHALLENGES & THE QUIZ CLIMBER EXPEDITION MANAGEMENT
+# ==============================================================================
+
+@admin_bp.route('/challenges')
+@login_required
+def challenges():
+    """Manage The Quiz Climber 30-day expedition progress & mini-game challenges."""
+    from .arena import _calc_day_meta, EXPEDITION_STAGES
+    from ..models_challenge import GameChallenge
+
+    search = (request.args.get('q') or '').strip()
+    stage_filter = request.args.get('stage')
+
+    query = ClimberProgress.query.join(PlayerProfile, ClimberProgress.player_profile_id == PlayerProfile.id)
+    if search:
+        query = query.outerjoin(User, PlayerProfile.user_id == User.id).filter(
+            db.or_(
+                PlayerProfile.display_name.ilike(f'%{search}%'),
+                User.username.ilike(f'%{search}%'),
+                User.email.ilike(f'%{search}%')
+            )
+        )
+    if stage_filter and stage_filter.isdigit():
+        query = query.filter(ClimberProgress.current_stage == int(stage_filter))
+
+    climber_rows = query.order_by(ClimberProgress.current_day.desc(), ClimberProgress.updated_at.desc()).all()
+
+    enriched_climbers = []
+    for cp in climber_rows:
+        meta = _calc_day_meta(cp.current_day)
+        player = cp.player
+        user = player.user if (player and player.user_id) else None
+        enriched_climbers.append({
+            'progress': cp,
+            'player': player,
+            'user': user,
+            'meta': meta
+        })
+
+    total_climbers = ClimberProgress.query.count()
+    summits_count = ClimberProgress.query.filter_by(status='summit').count()
+    completed_days_count = ClimberProgress.query.filter_by(is_day_completed=True).count()
+    total_banked_coins = db.session.query(db.func.sum(ClimberProgress.banked_coins)).scalar() or 0
+
+    try:
+        challenge_rows = GameChallenge.query.order_by(GameChallenge.created_at.desc()).limit(20).all()
+    except Exception:
+        challenge_rows = []
+
+    active_season = ClimberSeason.query.filter_by(is_active=True).first()
+
+    return render_template(
+        'admin/challenges.html',
+        climbers=enriched_climbers,
+        total_climbers=total_climbers,
+        summits_count=summits_count,
+        completed_days_count=completed_days_count,
+        total_banked_coins=total_banked_coins,
+        stages=EXPEDITION_STAGES,
+        challenges=challenge_rows,
+        season=active_season,
+        search=search,
+        stage_filter=stage_filter
+    )
+
+
+@admin_bp.route('/challenges/reset/<int:id>', methods=['POST'])
+@login_required
+def climber_progress_reset(id):
+    """Reset a user's climb progress to Day 1 (or a chosen target day)."""
+    from .arena import _calc_day_meta
+    progress = db.session.get(ClimberProgress, id)
+    if not progress:
+        flash('Climber progress record not found.', 'error')
+        return redirect(url_for('admin.challenges'))
+
+    target_day = int(request.form.get('target_day') or 1)
+    target_day = max(1, min(30, target_day))
+
+    player_name = progress.player.display_name if progress.player else f"Player #{progress.player_profile_id}"
+
+    progress.current_day = target_day
+    progress.current_step = target_day
+    progress.day_question_index = 1
+    progress.day_questions_total = 2
+    progress.is_day_completed = False
+    progress.unbanked_coins = 0
+    progress.status = 'climbing'
+    progress.last_climbed_date = None
+
+    if target_day == 1:
+        progress.altitude_m = 1000
+        progress.current_stage = 1
+        progress.secured_camp_stage = 1
+    else:
+        meta = _calc_day_meta(target_day)
+        progress.altitude_m = meta['altitude']
+        progress.current_stage = meta['stage_number']
+        progress.secured_camp_stage = meta['stage_number']
+
+    db.session.commit()
+    flash(f"Climb progress for {player_name} has been reset to Day {target_day} (Question 1 of 2, 0 coins at risk).", 'success')
+    return redirect(request.referrer or url_for('admin.challenges'))
+
+
+@admin_bp.route('/challenges/reset-all', methods=['POST'])
+@login_required
+def climber_progress_reset_all():
+    """Bulk reset all user climb progress to Day 1."""
+    confirm_text = (request.form.get('confirm_text') or '').strip().upper()
+    if confirm_text != 'RESET ALL':
+        flash('Please type "RESET ALL" to confirm resetting all climber progress.', 'error')
+        return redirect(url_for('admin.challenges'))
+
+    count = ClimberProgress.query.count()
+    ClimberProgress.query.update({
+        ClimberProgress.current_day: 1,
+        ClimberProgress.current_step: 1,
+        ClimberProgress.day_question_index: 1,
+        ClimberProgress.day_questions_total: 2,
+        ClimberProgress.is_day_completed: False,
+        ClimberProgress.secured_camp_stage: 1,
+        ClimberProgress.altitude_m: 1000,
+        ClimberProgress.unbanked_coins: 0,
+        ClimberProgress.status: 'climbing',
+        ClimberProgress.last_climbed_date: None
+    })
+    db.session.commit()
+    flash(f"Successfully reset climb progress to Day 1 for all {count} player records.", 'success')
+    return redirect(url_for('admin.challenges'))
+
+
+@admin_bp.route('/players/<int:id>/reset-climber', methods=['POST'])
+@login_required
+def player_reset_climber(id):
+    """Reset climber progress directly from the Players list."""
+    profile = db.session.get(PlayerProfile, id)
+    if not profile:
+        flash('Player profile not found.', 'error')
+        return redirect(url_for('admin.players'))
+
+    ClimberProgress.query.filter_by(player_profile_id=profile.id).update({
+        ClimberProgress.current_day: 1,
+        ClimberProgress.current_step: 1,
+        ClimberProgress.day_question_index: 1,
+        ClimberProgress.day_questions_total: 2,
+        ClimberProgress.is_day_completed: False,
+        ClimberProgress.secured_camp_stage: 1,
+        ClimberProgress.altitude_m: 1000,
+        ClimberProgress.unbanked_coins: 0,
+        ClimberProgress.status: 'climbing',
+        ClimberProgress.last_climbed_date: None
+    })
+    db.session.commit()
+    flash(f"Climb progress for {profile.display_name} has been reset to Day 1.", 'success')
+    return redirect(request.referrer or url_for('admin.players'))

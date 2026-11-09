@@ -218,6 +218,12 @@
                 ✏️ Edit / Reset PIN
               </button>
 
+              <form action="{{ url_for('admin.player_reset_climber', id=p.id) }}" method="POST" class="inline" onsubmit="return confirm('Reset The Quiz Climber expedition progress to Day 1 for {{ p.display_name|e }}?');">
+                <button type="submit" class="px-2.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-[11px] shadow-sm transition" title="Reset Climber Progress to Day 1">
+                  🧗 Reset Climb
+                </button>
+              </form>
+
               <form action="{{ url_for('admin.player_toggle_ban', id=p.id) }}" method="POST" class="inline" onsubmit="return confirm('Change ban status for {{ p.display_name|e }}?');">
                 {% if p.is_banned %}
                 <button type="submit" class="px-3 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-900 font-bold text-[11px] transition">

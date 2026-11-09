@@ -157,6 +157,9 @@
         <a href="{{ url_for('admin.duels') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if 'duel' in request.endpoint %}bg-purple-500 text-white font-black shadow{% else %}text-slate-100 hover:bg-purple-500/25 hover:text-white font-semibold{% endif %}">
           <span>⚔️</span> <span>Live Duels &amp; Stats</span>
         </a>
+        <a href="{{ url_for('admin.challenges') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if 'challenge' in request.endpoint %}bg-purple-500 text-white font-black shadow{% else %}text-slate-100 hover:bg-purple-500/25 hover:text-white font-semibold{% endif %}">
+          <span>🧗</span> <span>Challenges &amp; Climber</span>
+        </a>
         <a href="{{ url_for('admin.leagues') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl transition {% if 'league' in request.endpoint %}bg-purple-500 text-white font-black shadow{% else %}text-slate-100 hover:bg-purple-500/25 hover:text-white font-semibold{% endif %}">
           <span>🍻</span> <span>Pub Quiz Leagues</span>
         </a>

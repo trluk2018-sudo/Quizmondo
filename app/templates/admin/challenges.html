@@ -1,0 +1,341 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Challenges &amp; The Quiz Climber Expedition Ops • Quizmondo Control Centre{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl space-y-6 text-slate-900">
+
+  <!-- Page Header & Global Reset Actions -->
+  <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-300 pb-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <h1 class="text-2xl font-black text-slate-900">🧗 Challenges &amp; The Quiz Climber</h1>
+        <span class="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-900 font-mono font-black text-[11px] border border-purple-300">
+          SEASON: {{ season.month_key if season else 'ACTIVE' }}
+        </span>
+      </div>
+      <p class="text-xs text-slate-600 font-medium mt-1">
+        Monitor 30-day vertical expedition progress, inspect unbanked loot &amp; safe havens, and reset player climb progression.
+      </p>
+    </div>
+
+    <!-- Reset ALL Climbers (Protected Action) -->
+    <form action="{{ url_for('admin.climber_progress_reset_all') }}" method="POST"
+          class="flex flex-wrap sm:flex-nowrap items-center gap-2 bg-rose-50 border-2 border-rose-300 p-2.5 rounded-xl shadow-sm"
+          onsubmit="return confirm('WARNING: Are you sure you want to reset ALL users back to Day 1? This will reset all current climb checkpoints across the entire site.');">
+      <span class="text-xs font-black text-rose-900 whitespace-nowrap px-1">⚠️ Reset All Users:</span>
+      <input type="text" name="confirm_text" required placeholder="Type 'RESET ALL'"
+             class="px-3 py-1.5 rounded-lg border-2 border-rose-400 text-xs text-slate-900 font-bold bg-white w-32 uppercase placeholder:normal-case placeholder:font-normal">
+      <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase whitespace-nowrap shadow transition">
+        Reset All Climbers
+      </button>
+    </form>
+  </div>
+
+  <!-- Summary Metric Stat Cards -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="p-4 rounded-2xl bg-white border-2 border-slate-200 shadow-sm">
+      <div class="text-[11px] font-bold text-slate-500 uppercase font-mono">Active Climbers</div>
+      <div class="text-2xl font-black text-cyan-600 font-mono mt-1">{{ total_climbers }}</div>
+      <div class="text-[11px] text-slate-500 mt-1">Players on Everest wall</div>
+    </div>
+    <div class="p-4 rounded-2xl bg-white border-2 border-slate-200 shadow-sm">
+      <div class="text-[11px] font-bold text-slate-500 uppercase font-mono">8,848M Summits</div>
+      <div class="text-2xl font-black text-amber-500 font-mono mt-1">👑 {{ summits_count }}</div>
+      <div class="text-[11px] text-slate-500 mt-1">Completed all 30 days</div>
+    </div>
+    <div class="p-4 rounded-2xl bg-white border-2 border-slate-200 shadow-sm">
+      <div class="text-[11px] font-bold text-slate-500 uppercase font-mono">Completed Today</div>
+      <div class="text-2xl font-black text-emerald-600 font-mono mt-1">✓ {{ completed_days_count }}</div>
+      <div class="text-[11px] text-slate-500 mt-1">Conquered today's checkpoints</div>
+    </div>
+    <div class="p-4 rounded-2xl bg-white border-2 border-slate-200 shadow-sm">
+      <div class="text-[11px] font-bold text-slate-500 uppercase font-mono">Coins Banked</div>
+      <div class="text-2xl font-black text-purple-600 font-mono mt-1">🪙 {{ "{:,}".format(total_banked_coins) }}</div>
+      <div class="text-[11px] text-slate-500 mt-1">Secured in wallets</div>
+    </div>
+  </div>
+
+  <!-- Filter & Search Controls Bar -->
+  <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-100 border-2 border-slate-300 rounded-2xl p-3">
+    <form method="GET" action="{{ url_for('admin.challenges') }}" class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+      <div class="relative flex-1 sm:w-72">
+        <input type="text" name="q" value="{{ search or '' }}" placeholder="Search player name, username, or email..."
+               class="w-full px-3.5 py-2 rounded-lg border-2 border-slate-300 text-xs text-slate-900 font-semibold focus:outline-none focus:border-cyan-600 bg-white">
+      </div>
+      <select name="stage" class="px-3 py-2 rounded-lg border-2 border-slate-300 text-xs text-slate-900 font-semibold bg-white" onchange="this.form.submit()">
+        <option value="">All Mountain Stages</option>
+        {% for stg in stages %}
+        <option value="{{ stg.stage }}" {% if stage_filter == stg.stage|string %}selected{% endif %}>
+          Stage {{ stg.stage }}: {{ stg.name }} (Days {{ stg.days }})
+        </option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shrink-0 transition">
+        Filter
+      </button>
+      {% if search or stage_filter %}
+      <a href="{{ url_for('admin.challenges') }}" class="px-3 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs transition">
+        Clear
+      </a>
+      {% endif %}
+    </form>
+
+    <div class="text-xs font-mono font-bold text-slate-600">
+      Showing {{ climbers|length }} Climber Record{% if climbers|length != 1 %}s{% endif %}
+    </div>
+  </div>
+
+  <!-- CLIMBER EXPEDITION PLAYERS TABLE -->
+  <div class="bg-white rounded-2xl border-2 border-slate-300 overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs text-slate-700">
+        <thead class="bg-slate-900 text-white text-[11px] uppercase tracking-wider font-mono">
+          <tr>
+            <th class="py-3.5 px-4">Player</th>
+            <th class="py-3.5 px-4 text-center">Expedition Day</th>
+            <th class="py-3.5 px-4">Stage &amp; Elevation</th>
+            <th class="py-3.5 px-4">Safe Haven Camp</th>
+            <th class="py-3.5 px-4 text-center">Loot Status</th>
+            <th class="py-3.5 px-4 text-center">Status</th>
+            <th class="py-3.5 px-4 text-center">Last Climbed</th>
+            <th class="py-3.5 px-4 text-right">Reset / Set Progress</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200">
+          {% for item in climbers %}
+          {% set cp = item.progress %}
+          {% set p = item.player %}
+          {% set u = item.user %}
+          {% set meta = item.meta %}
+          <tr class="hover:bg-cyan-50/40 transition">
+
+            <!-- Player Info -->
+            <td class="py-3.5 px-4 font-medium text-slate-900">
+              <div class="flex items-center gap-2.5">
+                <span class="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-sm uppercase shrink-0">
+                  {{ p.display_name[:2] if p else '??' }}
+                </span>
+                <div class="min-w-0">
+                  <div class="font-bold text-slate-900 truncate">
+                    {{ p.display_name if p else 'Player #' ~ cp.player_profile_id }}
+                    {% if u and u.role in ('admin', 'super_admin') %}
+                    <span class="ml-1 px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 text-[9px] font-black uppercase">Staff</span>
+                    {% endif %}
+                  </div>
+                  <div class="text-[10px] text-slate-500 font-mono truncate">
+                    {{ u.email if u else 'Guest/Local Session' }}
+                  </div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Expedition Day & Question Index -->
+            <td class="py-3.5 px-4 text-center font-mono">
+              <div class="font-bold text-sm text-cyan-700">
+                DAY {{ cp.current_day }} <span class="text-xs text-slate-400">/ 30</span>
+              </div>
+              {% if cp.is_day_completed %}
+              <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300">
+                ✓ Day Complete
+              </span>
+              {% else %}
+              <span class="px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-800 text-[10px] font-bold border border-cyan-300">
+                Q {{ cp.day_question_index }} of {{ cp.day_questions_total or 2 }}
+              </span>
+              {% endif %}
+            </td>
+
+            <!-- Stage & Altitude -->
+            <td class="py-3.5 px-4">
+              <div class="font-bold text-slate-900 flex items-center gap-1">
+                <span>{{ meta.icon }}</span>
+                <span>Stage {{ meta.stage_number }}: {{ meta.stage_name }}</span>
+              </div>
+              <div class="text-[11px] text-slate-500 font-mono mt-0.5">
+                Elev: <strong class="text-blue-700">{{ cp.altitude_m }}m</strong> (Peak: {{ cp.highest_altitude }}m)
+              </div>
+            </td>
+
+            <!-- Safe Haven Camp -->
+            <td class="py-3.5 px-4 font-mono text-[11px]">
+              <div class="text-emerald-700 font-bold truncate">
+                ⛺ {{ meta.safe_haven }}
+              </div>
+              <div class="text-[10px] text-slate-500">
+                Secured: Stage {{ cp.secured_camp_stage }}
+              </div>
+            </td>
+
+            <!-- Loot & Shields -->
+            <td class="py-3.5 px-4 text-center font-mono">
+              <div class="text-xs">
+                {% if cp.unbanked_coins > 0 %}
+                <span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold border border-amber-300 text-[10px]" title="At risk if slipping">
+                  +{{ cp.unbanked_coins }} 🪙 At Risk
+                </span>
+                {% else %}
+                <span class="text-slate-400 text-[10px]">0 At Risk</span>
+                {% endif %}
+              </div>
+              <div class="text-[10px] text-purple-700 font-semibold mt-0.5">
+                Banked: {{ cp.banked_coins }} 🪙
+              </div>
+              {% if p and p.climber_shields and p.climber_shields > 0 %}
+              <div class="text-[10px] text-cyan-700 font-bold">
+                🛡️ {{ p.climber_shields }} Shield{% if p.climber_shields > 1 %}s{% endif %}
+              </div>
+              {% endif %}
+            </td>
+
+            <!-- Status -->
+            <td class="py-3.5 px-4 text-center font-mono">
+              {% if cp.status == 'summit' %}
+              <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 font-black text-[10px] uppercase border border-amber-400">
+                👑 SUMMIT
+              </span>
+              {% elif cp.status == 'day_completed' or cp.is_day_completed %}
+              <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-900 font-black text-[10px] uppercase border border-emerald-400">
+                ✓ DAY COMPLETE
+              </span>
+              {% elif cp.status == 'fallen' %}
+              <span class="px-2.5 py-1 rounded-full bg-rose-100 text-rose-900 font-black text-[10px] uppercase border border-rose-400">
+                ⚠️ FALLEN
+              </span>
+              {% else %}
+              <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-900 font-black text-[10px] uppercase border border-blue-400">
+                CLIMBING
+              </span>
+              {% endif %}
+            </td>
+
+            <!-- Last Climbed Date -->
+            <td class="py-3.5 px-4 text-center font-mono text-[11px] text-slate-500">
+              {{ cp.last_climbed_date.strftime('%b %d') if cp.last_climbed_date else cp.updated_at.strftime('%b %d') }}
+            </td>
+
+            <!-- Actions: Reset to Day 1 or Jump/Set Day -->
+            <td class="py-3.5 px-4 text-right whitespace-nowrap">
+              <div class="inline-flex items-center gap-1.5">
+
+                <!-- Primary: One-Click Reset to Day 1 -->
+                <form action="{{ url_for('admin.climber_progress_reset', id=cp.id) }}" method="POST" class="inline"
+                      onsubmit="return confirm('Reset The Quiz Climber progress to Day 1 for {{ (p.display_name if p else 'this player')|e }}? All checkpoints for today will be cleared.');">
+                  <input type="hidden" name="target_day" value="1">
+                  <button type="submit" class="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] shadow-sm transition flex items-center gap-1">
+                    <span>🔄</span> <span>Reset Day 1</span>
+                  </button>
+                </form>
+
+                <!-- Advance / Set to Specific Day (for testing & support) -->
+                <form action="{{ url_for('admin.climber_progress_reset', id=cp.id) }}" method="POST" class="inline-flex items-center gap-1">
+                  <select name="target_day" class="px-1.5 py-1 rounded-md border border-slate-300 text-[10px] font-mono bg-white font-bold">
+                    <option value="1">Day 1 (Basecamp)</option>
+                    <option value="5" {% if cp.current_day == 5 %}selected{% endif %}>Day 5 (Stage Gate 1)</option>
+                    <option value="6" {% if cp.current_day == 6 %}selected{% endif %}>Day 6 (Khumbu)</option>
+                    <option value="10" {% if cp.current_day == 10 %}selected{% endif %}>Day 10 (Stage Gate 2)</option>
+                    <option value="11" {% if cp.current_day == 11 %}selected{% endif %}>Day 11 (Cwm)</option>
+                    <option value="15" {% if cp.current_day == 15 %}selected{% endif %}>Day 15 (Stage Gate 3)</option>
+                    <option value="16" {% if cp.current_day == 16 %}selected{% endif %}>Day 16 (Lhotse)</option>
+                    <option value="20" {% if cp.current_day == 20 %}selected{% endif %}>Day 20 (Stage Gate 4)</option>
+                    <option value="21" {% if cp.current_day == 21 %}selected{% endif %}>Day 21 (South Col)</option>
+                    <option value="25" {% if cp.current_day == 25 %}selected{% endif %}>Day 25 (Stage Gate 5)</option>
+                    <option value="26" {% if cp.current_day == 26 %}selected{% endif %}>Day 26 (Hillary Step)</option>
+                    <option value="30" {% if cp.current_day == 30 %}selected{% endif %}>Day 30 (Summit Push)</option>
+                  </select>
+                  <button type="submit" class="px-2 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-white font-bold text-[10px] transition" title="Set player directly to chosen day">
+                    Set
+                  </button>
+                </form>
+
+              </div>
+            </td>
+
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8" class="py-12 text-center text-slate-500 font-mono text-sm">
+              No climber expedition progress records found matching your query.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION 2: 5-MINI-GAME FRIEND CHALLENGES -->
+  <div class="mt-8 pt-6 border-t-2 border-slate-200 space-y-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-lg font-black text-slate-900 flex items-center gap-2">
+          <span>🎮</span> <span>5x Mini-Game Challenges (Friend Duels)</span>
+          <span class="text-xs font-mono text-slate-500 font-normal">({{ challenges|length }} recent)</span>
+        </h2>
+        <p class="text-xs text-slate-600">
+          Weekly turn-based 5-mini-game matches between players.
+        </p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border-2 border-slate-300 overflow-hidden shadow-sm">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs text-slate-700">
+          <thead class="bg-slate-100 text-slate-800 text-[11px] uppercase tracking-wider font-mono border-b border-slate-300">
+            <tr>
+              <th class="py-3 px-4">Code</th>
+              <th class="py-3 px-4">Creator</th>
+              <th class="py-3 px-4 text-center">Score</th>
+              <th class="py-3 px-4">Opponent</th>
+              <th class="py-3 px-4 text-center">Status</th>
+              <th class="py-3 px-4 text-center">Created</th>
+              <th class="py-3 px-4 text-center">Expires</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200">
+            {% for ch in challenges %}
+            {% set table = ch.standings() %}
+            <tr class="hover:bg-slate-50">
+              <td class="py-3 px-4 font-mono font-bold text-indigo-700">
+                #{{ ch.code }}
+              </td>
+              <td class="py-3 px-4 font-semibold text-slate-900">
+                {{ ch.creator_name or 'Challenger' }}
+              </td>
+              <td class="py-3 px-4 text-center font-mono font-black text-sm">
+                {{ table.creator_wins }} &ndash; {{ table.opponent_wins }}
+              </td>
+              <td class="py-3 px-4 font-semibold text-slate-900">
+                {{ ch.opponent_name or 'Awaiting Opponent...' }}
+              </td>
+              <td class="py-3 px-4 text-center font-mono">
+                {% if ch.status == 'complete' %}
+                <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">Complete</span>
+                {% elif ch.expired %}
+                <span class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold">Expired</span>
+                {% else %}
+                <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold">In Progress</span>
+                {% endif %}
+              </td>
+              <td class="py-3 px-4 text-center font-mono text-slate-500 text-[11px]">
+                {{ ch.created_at.strftime('%b %d') if ch.created_at else '-' }}
+              </td>
+              <td class="py-3 px-4 text-center font-mono text-slate-500 text-[11px]">
+                {{ ch.expires_at.strftime('%b %d') if ch.expires_at else '-' }}
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="7" class="py-8 text-center text-slate-500 font-mono text-xs">
+                No 5-mini-game challenges recorded yet.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
