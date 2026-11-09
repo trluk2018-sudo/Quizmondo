@@ -127,7 +127,7 @@
                      onchange="refreshChallengeSelection()">
             </td>
             <td class="py-2.5 px-3 font-mono font-black text-indigo-700 text-sm">
-              <a href="{{ url_for('games_challenge.challenge_lobby', code=ch.code) }}" target="_blank" class="hover:underline flex items-center gap-1" title="Open Challenge Lobby">
+              <a href="{{ url_for('games.challenge', code=ch.code) }}" target="_blank" class="hover:underline flex items-center gap-1" title="Open Challenge Lobby">
                 <span>#{{ ch.code }}</span>
                 <span class="text-[10px] text-slate-400 font-normal">↗</span>
               </a>
@@ -179,7 +179,7 @@
               {% endif %}
             </td>
             <td class="py-2.5 px-3 text-right whitespace-nowrap space-x-1.5">
-              <a href="{{ url_for('games_challenge.challenge_lobby', code=ch.code) }}" target="_blank"
+              <a href="{{ url_for('games.challenge', code=ch.code) }}" target="_blank"
                  class="px-2.5 py-1 rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-900 font-bold text-[11px] inline-block transition">
                 View
               </a>
