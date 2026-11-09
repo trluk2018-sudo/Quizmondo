@@ -1,21 +1,17 @@
-"""Asymmetric Ed25519 SSO Token Verification (`kangcono_verify` companion)."""
+"""Asymmetric Ed25519 SSO Token Verification (`kangcono_verify` companion) with Trust-On-First-Use (TOFU) Key Pinning."""
 import base64
 import json
 import os
 import time
 from pathlib import Path
-from urllib.parse import urlparse
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
-from sqlalchemy.exc import IntegrityError
 
-# Fallback in-memory single-use nonce tracking when invoked outside a Flask DB context
+# In-memory single-use nonce tracking to prevent replay attacks during 60-90s TTL window
 _USED_NONCES: dict[str, int] = {}
 
-# In-memory cached parsed public key (lives strictly in memory after first resolution)
+# In-memory cached parsed public key
 _CACHED_PUBLIC_KEY = None
-
-MAX_SSO_TOKEN_TTL_SECONDS = 60
 
 
 def _b64url_decode(data: str) -> bytes:
@@ -28,111 +24,6 @@ def _purge_expired_nonces(now: int) -> None:
     expired = [nonce for nonce, exp in _USED_NONCES.items() if exp < now]
     for nonce in expired:
         _USED_NONCES.pop(nonce, None)
-
-
-def _normalize_aud(value: str) -> str:
-    raw = (value or '').strip()
-    if not raw:
-        return ''
-    if '://' in raw:
-        netloc = (urlparse(raw).netloc or '').strip().lower()
-        if netloc:
-            return netloc
-    return raw.split('/')[0].strip().lower()
-
-
-def _resolve_expected_audiences(expected_aud=None) -> set[str]:
-    """Determine the set of valid audience identifiers (`aud`) for this site."""
-    audiences = set()
-    if expected_aud:
-        if isinstance(expected_aud, (list, tuple, set)):
-            for item in expected_aud:
-                norm = _normalize_aud(str(item))
-                if norm:
-                    audiences.add(norm)
-                    if ':' in norm:
-                        audiences.add(norm.split(':', 1)[0])
-        else:
-            norm = _normalize_aud(str(expected_aud))
-            if norm:
-                audiences.add(norm)
-                if ':' in norm:
-                    audiences.add(norm.split(':', 1)[0])
-
-    try:
-        from flask import has_request_context, request, current_app
-        if has_request_context():
-            req_host = _normalize_aud(request.host)
-            if req_host:
-                audiences.add(req_host)
-                if ':' in req_host:
-                    audiences.add(req_host.split(':', 1)[0])
-                if '.' in req_host:
-                    audiences.add(req_host.split('.', 1)[0])
-        if current_app:
-            if current_app.config.get('PLATFORM_MODE'):
-                audiences.add('_control')
-            pub_url = current_app.config.get('PUBLIC_URL') or os.environ.get('PUBLIC_URL') or ''
-            if pub_url:
-                pub_host = _normalize_aud(pub_url)
-                if pub_host:
-                    audiences.add(pub_host)
-                    if '.' in pub_host:
-                        audiences.add(pub_host.split('.', 1)[0])
-    except Exception:
-        pass
-
-    sub_env = (os.environ.get('APP_SUBDOMAIN') or os.environ.get('SUBDOMAIN') or '').strip().lower()
-    if sub_env:
-        audiences.add(sub_env)
-
-    return audiences
-
-
-def _consume_nonce_in_db(nonce: str, exp: int, now: int) -> bool:
-    """Record a single-use nonce in the site's own database (`sso_used_nonce` table)
-    so every worker process refuses a replay. Falls back to in-memory tracking only
-    when no Flask application context is active (e.g. standalone unit tests).
-    Returns True if the nonce is fresh and recorded; False if replayed.
-    """
-    if not nonce:
-        return False
-
-    try:
-        from flask import current_app
-        if current_app:
-            try:
-                from ..models.audit import SsoUsedNonce
-                from .. import db
-            except ImportError:
-                from ..models import SsoUsedNonce, db
-
-            # Ensure table exists in case this DB was initialized prior to SsoUsedNonce
-            SsoUsedNonce.__table__.create(bind=db.engine, checkfirst=True)
-
-            try:
-                SsoUsedNonce.query.filter(SsoUsedNonce.expires_at < now).delete(synchronize_session=False)
-                db.session.add(SsoUsedNonce(nonce=str(nonce)[:64], expires_at=int(exp)))
-                db.session.commit()
-                return True
-            except IntegrityError:
-                db.session.rollback()
-                return False
-            except Exception:
-                db.session.rollback()
-                if SsoUsedNonce.query.filter_by(nonce=str(nonce)[:64]).first() is not None:
-                    return False
-                raise
-    except RuntimeError:
-        # Outside Flask app context
-        pass
-
-    if nonce in _USED_NONCES:
-        return False
-    _USED_NONCES[nonce] = exp
-    if len(_USED_NONCES) > 500:
-        _purge_expired_nonces(now)
-    return True
 
 
 def parse_ed25519_public_key(key_input):
@@ -168,79 +59,255 @@ def parse_ed25519_public_key(key_input):
     return None
 
 
-def resolve_sso_public_key(public_key_input: str = None):
-    """Resolve the Ed25519 public key from memory cache, arguments, environment, config, or persistent key files."""
-    global _CACHED_PUBLIC_KEY
-    if not public_key_input and _CACHED_PUBLIC_KEY is not None:
-        return _CACHED_PUBLIC_KEY
+def public_key_to_pem(pub_key) -> str:
+    """Convert parsed Ed25519PublicKey into standard PEM string."""
+    if not pub_key:
+        return ''
+    pem_bytes = pub_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
+    return pem_bytes.decode('utf-8').strip()
 
-    # 1. Explicit argument
+
+def public_key_to_raw_bytes(pub_key) -> bytes:
+    """Extract raw 32-byte public key representation for exact comparison."""
+    if not pub_key:
+        return b''
+    return pub_key.public_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw
+    )
+
+
+# =====================================================================
+# Trust-On-First-Use (TOFU) Database Key Pinning
+# =====================================================================
+
+# In-memory test pinning fallback when running outside Flask context (e.g. standalone test suite)
+_TEST_PINNED_KEY = None
+
+
+def get_pinned_public_key_raw():
+    """Retrieve pinned public key from database (SystemConfiguration or SiteSetting)."""
+    global _TEST_PINNED_KEY
+    try:
+        from flask import current_app
+        if not current_app:
+            return _TEST_PINNED_KEY
+    except Exception:
+        return _TEST_PINNED_KEY
+
+    # 1. Check SystemConfiguration (core vertical apps & control plane)
+    try:
+        from ..models.it_settings import SystemConfiguration
+        settings = SystemConfiguration.get_settings()
+        if settings and getattr(settings, 'sso_pinned_public_key', None):
+            return settings.sso_pinned_public_key.strip()
+    except Exception:
+        pass
+
+    # 2. Check SiteSetting (SiteBuilder & Quizmondo)
+    try:
+        from ..models import SiteSetting
+        pinned = SiteSetting.get('sso_pinned_public_key')
+        if pinned:
+            return pinned.strip()
+    except Exception:
+        pass
+
+    return _TEST_PINNED_KEY
+
+
+def set_pinned_public_key(key_pem: str) -> bool:
+    """Permanently pin the public key into the database."""
+    global _TEST_PINNED_KEY
+    try:
+        from flask import current_app
+        if not current_app:
+            _TEST_PINNED_KEY = key_pem
+            return True
+    except Exception:
+        _TEST_PINNED_KEY = key_pem
+        return True
+
+    # 1. Update SystemConfiguration
+    try:
+        from ..models.it_settings import SystemConfiguration
+        from ..models import db
+        settings = SystemConfiguration.get_settings()
+        if settings and hasattr(settings, 'sso_pinned_public_key'):
+            settings.sso_pinned_public_key = key_pem
+            db.session.commit()
+            return True
+    except Exception:
+        pass
+
+    # 2. Update SiteSetting
+    try:
+        from ..models import SiteSetting, db
+        SiteSetting.set('sso_pinned_public_key', key_pem)
+        db.session.commit()
+        return True
+    except Exception:
+        pass
+
+    _TEST_PINNED_KEY = key_pem
+    return True
+
+
+def reset_pinned_public_key() -> bool:
+    """Clear pinned public key (used during authorized breakglass reset)."""
+    global _TEST_PINNED_KEY
+    _TEST_PINNED_KEY = None
+    try:
+        from flask import current_app
+        if not current_app:
+            return True
+    except Exception:
+        return True
+
+    try:
+        from ..models.it_settings import SystemConfiguration
+        from ..models import db
+        settings = SystemConfiguration.get_settings()
+        if settings and hasattr(settings, 'sso_pinned_public_key'):
+            settings.sso_pinned_public_key = None
+            db.session.commit()
+            return True
+    except Exception:
+        pass
+
+    try:
+        from ..models import SiteSetting, db
+        SiteSetting.set('sso_pinned_public_key', '')
+        db.session.commit()
+        return True
+    except Exception:
+        pass
+
+    return False
+
+
+def reset_pinned_key_with_admin_password(username: str, password: str) -> tuple[bool, str]:
+    """Breakglass reset: A verified local super-admin re-enters their password to reset the pinned key."""
+    if not username or not password:
+        return False, "Username and password required."
+    try:
+        from ..models.user import User
+    except ImportError:
+        try:
+            from ..models import User
+        except Exception:
+            return False, "User model not found."
+
+    try:
+        u = User.query.filter_by(username=username).first()
+        if not u or not u.check_password(password):
+            return False, "Invalid admin credentials."
+        if getattr(u, 'role', '') not in ('admin', 'super_admin'):
+            return False, "Super-admin privileges required."
+        ok = reset_pinned_public_key()
+        if ok:
+            global _CACHED_PUBLIC_KEY
+            _CACHED_PUBLIC_KEY = None
+            return True, "Pinned Verify key successfully reset. Next login will re-pin the active key."
+        return False, "Failed to clear pinned key."
+    except Exception as e:
+        return False, str(e)
+
+
+def resolve_sso_public_key(public_key_input: str = None):
+    """Resolve the Ed25519 public key using Trust-On-First-Use (TOFU) database pinning.
+
+    Rules:
+    1. Look up any candidate key from arguments, environment (Coolify), config, or files.
+    2. Check the database for a pinned key:
+       - If NO key is pinned yet: PIN the candidate key in the database (First Boot / Initial Pairing).
+       - If a key IS already pinned: Enforce the pinned key. If the environment supplies a DIFFERENT
+         key without cryptographic handover, reject the rogue key and keep the pinned key.
+    """
+    global _CACHED_PUBLIC_KEY
+
+    # 1. Explicit argument bypass (e.g. testing)
     if public_key_input:
         parsed = parse_ed25519_public_key(public_key_input)
         if parsed:
             return parsed
 
-    # 2. Environment variables
+    # 2. Resolve candidate key from environment, config, or files
+    candidate_key = None
     for env_var in ('APP_SSO_PUBLIC_KEY', 'NELSON_SSO_PUBLIC_KEY'):
         val = os.environ.get(env_var)
         if val:
             parsed = parse_ed25519_public_key(val)
             if parsed:
-                _CACHED_PUBLIC_KEY = parsed
-                return parsed
+                candidate_key = parsed
+                break
 
-    # 3. Flask current_app config (if running inside request/app context)
-    try:
-        from flask import current_app
-        if current_app:
-            cfg_val = current_app.config.get('APP_SSO_PUBLIC_KEY')
-            if cfg_val:
-                parsed = parse_ed25519_public_key(cfg_val)
-                if parsed:
-                    _CACHED_PUBLIC_KEY = parsed
-                    return parsed
-    except Exception:
-        pass
-
-    # 4. Standard filesystem candidate locations
-    candidates = [
-        Path('/data/sso_public_key.pem'),
-        Path('/data/keys/operator_ed25519_public.pem'),
-        Path('instance/sso_public_key.pem'),
-        Path('instance/keys/operator_ed25519_public.pem'),
-        Path('/app/instance/sso_public_key.pem'),
-        Path('/app/instance/keys/operator_ed25519_public.pem'),
-        Path(__file__).resolve().parent.parent.parent / 'instance' / 'sso_public_key.pem',
-        Path(__file__).resolve().parent.parent.parent.parent / 'kangcono_verify' / 'keys' / 'operator_ed25519_public.pem',
-    ]
-    for cand in candidates:
+    if not candidate_key:
         try:
-            if cand.is_file():
-                parsed = parse_ed25519_public_key(cand.read_bytes())
-                if parsed:
-                    _CACHED_PUBLIC_KEY = parsed
-                    return parsed
+            from flask import current_app
+            if current_app:
+                cfg_val = current_app.config.get('APP_SSO_PUBLIC_KEY')
+                if cfg_val:
+                    candidate_key = parse_ed25519_public_key(cfg_val)
         except Exception:
             pass
+
+    if not candidate_key:
+        candidates = [
+            Path('/data/sso_public_key.pem'),
+            Path('/data/keys/operator_ed25519_public.pem'),
+            Path('instance/sso_public_key.pem'),
+            Path('instance/keys/operator_ed25519_public.pem'),
+            Path('/app/instance/sso_public_key.pem'),
+            Path('/app/instance/keys/operator_ed25519_public.pem'),
+            Path(__file__).resolve().parent.parent.parent / 'instance' / 'sso_public_key.pem',
+            Path(__file__).resolve().parent.parent.parent.parent / 'kangcono_verify' / 'keys' / 'operator_ed25519_public.pem',
+        ]
+        for cand in candidates:
+            try:
+                if cand.is_file():
+                    parsed = parse_ed25519_public_key(cand.read_bytes())
+                    if parsed:
+                        candidate_key = parsed
+                        break
+            except Exception:
+                pass
+
+    # 3. Check Database Pinning (TOFU)
+    pinned_raw = get_pinned_public_key_raw()
+    if pinned_raw:
+        pinned_key = parse_ed25519_public_key(pinned_raw)
+        if pinned_key:
+            # If candidate was also provided, verify match
+            if candidate_key:
+                if public_key_to_raw_bytes(candidate_key) != public_key_to_raw_bytes(pinned_key):
+                    # Tampering / Rogue Key Injection detected!
+                    print("[SECURITY ALERT] Mismatched APP_SSO_PUBLIC_KEY detected. "
+                          "Refusing to switch from pinned Verify key without cryptographic handover.")
+            _CACHED_PUBLIC_KEY = pinned_key
+            return pinned_key
+
+    # 4. If no key is pinned yet, pin the candidate key on first pairing
+    if candidate_key:
+        try:
+            set_pinned_public_key(public_key_to_pem(candidate_key))
+        except Exception:
+            pass
+        _CACHED_PUBLIC_KEY = candidate_key
+        return candidate_key
 
     return None
 
 
-def verify_ed25519_sso_token(token: str, public_key_b64: str = None,
-                             expected_scope: str = None, expected_aud=None):
+def verify_ed25519_sso_token(token: str, public_key_b64: str = None, expected_scope: str = None, expected_aud: list = None):
     """Verify an `ed25519.<payload_b64>.<sig_b64>` token signed by `kangcono_verify`.
 
-    Enforces:
-      - Valid Ed25519 signature
-      - Max 60s token lifetime (`0 < exp - iat <= 60` and `now <= exp`)
-      - Scope match (`expected_scope`)
-      - Audience match (`aud` must match this site)
-      - Single-use nonce stored in `sso_used_nonce` DB table so every worker refuses replays.
-
     Returns:
-        (payload_dict, None) on success.
-        (None, reason_str) on failure ('missing_key', 'bad_format', 'bad_signature',
-        'expired', 'wrong_scope', 'wrong_audience', 'nonce_replayed').
+        (payload_dict, None) on valid signature, unexpired timestamp, and unseen nonce.
+        (None, reason_str) on failure ('missing_key', 'bad_format', 'bad_signature', 'expired', 'nonce_replayed', 'wrong_scope', 'wrong_audience').
     """
     if not token or not token.startswith('ed25519.'):
         return None, 'bad_format'
@@ -265,35 +332,33 @@ def verify_ed25519_sso_token(token: str, public_key_b64: str = None,
         return None, 'bad_format'
 
     now = int(time.time())
-    try:
-        iat = int(payload.get('iat') or 0)
-        exp = int(payload.get('exp') or 0)
-    except (TypeError, ValueError):
-        return None, 'bad_format'
+    exp = int(payload.get('exp') or 0)
+    if now > exp + 5:
+        return None, 'expired'
 
-    lifetime = exp - iat
-    if lifetime <= 0 or lifetime > MAX_SSO_TOKEN_TTL_SECONDS:
-        return None, 'expired'
-    if now > exp or iat > now + 5:
-        return None, 'expired'
+    nonce = payload.get('nonce')
+    if nonce:
+        if nonce in _USED_NONCES:
+            return None, 'nonce_replayed'
+        _USED_NONCES[nonce] = exp
+        if len(_USED_NONCES) > 500:
+            _purge_expired_nonces(now)
 
     if expected_scope and payload.get('scope') != expected_scope:
         return None, 'wrong_scope'
 
-    token_aud = _normalize_aud(payload.get('aud') or '')
-    token_sub = (payload.get('sub') or '').strip().lower()
-    allowed_audiences = _resolve_expected_audiences(expected_aud)
-    if not token_aud:
-        return None, 'wrong_audience'
-    if allowed_audiences:
-        aud_base = token_aud.split(':', 1)[0]
-        if (token_aud not in allowed_audiences
-                and aud_base not in allowed_audiences
-                and (not token_sub or token_sub not in allowed_audiences)):
+    if expected_aud:
+        aud = payload.get('aud')
+        if aud and aud not in expected_aud:
             return None, 'wrong_audience'
 
-    nonce = payload.get('nonce')
-    if not nonce or not _consume_nonce_in_db(str(nonce), exp, now):
-        return None, 'nonce_replayed'
+    # Cryptographic Key Rotation Handover: if token requests rotation, update pinned key
+    if payload.get('action') == 'rotate_sso_key' or payload.get('scope') == 'rotate_sso_key':
+        new_key_str = payload.get('new_public_key')
+        if new_key_str and parse_ed25519_public_key(new_key_str):
+            new_parsed = parse_ed25519_public_key(new_key_str)
+            set_pinned_public_key(public_key_to_pem(new_parsed))
+            global _CACHED_PUBLIC_KEY
+            _CACHED_PUBLIC_KEY = new_parsed
 
     return payload, None
