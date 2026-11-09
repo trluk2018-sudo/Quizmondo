@@ -3,7 +3,7 @@
 {% block title %}Users, Roles &amp; Players • Quizmondo Control Centre{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl space-y-6 text-slate-900">
+<div class="w-full space-y-6 text-slate-900">
 
   <!-- Page Header & Search -->
   <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-300 pb-4">
@@ -124,25 +124,25 @@
       <table class="w-full text-left text-xs">
         <thead class="bg-slate-200 border-b-2 border-slate-300 text-slate-900 font-black uppercase tracking-wider">
           <tr>
-            <th class="py-3.5 px-4 w-10">
+            <th class="py-2.5 px-3 w-10 text-center">
               <input type="checkbox" id="playersMasterCheck" onchange="setAllPlayerChecks(this.checked)"
                      title="Select / deselect all accounts"
                      class="w-4 h-4 accent-rose-600 cursor-pointer align-middle">
             </th>
-            <th class="py-3.5 px-4">User / Player</th>
-            <th class="py-3.5 px-4">Account Role</th>
-            <th class="py-3.5 px-4">Level &amp; XP</th>
-            <th class="py-3.5 px-4">Coins</th>
-            <th class="py-3.5 px-4">Duel Record</th>
-            <th class="py-3.5 px-4">Status</th>
-            <th class="py-3.5 px-4 text-right">Manage / Edit / Moderation</th>
+            <th class="py-2.5 px-3">User / Player</th>
+            <th class="py-2.5 px-3">Account Role</th>
+            <th class="py-2.5 px-3">Level &amp; XP</th>
+            <th class="py-2.5 px-3">Coins</th>
+            <th class="py-2.5 px-3">Duel Record</th>
+            <th class="py-2.5 px-3">Status</th>
+            <th class="py-2.5 px-3 text-right">Manage / Edit / Moderation</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-200">
           {% for p in players %}
           {% set linked_user = users_by_id.get(p.user_id) if users_by_id and p.user_id else None %}
           <tr class="hover:bg-slate-50 transition {% if p.is_banned %}bg-rose-50{% endif %}">
-            <td class="py-3.5 px-4">
+            <td class="py-2.5 px-3">
               {% if not linked_user or linked_user.id != session.get('user_id') %}
               <input type="checkbox" form="bulkPlayersForm" name="player_ids" value="{{ p.id }}"
                      class="player-check w-4 h-4 accent-rose-600 cursor-pointer align-middle"
@@ -151,7 +151,7 @@
               <span class="text-slate-400 font-bold text-[11px]" title="Your own account cannot be bulk deleted">—</span>
               {% endif %}
             </td>
-            <td class="py-3.5 px-4">
+            <td class="py-2.5 px-3">
               <div class="flex items-center gap-3">
                 <span class="w-9 h-9 rounded-xl bg-purple-100 border border-purple-300 flex items-center justify-center text-base font-bold shrink-0">
                   {% if p.avatar_key == 'quizzy' %}⭐{% elif p.avatar_key == 'pixel' %}🤖{% elif p.avatar_key == 'nova' %}🚀{% else %}🦉{% endif %}
@@ -169,7 +169,7 @@
               </div>
             </td>
 
-            <td class="py-3.5 px-4">
+            <td class="py-2.5 px-3">
               <form action="{{ url_for('admin.player_set_role', id=p.id) }}" method="POST" class="inline-flex items-center gap-1.5">
                 <select name="role" onchange="this.form.submit()" class="px-2.5 py-1.5 rounded-lg border-2 border-slate-300 bg-white text-slate-900 font-mono text-xs font-bold cursor-pointer">
                   {% if not linked_user %}
@@ -184,20 +184,20 @@
               </form>
             </td>
 
-            <td class="py-3.5 px-4 font-mono">
+            <td class="py-2.5 px-3 font-mono">
               <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-900 font-black text-[11px]">LVL {{ p.level }}</span>
               <span class="text-purple-900 font-bold ml-1">{{ p.xp }} XP</span>
             </td>
 
-            <td class="py-3.5 px-4 font-mono text-amber-800 font-black">
+            <td class="py-2.5 px-3 font-mono text-amber-800 font-black">
               🪙 {{ p.coins }}
             </td>
 
-            <td class="py-3.5 px-4 font-mono text-slate-900 font-bold">
+            <td class="py-2.5 px-3 font-mono text-slate-900 font-bold">
               {{ p.matches_won }}W / {{ p.matches_played }} Played
             </td>
 
-            <td class="py-3.5 px-4">
+            <td class="py-2.5 px-3">
               {% if p.is_banned %}
               <span class="px-2.5 py-1 rounded-full bg-rose-200 text-rose-900 font-black font-mono text-[10px] uppercase">
                 BANNED 🚫
@@ -209,7 +209,7 @@
               {% endif %}
             </td>
 
-            <td class="py-3.5 px-4 text-right whitespace-nowrap space-x-1.5">
+            <td class="py-2.5 px-3 text-right whitespace-nowrap space-x-1">
               <button
                 type="button"
                 onclick="openEditUserModal('{{ p.id }}', '{{ p.display_name|e }}', '{{ (linked_user.email if linked_user else '')|e }}', '{{ (linked_user.role if linked_user else 'player')|e }}', '{{ p.xp }}', '{{ p.coins }}')"

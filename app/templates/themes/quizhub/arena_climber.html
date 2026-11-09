@@ -74,10 +74,7 @@
           <span class="text-xs font-mono text-amber-400 font-bold">
             STAGE {{ day_meta.stage_number }}/6 &bull; {{ day_meta.stage_name }} ({{ day_meta.days }})
           </span>
-          <a href="{{ url_for('arena.climber_reset') }}" onclick="return confirm('Reset your mountain climb back to Day 1? (Your banked coins remain in your wallet)')"
-             class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600/70 text-slate-300 hover:text-cyan-300 text-[10px] font-mono transition inline-flex items-center gap-1">
-            <span>🔄</span><span>Reset to Day 1</span>
-          </a>
+
         </div>
         <p class="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
           Ascend 6 major camps over 30 days to reach the 8,848m summit. Secure Camp Safe Havens to protect your permanent progress against falls!
@@ -349,8 +346,32 @@
             </div>
           </div>
 
-          <!-- NORMAL TRIVIA SPRINT SECTION (Shown on non-camp days) -->
-          <div id="triviaQuestionSection" class="{% if day_meta.is_camp_day %}hidden{% endif %} space-y-4">
+          <!-- PRE-START SPRINT CARD (Click to start sprint and timer) -->
+          <div id="startSprintCard" class="{% if progress.day_question_index > 1 or day_meta.is_camp_day %}hidden{% endif %} text-center py-8 px-4 rounded-3xl bg-gradient-to-b from-[#131135] via-[#0e0926] to-[#070514] border-2 border-cyan-500/40 shadow-2xl space-y-4 my-2">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-500/20 text-cyan-300 text-3xl border border-cyan-400/40 shadow-inner">
+              🧗
+            </div>
+            <div class="space-y-1.5">
+              <span class="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-400/30 text-[11px] font-mono font-bold uppercase tracking-wider">
+                STAGE {{ day_meta.stage_number }}: {{ day_meta.stage_name }}
+              </span>
+              <h3 class="text-2xl font-black text-white tracking-wide mt-1">
+                DAY {{ progress.current_day }} EXPEDITION SPRINT
+              </h3>
+              <p class="text-xs sm:text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
+                Answer <strong>5 rapid checkpoint questions</strong> before the 60-second speed clock expires. Every leftover second banks <span class="text-amber-300 font-bold">+1 🪙 Speed Bonus</span>!
+              </p>
+            </div>
+            <div class="pt-2">
+              <button type="button" onclick="startSprintNow()"
+                      class="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 via-indigo-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-black text-sm uppercase tracking-wider shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transform hover:-translate-y-0.5 active:translate-y-0 transition cursor-pointer">
+                🧗 START DAY {{ progress.current_day }} SPRINT (60s)
+              </button>
+            </div>
+          </div>
+
+          <!-- NORMAL TRIVIA SPRINT SECTION (Shown on non-camp days when sprint is started) -->
+          <div id="triviaQuestionSection" class="{% if progress.day_question_index <= 1 or day_meta.is_camp_day %}hidden{% endif %} space-y-4">
 
             <!-- Real Circular Countdown Clock (Countdown TV Show Style) -->
             <div id="realClockWidget" class="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-slate-950 via-[#0a1024] to-[#121936] border border-cyan-400/40 shadow-inner font-mono">
@@ -837,13 +858,30 @@
 
   updateClimberPosition(currentDay);
   startUnlockCountdown();
-  if (!isDayCompleted && !isCampDay) {
+  window.startSprintNow = function() {
+    var startCard = document.getElementById('startSprintCard');
+    if (startCard) startCard.classList.add('hidden');
+    var qSec = document.getElementById('triviaQuestionSection');
+    if (qSec) qSec.classList.remove('hidden');
     startSprintClock();
+    if (window.qmPlaySound) window.qmPlaySound('climbStep');
+  };
+
+  if (!isDayCompleted && !isCampDay) {
+    var qIdx = {{ progress.day_question_index or 1 }};
+    if (qIdx > 1) {
+      startSprintClock();
+    }
   }
 
   // TRIVIA ANSWER HANDLER
   window.selectAnswer = function(selectedOpt) {
-    if (isSubmitting || !currentQuestionId) return;
+    if (isSubmitting) return;
+    if (!currentQuestionId) {
+      console.warn('No active question ID, reloading...');
+      window.location.reload();
+      return;
+    }
     isSubmitting = true;
 
     var buttons = document.querySelectorAll('.option-btn');

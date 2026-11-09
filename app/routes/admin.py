@@ -2814,7 +2814,7 @@ def climber_progress_reset(id):
     progress.current_day = target_day
     progress.current_step = target_day
     progress.day_question_index = 1
-    progress.day_questions_total = 2
+    progress.day_questions_total = 5
     progress.is_day_completed = False
     progress.unbanked_coins = 0
     progress.status = 'climbing'
@@ -2822,6 +2822,7 @@ def climber_progress_reset(id):
 
     if target_day == 1:
         progress.altitude_m = 1000
+        progress.highest_altitude = 1000
         progress.current_stage = 1
         progress.secured_camp_stage = 1
     else:
@@ -2849,10 +2850,11 @@ def climber_progress_reset_all():
         ClimberProgress.current_day: 1,
         ClimberProgress.current_step: 1,
         ClimberProgress.day_question_index: 1,
-        ClimberProgress.day_questions_total: 2,
+        ClimberProgress.day_questions_total: 5,
         ClimberProgress.is_day_completed: False,
         ClimberProgress.secured_camp_stage: 1,
         ClimberProgress.altitude_m: 1000,
+        ClimberProgress.highest_altitude: 1000,
         ClimberProgress.unbanked_coins: 0,
         ClimberProgress.status: 'climbing',
         ClimberProgress.last_climbed_date: None
