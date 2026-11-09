@@ -2295,6 +2295,17 @@ def needs_account_to_challenge(what='challenge'):
     return redirect(url_for('arena.player_register', next=nxt))
 
 
+def needs_account_to_play(what='play this game'):
+    """Both The Quiz Climber and Daily Lucky Wheel require an authenticated player account."""
+    if session.get('user_id'):
+        return None
+    flash(
+        "👋 Welcome! Grab a free account to {what} — your coins, expedition altitude, shields, and daily streaks will be saved to your profile forever! 😊".format(what=what),
+        "info")
+    nxt = request.full_path if request.query_string else request.path
+    return redirect(url_for('arena.player_register', next=nxt))
+
+
 def resolve_pub_team(state, player, table_num, team_name, is_virtual, require_pin=None):
     """Find the squad row that belongs to this browser session.
 
@@ -4100,6 +4111,9 @@ WHEEL_SLICES = [
 @arena_bp.route('/wheel')
 def wheel():
     """Daily Vault Spinner screen for free daily coins and climber shields."""
+    gate = needs_account_to_play('spin the Daily Vault Wheel')
+    if gate:
+        return gate
     player = get_current_player(persist=True)
     now = datetime.utcnow()
     can_spin = True
@@ -4123,6 +4137,13 @@ def wheel():
 @arena_bp.route('/wheel/spin', methods=['POST'])
 def wheel_spin():
     """Spin the Daily Lucky Wheel with fair weighted odds and 24h cooldown."""
+    if not session.get('user_id'):
+        return jsonify({
+            'success': False,
+            'error': 'You must be logged in to spin the wheel.',
+            'login_required': True,
+            'redirect': url_for('arena.player_register', next=url_for('arena.wheel'))
+        }), 401
     player = get_current_player(persist=True)
     now = datetime.utcnow()
 
@@ -4244,6 +4265,9 @@ def _pick_climber_question(diff='easy', exclude_id=None):
 @arena_bp.route('/climber')
 def climber():
     """The Quiz Climber: graphical vertical rock face expedition screen."""
+    gate = needs_account_to_play('tackle The Quiz Climber expedition')
+    if gate:
+        return gate
     player = get_current_player(persist=True)
     season = get_or_create_climber_season()
     progress = get_or_create_climber_progress(player.id, season.id)
@@ -4265,6 +4289,13 @@ def climber():
 @arena_bp.route('/climber/answer', methods=['POST'])
 def climber_answer():
     """Validate answer on the rock wall: climb higher, use shield, or fall."""
+    if not session.get('user_id'):
+        return jsonify({
+            'success': False,
+            'error': 'You must be logged in to climb.',
+            'login_required': True,
+            'redirect': url_for('arena.player_register', next=url_for('arena.climber'))
+        }), 401
     player = get_current_player(persist=True)
     season = get_or_create_climber_season()
     progress = get_or_create_climber_progress(player.id, season.id)
@@ -4396,6 +4427,13 @@ def climber_answer():
 @arena_bp.route('/climber/bank', methods=['POST'])
 def climber_bank():
     """Push-your-luck Safe Haven: Bank unbanked coins permanently into player wallet."""
+    if not session.get('user_id'):
+        return jsonify({
+            'success': False,
+            'error': 'You must be logged in to bank coins.',
+            'login_required': True,
+            'redirect': url_for('arena.player_register', next=url_for('arena.climber'))
+        }), 401
     player = get_current_player(persist=True)
     season = get_or_create_climber_season()
     progress = get_or_create_climber_progress(player.id, season.id)
@@ -4422,6 +4460,13 @@ def climber_bank():
 @arena_bp.route('/climber/restart', methods=['POST'])
 def climber_restart():
     """Start a fresh free climb from Basecamp."""
+    if not session.get('user_id'):
+        return jsonify({
+            'success': False,
+            'error': 'You must be logged in to restart climb.',
+            'login_required': True,
+            'redirect': url_for('arena.player_register', next=url_for('arena.climber'))
+        }), 401
     player = get_current_player(persist=True)
     season = get_or_create_climber_season()
     progress = get_or_create_climber_progress(player.id, season.id)

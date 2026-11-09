@@ -167,6 +167,13 @@ def post_detail(slug):
 @public_bp.route('/posts/<slug>/claim-coins', methods=['POST'])
 def claim_post_coins(slug):
     post = Post.query.filter_by(slug=slug, status='publish').first_or_404()
+    if not session.get('user_id'):
+        return jsonify({
+            'success': False,
+            'error': 'You must be logged in to claim Field Intel coins.',
+            'login_required': True,
+            'redirect': url_for('arena.player_register', next=url_for('public.post_detail', slug=slug))
+        }), 401
     from .arena import get_current_player
     profile = get_current_player(persist=True)
     if not profile:
