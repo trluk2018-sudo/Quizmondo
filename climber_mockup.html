@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quizmondo • Climber, Lucky Wheel & Hero TV SFX Interactive Preview</title>
+  <style>
+    /* -------------------------------------------------------------
+       ZERO-EXTERNAL-DEPENDENCY STANDALONE STYLES (No CDN needed)
+       ------------------------------------------------------------- */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #030712;
+      color: #f3f4f6;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.5;
+      padding: 1.5rem 1rem;
+      min-height: 100vh;
+    }
+
+    .font-mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Top Header */
+    .header-card {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      background: rgba(168, 85, 247, 0.2);
+      border: 1px solid rgba(192, 132, 252, 0.4);
+      color: #fcd34d;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+
+    .title-main {
+      font-size: 1.875rem;
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+
+    .sub-main {
+      color: #9ca3af;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+
+    /* Global Audio Control */
+    .audio-toggle-box {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: #0f172a;
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      padding: 0.5rem 0.75rem;
+      border-radius: 1rem;
+    }
+
+    .btn-audio {
+      background: linear-gradient(135deg, #fbbf24, #f97316);
+      color: #030712;
+      font-weight: 900;
+      font-size: 0.75rem;
+      padding: 0.5rem 1rem;
+      border-radius: 0.75rem;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: transform 0.1s, filter 0.2s;
+    }
+    .btn-audio:hover { filter: brightness(1.1); }
+    .btn-audio:active { transform: scale(0.96); }
+
+    /* Navigation Bar */
+    .tab-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+    }
+
+    .tab-btn {
+      padding: 0.65rem 1.25rem;
+      border-radius: 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #0f172a;
+      color: #9ca3af;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab-btn:hover { color: #ffffff; background: #1e293b; }
+    .tab-btn.active {
+      background: #9333ea;
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(147, 51, 234, 0.4);
+    }
+
+    /* Content Panels */
+    .panel {
+      background: rgba(15, 23, 42, 0.85);
+      border: 2px solid rgba(168, 85, 247, 0.3);
+      border-radius: 1.5rem;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .panel.hidden { display: none; }
+
+    /* -------------------------------------------------------------
+       TAB 1: HERO ARCADE TV SCREEN
+       ------------------------------------------------------------- */
+    .tv-wrapper {
+      max-width: 580px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .tv-outer-bezel {
+      background: #090d16;
+      border: 4px solid #1e293b;
+      border-radius: 1.25rem;
+      padding: 0.5rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 15px rgba(0,0,0,0.9);
+      position: relative;
+    }
+
+    .tv-inner-screen {
+      background: linear-gradient(135deg, #1e1136, #090d16 65%, #0e1e38);
+      border-radius: 0.85rem;
+      height: 380px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .tv-scanlines {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%);
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .tv-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+
+    .tv-badge-pill {
+      background: #fbbf24;
+      color: #030712;
+      font-size: 0.65rem;
+      font-weight: 900;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tv-dots-group {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .tv-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 9999px;
+      background: rgba(255,255,255,0.3);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tv-dot.active {
+      width: 22px;
+      background: #fbbf24;
+    }
+
+    .tv-content-center {
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .tv-slide-title {
+      font-size: 1.75rem;
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+
+    .tv-slide-desc {
+      color: #cbd5e1;
+      font-size: 0.85rem;
+    }
+
+    .tv-slide-tag {
+      align-self: flex-start;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 0.5rem;
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #6ee7b7;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .tv-bottom-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      z-index: 10;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(168, 85, 247, 0.2);
+    }
+
+    .tv-subtext {
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+
+    .btn-pink-cta {
+      background: #db2777;
+      color: #ffffff;
+      padding: 0.5rem 1.15rem;
+      border-radius: 0.75rem;
+      font-weight: 900;
+      font-size: 0.75rem;
+      border: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: transform 0.15s, background 0.15s;
+    }
+    .btn-pink-cta:hover { background: #ec4899; transform: scale(1.05); }
+
+    .tv-controls-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    .btn-small-control {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      padding: 0.35rem 0.75rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .btn-small-control:hover { background: #334155; }
+
+    /* -------------------------------------------------------------
+       TAB 2: MONTH-LONG QUIZ CLIMBER
+       ------------------------------------------------------------- */
+    .climber-stats-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+      padding-bottom: 1rem;
+    }
+
+    .pill-hud {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.85rem;
+      border-radius: 0.75rem;
+      background: #030712;
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      color: #fcd34d;
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+    .pill-hud.shield {
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #6ee7b7;
+    }
+
+    .tiers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1rem;
+    }
+
+    .tier-card {
+      padding: 1.25rem;
+      border-radius: 1rem;
+      border: 2px solid rgba(168, 85, 247, 0.3);
+      background: rgba(15, 23, 42, 0.7);
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      position: relative;
+    }
+    .tier-card.cleared {
+      border-color: rgba(16, 185, 129, 0.5);
+      background: rgba(6, 78, 59, 0.2);
+    }
+    .tier-card.active {
+      border-color: #06b6d4;
+      background: rgba(8, 51, 68, 0.35);
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.25);
+    }
+    .tier-card.locked {
+      opacity: 0.7;
+    }
+
+    .tier-label-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .tier-title {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: #ffffff;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: #1e293b;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 9999px;
+    }
+
+    .sponsor-note-box {
+      background: #030712;
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      border-radius: 0.65rem;
+      padding: 0.5rem 0.65rem;
+      font-size: 0.75rem;
+      color: #67e8f9;
+      line-height: 1.4;
+    }
+
+    .decision-banner {
+      background: #030712;
+      border: 2px solid rgba(251, 191, 36, 0.4);
+      border-radius: 1.25rem;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.25rem;
+    }
+
+    .btn-bank {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 0.65rem 1.25rem;
+      border-radius: 0.75rem;
+      font-weight: 900;
+      font-size: 0.75rem;
+      border: 1px solid #334155;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+    .btn-bank:hover { background: #334155; }
+
+    .btn-climb {
+      background: linear-gradient(135deg, #06b6d4, #9333ea);
+      color: #ffffff;
+      padding: 0.65rem 1.5rem;
+      border-radius: 0.75rem;
+      font-weight: 900;
+      font-size: 0.75rem;
+      border: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+      transition: transform 0.15s;
+    }
+    .btn-climb:hover { transform: scale(1.05); }
+
+    /* -------------------------------------------------------------
+       TAB 3: DAILY LUCKY COIN WHEEL
+       ------------------------------------------------------------- */
+    .wheel-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+      padding: 1rem 0;
+    }
+
+    .wheel-bezel {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      border-radius: 9999px;
+      border: 8px solid #1e293b;
+      box-shadow: 0 0 35px rgba(234, 179, 8, 0.35);
+      background: #090d16;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .wheel-pointer {
+      position: absolute;
+      top: -16px;
+      z-index: 30;
+      font-size: 2rem;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.8));
+    }
+
+    .wheel-center-hub {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border-radius: 9999px;
+      background: #030712;
+      border: 4px solid #fbbf24;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      z-index: 20;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+      pointer-events: none;
+    }
+
+    .btn-spin-action {
+      background: linear-gradient(135deg, #fbbf24, #f97316 50%, #ec4899);
+      color: #030712;
+      font-size: 1rem;
+      font-weight: 900;
+      padding: 0.85rem 2.5rem;
+      border-radius: 1rem;
+      border: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      box-shadow: 0 8px 25px rgba(249, 115, 22, 0.4);
+      transition: transform 0.15s;
+    }
+    .btn-spin-action:hover { transform: scale(1.05); }
+    .btn-spin-action:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* -------------------------------------------------------------
+       TAB 4: ARTICLE SPONSOR INTEL
+       ------------------------------------------------------------- */
+    .article-hud {
+      background: #030712;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      border-radius: 1rem;
+      padding: 0.85rem 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .btn-claim-coins {
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      color: #030712;
+      font-weight: 900;
+      font-size: 0.75rem;
+      padding: 0.65rem 1.25rem;
+      border-radius: 0.75rem;
+      border: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: transform 0.15s;
+    }
+    .btn-claim-coins:hover { transform: scale(1.05); }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Top Header -->
+    <header class="header-card">
+      <div>
+        <div class="badge-pill font-mono">
+          <span>⚡</span> GAME DESIGN & UX PREVIEW
+        </div>
+        <h1 class="title-main">
+          Quizmondo: Climber, Lucky Wheel & Hero TV
+        </h1>
+        <p class="sub-main">
+          Standalone preview with playable Web Audio SFX synth, Month-Long Climber Wall, and Daily Wheel.
+        </p>
+      </div>
+
+      <!-- Global Audio Toggle -->
+      <div class="audio-toggle-box">
+        <button id="sfxMasterBtn" onclick="toggleAudio()" class="btn-audio font-mono">
+          <span id="sfxIcon">🔊</span>
+          <span id="sfxLabel">SFX ON</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Bar -->
+    <nav class="tab-nav font-mono">
+      <button onclick="switchTab('tv')" id="tab-tv" class="tab-btn active">
+        <span>📺</span> Hero TV Screen & SFX
+      </button>
+      <button onclick="switchTab('climber')" id="tab-climber" class="tab-btn">
+        <span>🧗</span> Month-Long Quiz Climber
+      </button>
+      <button onclick="switchTab('wheel')" id="tab-wheel" class="tab-btn">
+        <span>🎡</span> Daily Lucky Coin Wheel
+      </button>
+      <button onclick="switchTab('article')" id="tab-article" class="tab-btn">
+        <span>📖</span> Article Intel & Sponsors
+      </button>
+    </nav>
+
+    <!-- TAB 1: HERO TV SCREEN MODULE PREVIEW -->
+    <section id="panel-tv" class="panel">
+      <div class="tv-wrapper">
+        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #9ca3af;" class="font-mono">
+          <span style="display: flex; align-items: center; gap: 0.4rem;">
+            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 9999px; background: #ef4444;"></span>
+            HERO MODULE: RIGHT-HAND ARCADE TV
+          </span>
+          <span id="tvChannelTag" style="color: #fbbf24; font-weight: 800;">CH 01 / 03</span>
+        </div>
+
+        <!-- Arcade TV Screen Bezel -->
+        <div class="tv-outer-bezel">
+          <div class="tv-scanlines"></div>
+          <div id="tvScreen" class="tv-inner-screen">
+            
+            <!-- TV Top Badges -->
+            <div class="tv-top-bar">
+              <span id="tvBadge" class="tv-badge-pill font-mono">
+                MONTHLY EXPEDITION
+              </span>
+              <div class="tv-dots-group" id="tvDots">
+                <button onclick="goSlide(0)" class="tv-dot active"></button>
+                <button onclick="goSlide(1)" class="tv-dot"></button>
+                <button onclick="goSlide(2)" class="tv-dot"></button>
+              </div>
+            </div>
+
+            <!-- TV Center Visual / Content -->
+            <div class="tv-content-center" id="tvContent">
+              <div class="tv-slide-title">
+                🧗 THE QUIZ CLIMBER
+              </div>
+              <p class="tv-slide-desc font-mono">
+                Month 1: Everest Ascent is LIVE. 18 days left in the season!
+              </p>
+              <div class="tv-slide-tag font-mono">
+                <span>🏔️</span> Basecamp Reached • Next: Ice Falls
+              </div>
+            </div>
+
+            <!-- TV Bottom Action -->
+            <div class="tv-bottom-bar font-mono">
+              <span class="tv-subtext" id="tvSubtext">Free entry for all registered players</span>
+              <button id="tvCtaBtn" onclick="onTvCtaClick()" class="btn-pink-cta font-mono">
+                CLIMB NOW ➔
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- TV Controls Strip -->
+        <div class="tv-controls-strip font-mono">
+          <span>Auto-advances every 6s with synthesized CRT channel-change audio.</span>
+          <div style="display: flex; gap: 0.5rem;">
+            <button onclick="prevSlide()" class="btn-small-control">◀ Prev</button>
+            <button onclick="nextSlide()" class="btn-small-control">Next ▶</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 2: MONTH-LONG QUIZ CLIMBER -->
+    <section id="panel-climber" class="panel hidden">
+      <!-- Header Bar -->
+      <div class="climber-stats-bar">
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 1.5rem;">🧗</span>
+            <h2 style="font-size: 1.35rem; font-weight: 900; color: #fff;">THE QUIZ CLIMBER • SEASON 1</h2>
+          </div>
+          <p class="font-mono" style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem;">
+            Ascend Mount Everest. Reset in <strong style="color: #fbbf24;">18 days, 14 hours</strong>. Bank coins or risk it!
+          </p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+          <div class="pill-hud font-mono">
+            🪙 Unbanked: <span id="unbankedCoins">120</span> Coins
+          </div>
+          <div class="pill-hud shield font-mono">
+            🛡️ Lifelines: <span id="lifelineCount">1</span> Shield
+          </div>
+        </div>
+      </div>
+
+      <!-- The 4 Mountain Tiers -->
+      <div class="tiers-grid font-mono">
+        
+        <!-- Tier 4: Summit -->
+        <div class="tier-card locked" style="border-color: rgba(251, 191, 36, 0.4); background: rgba(120, 53, 15, 0.15);">
+          <div class="tier-label-strip" style="color: #fbbf24;">
+            <span>TIER 4 (WEEK 4)</span>
+            <span style="font-size: 1rem;">👑</span>
+          </div>
+          <div class="tier-title">The Summit (8,848m)</div>
+          <p style="font-size: 0.75rem; color: #94a3b8;">Death Zone Trivia. 3 extreme questions.</p>
+          <div style="font-size: 0.75rem; font-weight: 800; color: #fcd34d;">Reward: 500 Coins + Summit Badge</div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" style="width: 0%; background: #fbbf24;"></div>
+          </div>
+          <span style="font-size: 0.7rem; color: #64748b;">Locked until Camp 3 cleared</span>
+        </div>
+
+        <!-- Tier 3: Ridge Pass -->
+        <div class="tier-card" style="border-color: rgba(168, 85, 247, 0.4); background: rgba(88, 28, 135, 0.2);">
+          <div class="tier-label-strip" style="color: #c084fc;">
+            <span>TIER 3 (WEEK 3)</span>
+            <span style="font-size: 1rem;">⚡</span>
+          </div>
+          <div class="tier-title">Ice Ridge (5,500m)</div>
+          <p style="font-size: 0.75rem; color: #94a3b8;">Hard trivia. 4 questions.</p>
+          <div style="font-size: 0.75rem; font-weight: 800; color: #d8b4fe;">Reward: 250 Coins</div>
+          <div class="sponsor-note-box">
+            💡 <strong>Field Note:</strong> Nike Marathon Running guide has clues for this tier!
+          </div>
+        </div>
+
+        <!-- Tier 2: Ice Falls (ACTIVE NOW) -->
+        <div class="tier-card active">
+          <div class="tier-label-strip" style="color: #67e8f9;">
+            <span style="background: #06b6d4; color: #030712; padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 900;">CURRENT TIER</span>
+            <span style="font-size: 1rem;">🏔️</span>
+          </div>
+          <div class="tier-title">Ice Falls (3,000m)</div>
+          <p style="font-size: 0.75rem; color: #cbd5e1;">Medium difficulty. 2 of 4 cleared.</p>
+          <div style="font-size: 0.75rem; font-weight: 800; color: #67e8f9;">Checkpoint Safe Haven ahead</div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" style="width: 50%; background: #06b6d4;"></div>
+          </div>
+        </div>
+
+        <!-- Tier 1: Basecamp (CLEARED) -->
+        <div class="tier-card cleared">
+          <div class="tier-label-strip" style="color: #4ade80;">
+            <span>CLEARED 🏆</span>
+            <span style="font-size: 1rem;">⛺</span>
+          </div>
+          <div class="tier-title">Basecamp (1,000m)</div>
+          <p style="font-size: 0.75rem; color: #94a3b8;">All 3 questions completed.</p>
+          <div style="font-size: 0.75rem; font-weight: 800; color: #4ade80;">Banked: +100 Coins Safe</div>
+        </div>
+
+      </div>
+
+      <!-- Decision Box -->
+      <div class="decision-banner">
+        <div>
+          <div class="font-mono" style="font-size: 0.7rem; font-weight: 800; color: #fbbf24; text-transform: uppercase;">
+            PUSH YOUR LUCK • ALTITUDE DECISION
+          </div>
+          <div style="font-size: 1.15rem; font-weight: 900; color: #fff; margin-top: 0.25rem;">
+            Do you Bank your 120 Coins now, or Climb higher to the Ridge?
+          </div>
+          <p class="font-mono" style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem;">
+            If you fail question 3 without a shield, you tumble back to Basecamp and lose unbanked loot!
+          </p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+          <button onclick="bankCoins()" class="btn-bank font-mono">
+            🏕️ BANK &amp; REST (+120)
+          </button>
+          <button onclick="climbHigher()" class="btn-climb font-mono">
+            🧗 CLIMB HIGHER (RISK)
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: DAILY LUCKY COIN WHEEL -->
+    <section id="panel-wheel" class="panel hidden">
+      <div style="text-align: center; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 0.5rem;">
+        <span class="badge-pill font-mono" style="margin: 0 auto;">
+          FREE DAILY LOOT DROP
+        </span>
+        <h2 style="font-size: 1.85rem; font-weight: 900; color: #fff;">The Vault Spinner</h2>
+        <p class="font-mono" style="font-size: 0.75rem; color: #94a3b8;">
+          100% Free daily spin for coins, cosmetics &amp; climber shields. Never Pay To Play.
+        </p>
+      </div>
+
+      <div class="wheel-container">
+        <!-- Bezel -->
+        <div class="wheel-bezel">
+          <div class="wheel-pointer">🔻</div>
+          <canvas id="wheelCanvas" width="284" height="284" style="border-radius: 9999px;"></canvas>
+          <div class="wheel-center-hub">🪙</div>
+        </div>
+
+        <button id="spinBtn" onclick="spinWheel()" class="btn-spin-action font-mono">
+          SPIN WHEEL 🎡
+        </button>
+        <div id="wheelStatus" class="font-mono" style="font-size: 0.75rem; color: #94a3b8;">
+          1 Free Spin Available Today!
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: ARTICLE SPONSOR INTEL -->
+    <section id="panel-article" class="panel hidden">
+      <div class="article-hud font-mono">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.5rem;">📖</span>
+          <div>
+            <div style="font-size: 0.8rem; font-weight: 800; color: #fff;">SPONSORED EXPEDITION INTEL</div>
+            <div style="font-size: 0.7rem; color: #94a3b8;">Read 15s to earn +25 Coins &amp; Climber Clues</div>
+          </div>
+        </div>
+        <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; font-size: 0.75rem; font-weight: 800; padding: 0.35rem 0.75rem; border-radius: 0.5rem;">
+          Active Dwell: 15s / 15s Completed
+        </span>
+      </div>
+
+      <div style="background: #030712; padding: 1.5rem; border-radius: 1rem; border: 1px solid #1e293b; display: flex; flex-direction: column; gap: 0.75rem;">
+        <h3 style="font-size: 1.35rem; font-weight: 900; color: #fff;">How Carbon-Plate Running Shoes Changed Marathon History</h3>
+        <div class="font-mono" style="font-size: 0.75rem; color: #64748b;">Sponsored by Fleet Athletics • 3 min read</div>
+        <p style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.6;">
+          In 1984, the first prototype marathon sole debuted in Boston. Trivia competitors preparing for this month's <strong style="color: #fcd34d;">Ice Ridge Climber</strong> take note: the prototype reduced energy expenditure by exactly <strong>4.2 percent</strong>!
+        </p>
+
+        <div style="background: rgba(88, 28, 135, 0.25); border-left: 4px solid #fbbf24; padding: 0.75rem 1rem; border-radius: 0.5rem;">
+          <div class="font-mono" style="font-size: 0.65rem; font-weight: 800; color: #fbbf24; text-transform: uppercase;">
+            🧗 CLIMBER RECON CLUE UNLOCKED
+          </div>
+          <p style="font-size: 0.75rem; color: #f1f5f9; margin-top: 0.25rem;">
+            Question 7 on the Ice Ridge asks for the prototype shoe year: remember <strong>1984</strong>!
+          </p>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; background: #030712; padding: 1rem 1.25rem; border-radius: 1rem; border: 1px solid rgba(16, 185, 129, 0.3);">
+        <div class="font-mono">
+          <div style="font-size: 0.85rem; font-weight: 800; color: #fff;">Intel Reading Verified!</div>
+          <div style="font-size: 0.75rem; color: #94a3b8;">Real attention dwell completed.</div>
+        </div>
+        <button onclick="claimArticleCoins()" class="btn-claim-coins font-mono">
+          CLAIM +25 COINS 🪙
+        </button>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Audio Synthesis & Interaction Logic -->
+  <script>
+    var audioCtx = null;
+    var sfxEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function toggleAudio() {
+      initAudio();
+      sfxEnabled = !sfxEnabled;
+      document.getElementById('sfxIcon').innerText = sfxEnabled ? '🔊' : '🔇';
+      document.getElementById('sfxLabel').innerText = sfxEnabled ? 'SFX ON' : 'SFX MUTED';
+      if (sfxEnabled) playCoinSound();
+    }
+
+    function playTvSlideSound() {
+      if (!sfxEnabled) return;
+      initAudio();
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(320, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(780, audioCtx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.12);
+    }
+
+    function playCoinSound() {
+      if (!sfxEnabled) return;
+      initAudio();
+      var now = audioCtx.currentTime;
+      var osc1 = audioCtx.createOscillator();
+      var osc2 = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+
+      osc1.type = 'sine';
+      osc2.type = 'sine';
+      osc1.frequency.setValueAtTime(987.77, now);
+      osc1.frequency.setValueAtTime(1318.51, now + 0.08);
+      osc2.frequency.setValueAtTime(1318.51, now + 0.08);
+
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc1.start(now);
+      osc1.stop(now + 0.35);
+      osc2.start(now + 0.08);
+      osc2.stop(now + 0.35);
+    }
+
+    function playTickSound() {
+      if (!sfxEnabled) return;
+      initAudio();
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(450, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.03);
+    }
+
+    function switchTab(id) {
+      initAudio();
+      playTvSlideSound();
+      ['tv', 'climber', 'wheel', 'article'].forEach(function(t) {
+        var el = document.getElementById('panel-' + t);
+        if (el) el.classList.toggle('hidden', t !== id);
+        var btn = document.getElementById('tab-' + t);
+        if (btn) btn.classList.toggle('active', t === id);
+      });
+      if (id === 'wheel') drawWheel();
+    }
+
+    // Hero TV Module Slides
+    var tvSlides = [
+      {
+        channel: 'CH 01 / 03',
+        badge: 'MONTHLY EXPEDITION',
+        title: '🧗 THE QUIZ CLIMBER',
+        desc: 'Month 1: Everest Ascent is LIVE. 18 days left in the season!',
+        tag: '🏔️ Basecamp Reached • Next: Ice Falls',
+        sub: 'Free entry for all registered players',
+        cta: 'CLIMB NOW ➔',
+        action: function() { switchTab('climber'); }
+      },
+      {
+        channel: 'CH 02 / 03',
+        badge: 'DAILY VAULT REWARD',
+        title: '🎡 LUCKY COIN WHEEL',
+        desc: 'Your Free Daily Spin is ready in the Vault. Win up to 250 Coins!',
+        tag: '⚡ 100% Free • Never Pay To Play',
+        sub: 'Available once every 24 hours',
+        cta: 'SPIN NOW ➔',
+        action: function() { switchTab('wheel'); }
+      },
+      {
+        channel: 'CH 03 / 03',
+        badge: 'SPONSORED INTEL',
+        title: '📖 FIELD RECON & CLUES',
+        desc: 'Read the Nike Marathon guide to unlock answers for Camp 3 + Earn +25 Coins.',
+        tag: '💡 Guaranteed Climber Clues Inside',
+        sub: 'Sponsored by Fleet Athletics',
+        cta: 'READ & EARN ➔',
+        action: function() { switchTab('article'); }
+      }
+    ];
+    var currentSlide = 0;
+    var tvTimer = null;
+
+    function renderSlide(idx, playSound) {
+      currentSlide = (idx + tvSlides.length) % tvSlides.length;
+      var s = tvSlides[currentSlide];
+      document.getElementById('tvChannelTag').innerText = s.channel;
+      document.getElementById('tvBadge').innerText = s.badge;
+      document.getElementById('tvSubtext').innerText = s.sub;
+      document.getElementById('tvCtaBtn').innerText = s.cta;
+
+      var dots = document.querySelectorAll('#tvDots .tv-dot');
+      dots.forEach(function(d, i) {
+        d.className = (i === currentSlide) ? 'tv-dot active' : 'tv-dot';
+      });
+
+      var content = document.getElementById('tvContent');
+      content.style.opacity = '0';
+      content.style.transform = 'translateY(8px)';
+      setTimeout(function() {
+        content.innerHTML = '<div class="tv-slide-title">' + s.title + '</div>' +
+          '<p class="tv-slide-desc font-mono">' + s.desc + '</p>' +
+          '<div class="tv-slide-tag font-mono">' + s.tag + '</div>';
+        content.style.opacity = '1';
+        content.style.transform = 'translateY(0)';
+      }, 150);
+
+      if (playSound) playTvSlideSound();
+    }
+
+    function goSlide(i) { renderSlide(i, true); restartTvTimer(); }
+    function nextSlide() { renderSlide(currentSlide + 1, true); restartTvTimer(); }
+    function prevSlide() { renderSlide(currentSlide - 1, true); restartTvTimer(); }
+    function onTvCtaClick() { tvSlides[currentSlide].action(); }
+    function restartTvTimer() {
+      if (tvTimer) clearInterval(tvTimer);
+      tvTimer = setInterval(function() { renderSlide(currentSlide + 1, true); }, 6000);
+    }
+    restartTvTimer();
+
+    // Wheel Rendering
+    var wheelSegments = [
+      { text: '+25 Coins', color: '#06b6d4' },
+      { text: '+50 Coins', color: '#3b82f6' },
+      { text: '🛡️ Shield', color: '#8b5cf6' },
+      { text: '+15 Coins', color: '#10b981' },
+      { text: '🪙 250 VIP', color: '#f59e0b' },
+      { text: '+35 Coins', color: '#06b6d4' },
+      { text: '+100 Coins', color: '#ec4899' },
+      { text: '+15 Coins', color: '#10b981' }
+    ];
+    var currentAngle = 0;
+    var isSpinning = false;
+
+    function drawWheel() {
+      var canvas = document.getElementById('wheelCanvas');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+      var num = wheelSegments.length;
+      var arc = (2 * Math.PI) / num;
+      var r = canvas.width / 2;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(r, r);
+      ctx.rotate(currentAngle);
+
+      wheelSegments.forEach(function(seg, i) {
+        var start = i * arc;
+        var end = start + arc;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, r - 2, start, end);
+        ctx.fillStyle = seg.color;
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#090d16';
+        ctx.stroke();
+
+        ctx.save();
+        ctx.rotate(start + arc / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px ui-monospace, monospace';
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(seg.text, r - 20, 4);
+        ctx.restore();
+      });
+
+      ctx.restore();
+    }
+    drawWheel();
+
+    function spinWheel() {
+      if (isSpinning) return;
+      initAudio();
+      isSpinning = true;
+      var spinBtn = document.getElementById('spinBtn');
+      spinBtn.disabled = true;
+
+      var extraSpins = 5 + Math.random() * 3;
+      var totalRotation = extraSpins * 2 * Math.PI + Math.random() * 2 * Math.PI;
+      var duration = 3800;
+      var start = performance.now();
+      var initialAngle = currentAngle;
+      var lastTick = 0;
+
+      function animate(time) {
+        var elapsed = time - start;
+        var progress = Math.min(elapsed / duration, 1);
+        var ease = 1 - Math.pow(1 - progress, 3);
+        currentAngle = initialAngle + totalRotation * ease;
+        drawWheel();
+
+        var tickThreshold = (2 * Math.PI) / wheelSegments.length;
+        if (currentAngle - lastTick > tickThreshold) {
+          playTickSound();
+          lastTick = currentAngle;
+        }
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          isSpinning = false;
+          playCoinSound();
+          spinBtn.disabled = false;
+          document.getElementById('wheelStatus').innerHTML = '<span style="color: #fbbf24; font-weight: 800;">🎉 You won +50 Coins! Banked into your Profile.</span>';
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+
+    function bankCoins() {
+      playCoinSound();
+      alert('🏕️ SUCCESS: 120 Coins safely banked into your profile! You rest at Camp 2.');
+    }
+    function climbHigher() {
+      initAudio();
+      playTvSlideSound();
+      alert('🧗 ASCENDING: You begin Tier 3 (Ice Ridge, 5,500m)! Read the sponsor guide to scout questions.');
+    }
+    function claimArticleCoins() {
+      playCoinSound();
+      alert('🪙 +25 Coins claimed! Your Climber clue for Question 7 has been marked.');
+    }
+  </script>
+</body>
+</html>

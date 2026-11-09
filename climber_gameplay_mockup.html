@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Quizmondo • The Quiz Climber Live Wall (High-Visibility Mountain Range &amp; Sound)</title>
+  <style>
+    /* -------------------------------------------------------------
+       MOBILE-FIRST ZERO-DEPENDENCY STYLES (No overflow, no CDN)
+       ------------------------------------------------------------- */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #030712;
+      color: #f3f4f6;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.4;
+      padding: 0.75rem 0.5rem;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .font-mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .app-shell {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.3);
+      flex-wrap: wrap;
+    }
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      background: rgba(168, 85, 247, 0.2);
+      border: 1px solid rgba(192, 132, 252, 0.4);
+      color: #fcd34d;
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .btn-audio-toggle {
+      background: linear-gradient(135deg, #fbbf24, #f97316);
+      color: #030712;
+      font-weight: 900;
+      font-size: 0.7rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 0.5rem;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      text-transform: uppercase;
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+      padding-bottom: 0.5rem;
+    }
+    .tab-btn {
+      padding: 0.5rem 1rem;
+      border-radius: 0.65rem;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      background: #0f172a;
+      color: #9ca3af;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: #9333ea;
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(147, 51, 234, 0.4);
+    }
+
+    .card-panel {
+      background: rgba(15, 23, 42, 0.9);
+      border: 2px solid rgba(168, 85, 247, 0.3);
+      border-radius: 1.25rem;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .card-panel.hidden { display: none; }
+
+    /* =============================================================
+       GAMEPLAY LAYOUT: Wall with Visible Mountain + Live Question
+       ============================================================= */
+    .gameplay-layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 1.25rem;
+      align-items: stretch;
+      width: 100%;
+    }
+    @media (max-width: 820px) {
+      .gameplay-layout {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+    }
+
+    /* -------------------------------------------------------------
+       THE WALL BOX (HIGH-VISIBILITY MOUNTAIN RANGE + LIVE SNOW)
+       ------------------------------------------------------------- */
+    .wall-box {
+      position: relative;
+      height: 460px;
+      border-radius: 1rem;
+      border: 3px solid #475569;
+      overflow: hidden;
+      background: #080d1a;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.85), inset 0 0 30px rgba(0,0,0,0.8);
+      display: flex;
+      width: 100%;
+    }
+    @media (max-width: 820px) {
+      .wall-box { height: 280px; }
+    }
+
+    /* High-Visibility Mountain Landscape SVG */
+    .mountain-backdrop {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Live Falling Snow Particles */
+    .snow-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 5;
+      overflow: hidden;
+    }
+    .snowflake {
+      position: absolute;
+      top: -20px;
+      background: #ffffff;
+      border-radius: 9999px;
+      opacity: 0.85;
+      box-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+      animation: fallDown linear infinite, swaySide ease-in-out infinite alternate;
+    }
+
+    @keyframes fallDown {
+      0% { top: -20px; }
+      100% { top: 105%; }
+    }
+    @keyframes swaySide {
+      0% { transform: translateX(0px); }
+      100% { transform: translateX(20px); }
+    }
+
+    /* LEFT TRACK (84px): Dedicated Climbing Rope (Climber stays inside) */
+    .climb-track {
+      width: 84px;
+      height: 100%;
+      position: relative;
+      background: rgba(3, 7, 18, 0.4);
+      backdrop-filter: blur(2px);
+      border-right: 2px dashed rgba(168, 85, 247, 0.45);
+      flex-shrink: 0;
+      z-index: 15;
+    }
+
+    /* Golden Braided Climbing Rope */
+    .rope-line {
+      position: absolute;
+      top: 15px;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 3px;
+      background: linear-gradient(180deg, #fef08a, #f59e0b, #d97706);
+      box-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+      border-radius: 2px;
+    }
+
+    /* Piton Anchors on the rope */
+    .rope-piton {
+      position: absolute;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 16px;
+      height: 8px;
+      background: #475569;
+      border: 1px solid #94a3b8;
+      border-radius: 3px;
+    }
+
+    /* Animated Mascot Climber */
+    .climber-character {
+      position: absolute;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 30;
+      transition: all 0.75s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      pointer-events: none;
+    }
+    .climber-disc {
+      width: 44px;
+      height: 44px;
+      border-radius: 9999px;
+      background: linear-gradient(135deg, #9333ea, #4f46e5);
+      border: 3px solid #fbbf24;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      box-shadow: 0 0 25px rgba(251, 191, 36, 0.95);
+    }
+    .climber-badge-mini {
+      background: #030712;
+      border: 1px solid #fbbf24;
+      color: #fbbf24;
+      padding: 0.1rem 0.35rem;
+      border-radius: 9999px;
+      font-size: 0.6rem;
+      font-weight: 900;
+      margin-top: 0.15rem;
+      white-space: nowrap;
+    }
+
+    /* RIGHT TRACK: Ledge Cards Overlaid on Mountain (Zero text overlap!) */
+    .stations-column {
+      flex: 1;
+      height: 100%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 0.85rem 0.75rem;
+      min-width: 0;
+      z-index: 15;
+    }
+
+    .station-ledge-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.4rem 0.65rem;
+      border-radius: 0.5rem;
+      background: rgba(3, 7, 18, 0.85);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.25);
+      font-size: 0.7rem;
+      font-weight: 800;
+      white-space: nowrap;
+      min-width: 0;
+      gap: 0.4rem;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+    }
+    .station-ledge-item.summit {
+      border-color: #fbbf24;
+      background: rgba(251, 191, 36, 0.25);
+      color: #fef08a;
+    }
+    .station-ledge-item.camp2 {
+      border-color: #a855f7;
+      background: rgba(168, 85, 247, 0.25);
+      color: #d8b4fe;
+    }
+    .station-ledge-item.camp1 {
+      border-color: #06b6d4;
+      background: rgba(6, 182, 212, 0.25);
+      color: #67e8f9;
+    }
+    .station-ledge-item.base {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.25);
+      color: #86efac;
+    }
+    .station-ledge-item.current-target {
+      box-shadow: 0 0 16px rgba(6, 182, 212, 0.85);
+      border-color: #38bdf8;
+    }
+
+    .ledge-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+    .ledge-reward {
+      font-size: 0.65rem;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      background: rgba(0,0,0,0.6);
+      flex-shrink: 0;
+    }
+
+    /* -------------------------------------------------------------
+       RIGHT COLUMN: TRIVIA TERMINAL & CONTROLS
+       ------------------------------------------------------------- */
+    .terminal-box {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      min-width: 0;
+    }
+
+    .hud-bar {
+      background: #030712;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      border-radius: 0.75rem;
+      padding: 0.65rem 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+
+    .question-panel {
+      background: #090d16;
+      border: 2px solid #1e293b;
+      border-radius: 1rem;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      min-width: 0;
+    }
+
+    .q-step-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: #94a3b8;
+    }
+
+    .q-prompt-heading {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.35;
+      word-wrap: break-word;
+    }
+
+    .answers-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+      width: 100%;
+    }
+    @media (min-width: 580px) {
+      .answers-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .btn-answer {
+      background: #0f172a;
+      border: 2px solid #334155;
+      border-radius: 0.65rem;
+      padding: 0.65rem 0.85rem;
+      color: #f1f5f9;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-align: left;
+      transition: all 0.15s;
+      min-width: 0;
+      width: 100%;
+    }
+    .btn-answer:hover {
+      border-color: #06b6d4;
+      background: #1e293b;
+    }
+    .btn-answer.correct {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.25);
+      color: #6ee7b7;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+    }
+    .btn-answer.wrong {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.25);
+      color: #fca5a5;
+    }
+
+    .opt-letter {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      background: #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 900;
+      color: #38bdf8;
+      flex-shrink: 0;
+    }
+    .opt-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: normal;
+      word-wrap: break-word;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .recon-box {
+      background: rgba(88, 28, 135, 0.25);
+      border-left: 3px solid #38bdf8;
+      border-radius: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.7rem;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .bank-box {
+      background: #030712;
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      border-radius: 0.75rem;
+      padding: 0.65rem 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .btn-bank-action {
+      background: #1e293b;
+      color: #fcd34d;
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 900;
+      font-size: 0.7rem;
+      cursor: pointer;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* -------------------------------------------------------------
+       WHEEL TAB (With Audible Mechanical Peg Sounds)
+       ------------------------------------------------------------- */
+    .wheel-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+      padding: 1rem 0;
+    }
+    .wheel-bezel {
+      position: relative;
+      width: 290px;
+      height: 290px;
+      border-radius: 9999px;
+      border: 6px solid #1e293b;
+      box-shadow: 0 0 35px rgba(251, 191, 36, 0.35);
+      background: #090d16;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .wheel-pointer-pin {
+      position: absolute;
+      top: -16px;
+      z-index: 40;
+      font-size: 2rem;
+      filter: drop-shadow(0 3px 5px rgba(0,0,0,0.9));
+      transition: transform 0.05s ease;
+    }
+    .wheel-hub-center {
+      position: absolute;
+      width: 56px;
+      height: 56px;
+      border-radius: 9999px;
+      background: #030712;
+      border: 3px solid #fbbf24;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      z-index: 25;
+      pointer-events: none;
+    }
+    .btn-spin-wheel {
+      background: linear-gradient(135deg, #fbbf24, #f97316 50%, #ec4899);
+      color: #030712;
+      font-size: 1rem;
+      font-weight: 900;
+      padding: 0.85rem 2.5rem;
+      border-radius: 1rem;
+      border: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
+      transition: transform 0.15s;
+    }
+    .btn-spin-wheel:disabled { opacity: 0.5; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+  <div class="app-shell">
+    
+    <!-- Top Header -->
+    <header class="top-bar">
+      <div>
+        <div class="badge-pill font-mono">
+          <span>⚡</span> HIGH-VISIBILITY MOUNTAIN RANGE
+        </div>
+        <h1 style="font-size: 1.25rem; font-weight: 900; color: #fff; margin-top: 0.15rem;">
+          The Quiz Climber: Snowing Mountain &amp; Wheel
+        </h1>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 0.4rem;">
+        <button id="sfxMasterBtn" onclick="toggleAudio()" class="btn-audio-toggle font-mono">
+          <span id="sfxIcon">🔊</span>
+          <span id="sfxLabel">SFX ON</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs font-mono">
+      <button onclick="switchView('gameplay')" id="tab-gameplay" class="tab-btn active">
+        <span>🧗</span> Live Snowing Mountain Wall
+      </button>
+      <button onclick="switchView('wheel')" id="tab-wheel" class="tab-btn">
+        <span>🎡</span> Lucky Spin Wheel
+      </button>
+    </nav>
+
+    <!-- =============================================================
+         PANEL 1: ACTIVE ROCK WALL CLIMBING GAMEPLAY
+         ============================================================= -->
+    <section id="panel-gameplay" class="card-panel">
+      
+      <div class="gameplay-layout">
+        
+        <!-- LEFT: THE CLIMBING WALL (HIGH-VISIBILITY MOUNTAIN RANGE + LIVE SNOWFALL) -->
+        <div class="wall-box font-mono">
+          
+          <!-- High-Visibility Mountain Landscape SVG -->
+          <svg class="mountain-backdrop" viewBox="0 0 360 460" preserveAspectRatio="none">
+            <defs>
+              <!-- Atmospheric Twilight Alpine Sky -->
+              <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#040614" />
+                <stop offset="35%" stop-color="#0f1638" />
+                <stop offset="65%" stop-color="#211a4d" />
+                <stop offset="90%" stop-color="#382161" />
+                <stop offset="100%" stop-color="#1b1535" />
+              </linearGradient>
+
+              <!-- Aurora Glow in Upper Sky -->
+              <radialGradient id="auroraGlow" cx="60%" cy="18%" r="60%">
+                <stop offset="0%" stop-color="rgba(56, 189, 248, 0.45)" />
+                <stop offset="45%" stop-color="rgba(168, 85, 247, 0.25)" />
+                <stop offset="100%" stop-color="transparent" />
+              </radialGradient>
+
+              <!-- Far Distant Peaks: Vibrant illuminated alpine lilac & sky blue (Much lighter & visible) -->
+              <linearGradient id="farPeakLeftGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#c4b5fd" />
+                <stop offset="40%" stop-color="#8b5cf6" />
+                <stop offset="100%" stop-color="#3b1d6e" />
+              </linearGradient>
+
+              <linearGradient id="farPeakRightGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#93c5fd" />
+                <stop offset="45%" stop-color="#60a5fa" />
+                <stop offset="100%" stop-color="#1e3a8a" />
+              </linearGradient>
+
+              <!-- Mid-Range Secondary Mountain (Left): Bright Snow & Deep Slate Face -->
+              <linearGradient id="midSnowLeftLit" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#ffffff" />
+                <stop offset="30%" stop-color="#e0f2fe" />
+                <stop offset="70%" stop-color="#7dd3fc" />
+                <stop offset="100%" stop-color="#0284c7" />
+              </linearGradient>
+
+              <linearGradient id="midSnowLeftShadow" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#64748b" />
+                <stop offset="50%" stop-color="#334155" />
+                <stop offset="100%" stop-color="#1e293b" />
+              </linearGradient>
+
+              <!-- Mid-Range Secondary Peak (Right Shoulder) -->
+              <linearGradient id="midSnowRightLit" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ffffff" />
+                <stop offset="40%" stop-color="#bae6fd" />
+                <stop offset="100%" stop-color="#2563eb" />
+              </linearGradient>
+
+              <!-- Main Colossal Everest Peak Gradients -->
+              <linearGradient id="everestSnowLit" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#ffffff" />
+                <stop offset="25%" stop-color="#f0f9ff" />
+                <stop offset="65%" stop-color="#bae6fd" />
+                <stop offset="95%" stop-color="#38bdf8" />
+                <stop offset="100%" stop-color="#1e3a8a" />
+              </linearGradient>
+
+              <linearGradient id="everestRockShadow" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#475569" />
+                <stop offset="40%" stop-color="#1e293b" />
+                <stop offset="85%" stop-color="#0f172a" />
+                <stop offset="100%" stop-color="#020617" />
+              </linearGradient>
+            </defs>
+
+            <!-- 1. Sky & Aurora -->
+            <rect width="360" height="460" fill="url(#skyGrad)" />
+            <rect width="360" height="240" fill="url(#auroraGlow)" />
+
+            <!-- Stars & Moon -->
+            <circle cx="45" cy="30" r="1.5" fill="#ffffff" opacity="0.9" />
+            <circle cx="110" cy="50" r="1.2" fill="#ffffff" opacity="0.8" />
+            <circle cx="175" cy="25" r="1.8" fill="#fef08a" opacity="0.95" />
+            <circle cx="230" cy="65" r="1.1" fill="#ffffff" opacity="0.6" />
+            <circle cx="310" cy="35" r="1.5" fill="#ffffff" opacity="0.85" />
+            
+            <!-- Glowing Full Moon Over Summit -->
+            <circle cx="280" cy="48" r="18" fill="rgba(254, 240, 138, 0.2)" />
+            <circle cx="280" cy="48" r="10" fill="rgba(254, 240, 138, 0.4)" />
+            <circle cx="280" cy="48" r="6" fill="#fef08a" opacity="0.95" />
+
+            <!-- 2. HIGH-VISIBILITY DISTANT PEAKS (Crisp and Lighter) -->
+            <!-- Distant Left Lilac Peak (Lhotse Silhouette) -->
+            <polygon points="-25,460 70,175 165,460" fill="url(#farPeakLeftGrad)" opacity="0.9" />
+            <!-- Snow Cap on Distant Left Peak -->
+            <polygon points="55,200 70,175 85,200 70,193" fill="#ffffff" opacity="0.95" />
+
+            <!-- Distant Right Cobalt Peak (Nuptse Silhouette) -->
+            <polygon points="175,460 285,135 385,460" fill="url(#farPeakRightGrad)" opacity="0.85" />
+            <!-- Snow Cap on Distant Right Peak -->
+            <polygon points="270,158 285,135 300,158 285,152" fill="#ffffff" opacity="0.95" />
+
+            <!-- 3. SECONDARY SHARP MOUNTAINS (NOW CLEARLY VISIBLE WITH CRISP SNOW) -->
+            <!-- Secondary Peak (Left-Center) -->
+            <!-- Rocky Shadow Side -->
+            <polygon points="15,460 115,160 115,460" fill="url(#midSnowLeftShadow)" />
+            <!-- Sunlit Snow Side -->
+            <polygon points="115,160 215,460 115,460" fill="url(#midSnowLeftLit)" />
+            <!-- Brilliant Snow Tip & Ridge on Secondary Left Peak -->
+            <polygon points="98,190 115,160 132,190 115,182" fill="#ffffff" filter="drop-shadow(0 0 3px rgba(255,255,255,0.9))" />
+            <path d="M 115,160 L 105,230 L 120,300 L 95,390" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.8" />
+
+            <!-- Secondary Peak (Right Shoulder behind Everest) -->
+            <polygon points="230,460 310,185 365,460" fill="url(#midSnowRightLit)" opacity="0.9" />
+            <polygon points="295,215 310,185 325,215 310,208" fill="#ffffff" />
+
+            <!-- 4. MAIN COLOSSAL MOUNT EVEREST SUMMIT (INSTANTLY RECOGNIZABLE) -->
+            <!-- Left Shadow Face (Rocky Slate Chasm) -->
+            <polygon points="40,460 225,45 225,460" fill="url(#everestRockShadow)" />
+            
+            <!-- Right Brilliant Sunlit Snow Face (Snow & Glaciers) -->
+            <polygon points="225,45 360,460 225,460" fill="url(#everestSnowLit)" />
+
+            <!-- BRILLIANT WHITE SNOWCAP ON PEAK -->
+            <polygon points="200,95 225,45 250,95 235,82 225,92 215,82" fill="#ffffff" filter="drop-shadow(0 0 6px rgba(255,255,255,0.95))" />
+            
+            <!-- Razor Sharp Snow Ridge Line (Hillary Step / South Col) -->
+            <path d="M 225,45 L 210,120 L 230,190 L 205,270 L 235,360 L 195,460" fill="none" stroke="#ffffff" stroke-width="3.5" filter="drop-shadow(0 0 4px #bae6fd)" />
+
+            <!-- Glacial Snow Ribbons cascading down the face -->
+            <polygon points="225,90 260,150 240,170 275,240 245,270 300,370 255,400 330,460 225,460" fill="rgba(255, 255, 255, 0.8)" />
+            <polygon points="245,270 290,340 265,360 320,460 245,460" fill="rgba(255, 255, 255, 0.95)" />
+
+            <!-- Base Crevasse Crags (Foreground Icefall) -->
+            <polygon points="0,460 80,340 160,460" fill="#0f172a" />
+            <polygon points="80,340 130,460 80,460" fill="#38bdf8" opacity="0.45" />
+          </svg>
+
+          <!-- LIVE DRIFTING SNOWFALL PARTICLES (Animated across mountain) -->
+          <div class="snow-layer" id="snowContainer"></div>
+
+          <!-- Track A: 84px Vertical Climbing Rope & Pitons (Climber stays inside) -->
+          <div class="climb-track">
+            <div class="rope-line"></div>
+            
+            <!-- Grip Pitons along the rope -->
+            <div class="rope-piton" style="top: 15%;"></div>
+            <div class="rope-piton" style="top: 38%;"></div>
+            <div class="rope-piton" style="top: 65%;"></div>
+            <div class="rope-piton" style="top: 88%;"></div>
+
+            <!-- The Climber Puppet -->
+            <div class="climber-character" id="climberPuppet" style="top: 65%;">
+              <div class="climber-disc">🧗</div>
+              <div class="climber-badge-mini" id="climberBadge">3,000m</div>
+            </div>
+          </div>
+
+          <!-- Track B: Stations & Altitude Markers (Sitting to the right of the rope) -->
+          <div class="stations-column">
+            
+            <div class="station-ledge-item summit" id="ledge4">
+              <span class="ledge-title">👑 The Summit (8,848m)</span>
+              <span class="ledge-reward">+500c</span>
+            </div>
+
+            <div class="station-ledge-item camp2" id="ledge3">
+              <span class="ledge-title">⛺ Camp 2 (5,500m)</span>
+              <span class="ledge-reward">Safe</span>
+            </div>
+
+            <div class="station-ledge-item camp1 current-target" id="ledge2">
+              <span class="ledge-title">⛺ Camp 1 (3,000m)</span>
+              <span class="ledge-reward" style="background:#06b6d4; color:#030712; font-weight:900;">HERE</span>
+            </div>
+
+            <div class="station-ledge-item base" id="ledge1">
+              <span class="ledge-title">⛺ Basecamp (1,000m)</span>
+              <span class="ledge-reward">Done</span>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- RIGHT: LIVE TRIVIA TERMINAL -->
+        <div class="terminal-box">
+          
+          <!-- Compact Altitude HUD -->
+          <div class="hud-bar font-mono">
+            <div>
+              <span style="color: #94a3b8; font-size: 0.65rem;">ALTITUDE:</span>
+              <span style="color: #38bdf8;" id="hudAltitudeText">3,000m (Camp 1)</span>
+            </div>
+            <div>
+              <span style="color: #94a3b8; font-size: 0.65rem;">LOOT:</span>
+              <span style="color: #fbbf24;" id="hudLootText">🪙 150 Coins</span>
+            </div>
+            <div>
+              <span style="color: #94a3b8; font-size: 0.65rem;">SHIELD:</span>
+              <span style="color: #4ade80;">🛡️ Active</span>
+            </div>
+          </div>
+
+          <!-- Question Panel -->
+          <div class="question-panel">
+            
+            <div class="q-step-strip font-mono">
+              <span style="color: #38bdf8;" id="qStepLabel">STEP 3 OF 8</span>
+              <span style="color: #a855f7;">SCIENCE &amp; PEAKS</span>
+            </div>
+
+            <div class="q-prompt-heading" id="qPrompt">
+              What atmospheric gas decreases in partial pressure as climbers ascend Mount Everest, requiring supplementary oxygen in the Death Zone?
+            </div>
+
+            <!-- 4 Mobile-Safe Answer Buttons -->
+            <div class="answers-grid font-mono">
+              <button class="btn-answer" onclick="answerQuestion(this, false)">
+                <span class="opt-letter">A</span>
+                <span class="opt-text">Nitrogen</span>
+              </button>
+              <button class="btn-answer" onclick="answerQuestion(this, true)">
+                <span class="opt-letter">B</span>
+                <span class="opt-text">Oxygen</span>
+              </button>
+              <button class="btn-answer" onclick="answerQuestion(this, false)">
+                <span class="opt-letter">C</span>
+                <span class="opt-text">Argon</span>
+              </button>
+              <button class="btn-answer" onclick="answerQuestion(this, false)">
+                <span class="opt-letter">D</span>
+                <span class="opt-text">Carbon Dioxide</span>
+              </button>
+            </div>
+
+            <!-- Sponsor Recon Note -->
+            <div class="recon-box font-mono">
+              <span>💡 <strong>Recon:</strong> Read the Nike Tech Dossier for Camp 2 clues.</span>
+              <button onclick="readSponsorArticle()" style="background: none; border: none; color: #38bdf8; font-weight: 800; cursor: pointer; text-decoration: underline;">
+                Read (+25c)
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Safe Haven Bank Box -->
+          <div class="bank-box font-mono">
+            <div>
+              <div style="font-size: 0.65rem; color: #fbbf24; font-weight: 800;">SAFE HAVEN REST</div>
+              <div style="font-size: 0.8rem; color: #fff;">Bank 150 Coins safely or risk ascending?</div>
+            </div>
+            <button onclick="bankLoot()" class="btn-bank-action">
+              🏕️ Bank (+150c)
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- =============================================================
+         PANEL 2: LUCKY SPIN WHEEL (WITH AUDIBLE REAL-TIME SOUND)
+         ============================================================= -->
+    <section id="panel-wheel" class="card-panel hidden">
+      <div style="text-align: center; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 0.35rem;">
+        <span class="badge-pill font-mono" style="margin: 0 auto;">FREE DAILY LOOT DROP</span>
+        <h2 style="font-size: 1.5rem; font-weight: 900; color: #fff;">The Vault Spinner</h2>
+        <p class="font-mono" style="font-size: 0.75rem; color: #94a3b8;">
+          100% Free Daily Spin. Realistic peg clicks as the pointer hits each segment!
+        </p>
+      </div>
+
+      <div class="wheel-wrapper font-mono">
+        <div class="wheel-bezel">
+          <div class="wheel-pointer-pin" id="wheelPeg">🔻</div>
+          <canvas id="wheelCanvas" width="278" height="278" style="border-radius: 9999px;"></canvas>
+          <div class="wheel-hub-center">🪙</div>
+        </div>
+
+        <button id="spinBtn" onclick="spinWheel()" class="btn-spin-wheel">
+          SPIN WHEEL 🎡
+        </button>
+
+        <div id="wheelStatus" style="font-size: 0.8rem; color: #fbbf24; font-weight: 800;">
+          1 Free Spin Available Today!
+        </div>
+
+        <div style="display: flex; gap: 0.4rem; font-size: 0.7rem; color: #94a3b8; background: #030712; padding: 0.4rem 0.75rem; border-radius: 0.5rem; border: 1px solid #1e293b;">
+          <span>🔊 Sound Tester:</span>
+          <button onclick="playPegClickSound()" style="background: #1e293b; color: #fff; border: 1px solid #334155; padding: 0.2rem 0.5rem; border-radius: 4px; cursor: pointer;">Test Click</button>
+          <button onclick="playJackpotFanfare()" style="background: #1e293b; color: #fff; border: 1px solid #334155; padding: 0.2rem 0.5rem; border-radius: 4px; cursor: pointer;">Test Fanfare</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Audio Synthesis, Snowfall Generator & Gameplay Logic -->
+  <script>
+    // Dynamic Falling Snow Generator
+    (function createSnowflakes() {
+      var container = document.getElementById('snowContainer');
+      if (!container) return;
+      var count = 38;
+      for (var i = 0; i < count; i++) {
+        var flake = document.createElement('div');
+        flake.className = 'snowflake';
+        var size = Math.random() * 3.5 + 1.5;
+        var left = Math.random() * 100;
+        var duration = Math.random() * 4 + 3.5;
+        var delay = Math.random() * 5;
+        var swayDuration = Math.random() * 2 + 1.5;
+
+        flake.style.width = size + 'px';
+        flake.style.height = size + 'px';
+        flake.style.left = left + '%';
+        flake.style.opacity = Math.random() * 0.7 + 0.3;
+        flake.style.animationDuration = duration + 's, ' + swayDuration + 's';
+        flake.style.animationDelay = delay + 's, ' + (delay * 0.5) + 's';
+
+        container.appendChild(flake);
+      }
+    })();
+
+    var audioCtx = null;
+    var sfxEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function toggleAudio() {
+      initAudio();
+      sfxEnabled = !sfxEnabled;
+      document.getElementById('sfxIcon').innerText = sfxEnabled ? '🔊' : '🔇';
+      document.getElementById('sfxLabel').innerText = sfxEnabled ? 'SFX ON' : 'SFX MUTED';
+      if (sfxEnabled) playJackpotFanfare();
+    }
+
+    function playClimbSound() {
+      if (!sfxEnabled) return;
+      initAudio();
+      var now = audioCtx.currentTime;
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(200, now);
+      osc.frequency.exponentialRampToValueAtTime(460, now + 0.12);
+
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.14);
+    }
+
+    function playPegClickSound() {
+      if (!sfxEnabled) return;
+      initAudio();
+      var now = audioCtx.currentTime;
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(640, now);
+      osc.frequency.exponentialRampToValueAtTime(160, now + 0.02);
+
+      gain.gain.setValueAtTime(0.22, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.02);
+
+      var peg = document.getElementById('wheelPeg');
+      if (peg) {
+        peg.style.transform = 'rotate(-14deg)';
+        setTimeout(function() { peg.style.transform = 'rotate(0deg)'; }, 28);
+      }
+    }
+
+    function playJackpotFanfare() {
+      if (!sfxEnabled) return;
+      initAudio();
+      var now = audioCtx.currentTime;
+
+      [523.25, 659.25, 783.99, 1046.50].forEach(function(freq, i) {
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + i * 0.07);
+
+        gain.gain.setValueAtTime(0.18, now + i * 0.07);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.35);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + i * 0.07);
+        osc.stop(now + i * 0.07 + 0.35);
+      });
+    }
+
+    function playSlipSound() {
+      if (!sfxEnabled) return;
+      initAudio();
+      var now = audioCtx.currentTime;
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(300, now);
+      osc.frequency.exponentialRampToValueAtTime(100, now + 0.22);
+
+      gain.gain.setValueAtTime(0.14, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.22);
+    }
+
+    var climbLevels = [
+      { top: '88%', alt: '1,000m (Basecamp)', coins: 50, ledgeId: 'ledge1' },
+      { top: '65%', alt: '3,000m (Camp 1)', coins: 150, ledgeId: 'ledge2' },
+      { top: '38%', alt: '5,500m (Camp 2)', coins: 300, ledgeId: 'ledge3' },
+      { top: '15%', alt: '8,848m (Summit Peak!)', coins: 650, ledgeId: 'ledge4' }
+    ];
+    var currentLevelIdx = 1;
+
+    function answerQuestion(btn, isCorrect) {
+      initAudio();
+      if (isCorrect) {
+        btn.classList.add('correct');
+        playClimbSound();
+        setTimeout(function() { advanceClimber(); }, 250);
+      } else {
+        btn.classList.add('wrong');
+        playSlipSound();
+        alert('⚠️ SLIP! Your Mountain Shield absorbed the fall so you stay safe on the rope!');
+      }
+    }
+
+    function advanceClimber() {
+      if (currentLevelIdx < climbLevels.length - 1) {
+        currentLevelIdx++;
+        var lvl = climbLevels[currentLevelIdx];
+        var puppet = document.getElementById('climberPuppet');
+        puppet.style.top = lvl.top;
+        document.getElementById('climberBadge').innerText = lvl.alt.split(' ')[0];
+        document.getElementById('hudAltitudeText').innerText = lvl.alt;
+        document.getElementById('hudLootText').innerText = '🪙 ' + lvl.coins + ' Coins';
+        document.getElementById('qStepLabel').innerText = 'STEP ' + (currentLevelIdx + 2) + ' OF 8';
+        
+        [1, 2, 3, 4].forEach(function(n) {
+          var el = document.getElementById('ledge' + n);
+          if (el) el.classList.remove('current-target');
+        });
+        var activeLedge = document.getElementById(lvl.ledgeId);
+        if (activeLedge) activeLedge.classList.add('current-target');
+
+        playJackpotFanfare();
+      } else {
+        playJackpotFanfare();
+        alert('👑 SUMMIT REACHED! You have conquered Mount Everest Season 1!');
+      }
+    }
+
+    function bankLoot() {
+      playJackpotFanfare();
+      alert('🏕️ BANK SUCCESS: 150 Coins banked into your profile! You safely exit this climb.');
+    }
+
+    function readSponsorArticle() {
+      initAudio();
+      playClimbSound();
+      alert('📖 RECON DOSSIER: "High-Altitude Nutrition & Gear by Fleet Athletics" — Reading awards +25 Coins & reveals the answer for Camp 2!');
+    }
+
+    function switchView(mode) {
+      initAudio();
+      playClimbSound();
+      document.getElementById('panel-gameplay').classList.toggle('hidden', mode !== 'gameplay');
+      document.getElementById('panel-wheel').classList.toggle('hidden', mode !== 'wheel');
+      document.getElementById('tab-gameplay').classList.toggle('active', mode === 'gameplay');
+      document.getElementById('tab-wheel').classList.toggle('active', mode === 'wheel');
+      if (mode === 'wheel') drawWheel();
+    }
+
+    var wheelSegments = [
+      { text: '+25 Coins', color: '#06b6d4' },
+      { text: '+50 Coins', color: '#3b82f6' },
+      { text: '🛡️ Shield', color: '#8b5cf6' },
+      { text: '+15 Coins', color: '#10b981' },
+      { text: '🪙 250 VIP', color: '#f59e0b' },
+      { text: '+35 Coins', color: '#06b6d4' },
+      { text: '+100 Coins', color: '#ec4899' },
+      { text: '+15 Coins', color: '#10b981' }
+    ];
+    var currentAngle = 0;
+    var isSpinning = false;
+
+    function drawWheel() {
+      var canvas = document.getElementById('wheelCanvas');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+      var num = wheelSegments.length;
+      var arc = (2 * Math.PI) / num;
+      var r = canvas.width / 2;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(r, r);
+      ctx.rotate(currentAngle);
+
+      wheelSegments.forEach(function(seg, i) {
+        var start = i * arc;
+        var end = start + arc;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, r - 3, start, end);
+        ctx.fillStyle = seg.color;
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#090d16';
+        ctx.stroke();
+
+        ctx.save();
+        ctx.rotate(start + arc / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px ui-monospace, monospace';
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(seg.text, r - 20, 4);
+        ctx.restore();
+      });
+
+      ctx.restore();
+    }
+    drawWheel();
+
+    function spinWheel() {
+      if (isSpinning) return;
+      initAudio();
+      isSpinning = true;
+      var spinBtn = document.getElementById('spinBtn');
+      spinBtn.disabled = true;
+
+      var extraSpins = 5 + Math.random() * 3;
+      var totalRotation = extraSpins * 2 * Math.PI + Math.random() * 2 * Math.PI;
+      var duration = 3800;
+      var start = performance.now();
+      var initialAngle = currentAngle;
+      var lastTick = 0;
+
+      function animate(time) {
+        var elapsed = time - start;
+        var progress = Math.min(elapsed / duration, 1);
+        var ease = 1 - Math.pow(1 - progress, 3);
+        currentAngle = initialAngle + totalRotation * ease;
+        drawWheel();
+
+        var tickThreshold = (2 * Math.PI) / wheelSegments.length;
+        if (currentAngle - lastTick > tickThreshold) {
+          playPegClickSound();
+          lastTick = currentAngle;
+        }
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          isSpinning = false;
+          playJackpotFanfare();
+          spinBtn.disabled = false;
+          document.getElementById('wheelStatus').innerHTML = '🎉 You won +50 Coins! Banked into your Profile.';
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+  </script>
+</body>
+</html>
