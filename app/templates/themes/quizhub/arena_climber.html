@@ -664,6 +664,15 @@
     }
   }
 
+  window.startSprintNow = function() {
+    var startCard = document.getElementById('startSprintCard');
+    if (startCard) startCard.classList.add('hidden');
+    var qSec = document.getElementById('triviaQuestionSection');
+    if (qSec) qSec.classList.remove('hidden');
+    startSprintClock();
+    if (window.qmPlaySound) window.qmPlaySound('climbStep');
+  };
+
   function updateSprintClockDisplay() {
     var txt = document.getElementById('speedClockText');
     var bar = document.getElementById('speedClockBar');

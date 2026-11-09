@@ -4508,6 +4508,9 @@ def climber_reset():
 @arena_bp.route('/climber')
 def climber():
     """The Quiz Climber: 30-Day Everest Expedition Screen."""
+    gate = needs_account_to_play('tackle The Quiz Climber expedition')
+    if gate:
+        return gate
     player = get_current_player(persist=True)
     season = get_or_create_climber_season()
     progress = get_or_create_climber_progress(player.id, season.id)
