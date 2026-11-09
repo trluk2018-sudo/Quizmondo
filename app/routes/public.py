@@ -1,6 +1,7 @@
 import json
 from flask import Blueprint, render_template, request, abort, Response, current_app, flash, redirect, url_for, session
-from ..models import db, Post, Page, Category, Media, MenuItem, SidebarWidget, SiteSetting, PageModule, PlayerProfile, ArenaMatch, FeaturedGame
+from flask import jsonify
+from ..models import db, Post, Page, Category, Media, MenuItem, SidebarWidget, SiteSetting, PageModule, PlayerProfile, ArenaMatch, FeaturedGame, UserPostRead
 
 public_bp = Blueprint('public', __name__)
 
@@ -153,7 +154,49 @@ def post_detail(slug):
     db.session.commit()
     modules_above = PageModule.query.filter_by(post_id=post.id, placement='above', is_enabled=True).order_by(PageModule.sort_order.asc()).all()
     modules_below = PageModule.query.filter_by(post_id=post.id, placement='below', is_enabled=True).order_by(PageModule.sort_order.asc()).all()
-    return render_theme('post_detail.html', post=post, modules_above=modules_above, modules_below=modules_below)
+
+    from .arena import get_current_player
+    profile = get_current_player(persist=False)
+    already_claimed = False
+    if profile and profile.id:
+        already_claimed = UserPostRead.query.filter_by(player_profile_id=profile.id, post_id=post.id).first() is not None
+
+    return render_theme('post_detail.html', post=post, modules_above=modules_above, modules_below=modules_below, already_claimed=already_claimed)
+
+
+@public_bp.route('/posts/<slug>/claim-coins', methods=['POST'])
+def claim_post_coins(slug):
+    post = Post.query.filter_by(slug=slug, status='publish').first_or_404()
+    from .arena import get_current_player
+    profile = get_current_player(persist=True)
+    if not profile:
+        return jsonify({'success': False, 'error': 'No player profile found'}), 400
+
+    existing = UserPostRead.query.filter_by(player_profile_id=profile.id, post_id=post.id).first()
+    if existing:
+        return jsonify({
+            'success': False,
+            'already_claimed': True,
+            'coins': profile.coins,
+            'message': 'Intel reward already claimed for this dispatch.'
+        })
+
+    read_record = UserPostRead(
+        player_profile_id=profile.id,
+        post_id=post.id,
+        coins_awarded=25,
+        read_seconds=15
+    )
+    profile.coins = (profile.coins or 0) + 25
+    db.session.add(read_record)
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'coins_awarded': 25,
+        'new_coins': profile.coins,
+        'message': '+25 Coins Claimed for Field Intel Recon!'
+    })
 
 
 @public_bp.route('/category/<slug>')

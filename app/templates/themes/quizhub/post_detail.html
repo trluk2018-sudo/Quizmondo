@@ -4,6 +4,7 @@
 
 {% block content %}
 <div class="space-y-0 text-slate-100">
+  <!-- Article Header Banner -->
   <section class="bg-gradient-to-r from-slate-950 via-[#1e1438] to-slate-900 text-white py-14 border-b-2 border-purple-500/30">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-3">
       {% if post.category %}
@@ -12,8 +13,21 @@
       </span>
       {% endif %}
       <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-tight">{{ post.title }}</h1>
-      <div class="text-xs text-slate-400 font-mono">
-        Published {{ post.created_at.strftime('%B %d, %Y') }} &bull; {{ post.view_count }} Views
+      <div class="flex flex-wrap items-center gap-4 text-xs text-slate-400 font-mono">
+        <span>Published {{ post.created_at.strftime('%B %d, %Y') }} &bull; {{ post.view_count }} Views</span>
+
+        <!-- Field Intel Dwell Reward Pill -->
+        <div id="intelDwellBox" class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/90 border border-amber-400/50 shadow-md">
+          {% if already_claimed %}
+            <span class="text-emerald-400 font-bold">✓ Field Intel Logged (+25 Coins Claimed)</span>
+          {% else %}
+            <span class="animate-pulse">🎯</span>
+            <span id="intelStatusText" class="text-amber-300 font-bold">Field Intel Recon: <span id="intelCountdown">15</span>s to claim +25 Coins</span>
+            <div class="w-12 h-2 rounded-full bg-slate-800 overflow-hidden border border-slate-700">
+              <div id="intelProgressBar" class="h-full bg-gradient-to-r from-amber-400 to-emerald-400 transition-all duration-1000" style="width: 0%"></div>
+            </div>
+          {% endif %}
+        </div>
       </div>
     </div>
   </section>
@@ -24,6 +38,22 @@
       <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="w-full h-80 sm:h-96 object-cover">
     </div>
     {% endif %}
+
+    <!-- Climber Expedition Clue Callout Box -->
+    <div class="p-5 sm:p-6 rounded-2xl border-2 border-cyan-400/40 bg-gradient-to-br from-slate-950 via-cyan-950/20 to-slate-900 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2 text-cyan-300 font-mono text-xs font-black uppercase tracking-wider">
+          <span>🏔️ EXPEDITION INTEL</span>
+          <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 text-[10px]">THE QUIZ CLIMBER</span>
+        </div>
+        <p class="text-sm text-slate-200">
+          This dispatch contains terrain intelligence and lore relevant to higher altitude tiers. Read thoroughly, claim your +25 coins, and prepare for the 8,848m summit!
+        </p>
+      </div>
+      <a href="{{ url_for('arena.climber') }}" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs uppercase tracking-wider shrink-0 shadow-lg shadow-cyan-500/20 transition">
+        Climb The Wall &rarr;
+      </a>
+    </div>
 
     {% if post.excerpt %}
     <div class="p-6 rounded-2xl border-l-4 border-amber-400 bg-slate-950/90 text-slate-200 shadow-xl">
@@ -41,4 +71,62 @@
     </div>
   </div>
 </div>
+
+{% if not already_claimed %}
+<script>
+(function() {
+  var remaining = 15;
+  var total = 15;
+  var claimed = false;
+  var countdownEl = document.getElementById('intelCountdown');
+  var progressEl = document.getElementById('intelProgressBar');
+  var statusEl = document.getElementById('intelStatusText');
+
+  var timer = setInterval(function() {
+    if (document.hidden) return; // Only count active dwell time
+    remaining--;
+    if (countdownEl) countdownEl.textContent = remaining;
+    if (progressEl) {
+      var pct = Math.min(100, Math.round(((total - remaining) / total) * 100));
+      progressEl.style.width = pct + '%';
+    }
+
+    if (remaining <= 0) {
+      clearInterval(timer);
+      claimReward();
+    }
+  }, 1000);
+
+  function claimReward() {
+    if (claimed) return;
+    claimed = true;
+    if (statusEl) statusEl.textContent = 'Verifying dwell intel...';
+
+    fetch('/posts/{{ post.slug }}/claim-coins', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.success) {
+        if (window.qmPlaySound) window.qmPlaySound('bank');
+        if (statusEl) {
+          statusEl.innerHTML = '<span class="text-emerald-400 font-black">🎉 +25 COINS CLAIMED! (Field Intel Logged)</span>';
+        }
+        var box = document.getElementById('intelDwellBox');
+        if (box) {
+          box.classList.remove('border-amber-400/50');
+          box.classList.add('border-emerald-400/80', 'bg-emerald-950/40');
+        }
+      } else if (data.already_claimed) {
+        if (statusEl) statusEl.textContent = '✓ Intel reward previously claimed.';
+      }
+    })
+    .catch(function(err) {
+      console.warn('Intel claim error', err);
+    });
+  }
+})();
+</script>
+{% endif %}
 {% endblock %}

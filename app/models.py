@@ -512,6 +512,8 @@ class PlayerProfile(db.Model):
     streak_days = db.Column(db.Integer, default=1)
     matches_played = db.Column(db.Integer, default=0)
     matches_won = db.Column(db.Integer, default=0)
+    last_wheel_spin_at = db.Column(db.DateTime, nullable=True)
+    climber_shields = db.Column(db.Integer, default=1)
     is_banned = db.Column(db.Boolean, default=False)
     ban_reason = db.Column(db.String(255), default='')
     # Paused by the player: hidden from public lists, and reversible by signing in
@@ -540,7 +542,9 @@ class PlayerProfile(db.Model):
             'streak_days': self.streak_days,
             'matches_played': self.matches_played,
             'matches_won': self.matches_won,
-            'win_rate': round((self.matches_won / self.matches_played * 100), 1) if self.matches_played > 0 else 0
+            'win_rate': round((self.matches_won / self.matches_played * 100), 1) if self.matches_played > 0 else 0,
+            'last_wheel_spin_at': self.last_wheel_spin_at.isoformat() if self.last_wheel_spin_at else None,
+            'climber_shields': self.climber_shields if self.climber_shields is not None else 1
         }
 
 
@@ -1008,3 +1012,54 @@ class SsoUsedNonce(db.Model):
     nonce = db.Column(db.String(64), primary_key=True)
     expires_at = db.Column(db.Integer, nullable=False, index=True)
     used_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class ClimberSeason(db.Model):
+    """Monthly Expedition Season for The Quiz Climber challenge."""
+    __tablename__ = 'climber_seasons'
+
+    id = db.Column(db.Integer, primary_key=True)
+    month_key = db.Column(db.String(10), unique=True, index=True, nullable=False)  # e.g. '2026-11'
+    title = db.Column(db.String(120), default='Everest North Ridge Expedition')
+    mountain_name = db.Column(db.String(80), default='Mount Everest')
+    elevation_m = db.Column(db.Integer, default=8848)
+    sponsor_name = db.Column(db.String(100), default='Peak Performance Gear')
+    sponsor_url = db.Column(db.String(255), default='/posts')
+    sponsor_article_slug = db.Column(db.String(150), default='')
+    starts_at = db.Column(db.DateTime, default=datetime.utcnow)
+    ends_at = db.Column(db.DateTime, nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class ClimberProgress(db.Model):
+    """User progress along the vertical rock face for the active Climber season."""
+    __tablename__ = 'climber_progress'
+
+    id = db.Column(db.Integer, primary_key=True)
+    player_profile_id = db.Column(db.Integer, db.ForeignKey('player_profiles.id'), index=True, nullable=False)
+    season_id = db.Column(db.Integer, db.ForeignKey('climber_seasons.id'), index=True, nullable=False)
+    current_tier = db.Column(db.Integer, default=1)  # 1: Basecamp, 2: Camp 1, 3: Camp 2, 4: Summit Push
+    current_step = db.Column(db.Integer, default=1)  # 1-8 total steps
+    altitude_m = db.Column(db.Integer, default=1000)
+    banked_coins = db.Column(db.Integer, default=0)
+    unbanked_coins = db.Column(db.Integer, default=0)
+    highest_altitude = db.Column(db.Integer, default=1000)
+    status = db.Column(db.String(20), default='climbing')  # climbing, summit, banked, fallen
+    total_falls = db.Column(db.Integer, default=0)
+    total_summits = db.Column(db.Integer, default=0)
+    last_question_id = db.Column(db.Integer, nullable=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class UserPostRead(db.Model):
+    """Record of verified article dwell time rewards (Field Intel Recon)."""
+    __tablename__ = 'user_post_reads'
+
+    id = db.Column(db.Integer, primary_key=True)
+    player_profile_id = db.Column(db.Integer, db.ForeignKey('player_profiles.id'), index=True, nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), index=True, nullable=False)
+    coins_awarded = db.Column(db.Integer, default=25)
+    read_seconds = db.Column(db.Integer, default=15)
+    claimed_at = db.Column(db.DateTime, default=datetime.utcnow)
+

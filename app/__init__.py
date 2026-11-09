@@ -1,7 +1,7 @@
 import os
 from datetime import timedelta
 from flask import Flask, send_from_directory, redirect, url_for, session, request
-from .models import db, User, SiteSetting, Category, Page, Post, MenuItem, SidebarWidget, PageModule, PlayerProfile
+from .models import db, User, SiteSetting, Category, Page, Post, MenuItem, SidebarWidget, PageModule, PlayerProfile, ClimberSeason, ClimberProgress, UserPostRead
 
 
 def create_app(test_config=None):
@@ -257,6 +257,10 @@ def _ensure_schema():
                 db.session.execute(text("ALTER TABLE player_profiles ADD COLUMN is_paused BOOLEAN DEFAULT 0"))
             if 'is_anonymised' not in cols_profiles:
                 db.session.execute(text("ALTER TABLE player_profiles ADD COLUMN is_anonymised BOOLEAN DEFAULT 0"))
+            if 'last_wheel_spin_at' not in cols_profiles:
+                db.session.execute(text("ALTER TABLE player_profiles ADD COLUMN last_wheel_spin_at DATETIME"))
+            if 'climber_shields' not in cols_profiles:
+                db.session.execute(text("ALTER TABLE player_profiles ADD COLUMN climber_shields INTEGER DEFAULT 1"))
             db.session.commit()
 
         cols_leagues = [row[1] for row in db.session.execute(text("PRAGMA table_info(pub_leagues)")).fetchall()]

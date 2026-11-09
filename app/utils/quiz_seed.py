@@ -1651,6 +1651,33 @@ def seed_quizmondo_full_environment():
         db.session.add(SiteSetting(key='featured_games_seeded', value='1'))
         db.session.commit()
 
+    # Ensure The Quiz Climber and Daily Lucky Wheel slides exist in Featured Games
+    if not FeaturedGame.query.filter_by(link_url='/arena/climber').first():
+        db.session.add(FeaturedGame(
+            label='EXPEDITION CHALLENGE',
+            title='The Quiz Climber: 8,848m Summit',
+            image_url='/static/img/climber_hero_bg.svg',
+            link_url='/arena/climber',
+            cta_text='CLIMB NOW',
+            category_slug='geography-world',
+            sort_order=1,
+            is_active=True
+        ))
+        db.session.commit()
+
+    if not FeaturedGame.query.filter_by(link_url='/arena/wheel').first():
+        db.session.add(FeaturedGame(
+            label='DAILY VAULT SPINNER',
+            title='Spin The Wheel: Win Coins & Shields',
+            image_url='/static/img/wheel_hero_bg.svg',
+            link_url='/arena/wheel',
+            cta_text='SPIN FOR FREE',
+            category_slug='general-knowledge',
+            sort_order=2,
+            is_active=True
+        ))
+        db.session.commit()
+
     _restore_game_arcade_module()
 
     print("QUIZMONDO_SEED_SYNCHRONIZED_SUCCESSFULLY")

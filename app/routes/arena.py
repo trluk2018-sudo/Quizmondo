@@ -4,7 +4,7 @@ import secrets
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, flash, current_app, Response
 from sqlalchemy.sql.expression import func
-from ..models import db, User, PlayerProfile, MINIMUM_SIGNUP_AGE, age_gate_config, ArenaMatch, ArenaRound, QuizQuestion, QuizPack, PubLeague, PubLeagueResult, pub_season_label, SiteSetting, slugify, GroupGame, GroupPlayer
+from ..models import db, User, PlayerProfile, MINIMUM_SIGNUP_AGE, age_gate_config, ArenaMatch, ArenaRound, QuizQuestion, QuizPack, PubLeague, PubLeagueResult, pub_season_label, SiteSetting, slugify, GroupGame, GroupPlayer, ClimberSeason, ClimberProgress, UserPostRead, Post
 from ..models_quiz_memory import QuestionMemory, MEMORY_LIMIT
 from ..utils.share_card import generate_duel_card_png, generate_pub_card_png
 
@@ -1043,8 +1043,8 @@ def _build_round_comparison(r: ArenaRound) -> list:
         comparison.append({
             'q_num': idx,
             'prompt': q.prompt,
-            'correct_option': q.correct_option,
-            'correct_text': opts.get(q.correct_option, q.correct_option),
+            'correct_option': q.correct_option_option,
+            'correct_text': opts.get(q.correct_option_option, q.correct_option_option),
             'p1_choice': c1,
             'p1_text': opts.get(c1, c1) if c1 in opts else ('Timed Out' if c1 == 'TIMEOUT' else c1),
             'p1_correct': bool(a1.get('is_correct')),
@@ -1497,7 +1497,7 @@ def submit_round(match_code):
         time_taken = round(max(0.5, float(q_limit - time_left)), 1)
         total_time_sec = round(total_time_sec + time_taken, 1)
 
-        is_correct = (choice == q.correct_option)
+        is_correct = (choice == q.correct_option_option)
         points_awarded = 0
         if is_correct:
             correct_count += 1
@@ -1509,7 +1509,7 @@ def submit_round(match_code):
             'question_id': q.id,
             'prompt': q.prompt,
             'selected': choice,
-            'correct_option': q.correct_option,
+            'correct_option': q.correct_option_option,
             'is_correct': is_correct,
             'time_left': time_left,
             'time_taken': time_taken,
@@ -1544,9 +1544,9 @@ def submit_round(match_code):
             # A miss has to land on an option that is actually wrong. This used to
             # be hard-coded to 'B', so whenever B was the right answer the results
             # screen showed the bot picking the correct line and marked it wrong.
-            wrong_options = [k for k in (q.get_options() or {}) if k != q.correct_option]
-            bot_choice = q.correct_option if bot_correct else (
-                random.choice(wrong_options) if wrong_options else q.correct_option)
+            wrong_options = [k for k in (q.get_options() or {}) if k != q.correct_option_option]
+            bot_choice = q.correct_option_option if bot_correct else (
+                random.choice(wrong_options) if wrong_options else q.correct_option_option)
             bot_detailed.append({
                 'question_id': q.id,
                 'selected': bot_choice,
@@ -2458,7 +2458,7 @@ def score_pub_answers(state, round_num, raw_answers, cfg, total_rounds):
             continue
         counted.add(qid)
         q = QuizQuestion.query.get(qid)
-        if not q or not item.get('choice') or item.get('choice') != q.correct_option:
+        if not q or not item.get('choice') or item.get('choice') != q.correct_option_option:
             continue
         try:
             remaining = int(item.get('remaining') or 0)
@@ -3471,7 +3471,7 @@ def group_questions(game):
 
 def score_group_answer(question, choice, seconds_left, limit):
     """Same shape as the pub quiz: right answer plus whatever clock is left."""
-    if not question or not choice or choice != question.correct_option:
+    if not question or not choice or choice != question.correct_option_option:
         return 0
     seconds_left = max(0, min(int(limit), int(seconds_left or 0)))
     return 100 + seconds_left * 2
@@ -3495,8 +3495,8 @@ def settle_group_question(game):
             correct = random.random() < GROUP_BOT_ACCURACY
             # Bots never look superhuman: they use up a believable slice of the clock
             left = random.randint(1, max(1, int(limit * 0.6)))
-            choice = question.correct_option if correct else next(
-                (o for o in ('A', 'B', 'C', 'D') if o != question.correct_option), 'A'
+            choice = question.correct_option_option if correct else next(
+                (o for o in ('A', 'B', 'C', 'D') if o != question.correct_option_option), 'A'
             )
             points = score_group_answer(question, choice, left, limit)
         else:
@@ -3782,7 +3782,7 @@ def group_state(code):
         }
     if game.status in ('reveal', 'finished') and question:
         payload['reveal'] = {
-            'correct_option': question.correct_option,
+            'correct_option': question.correct_option_option,
             'explanation': question.explanation,
             'prompt': question.prompt,
             'your_answer': (seat.get_answers().get(str(idx)) or {}) if seat else {}
@@ -4080,3 +4080,375 @@ def packs_directory():
         player=player,
         packs=all_packs
     )
+
+# ==============================================================================
+# THE DAILY LUCKY COIN WHEEL ("THE VAULT SPINNER")
+# ==============================================================================
+
+WHEEL_SLICES = [
+    {'index': 0, 'label': '50 Coins', 'type': 'coins', 'amount': 50, 'weight': 30, 'icon': '🪙', 'color': '#ec4899'},
+    {'index': 1, 'label': 'Climber Shield', 'type': 'shield', 'amount': 1, 'weight': 15, 'icon': '🛡️', 'color': '#06b6d4'},
+    {'index': 2, 'label': '100 Coins', 'type': 'coins', 'amount': 100, 'weight': 25, 'icon': '🪙', 'color': '#8b5cf6'},
+    {'index': 3, 'label': '150 XP Boost', 'type': 'xp', 'amount': 150, 'weight': 15, 'icon': '⚡', 'color': '#f59e0b'},
+    {'index': 4, 'label': '250 Coins', 'type': 'coins', 'amount': 250, 'weight': 8, 'icon': '💰', 'color': '#10b981'},
+    {'index': 5, 'label': 'Safety Shield', 'type': 'shield', 'amount': 1, 'weight': 10, 'icon': '🛡️', 'color': '#3b82f6'},
+    {'index': 6, 'label': 'JACKPOT 1,000 Coins', 'type': 'jackpot', 'amount': 1000, 'weight': 3, 'icon': '🌟', 'color': '#eab308'},
+    {'index': 7, 'label': '75 Coins', 'type': 'coins', 'amount': 75, 'weight': 20, 'icon': '🪙', 'color': '#f43f5e'}
+]
+
+
+@arena_bp.route('/wheel')
+def wheel():
+    """Daily Vault Spinner screen for free daily coins and climber shields."""
+    player = get_current_player(persist=True)
+    now = datetime.utcnow()
+    can_spin = True
+    seconds_left = 0
+
+    if player.last_wheel_spin_at:
+        elapsed = (now - player.last_wheel_spin_at).total_seconds()
+        if elapsed < 86400:
+            can_spin = False
+            seconds_left = max(0, int(86400 - elapsed))
+
+    return render_template(
+        'themes/quizhub/arena_wheel.html',
+        player=player,
+        can_spin=can_spin,
+        seconds_left=seconds_left,
+        slices=WHEEL_SLICES
+    )
+
+
+@arena_bp.route('/wheel/spin', methods=['POST'])
+def wheel_spin():
+    """Spin the Daily Lucky Wheel with fair weighted odds and 24h cooldown."""
+    player = get_current_player(persist=True)
+    now = datetime.utcnow()
+
+    if player.last_wheel_spin_at:
+        elapsed = (now - player.last_wheel_spin_at).total_seconds()
+        if elapsed < 86400:
+            seconds_left = int(86400 - elapsed)
+            return jsonify({
+                'success': False,
+                'error': 'Daily spin cooldown active',
+                'seconds_left': seconds_left
+            }), 429
+
+    weights = [s['weight'] for s in WHEEL_SLICES]
+    prize = random.choices(WHEEL_SLICES, weights=weights, k=1)[0]
+
+    # Award the prize
+    if prize['type'] in ('coins', 'jackpot'):
+        player.coins = (player.coins or 0) + prize['amount']
+    elif prize['type'] == 'shield':
+        player.climber_shields = (player.climber_shields or 0) + prize['amount']
+    elif prize['type'] == 'xp':
+        player.add_xp(prize['amount'])
+
+    player.last_wheel_spin_at = now
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'slice': prize,
+        'index': prize['index'],
+        'coins': player.coins,
+        'shields': player.climber_shields,
+        'xp': player.xp,
+        'level': player.level
+    })
+
+
+# ==============================================================================
+# THE QUIZ CLIMBER ("THE WALL")
+# ==============================================================================
+
+CLIMBER_STEPS = [
+    {'step': 1, 'tier': 1, 'tier_name': 'Basecamp Entry', 'altitude': 1000, 'coins': 100, 'diff': 'easy', 'clue': 'Foundation knowledge of geography and world landmarks.'},
+    {'step': 2, 'tier': 1, 'tier_name': 'Khumbu Icefall', 'altitude': 2000, 'coins': 100, 'diff': 'easy', 'clue': 'Navigating crevasses requires swift observation.'},
+    {'step': 3, 'tier': 2, 'tier_name': 'Camp 1 Plateau', 'altitude': 3000, 'coins': 200, 'diff': 'medium', 'clue': 'Thinning air tests science and natural history recall.'},
+    {'step': 4, 'tier': 2, 'tier_name': 'Western Cwm', 'altitude': 4200, 'coins': 250, 'diff': 'medium', 'clue': 'Solar radiation is intense; stay alert for tricky options.'},
+    {'step': 5, 'tier': 3, 'tier_name': 'Lhotse Face', 'altitude': 5500, 'coins': 350, 'diff': 'hard', 'clue': 'Sheer vertical ice wall. Technical accuracy is essential.'},
+    {'step': 6, 'tier': 3, 'tier_name': 'Yellow Band', 'altitude': 6800, 'coins': 400, 'diff': 'hard', 'clue': 'Limestone strata at high altitude. Use field intel clues!'},
+    {'step': 7, 'tier': 4, 'tier_name': 'South Col Death Zone', 'altitude': 8000, 'coins': 600, 'diff': 'hard', 'clue': 'Extreme cold and hypoxia. Keep your shield ready.'},
+    {'step': 8, 'tier': 4, 'tier_name': 'Hillary Step & Summit', 'altitude': 8848, 'coins': 1000, 'diff': 'hard', 'clue': 'The final knife-edge ridge to the top of the world!'}
+]
+
+
+def get_or_create_climber_season():
+    """Retrieve or create the active month's expedition season."""
+    month_key = datetime.utcnow().strftime('%Y-%m')
+    season = ClimberSeason.query.filter_by(month_key=month_key, is_active=True).first()
+    if not season:
+        # Check if sponsor article exists
+        sponsor_post = Post.query.filter_by(status='publish').first()
+        article_slug = sponsor_post.slug if sponsor_post else ''
+
+        season = ClimberSeason(
+            month_key=month_key,
+            title='Everest North Ridge Expedition',
+            mountain_name='Mount Everest',
+            elevation_m=8848,
+            sponsor_name='Alpine Dynamics & Mountain Gear',
+            sponsor_url='/posts/' + article_slug if article_slug else '/posts',
+            sponsor_article_slug=article_slug,
+            starts_at=datetime.utcnow(),
+            is_active=True
+        )
+        db.session.add(season)
+        db.session.commit()
+    return season
+
+
+def get_or_create_climber_progress(player_id, season_id):
+    """Retrieve or initialize player climb progress for active season."""
+    progress = ClimberProgress.query.filter_by(
+        player_profile_id=player_id,
+        season_id=season_id
+    ).first()
+    if not progress:
+        progress = ClimberProgress(
+            player_profile_id=player_id,
+            season_id=season_id,
+            current_tier=1,
+            current_step=1,
+            altitude_m=1000,
+            banked_coins=0,
+            unbanked_coins=0,
+            highest_altitude=1000,
+            status='climbing'
+        )
+        db.session.add(progress)
+        db.session.commit()
+    return progress
+
+
+def _pick_climber_question(diff='easy', exclude_id=None):
+    """Select a playable question for the current altitude tier."""
+    query = playable_questions().filter(QuizQuestion.difficulty == diff)
+    if exclude_id:
+        query = query.filter(QuizQuestion.id != exclude_id)
+    count = query.count()
+    if count == 0:
+        # Fallback to any playable question
+        query = playable_questions()
+        count = query.count()
+    if count > 0:
+        offset = random.randint(0, max(0, count - 1))
+        return query.offset(offset).first()
+    return None
+
+
+@arena_bp.route('/climber')
+def climber():
+    """The Quiz Climber: graphical vertical rock face expedition screen."""
+    player = get_current_player(persist=True)
+    season = get_or_create_climber_season()
+    progress = get_or_create_climber_progress(player.id, season.id)
+
+    step_info = CLIMBER_STEPS[min(progress.current_step - 1, len(CLIMBER_STEPS) - 1)]
+    question = _pick_climber_question(diff=step_info['diff'])
+
+    return render_template(
+        'themes/quizhub/arena_climber.html',
+        player=player,
+        season=season,
+        progress=progress,
+        step_info=step_info,
+        climber_steps=CLIMBER_STEPS,
+        question=question
+    )
+
+
+@arena_bp.route('/climber/answer', methods=['POST'])
+def climber_answer():
+    """Validate answer on the rock wall: climb higher, use shield, or fall."""
+    player = get_current_player(persist=True)
+    season = get_or_create_climber_season()
+    progress = get_or_create_climber_progress(player.id, season.id)
+
+    data = request.get_json() or {}
+    question_id = data.get('question_id')
+    selected = data.get('selected')
+
+    question = db.session.get(QuizQuestion, question_id)
+    if not question:
+        return jsonify({'success': False, 'error': 'Question not found'}), 404
+
+    is_correct = (str(selected).strip().upper() == str(question.correct_option).strip().upper())
+    step_info = CLIMBER_STEPS[min(progress.current_step - 1, len(CLIMBER_STEPS) - 1)]
+
+    if is_correct:
+        # Climber advances!
+        coins_gained = step_info['coins']
+        progress.unbanked_coins += coins_gained
+
+        if progress.current_step >= len(CLIMBER_STEPS):
+            # SUMMIT ACHIEVED!
+            progress.altitude_m = 8848
+            progress.status = 'summit'
+            progress.total_summits += 1
+            progress.highest_altitude = 8848
+
+            # Auto-bank all unbanked coins + 1,000 Summit Bonus into wallet!
+            summit_bonus = 1000
+            total_awarded = progress.unbanked_coins + summit_bonus
+            player.coins = (player.coins or 0) + total_awarded
+            progress.banked_coins += total_awarded
+            progress.unbanked_coins = 0
+            db.session.commit()
+
+            return jsonify({
+                'success': True,
+                'correct': True,
+                'summit': True,
+                'new_step': 8,
+                'new_altitude': 8848,
+                'coins_awarded': total_awarded,
+                'wallet_coins': player.coins,
+                'explanation': question.explanation or 'Outstanding summit achievement!'
+            })
+        else:
+            progress.current_step += 1
+            next_step_info = CLIMBER_STEPS[progress.current_step - 1]
+            progress.altitude_m = next_step_info['altitude']
+            progress.current_tier = next_step_info['tier']
+            progress.highest_altitude = max(progress.highest_altitude, progress.altitude_m)
+            progress.status = 'climbing'
+            db.session.commit()
+
+            next_q = _pick_climber_question(diff=next_step_info['diff'], exclude_id=question.id)
+            next_q_data = None
+            if next_q:
+                next_q_data = {
+                    'id': next_q.id,
+                    'prompt': next_q.prompt,
+                    'options': next_q.get_options(),
+                    'difficulty': next_q.difficulty
+                }
+
+            return jsonify({
+                'success': True,
+                'correct': True,
+                'summit': False,
+                'new_step': progress.current_step,
+                'new_altitude': progress.altitude_m,
+                'unbanked_coins': progress.unbanked_coins,
+                'next_step_info': next_step_info,
+                'next_question': next_q_data,
+                'explanation': question.explanation or 'Correct answer!'
+            })
+
+    else:
+        # INCORRECT
+        if (player.climber_shields or 0) > 0:
+            # Shield deflects the fall!
+            player.climber_shields -= 1
+            db.session.commit()
+
+            next_q = _pick_climber_question(diff=step_info['diff'], exclude_id=question.id)
+            next_q_data = None
+            if next_q:
+                next_q_data = {
+                    'id': next_q.id,
+                    'prompt': next_q.prompt,
+                    'options': next_q.get_options(),
+                    'difficulty': next_q.difficulty
+                }
+
+            return jsonify({
+                'success': True,
+                'correct': False,
+                'shield_saved': True,
+                'shields_left': player.climber_shields,
+                'unbanked_coins': progress.unbanked_coins,
+                'current_altitude': progress.altitude_m,
+                'correct_answer': question.correct_option,
+                'explanation': question.explanation or 'Your climber shield absorbed the fall!',
+                'next_question': next_q_data
+            })
+        else:
+            # FALL! Unbanked coins are lost, climber slides down to Basecamp
+            lost_coins = progress.unbanked_coins
+            progress.unbanked_coins = 0
+            progress.current_step = 1
+            progress.current_tier = 1
+            progress.altitude_m = 1000
+            progress.status = 'fallen'
+            progress.total_falls += 1
+            db.session.commit()
+
+            return jsonify({
+                'success': True,
+                'correct': False,
+                'shield_saved': False,
+                'fallen': True,
+                'lost_coins': lost_coins,
+                'new_step': 1,
+                'new_altitude': 1000,
+                'correct_answer': question.correct_option,
+                'explanation': question.explanation or 'Incorrect answer! You slipped down to Basecamp.'
+            })
+
+
+@arena_bp.route('/climber/bank', methods=['POST'])
+def climber_bank():
+    """Push-your-luck Safe Haven: Bank unbanked coins permanently into player wallet."""
+    player = get_current_player(persist=True)
+    season = get_or_create_climber_season()
+    progress = get_or_create_climber_progress(player.id, season.id)
+
+    if progress.unbanked_coins <= 0:
+        return jsonify({'success': False, 'error': 'No unbanked coins to secure'}), 400
+
+    amount = progress.unbanked_coins
+    player.coins = (player.coins or 0) + amount
+    progress.banked_coins += amount
+    progress.unbanked_coins = 0
+    progress.status = 'banked'
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'banked_amount': amount,
+        'wallet_coins': player.coins,
+        'altitude': progress.altitude_m,
+        'step': progress.current_step
+    })
+
+
+@arena_bp.route('/climber/restart', methods=['POST'])
+def climber_restart():
+    """Start a fresh free climb from Basecamp."""
+    player = get_current_player(persist=True)
+    season = get_or_create_climber_season()
+    progress = get_or_create_climber_progress(player.id, season.id)
+
+    progress.current_step = 1
+    progress.current_tier = 1
+    progress.altitude_m = 1000
+    progress.unbanked_coins = 0
+    progress.status = 'climbing'
+    db.session.commit()
+
+    step_info = CLIMBER_STEPS[0]
+    next_q = _pick_climber_question(diff='easy')
+    next_q_data = None
+    if next_q:
+        next_q_data = {
+            'id': next_q.id,
+            'prompt': next_q.prompt,
+            'options': next_q.get_options(),
+            'difficulty': next_q.difficulty
+        }
+
+    return jsonify({
+        'success': True,
+        'step': 1,
+        'altitude': 1000,
+        'step_info': step_info,
+        'next_question': next_q_data
+    })
+

@@ -1,0 +1,596 @@
+{% extends "themes/quizhub/base.html" %}
+
+{% block title %}The Quiz Climber &mdash; {{ season.title }} &mdash; {{ site_title }}{% endblock %}
+
+{% block content %}
+<style>
+  /* Dedicated Snowfall Simulation */
+  .snow-canvas {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 5;
+  }
+  .snow-flake {
+    position: absolute;
+    top: -12px;
+    background: #ffffff;
+    border-radius: 50%;
+    opacity: 0.85;
+    animation: snowFall linear infinite;
+  }
+  @keyframes snowFall {
+    0% { transform: translateY(0) translateX(0); opacity: 0.9; }
+    50% { transform: translateY(280px) translateX(18px); opacity: 0.7; }
+    100% { transform: translateY(620px) translateX(-12px); opacity: 0.2; }
+  }
+
+  /* Climber Character Animation */
+  .climber-puppet {
+    transition: top 750ms cubic-bezier(0.34, 1.56, 0.64, 1), transform 350ms ease;
+  }
+  .climber-pull {
+    animation: climberPull 450ms ease-in-out;
+  }
+  @keyframes climberPull {
+    0% { transform: scale(1) translateY(0); }
+    50% { transform: scale(1.08) translateY(-14px); }
+    100% { transform: scale(1) translateY(0); }
+  }
+  .climber-fall {
+    animation: climberFall 850ms ease-in;
+  }
+  @keyframes climberFall {
+    0% { transform: translateY(0) rotate(0deg); }
+    30% { transform: translateY(80px) rotate(25deg); }
+    70% { transform: translateY(240px) rotate(-20deg); }
+    100% { transform: translateY(420px) rotate(0deg); }
+  }
+
+  /* Station Ledge Pulse */
+  .ledge-active {
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.5), inset 0 0 12px rgba(56, 189, 248, 0.3);
+  }
+</style>
+
+<div class="min-h-screen bg-slate-950 text-white py-8 px-3 sm:px-6 lg:px-8">
+  <div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Top Season & Sponsor Intel Strip -->
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-[#191438] border-2 border-purple-500/40 shadow-xl">
+      <div class="space-y-1">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 font-mono text-[10px] font-black uppercase tracking-wider">
+            🏔️ 30-DAY SEASON EXPEDITION
+          </span>
+          <span class="text-xs font-mono text-amber-400 font-bold">{{ season.title }} ({{ season.elevation_m }}m)</span>
+        </div>
+        <p class="text-xs sm:text-sm text-slate-300">
+          Climb vertical altitude stations of increasing difficulty. Bank coins at safe havens or risk falling down the wall!
+        </p>
+      </div>
+
+      <!-- Sponsor Field Intel Badge -->
+      {% if season.sponsor_article_slug %}
+      <a href="{{ url_for('public.post_detail', slug=season.sponsor_article_slug) }}" target="_blank"
+         class="px-3.5 py-2 rounded-xl bg-purple-950/80 hover:bg-purple-900 border border-purple-400/50 flex items-center gap-2.5 transition shrink-0 group">
+        <span class="text-xl">📖</span>
+        <div class="text-left font-mono">
+          <div class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">EXPEDITION SPONSOR GUIDE</div>
+          <div class="text-xs font-bold text-white group-hover:text-cyan-300">Read Field Intel (+25 Coins) &rarr;</div>
+        </div>
+      </a>
+      {% endif %}
+    </div>
+
+    <!-- HUD Bar: Altitude, Wallet, Unbanked Risk, Shields, Audio Toggle -->
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div class="p-3 rounded-xl bg-slate-900/90 border border-cyan-500/40 shadow">
+        <div class="text-[10px] font-mono text-slate-400 uppercase font-semibold">CURRENT ALTITUDE</div>
+        <div class="text-xl sm:text-2xl font-black text-cyan-300 font-mono flex items-baseline gap-1">
+          <span id="hudAltitude">{{ progress.altitude_m }}</span><span class="text-xs text-cyan-400">m</span>
+        </div>
+      </div>
+      <div class="p-3 rounded-xl bg-slate-900/90 border border-amber-500/40 shadow">
+        <div class="text-[10px] font-mono text-slate-400 uppercase font-semibold">UNBANKED (AT RISK)</div>
+        <div class="text-xl sm:text-2xl font-black text-amber-300 font-mono flex items-baseline gap-1">
+          <span id="hudUnbanked">{{ progress.unbanked_coins }}</span><span class="text-xs text-amber-400">🪙</span>
+        </div>
+      </div>
+      <div class="p-3 rounded-xl bg-slate-900/90 border border-emerald-500/40 shadow">
+        <div class="text-[10px] font-mono text-slate-400 uppercase font-semibold">SECURED WALLET</div>
+        <div class="text-xl sm:text-2xl font-black text-emerald-300 font-mono flex items-baseline gap-1">
+          <span id="hudWallet">{{ player.coins }}</span><span class="text-xs text-emerald-400">🪙</span>
+        </div>
+      </div>
+      <div class="p-3 rounded-xl bg-slate-900/90 border border-blue-500/40 shadow">
+        <div class="text-[10px] font-mono text-slate-400 uppercase font-semibold">GEAR SHIELDS</div>
+        <div class="text-xl sm:text-2xl font-black text-blue-300 font-mono flex items-baseline gap-1">
+          <span id="hudShields">{{ player.climber_shields or 0 }}</span><span class="text-xs text-blue-400">🛡️</span>
+        </div>
+      </div>
+      <div class="col-span-2 sm:col-span-1 p-3 rounded-xl bg-slate-900/90 border border-purple-500/40 flex items-center justify-between sm:justify-center gap-2 shadow">
+        <button type="button" data-qm-sound-toggle onclick="window.qmToggleMute && window.qmToggleMute()"
+                class="w-full py-1.5 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono text-cyan-300 font-bold transition flex items-center justify-center gap-1.5">
+          🔊 <span class="hidden sm:inline">SFX ON</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Expedition Wall & Interactive Trivia Stage -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- LEFT: The Graphical Vertical Rock Wall (5 Cols) -->
+      <div class="lg:col-span-5 relative rounded-3xl overflow-hidden border-2 border-purple-500/50 shadow-2xl bg-slate-950 h-[560px] select-none">
+
+        <!-- Everest Illuminated Background Graphic -->
+        <svg class="absolute inset-0 w-full h-full object-cover pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 700" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="skyExpGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#040611" />
+              <stop offset="35%" stop-color="#0d1430" />
+              <stop offset="70%" stop-color="#19234d" />
+              <stop offset="100%" stop-color="#2c2759" />
+            </linearGradient>
+            <radialGradient id="moonExpGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9" />
+              <stop offset="35%" stop-color="#cbd5e1" stop-opacity="0.5" />
+              <stop offset="70%" stop-color="#38bdf8" stop-opacity="0.2" />
+              <stop offset="100%" stop-color="#0d1430" stop-opacity="0" />
+            </radialGradient>
+            <linearGradient id="snowEverest" x1="0%" y1="0%" x2="50%" y2="100%">
+              <stop offset="0%" stop-color="#ffffff" />
+              <stop offset="40%" stop-color="#e0f2fe" />
+              <stop offset="100%" stop-color="#7dd3fc" />
+            </linearGradient>
+            <linearGradient id="midPeakGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#334155" />
+              <stop offset="50%" stop-color="#1e293b" />
+              <stop offset="100%" stop-color="#0f172a" />
+            </linearGradient>
+          </defs>
+
+          <!-- Sky -->
+          <rect width="500" height="700" fill="url(#skyExpGrad)" />
+
+          <!-- Stars -->
+          <g fill="#ffffff" opacity="0.8">
+            <circle cx="60" cy="50" r="1.5" />
+            <circle cx="180" cy="35" r="2" />
+            <circle cx="280" cy="70" r="1.2" />
+            <circle cx="390" cy="45" r="1.8" />
+            <circle cx="460" cy="90" r="1.5" />
+            <circle cx="120" cy="110" r="1.2" />
+            <circle cx="340" cy="120" r="1.5" />
+          </g>
+
+          <!-- Full Moon -->
+          <circle cx="410" cy="90" r="65" fill="url(#moonExpGlow)" />
+          <circle cx="410" cy="90" r="24" fill="#f8fafc" />
+
+          <!-- Distant Secondary Peaks (High Visibility Alpine Lilac & Sky Blue) -->
+          <polygon points="120,700 240,320 360,500 480,290 500,700" fill="url(#midPeakGrad)" opacity="0.8" />
+          <polygon points="240,320 220,365 260,365" fill="#bae6fd" opacity="0.9" />
+          <polygon points="480,290 455,340 505,340" fill="#bae6fd" opacity="0.9" />
+
+          <!-- Main Everest Pyramid Summit -->
+          <polygon points="160,700 370,140 520,700" fill="#18223c" />
+          <polygon points="370,140 325,240 355,255 370,220 385,260 415,230" fill="url(#snowEverest)" />
+          <polygon points="370,140 370,220 385,260 415,230 520,700 370,700" fill="#0f172a" opacity="0.5" />
+
+          <!-- Rock Face Cliff Texture on Left (Width: 84px track) -->
+          <polygon points="0,0 84,0 76,240 88,440 78,700 0,700" fill="#1e293b" />
+          <path d="M 0,110 L 80,110 L 65,160 M 0,310 L 82,310 L 60,370 M 0,510 L 84,510 L 62,570" stroke="#475569" stroke-width="2.5" fill="none" opacity="0.6" />
+        </svg>
+
+        <!-- Dynamic Falling Snow Simulation Layer -->
+        <div id="snowLayer" class="snow-canvas">
+          {% for i in range(28) %}
+          <div class="snow-flake" style="
+            left: {{ (i * 3.7) % 100 }}%;
+            width: {{ 2 + (i % 4) }}px;
+            height: {{ 2 + (i % 4) }}px;
+            animation-duration: {{ 3.5 + (i % 4) }}s;
+            animation-delay: -{{ (i * 0.4) }}s;
+          "></div>
+          {% endfor %}
+        </div>
+
+        <!-- Vertical Fixed Climbing Rope (Left X: 42px) -->
+        <div class="absolute top-0 bottom-0 left-[42px] w-[3px] bg-amber-400 border-l border-amber-500 z-10 opacity-90"></div>
+
+        <!-- Animated Climber Puppet (Tied to Rope on Left Track, ZERO overlap with text) -->
+        <div id="climberPuppet" class="climber-puppet absolute left-[18px] z-20" style="top: 480px;">
+          <svg width="48" height="58" viewBox="0 0 48 58" fill="none">
+            <!-- Helmet -->
+            <ellipse cx="24" cy="11" rx="10" ry="8" fill="#ef4444" stroke="#b91c1c" stroke-width="1.5" />
+            <rect x="22" y="10" width="7" height="3" fill="#fbbf24" rx="1" />
+            <!-- Backpack -->
+            <rect x="4" y="20" width="12" height="20" rx="3" fill="#2563eb" stroke="#1d4ed8" stroke-width="1.5" />
+            <!-- Torso Jacket -->
+            <path d="M 14,18 L 32,20 L 29,40 L 15,38 Z" fill="#ea580c" />
+            <!-- Harness & Carabiner -->
+            <ellipse cx="22" cy="38" rx="8" ry="3" fill="#1e293b" />
+            <circle cx="24" cy="38" r="2.5" fill="#facc15" />
+            <!-- Left Arm reaching for rope -->
+            <path d="M 17,20 L 24,4 L 24,0" stroke="#ea580c" stroke-width="4" stroke-linecap="round" fill="none" />
+            <!-- Right Arm gripping rope -->
+            <path d="M 30,22 L 24,14 L 24,0" stroke="#c2410c" stroke-width="4" stroke-linecap="round" fill="none" />
+            <!-- Legs planted on rock -->
+            <path d="M 18,38 L 10,50 L 3,53" stroke="#0f172a" stroke-width="4" stroke-linecap="round" fill="none" />
+            <path d="M 26,39 L 23,52 L 17,56" stroke="#1e293b" stroke-width="4" stroke-linecap="round" fill="none" />
+            <!-- Boots -->
+            <ellipse cx="3" cy="53" rx="4" ry="2.5" fill="#fbbf24" />
+            <ellipse cx="17" cy="56" rx="4" ry="2.5" fill="#fbbf24" />
+          </svg>
+        </div>
+
+        <!-- 8 Station Ledges (Arranged on Right Side X: 84px to 100%, NEVER collides with Climber) -->
+        <div class="absolute inset-y-4 left-[78px] right-3 flex flex-col-reverse justify-between z-10 pointer-events-none">
+          {% for step in climber_steps %}
+          <div id="ledge-{{ step.step }}"
+               class="p-2 sm:p-2.5 rounded-xl bg-slate-900/85 backdrop-blur border transition-all duration-300 flex items-center justify-between text-xs font-mono
+                      {% if step.step == progress.current_step %}ledge-active border-cyan-400 bg-cyan-950/80 text-white{% elif step.step < progress.current_step %}border-emerald-500/50 bg-emerald-950/40 text-emerald-300{% else %}border-slate-800 text-slate-400 opacity-60{% endif %}">
+            <div class="flex items-center gap-2 truncate">
+              <span class="text-sm">
+                {% if step.step == 8 %}👑{% elif step.step == progress.current_step %}🧗{% elif step.step < progress.current_step %}🚩{% else %}⛰️{% endif %}
+              </span>
+              <div class="truncate">
+                <span class="font-bold text-white text-[11px] sm:text-xs">{{ step.tier_name }}</span>
+                <span class="text-[10px] text-cyan-400 ml-1">({{ step.altitude }}m)</span>
+              </div>
+            </div>
+            <div class="font-bold shrink-0 ml-2">
+              {% if step.step == 8 %}
+                <span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] border border-amber-400/40">SUMMIT</span>
+              {% else %}
+                <span class="text-amber-400">+{{ step.coins }}🪙</span>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Interactive Terminal & Push-Your-Luck Console (7 Cols) -->
+      <div class="lg:col-span-7 space-y-6">
+
+        <!-- Question Station Card -->
+        <div id="triviaCard" class="bg-slate-900/90 rounded-3xl border-2 border-purple-500/40 p-5 sm:p-7 shadow-2xl backdrop-blur space-y-6">
+
+          <!-- Terminal Header -->
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-purple-500/20 pb-4">
+            <div class="flex items-center gap-2">
+              <span id="tierBadge" class="px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 font-mono text-xs font-bold uppercase tracking-wider">
+                STEP <span id="currentStepNum">{{ progress.current_step }}</span> / 8 &bull; {{ step_info.tier_name }}
+              </span>
+              <span id="diffBadge" class="px-2.5 py-1 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 font-mono text-[10px] font-bold uppercase">
+                {{ step_info.diff }}
+              </span>
+            </div>
+            <div class="text-xs font-mono text-amber-400 font-bold flex items-center gap-1">
+              <span>Potential Gain:</span>
+              <span id="stepCoinsReward" class="text-sm font-black text-amber-300">+{{ step_info.coins }} 🪙</span>
+            </div>
+          </div>
+
+          <!-- Station Terrain Clue -->
+          <div class="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-300 font-mono flex items-center gap-2">
+            <span class="text-base">🧭</span>
+            <span id="terrainClueText" class="truncate">{{ step_info.clue }}</span>
+          </div>
+
+          <!-- Question Prompt -->
+          <div class="space-y-3">
+            <h2 id="qPrompt" class="text-lg sm:text-xl font-black text-white leading-snug break-words">
+              {% if question %}{{ question.prompt }}{% else %}Ready for the next climb? Press restart to begin Basecamp push.{% endif %}
+            </h2>
+          </div>
+
+          <!-- Answer Options Grid (100% Mobile Safe 1-col, 2-col desktop) -->
+          <div id="optionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            {% if question and question.get_options() %}
+              {% for opt_key, opt_text in question.get_options().items() %}
+              <button type="button" onclick="selectAnswer('{{ opt_key }}')"
+                      class="option-btn p-4 rounded-2xl bg-slate-950/90 hover:bg-slate-800 border-2 border-slate-700 hover:border-cyan-400 text-left transition transform hover:-translate-y-0.5 active:translate-y-0 group break-words">
+                <div class="flex items-start gap-3">
+                  <span class="w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-400/40 text-cyan-300 font-mono font-bold text-xs flex items-center justify-center shrink-0 group-hover:bg-cyan-500/30 group-hover:text-white">
+                    {{ opt_key }}
+                  </span>
+                  <span class="text-sm font-semibold text-slate-200 group-hover:text-white leading-snug">
+                    {{ opt_text }}
+                  </span>
+                </div>
+              </button>
+              {% endfor %}
+            {% endif %}
+          </div>
+
+          <!-- Feedback Banner -->
+          <div id="feedbackBanner" class="hidden p-4 rounded-2xl text-center space-y-1 font-mono">
+            <div id="feedbackTitle" class="text-base font-black uppercase"></div>
+            <p id="feedbackDesc" class="text-xs text-slate-300"></p>
+          </div>
+
+        </div>
+
+        <!-- Push-Your-Luck Safe Haven Banking Console -->
+        <div class="bg-gradient-to-br from-slate-950 via-[#160d2b] to-slate-900 rounded-3xl border-2 border-amber-400/40 p-5 sm:p-6 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="space-y-1 text-center sm:text-left">
+            <div class="flex items-center justify-center sm:justify-start gap-2 text-amber-400 font-mono text-xs font-black uppercase tracking-wider">
+              <span>🏦 SAFE HAVEN BANKING</span>
+              <span class="px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[10px]">PUSH YOUR LUCK</span>
+            </div>
+            <p class="text-xs text-slate-300 max-w-sm">
+              Bank your unbanked coins now to secure them in your wallet. If you climb higher without a shield and answer wrong, unbanked coins are lost!
+            </p>
+          </div>
+
+          <div class="flex items-center gap-3 w-full sm:w-auto">
+            <button id="bankBtn" onclick="bankCoins()"
+                    {% if progress.unbanked_coins <= 0 %}disabled{% endif %}
+                    class="w-full sm:w-auto py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:cursor-not-allowed">
+              BANK COINS NOW 🪙
+            </button>
+            <button id="restartBtn" onclick="restartClimb()"
+                    class="py-3.5 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-mono text-xs font-bold uppercase tracking-wider border border-slate-700 transition">
+              🔄 RESTART
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function() {
+  var climberSteps = {{ climber_steps|tojson }};
+  var currentStep = {{ progress.current_step }};
+  var currentQuestionId = {{ question.id if question else 'null' }};
+  var isSubmitting = false;
+
+  // Altitude position mapping for 8 ledges (top 0 to 500px in the wall container)
+  // Step 1: Basecamp (top 480px) down to Step 8: Summit (top 20px)
+  function updateClimberPosition(stepNum) {
+    var puppet = document.getElementById('climberPuppet');
+    if (!puppet) return;
+    var totalSteps = climberSteps.length;
+    var progressPct = (stepNum - 1) / (totalSteps - 1); // 0 at step 1, 1 at step 8
+    // Interpolate top from 480px down to 24px
+    var targetTop = 480 - (progressPct * 456);
+    puppet.style.top = targetTop + 'px';
+
+    // Update ledge active classes
+    for (var i = 1; i <= totalSteps; i++) {
+      var ledge = document.getElementById('ledge-' + i);
+      if (!ledge) continue;
+      ledge.classList.remove('ledge-active', 'border-cyan-400', 'bg-cyan-950/80', 'text-white', 'border-emerald-500/50', 'bg-emerald-950/40', 'text-emerald-300', 'border-slate-800', 'text-slate-400', 'opacity-60');
+      if (i === stepNum) {
+        ledge.classList.add('ledge-active', 'border-cyan-400', 'bg-cyan-950/80', 'text-white');
+      } else if (i < stepNum) {
+        ledge.classList.add('border-emerald-500/50', 'bg-emerald-950/40', 'text-emerald-300');
+      } else {
+        ledge.classList.add('border-slate-800', 'text-slate-400', 'opacity-60');
+      }
+    }
+  }
+
+  // Initialize position on load
+  updateClimberPosition(currentStep);
+
+  window.selectAnswer = function(selectedOpt) {
+    if (isSubmitting || !currentQuestionId) return;
+    isSubmitting = true;
+
+    // Highlight selected option button
+    var buttons = document.querySelectorAll('.option-btn');
+    buttons.forEach(function(btn) { btn.disabled = true; });
+
+    var puppet = document.getElementById('climberPuppet');
+
+    fetch('{{ url_for("arena.climber_answer") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question_id: currentQuestionId, selected: selectedOpt })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (!data.success) {
+        alert(data.error || 'Server error');
+        isSubmitting = false;
+        buttons.forEach(function(btn) { btn.disabled = false; });
+        return;
+      }
+
+      var banner = document.getElementById('feedbackBanner');
+      var fbTitle = document.getElementById('feedbackTitle');
+      var fbDesc = document.getElementById('feedbackDesc');
+      banner.classList.remove('hidden', 'bg-emerald-950/80', 'border-emerald-400', 'bg-blue-950/80', 'border-blue-400', 'bg-rose-950/80', 'border-rose-400', 'border-2');
+      banner.classList.add('border-2');
+
+      if (data.correct) {
+        // CORRECT
+        if (data.summit) {
+          if (window.qmPlaySound) window.qmPlaySound('fanfare');
+          if (puppet) puppet.classList.add('climber-pull');
+          updateClimberPosition(8);
+
+          banner.classList.add('bg-amber-950/80', 'border-amber-400');
+          fbTitle.innerHTML = '<span class="text-amber-300">👑 EVEREST SUMMIT CONQUERED! 8,848M!</span>';
+          fbDesc.textContent = 'All unbanked coins + 1,000 Summit Bonus banked safely into your wallet!';
+
+          document.getElementById('hudAltitude').textContent = '8848';
+          document.getElementById('hudUnbanked').textContent = '0';
+          document.getElementById('hudWallet').textContent = data.wallet_coins;
+          document.getElementById('bankBtn').disabled = true;
+          document.getElementById('optionsGrid').innerHTML = '<div class="col-span-full p-6 text-center text-amber-300 font-mono font-bold text-base">Congratulations on Summiting Everest! Start a new push anytime.</div>';
+          return;
+        }
+
+        // Normal step advance
+        if (window.qmPlaySound) window.qmPlaySound('pull');
+        if (puppet) puppet.classList.add('climber-pull');
+        setTimeout(function() { if (puppet) puppet.classList.remove('climber-pull'); }, 500);
+
+        banner.classList.add('bg-emerald-950/80', 'border-emerald-400');
+        fbTitle.innerHTML = '<span class="text-emerald-300">✓ CORRECT! CLIMBING HIGHER</span>';
+        fbDesc.textContent = data.explanation || 'Altitude gained safely.';
+
+        currentStep = data.new_step;
+        updateClimberPosition(currentStep);
+
+        // Update HUD
+        document.getElementById('hudAltitude').textContent = data.new_altitude;
+        document.getElementById('hudUnbanked').textContent = data.unbanked_coins;
+        document.getElementById('bankBtn').disabled = false;
+
+        // Render Next Question
+        setTimeout(function() {
+          banner.classList.add('hidden');
+          renderNextQuestion(data.next_step_info, data.next_question);
+          isSubmitting = false;
+        }, 1200);
+
+      } else {
+        // INCORRECT
+        if (data.shield_saved) {
+          // Shield saved from falling!
+          if (window.qmPlaySound) window.qmPlaySound('shield');
+          banner.classList.add('bg-blue-950/80', 'border-blue-400');
+          fbTitle.innerHTML = '<span class="text-cyan-300">🛡️ SHIELD DEFLECTED THE FALL!</span>';
+          fbDesc.textContent = 'A gear shield absorbed the slip! Correct answer was (' + data.correct_answer + '). Altitude preserved.';
+
+          document.getElementById('hudShields').textContent = data.shields_left;
+
+          setTimeout(function() {
+            banner.classList.add('hidden');
+            if (data.next_question) {
+              renderNextQuestion(climberSteps[currentStep - 1], data.next_question);
+            }
+            isSubmitting = false;
+          }, 2000);
+
+        } else if (data.fallen) {
+          // Slipped and fallen down the wall!
+          if (window.qmPlaySound) window.qmPlaySound('slip');
+          if (puppet) puppet.classList.add('climber-fall');
+          setTimeout(function() {
+            if (puppet) {
+              puppet.classList.remove('climber-fall');
+              updateClimberPosition(1);
+            }
+          }, 850);
+
+          banner.classList.add('bg-rose-950/80', 'border-rose-400');
+          fbTitle.innerHTML = '<span class="text-rose-400">⚠️ WRONG ANSWER &mdash; FALLEN DOWN TO BASECAMP!</span>';
+          fbDesc.textContent = 'Lost ' + data.lost_coins + ' unbanked coins. Correct answer was (' + data.correct_answer + '). Free retry from Basecamp!';
+
+          currentStep = 1;
+          document.getElementById('hudAltitude').textContent = '1000';
+          document.getElementById('hudUnbanked').textContent = '0';
+          document.getElementById('bankBtn').disabled = true;
+
+          setTimeout(function() {
+            restartClimb();
+          }, 2400);
+        }
+      }
+    })
+    .catch(function(err) {
+      console.warn('Climb answer error', err);
+      isSubmitting = false;
+      buttons.forEach(function(btn) { btn.disabled = false; });
+    });
+  };
+
+  function renderNextQuestion(stepInfo, qData) {
+    if (!stepInfo || !qData) return;
+    currentQuestionId = qData.id;
+
+    document.getElementById('currentStepNum').textContent = stepInfo.step;
+    document.getElementById('tierBadge').innerHTML = 'STEP ' + stepInfo.step + ' / 8 &bull; ' + stepInfo.tier_name;
+    document.getElementById('diffBadge').textContent = stepInfo.diff;
+    document.getElementById('stepCoinsReward').textContent = '+' + stepInfo.coins + ' 🪙';
+    document.getElementById('terrainClueText').textContent = stepInfo.clue;
+    document.getElementById('qPrompt').textContent = qData.prompt;
+
+    var grid = document.getElementById('optionsGrid');
+    grid.innerHTML = '';
+    var opts = qData.options || {};
+    for (var key in opts) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'option-btn p-4 rounded-2xl bg-slate-950/90 hover:bg-slate-800 border-2 border-slate-700 hover:border-cyan-400 text-left transition transform hover:-translate-y-0.5 active:translate-y-0 group break-words';
+      btn.setAttribute('onclick', 'selectAnswer("' + key + '")');
+      btn.innerHTML = '<div class="flex items-start gap-3">' +
+        '<span class="w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-400/40 text-cyan-300 font-mono font-bold text-xs flex items-center justify-center shrink-0 group-hover:bg-cyan-500/30 group-hover:text-white">' + key + '</span>' +
+        '<span class="text-sm font-semibold text-slate-200 group-hover:text-white leading-snug">' + opts[key] + '</span>' +
+        '</div>';
+      grid.appendChild(btn);
+    }
+  }
+
+  window.bankCoins = function() {
+    fetch('{{ url_for("arena.climber_bank") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.success) {
+        if (window.qmPlaySound) window.qmPlaySound('bank');
+        document.getElementById('hudWallet').textContent = data.wallet_coins;
+        document.getElementById('hudUnbanked').textContent = '0';
+        document.getElementById('bankBtn').disabled = true;
+
+        var banner = document.getElementById('feedbackBanner');
+        banner.className = 'p-4 rounded-2xl text-center space-y-1 font-mono border-2 bg-emerald-950/80 border-emerald-400';
+        document.getElementById('feedbackTitle').innerHTML = '<span class="text-emerald-300">🪙 ' + data.banked_amount + ' COINS SECURED IN WALLET!</span>';
+        document.getElementById('feedbackDesc').textContent = 'Coins safely stored in your permanent profile. Continue climbing risk-free!';
+        setTimeout(function() { banner.classList.add('hidden'); }, 3000);
+      } else {
+        alert(data.error || 'Banking error');
+      }
+    })
+    .catch(function(err) {
+      console.warn('Bank error', err);
+    });
+  };
+
+  window.restartClimb = function() {
+    fetch('{{ url_for("arena.climber_restart") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.success) {
+        currentStep = 1;
+        updateClimberPosition(1);
+        document.getElementById('hudAltitude').textContent = '1000';
+        document.getElementById('hudUnbanked').textContent = '0';
+        document.getElementById('bankBtn').disabled = true;
+
+        var banner = document.getElementById('feedbackBanner');
+        if (banner) banner.classList.add('hidden');
+
+        if (data.next_question) {
+          renderNextQuestion(data.step_info, data.next_question);
+        }
+        isSubmitting = false;
+      }
+    })
+    .catch(function(err) {
+      console.warn('Restart error', err);
+    });
+  };
+
+})();
+</script>
+{% endblock %}

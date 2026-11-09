@@ -281,6 +281,53 @@
     {% endif %}
 
     <!-- PRIMARY ACTION CARDS -->
+    <!-- EXPEDITION & DAILY GAMIFICATION SHOWCASE -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- The Quiz Climber Card -->
+      <a href="{{ url_for('arena.climber') }}" class="p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-cyan-950/70 via-slate-950 to-slate-950 border-2 border-cyan-400/50 relative overflow-hidden space-y-4 hover:border-cyan-300 transition-all duration-300 group shadow-xl">
+        <div class="flex items-center justify-between">
+          <div class="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+            🏔️
+          </div>
+          <span class="px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-black uppercase font-mono border border-cyan-400/30">
+            30-DAY SEASON &bull; 8,848M
+          </span>
+        </div>
+        <div class="space-y-1">
+          <h2 class="text-xl font-black font-mono text-white group-hover:text-cyan-300 transition">The Quiz Climber</h2>
+          <p class="text-xs font-mono text-slate-300 leading-relaxed">
+            Ascend the vertical rock face through 4 altitude tiers. Bank coins at safe havens or risk it for the Everest Summit!
+          </p>
+        </div>
+        <div class="pt-2 flex items-center justify-between text-xs font-mono font-bold">
+          <span class="text-amber-400">Win up to +2,650 🪙</span>
+          <span class="text-cyan-400 group-hover:translate-x-1 transition">Climb The Wall &rarr;</span>
+        </div>
+      </a>
+
+      <!-- Daily Lucky Wheel Card -->
+      <a href="{{ url_for('arena.wheel') }}" class="p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-amber-950/60 via-slate-950 to-slate-950 border-2 border-amber-400/50 relative overflow-hidden space-y-4 hover:border-amber-300 transition-all duration-300 group shadow-xl">
+        <div class="flex items-center justify-between">
+          <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-2xl group-hover:rotate-45 transition duration-500">
+            🎡
+          </div>
+          <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black uppercase font-mono border border-amber-400/30">
+            DAILY FREE SPINS
+          </span>
+        </div>
+        <div class="space-y-1">
+          <h2 class="text-xl font-black font-mono text-white group-hover:text-amber-300 transition">Daily Lucky Coin Wheel</h2>
+          <p class="text-xs font-mono text-slate-300 leading-relaxed">
+            Spin the Vault once every 24 hours to win free coins, climber shields, and 1,000 coin jackpots.
+          </p>
+        </div>
+        <div class="pt-2 flex items-center justify-between text-xs font-mono font-bold">
+          <span class="text-emerald-400">100% Free to Play</span>
+          <span class="text-amber-400 group-hover:translate-x-1 transition">Spin Vault &rarr;</span>
+        </div>
+      </a>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       
       <!-- Challenge a Friend Card (WhatsApp Deep Link & Web Share) -->

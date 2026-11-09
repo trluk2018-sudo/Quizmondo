@@ -1,0 +1,287 @@
+{% extends "themes/quizhub/base.html" %}
+
+{% block title %}Daily Lucky Coin Wheel &mdash; {{ site_title }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-slate-950 via-[#180d33] to-slate-950 text-white py-10 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-4xl mx-auto space-y-8">
+
+    <!-- Header Section -->
+    <div class="text-center space-y-3">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-purple-500/20 border border-purple-400/40 text-amber-300 font-mono text-xs font-bold uppercase tracking-wider shadow">
+        <span>🎡 THE VAULT SPINNER</span>
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+        <span class="text-emerald-400">100% FREE DAILY</span>
+      </div>
+      <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
+        Daily Lucky Coin Wheel
+      </h1>
+      <p class="text-slate-300 text-sm sm:text-base max-w-xl mx-auto">
+        Spin once every 24 hours to score free coins, expedition shields, and massive jackpot boosts for The Quiz Climber!
+      </p>
+
+      <!-- Player HUD & Sound Controls -->
+      <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+        <div class="px-4 py-1.5 rounded-xl bg-slate-900/90 border border-amber-400/40 text-xs font-mono font-bold flex items-center gap-2 shadow">
+          <span class="text-amber-400 text-sm">🪙</span>
+          <span class="text-slate-400">COINS:</span>
+          <span id="playerCoinsDisplay" class="text-amber-300 font-black text-sm">{{ player.coins }}</span>
+        </div>
+        <div class="px-4 py-1.5 rounded-xl bg-slate-900/90 border border-cyan-400/40 text-xs font-mono font-bold flex items-center gap-2 shadow">
+          <span class="text-cyan-400 text-sm">🛡️</span>
+          <span class="text-slate-400">CLIMBER SHIELDS:</span>
+          <span id="playerShieldsDisplay" class="text-cyan-300 font-black text-sm">{{ player.climber_shields or 0 }}</span>
+        </div>
+        <button type="button" data-qm-sound-toggle onclick="window.qmToggleMute && window.qmToggleMute()"
+                class="px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-purple-400/40 text-xs font-mono text-cyan-300 font-bold transition flex items-center gap-1.5 shadow">
+          🔊 <span class="hidden sm:inline">SFX ON</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Spinner Stage -->
+    <div class="relative bg-slate-900/80 rounded-3xl border-2 border-purple-500/40 p-6 sm:p-10 shadow-2xl backdrop-blur overflow-hidden flex flex-col items-center justify-center gap-8">
+
+      <!-- Ambient Glow Behind Wheel -->
+      <div class="absolute w-80 h-80 sm:w-96 sm:h-96 rounded-full bg-gradient-to-tr from-amber-500/15 via-purple-600/25 to-pink-500/20 blur-3xl pointer-events-none"></div>
+
+      <!-- Wheel Wrapper with Top Clapper Pin -->
+      <div class="relative w-[310px] h-[310px] sm:w-[420px] sm:h-[420px] flex items-center justify-center">
+
+        <!-- Top Pointer Needle -->
+        <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-30 filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">
+          <svg width="34" height="42" viewBox="0 0 34 42" fill="none">
+            <path d="M 17 40 L 4 4 L 30 4 Z" fill="#ef4444" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round"/>
+            <circle cx="17" cy="10" r="4.5" fill="#facc15" stroke="#78350f" stroke-width="1.5" />
+          </svg>
+        </div>
+
+        <!-- Rotating Wheel Disk -->
+        <div id="vaultWheelDisk" class="relative w-full h-full rounded-full border-4 border-amber-300/80 shadow-[0_0_40px_rgba(251,191,36,0.35)] overflow-hidden transition-transform duration-[4800ms] ease-out will-change-transform bg-slate-950">
+          <canvas id="wheelCanvas" width="420" height="420" class="w-full h-full"></canvas>
+        </div>
+
+        <!-- Center Hub Vault Lock -->
+        <div class="absolute inset-0 m-auto w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-b from-amber-300 via-amber-500 to-amber-700 border-4 border-slate-950 shadow-2xl flex flex-col items-center justify-center z-20 pointer-events-none">
+          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-950 border-2 border-amber-400 flex flex-col items-center justify-center">
+            <span class="text-amber-400 font-mono font-black text-[11px] sm:text-xs tracking-wider">VAULT</span>
+            <span class="text-[13px] sm:text-sm">🪙</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result Banner Modal / Alert -->
+      <div id="wheelResultBox" class="hidden w-full max-w-md p-4 rounded-2xl border-2 border-amber-400 bg-slate-950/95 text-center space-y-2 shadow-2xl animate-bounce">
+        <div id="wheelResultIcon" class="text-4xl">🌟</div>
+        <div id="wheelResultTitle" class="text-lg font-black text-amber-300 font-mono">CONGRATULATIONS!</div>
+        <p id="wheelResultDesc" class="text-sm text-slate-200 font-semibold"></p>
+      </div>
+
+      <!-- Action Controls -->
+      <div class="w-full max-w-md text-center space-y-4">
+        {% if can_spin %}
+          <button id="spinBtn" onclick="triggerSpin()" class="w-full py-4 px-8 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-500 to-pink-500 hover:from-amber-300 hover:to-pink-400 text-slate-950 font-black text-lg sm:text-xl uppercase tracking-wider shadow-xl shadow-orange-500/30 transition transform hover:-translate-y-1 active:translate-y-0">
+            SPIN THE VAULT NOW ⚡
+          </button>
+        {% else %}
+          <button disabled class="w-full py-4 px-8 rounded-2xl bg-slate-800 text-slate-400 font-mono font-bold text-sm uppercase tracking-wider border border-slate-700 cursor-not-allowed">
+            Next Free Spin in: <span id="cooldownTimer" class="text-amber-300 font-black">--:--:--</span>
+          </button>
+        {% endif %}
+
+        <div class="flex items-center justify-between text-xs font-mono text-slate-400 px-2">
+          <span>Shields protect you from falls in Climber!</span>
+          <a href="{{ url_for('arena.climber') }}" class="text-cyan-400 hover:text-cyan-300 font-bold underline">Go To Climber &rarr;</a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Prize Table Grid -->
+    <div class="bg-slate-900/60 rounded-2xl border border-purple-500/20 p-6 space-y-4">
+      <h3 class="text-sm font-black font-mono uppercase tracking-wider text-amber-400">Vault Slices &amp; Prize Rates</h3>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+        {% for s in slices %}
+        <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center gap-2.5">
+          <span class="text-xl">{{ s.icon }}</span>
+          <div>
+            <div class="font-bold text-white">{{ s.label }}</div>
+            <div class="text-[10px] text-slate-400 capitalize">{{ s.type }} reward</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function() {
+  var slices = {{ slices|tojson }};
+  var canSpin = {{ 'true' if can_spin else 'false' }};
+  var secondsLeft = {{ seconds_left }};
+  var isSpinning = false;
+  var currentRotation = 0;
+
+  var canvas = document.getElementById('wheelCanvas');
+  var ctx = canvas.getContext('2d');
+  var numSlices = slices.length;
+  var arc = (2 * Math.PI) / numSlices;
+  var center = 210;
+  var radius = 206;
+
+  function drawWheel() {
+    ctx.clearRect(0, 0, 420, 420);
+    for (var i = 0; i < numSlices; i++) {
+      var angle = i * arc - (Math.PI / 2); // Start at top
+      ctx.beginPath();
+      ctx.fillStyle = slices[i].color || '#8b5cf6';
+      ctx.moveTo(center, center);
+      ctx.arc(center, center, radius, angle, angle + arc);
+      ctx.lineTo(center, center);
+      ctx.fill();
+
+      // Divider line
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Peg dot on outer rim
+      var pegAngle = angle + arc / 2;
+      var pegX = center + (radius - 12) * Math.cos(pegAngle);
+      var pegY = center + (radius - 12) * Math.sin(pegAngle);
+      ctx.beginPath();
+      ctx.arc(pegX, pegY, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = '#fef08a';
+      ctx.fill();
+      ctx.strokeStyle = '#78350f';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Text label inside slice
+      ctx.save();
+      ctx.translate(center, center);
+      ctx.rotate(angle + arc / 2);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.shadowColor = 'rgba(0,0,0,0.8)';
+      ctx.shadowBlur = 4;
+      ctx.fillText(slices[i].icon + ' ' + slices[i].label, radius - 26, 5);
+      ctx.restore();
+    }
+  }
+
+  drawWheel();
+
+  // Cooldown countdown if not ready
+  if (!canSpin && secondsLeft > 0) {
+    var timerEl = document.getElementById('cooldownTimer');
+    var timer = setInterval(function() {
+      secondsLeft--;
+      if (secondsLeft <= 0) {
+        clearInterval(timer);
+        window.location.reload();
+        return;
+      }
+      var h = Math.floor(secondsLeft / 3600);
+      var m = Math.floor((secondsLeft % 3600) / 60);
+      var s = secondsLeft % 60;
+      if (timerEl) {
+        timerEl.textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+      }
+    }, 1000);
+  }
+
+  window.triggerSpin = function() {
+    if (isSpinning || !canSpin) return;
+    isSpinning = true;
+    var spinBtn = document.getElementById('spinBtn');
+    if (spinBtn) {
+      spinBtn.disabled = true;
+      spinBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      spinBtn.textContent = 'SPINNING VAULT...';
+    }
+
+    fetch('{{ url_for("arena.wheel_spin") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (!data.success) {
+        alert(data.error || 'Spin error occurred');
+        isSpinning = false;
+        if (spinBtn) spinBtn.disabled = false;
+        return;
+      }
+
+      var prizeIdx = data.index;
+      // Calculate target angle so winning slice lands directly at the top pointer (index 0 is centered around angle 0)
+      var sliceDeg = 360 / numSlices;
+      var targetDeg = (numSlices - prizeIdx) * sliceDeg - (sliceDeg / 2);
+      var extraRounds = 5 + Math.floor(Math.random() * 3); // 5 to 7 full 360 rotations
+      var finalDeg = currentRotation + (extraRounds * 360) + targetDeg;
+      currentRotation = finalDeg;
+
+      var disk = document.getElementById('vaultWheelDisk');
+      disk.style.transform = 'rotate(' + finalDeg + 'deg)';
+
+      // Trigger mechanical clicking audio as wheel spins past pegs
+      var tickCount = 28;
+      var tickInterval = 4800 / tickCount;
+      var currentTick = 0;
+      var tickTimer = setInterval(function() {
+        if (window.qmPlaySound) window.qmPlaySound('tick');
+        currentTick++;
+        if (currentTick >= tickCount) clearInterval(tickTimer);
+      }, tickInterval);
+
+      // On spin finish (4800ms)
+      setTimeout(function() {
+        isSpinning = false;
+        if (window.qmPlaySound) window.qmPlaySound('fanfare');
+
+        // Update displays
+        var coinsEl = document.getElementById('playerCoinsDisplay');
+        if (coinsEl && data.coins !== undefined) coinsEl.textContent = data.coins;
+        var shieldsEl = document.getElementById('playerShieldsDisplay');
+        if (shieldsEl && data.shields !== undefined) shieldsEl.textContent = data.shields;
+
+        // Show result banner
+        var resBox = document.getElementById('wheelResultBox');
+        var resIcon = document.getElementById('wheelResultIcon');
+        var resTitle = document.getElementById('wheelResultTitle');
+        var resDesc = document.getElementById('wheelResultDesc');
+        if (resBox) {
+          resBox.classList.remove('hidden');
+          if (resIcon) resIcon.textContent = data.slice.icon;
+          if (resTitle) resTitle.textContent = 'YOU WON: ' + data.slice.label + '!';
+          if (resDesc) {
+            if (data.slice.type === 'shield') {
+              resDesc.textContent = 'An expedition shield has been added to your gear! Use it to safeguard against falling in The Quiz Climber.';
+            } else if (data.slice.type === 'jackpot') {
+              resDesc.textContent = '🌟 MASSIVE VAULT JACKPOT! 1,000 Coins added directly to your player wallet!';
+            } else {
+              resDesc.textContent = 'Prize credited directly to your profile. Come back in 24 hours for your next free spin!';
+            }
+          }
+        }
+
+        if (spinBtn) {
+          spinBtn.textContent = 'SPUN FOR TODAY (24H COOLDOWN)';
+        }
+      }, 5000);
+
+    })
+    .catch(function(err) {
+      console.warn('Spin error', err);
+      isSpinning = false;
+      if (spinBtn) spinBtn.disabled = false;
+    });
+  };
+
+})();
+</script>
+{% endblock %}
