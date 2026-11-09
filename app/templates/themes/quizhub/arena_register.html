@@ -8,53 +8,55 @@
   <!-- Glowing ambient nebula -->
   <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
 
-  <div class="max-w-md mx-auto px-4 sm:px-6 w-full relative z-10 space-y-5">
+  <div class="max-w-md mx-auto px-4 sm:px-6 w-full relative z-10 space-y-4 sm:space-y-5">
 
-    <!-- Header Avatar & Dynamic Speech Bubble -->
+    <!-- Header Avatar & Badge -->
     <div class="text-center space-y-2">
       <div class="inline-block transform hover:scale-105 transition duration-300">
         {{ render_mascot(player.avatar_key, 'happy', 'sm', 'mx-auto') }}
       </div>
       <div>
-        <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-300 bg-cyan-950/70 border border-cyan-500/40 px-3 py-1 rounded-full">
-          ⚡ EASY 3-STEP PLAYER SETUP
+        <span class="text-[10px] font-mono font-semibold uppercase tracking-wider text-cyan-300 bg-cyan-950/70 border border-cyan-500/40 px-3 py-1 rounded-full">
+          ⚡ Quick 3-Step Player Setup
         </span>
       </div>
     </div>
 
     <!-- 3-Step Progress Bar -->
-    <div class="grid grid-cols-3 gap-2 font-mono text-[10px] uppercase font-bold">
-      <div id="progStep1" class="p-2 rounded-xl border-2 border-cyan-400 bg-cyan-950/50 text-cyan-300 text-center transition">
+    <div class="grid grid-cols-3 gap-2 font-mono text-[10px] font-semibold">
+      <div id="progStep1" class="py-2 px-1 rounded-xl border-2 border-cyan-400 bg-cyan-950/50 text-cyan-300 text-center transition truncate">
         1. Hero Name
       </div>
-      <div id="progStep2" class="p-2 rounded-xl border border-purple-500/30 bg-slate-900/60 text-slate-500 text-center transition">
+      <div id="progStep2" class="py-2 px-1 rounded-xl border border-purple-500/30 bg-slate-900/60 text-slate-500 text-center transition truncate">
         2. Email
       </div>
-      <div id="progStep3" class="p-2 rounded-xl border border-purple-500/30 bg-slate-900/60 text-slate-500 text-center transition">
+      <div id="progStep3" class="py-2 px-1 rounded-xl border border-purple-500/30 bg-slate-900/60 text-slate-500 text-center transition truncate">
         3. 6-Digit PIN
       </div>
     </div>
 
-    <!-- 3-Step Wizard Card -->
-    <div class="bg-slate-950/95 border-2 border-purple-500/40 rounded-3xl p-6 sm:p-8 backdrop-blur shadow-2xl space-y-6">
-      <form id="setupWizardForm" method="POST" action="{{ url_for('arena.player_register', next=request.args.get('next')) }}" class="space-y-5 font-mono text-xs">
+    <!-- 3-Step Wizard Card (Optimized padding for iPhone 16 Pro) -->
+    <div class="bg-slate-950/95 border-2 border-purple-500/40 rounded-2xl sm:rounded-3xl p-5 sm:p-7 backdrop-blur shadow-2xl space-y-5">
+      <form id="setupWizardForm" method="POST" action="{{ url_for('arena.player_register', next=request.args.get('next')) }}" class="space-y-4 font-mono text-xs">
         <input type="hidden" name="next" value="{{ request.args.get('next') or '' }}">
 
         <!-- ============================================== -->
         <!-- STEP 1: UNIQUE PLAYER NAME OR SUPERHERO PICKER -->
         <!-- ============================================== -->
         <div id="wizardStep1" class="space-y-4">
-          <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-950/70 to-indigo-950/70 border border-purple-400/40 space-y-1.5">
-            <div class="text-cyan-300 font-black text-sm sm:text-base leading-snug">
-              👋 Hey player, welcome to Quizmondo!
+          <!-- Welcome Banner -->
+          <div class="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-900/90 border border-purple-500/30 space-y-1 shadow-sm">
+            <div class="text-white font-bold text-sm sm:text-base flex items-center gap-2">
+              <span>👋</span>
+              <span>Welcome to Quizmondo!</span>
             </div>
-            <p class="text-xs text-slate-200 leading-relaxed">
-              Let's get your challenge set up — <strong>what's your name?</strong> Pick a unique player name, or let us randomise a cool superhero name for you!
+            <p class="text-xs text-slate-300 font-normal leading-relaxed">
+              Set up your free player profile — choose your unique player name, or tap below to generate a fun hero name!
             </p>
           </div>
 
-          <div class="space-y-2">
-            <label class="block font-bold text-slate-300 uppercase tracking-wider text-[11px]">
+          <div class="space-y-1.5">
+            <label class="block font-semibold text-slate-300 uppercase tracking-wider text-[11px]">
               Your Unique Player Name <span class="text-rose-400">*</span>
             </label>
             <div class="relative">
@@ -62,20 +64,22 @@
                 value="{{ '' if (player.display_name.startswith('Player') or player.display_name.startswith('Challenger_')) else player.display_name }}"
                 placeholder="e.g. CaptainQuasar"
                 autocomplete="username"
-                class="w-full bg-slate-900 border-2 border-purple-500/40 rounded-2xl p-3.5 text-base font-black text-white placeholder-slate-600 focus:border-cyan-400 focus:outline-none transition">
+                class="w-full bg-slate-900 border-2 border-purple-500/40 rounded-xl p-3 text-sm sm:text-base font-semibold text-white placeholder-slate-600 focus:border-cyan-400 focus:outline-none transition">
             </div>
-            <div id="usernameFeedback" class="text-[11px] min-h-[18px] text-cyan-300 font-bold"></div>
+            <div id="usernameFeedback" class="text-[11px] min-h-[16px] text-cyan-300 font-medium"></div>
           </div>
 
-          <!-- Superhero Name Randomiser Button -->
-          <button type="button" onclick="generateSuperheroName()" class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-pink-600/30 via-purple-600/40 to-indigo-600/30 hover:from-pink-500/50 hover:to-indigo-500/50 border-2 border-pink-400/50 text-pink-200 hover:text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition active:scale-95">
-            <span class="text-base">🎲</span>
-            <span>Pick a Cool Superhero Name for Me!</span>
+          <!-- Superhero Name Randomiser Button (Clean font-semibold, single line on mobile) -->
+          <button type="button" onclick="generateSuperheroName()"
+                  class="w-full py-2.5 px-3 rounded-xl bg-purple-900/30 hover:bg-purple-800/40 border border-purple-400/40 text-purple-200 hover:text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-sm transition active:scale-95">
+            <span>🎲</span>
+            <span>Generate Random Hero Name</span>
           </button>
 
-          <div class="pt-2">
-            <button type="button" onclick="goToStep2()" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400 hover:from-cyan-400 hover:to-emerald-300 text-slate-950 font-black text-sm uppercase tracking-wider shadow-xl transition active:scale-95">
-              Next Step: Email Address &rarr;
+          <div class="pt-1">
+            <button type="button" onclick="goToStep2()"
+                    class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-bold text-sm tracking-wide shadow-lg transition active:scale-95">
+              Continue to Email &rarr;
             </button>
           </div>
         </div>
@@ -84,52 +88,51 @@
         <!-- STEP 2: EMAIL ADDRESS                          -->
         <!-- ============================================== -->
         <div id="wizardStep2" class="hidden space-y-4">
-          <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-950/70 to-indigo-950/70 border border-purple-400/40 space-y-1.5">
-            <div class="text-cyan-300 font-black text-sm sm:text-base leading-snug">
-              🦸‍♂️ Awesome name, <span id="heroNamePreview" class="text-amber-300">Hero</span>!
+          <div class="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-900/90 border border-purple-500/30 space-y-1 shadow-sm">
+            <div class="text-white font-bold text-sm sm:text-base flex items-center gap-2">
+              <span>🦸‍♂️</span>
+              <span>Great choice, <span id="heroNamePreview" class="text-amber-300 font-bold">Hero</span>!</span>
             </div>
-            <p class="text-xs text-slate-200 leading-relaxed">
-              <strong>Step 2 of 3:</strong> What's your email address? This locks in your high scores, leaderboard rank, and friend challenges.
+            <p class="text-xs text-slate-300 font-normal leading-relaxed">
+              Enter your email address to save your high scores, season achievements, and coins.
             </p>
           </div>
 
-          <div class="space-y-2">
-            <label class="block font-bold text-slate-300 uppercase tracking-wider text-[11px]">
+          <div class="space-y-1.5">
+            <label class="block font-semibold text-slate-300 uppercase tracking-wider text-[11px]">
               Your Email Address <span class="text-rose-400">*</span>
             </label>
             <input type="email" id="step2Email" name="email" required
               placeholder="you@example.com"
               autocomplete="email"
               inputmode="email"
-              class="w-full bg-slate-900 border-2 border-purple-500/40 rounded-2xl p-3.5 text-base font-bold text-white placeholder-slate-600 focus:border-cyan-400 focus:outline-none transition">
-            <div id="emailFeedback" class="text-[11px] min-h-[18px] text-rose-400 font-bold"></div>
+              class="w-full bg-slate-900 border-2 border-purple-500/40 rounded-xl p-3 text-sm sm:text-base font-semibold text-white placeholder-slate-600 focus:border-cyan-400 focus:outline-none transition">
+            <div id="emailFeedback" class="text-[11px] min-h-[16px] text-rose-400 font-medium"></div>
           </div>
 
-          {# Date of birth, not a tickbox: a date is the only thing that can be
-             checked against later. The whole field disappears when the gate is
-             turned off in Settings > Security. #}
           {% if age_gate_on %}
-          <div class="space-y-2">
-            <label class="block font-bold text-slate-300 uppercase tracking-wider text-[11px]">
+          <div class="space-y-1.5">
+            <label class="block font-semibold text-slate-300 uppercase tracking-wider text-[11px]">
               Your Date of Birth <span class="text-rose-400">*</span>
             </label>
             <input type="date" id="step2Dob" name="date_of_birth" required
               max="{{ max_dob }}"
-              class="w-full bg-slate-900 border-2 border-purple-500/40 rounded-2xl p-3.5 text-base font-bold text-white focus:border-cyan-400 focus:outline-none transition">
-            <p class="text-[11px] text-slate-400 leading-relaxed">
-              You need to be at least {{ minimum_age }} to have a Quizmondo account. You can play
-              as a guest at any age without signing up.
+              class="w-full bg-slate-900 border-2 border-purple-500/40 rounded-xl p-3 text-sm sm:text-base font-semibold text-white focus:border-cyan-400 focus:outline-none transition">
+            <p class="text-[10px] text-slate-400 leading-relaxed font-normal">
+              You need to be at least {{ minimum_age }} to have a Quizmondo account. You can play as a guest at any age without signing up.
             </p>
-            <div id="dobFeedback" class="text-[11px] min-h-[18px] text-rose-400 font-bold"></div>
+            <div id="dobFeedback" class="text-[11px] min-h-[16px] text-rose-400 font-medium"></div>
           </div>
           {% endif %}
 
-          <div class="flex items-center gap-3 pt-2">
-            <button type="button" onclick="showStep(1)" class="w-1/3 py-3.5 px-4 rounded-2xl bg-slate-900 border border-purple-500/30 text-slate-300 hover:text-white font-bold text-xs uppercase transition">
+          <div class="flex items-center gap-2.5 pt-1">
+            <button type="button" onclick="showStep(1)"
+                    class="w-1/3 py-3 px-3 rounded-xl bg-slate-900 border border-purple-500/30 text-slate-300 hover:text-white font-semibold text-xs transition active:scale-95">
               &larr; Back
             </button>
-            <button type="button" onclick="goToStep3()" class="w-2/3 py-4 px-5 rounded-2xl bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400 hover:from-cyan-400 hover:to-emerald-300 text-slate-950 font-black text-sm uppercase tracking-wider shadow-xl transition active:scale-95">
-              Next: 6-Digit PIN &rarr;
+            <button type="button" onclick="goToStep3()"
+                    class="w-2/3 py-3.5 px-4 rounded-xl bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-bold text-sm tracking-wide shadow-lg transition active:scale-95">
+              Continue to PIN &rarr;
             </button>
           </div>
         </div>
@@ -138,17 +141,18 @@
         <!-- STEP 3: EASY 6-DIGIT PIN                       -->
         <!-- ============================================== -->
         <div id="wizardStep3" class="hidden space-y-4">
-          <div class="p-4 rounded-2xl bg-gradient-to-r from-purple-950/70 to-indigo-950/70 border border-purple-400/40 space-y-1.5">
-            <div class="text-cyan-300 font-black text-sm sm:text-base leading-snug">
-              🔐 Final Step: Set Your 6-Digit PIN!
+          <div class="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-900/90 border border-purple-500/30 space-y-1 shadow-sm">
+            <div class="text-white font-bold text-sm sm:text-base flex items-center gap-2">
+              <span>🔐</span>
+              <span>Final Step: Choose Your 6-Digit PIN</span>
             </div>
-            <p class="text-xs text-slate-200 leading-relaxed">
-              Pick an easy <strong>6-digit PIN</strong> (e.g. <code class="text-amber-300">123456</code>) so you can sign back in on any phone in seconds!
+            <p class="text-xs text-slate-300 font-normal leading-relaxed">
+              Pick a quick numeric PIN (e.g. <span class="text-amber-300 font-mono font-bold">123456</span>) so you can log back in on any phone in seconds.
             </p>
           </div>
 
-          <div class="space-y-2">
-            <label class="block font-bold text-slate-300 uppercase tracking-wider text-[11px] text-center">
+          <div class="space-y-1.5">
+            <label class="block font-semibold text-slate-300 uppercase tracking-wider text-[11px] text-center">
               Enter 6-Digit Numeric PIN <span class="text-rose-400">*</span>
             </label>
             <input type="password" id="step3Pin" name="pin" required minlength="6" maxlength="6"
@@ -157,21 +161,23 @@
               placeholder="• • • • • •"
               autocomplete="new-password"
               oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6); syncPinPreview();"
-              class="w-full bg-slate-900 border-2 border-cyan-400/60 rounded-2xl p-4 text-center text-2xl sm:text-3xl tracking-[0.6em] font-black text-cyan-300 placeholder-slate-700 focus:border-emerald-400 focus:outline-none transition">
+              class="w-full bg-slate-900 border-2 border-cyan-400/60 rounded-xl p-3.5 text-center text-2xl sm:text-3xl tracking-[0.5em] font-bold text-cyan-300 placeholder-slate-700 focus:border-emerald-400 focus:outline-none transition">
             <!-- Mirror to password & confirm_password for backend compatibility -->
             <input type="hidden" id="hiddenPassword" name="password" value="">
             <input type="hidden" id="hiddenConfirmPassword" name="confirm_password" value="">
-            <div id="pinFeedback" class="text-[11px] text-center min-h-[18px] text-slate-400">
+            <div id="pinFeedback" class="text-[11px] text-center min-h-[16px] text-slate-400 font-medium">
               Type 6 digits using your number pad (<span id="pinDigitCount">0</span>/6 digits)
             </div>
           </div>
 
-          <div class="flex items-center gap-3 pt-2">
-            <button type="button" onclick="showStep(2)" class="w-1/3 py-3.5 px-4 rounded-2xl bg-slate-900 border border-purple-500/30 text-slate-300 hover:text-white font-bold text-xs uppercase transition">
+          <div class="flex items-center gap-2.5 pt-1">
+            <button type="button" onclick="showStep(2)"
+                    class="w-1/3 py-3 px-3 rounded-xl bg-slate-900 border border-purple-500/30 text-slate-300 hover:text-white font-semibold text-xs transition active:scale-95">
               &larr; Back
             </button>
-            <button type="submit" onclick="return validateStep3Submit()" class="w-2/3 py-4 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 hover:from-emerald-400 hover:to-cyan-300 text-slate-950 font-black text-sm uppercase tracking-wider shadow-2xl transition active:scale-95">
-              🚀 Launch Challenge!
+            <button type="submit" onclick="return validateStep3Submit()"
+                    class="w-2/3 py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 text-slate-950 font-bold text-sm tracking-wide shadow-xl transition active:scale-95">
+              Launch Challenge &rarr;
             </button>
           </div>
         </div>
@@ -179,10 +185,10 @@
       </form>
 
       <!-- Footer Links -->
-      <div class="pt-4 border-t border-purple-500/20 text-center space-y-2 font-mono text-xs">
-        <p class="text-slate-400">
+      <div class="pt-3 border-t border-purple-500/20 text-center space-y-1.5 font-mono text-xs">
+        <p class="text-slate-400 font-normal">
           Already set up your Player Name &amp; PIN?
-          <a href="{{ url_for('arena.player_login', next=request.args.get('next')) }}" class="text-cyan-400 hover:underline font-bold">Sign in here &rarr;</a>
+          <a href="{{ url_for('arena.player_login', next=request.args.get('next')) }}" class="text-cyan-400 hover:underline font-bold ml-1">Sign in here &rarr;</a>
         </p>
       </div>
     </div>
@@ -206,8 +212,8 @@ function generateSuperheroName() {
   var feedback = document.getElementById('usernameFeedback');
   var input = document.getElementById('step1Username');
   if (feedback) {
-    feedback.className = 'text-[11px] min-h-[18px] text-cyan-300 font-bold';
-    feedback.textContent = '🎲 Rolling a unique superhero identity...';
+    feedback.className = 'text-[11px] min-h-[16px] text-cyan-300 font-medium';
+    feedback.textContent = '🎲 Rolling a unique hero identity...';
   }
   fetch('/arena/api/random-hero-name')
     .then(function(r) { return r.json(); })
@@ -215,8 +221,8 @@ function generateSuperheroName() {
       if (data && data.name) {
         input.value = data.name;
         if (feedback) {
-          feedback.className = 'text-[11px] min-h-[18px] text-emerald-400 font-bold';
-          feedback.textContent = '✨ ' + data.name + ' is available and ready for battle!';
+          feedback.className = 'text-[11px] min-h-[16px] text-emerald-400 font-medium';
+          feedback.textContent = '✨ ' + data.name + ' selected!';
         }
       }
     })
@@ -227,7 +233,7 @@ function generateSuperheroName() {
       var hero = p + n + num;
       input.value = hero;
       if (feedback) {
-        feedback.className = 'text-[11px] min-h-[18px] text-emerald-400 font-bold';
+        feedback.className = 'text-[11px] min-h-[16px] text-emerald-400 font-medium';
         feedback.textContent = '✨ ' + hero + ' selected!';
       }
     });
@@ -243,11 +249,11 @@ function showStep(stepNum) {
     }
     if (progEl) {
       if (n === stepNum) {
-        progEl.className = 'p-2 rounded-xl border-2 border-cyan-400 bg-cyan-950/50 text-cyan-300 text-center transition';
+        progEl.className = 'py-2 px-1 rounded-xl border-2 border-cyan-400 bg-cyan-950/50 text-cyan-300 text-center transition truncate font-semibold';
       } else if (n < stepNum) {
-        progEl.className = 'p-2 rounded-xl border border-emerald-500/40 bg-emerald-950/30 text-emerald-300 text-center transition';
+        progEl.className = 'py-2 px-1 rounded-xl border border-emerald-500/40 bg-emerald-950/30 text-emerald-300 text-center transition truncate font-semibold';
       } else {
-        progEl.className = 'p-2 rounded-xl border border-purple-500/30 bg-slate-900/60 text-slate-500 text-center transition';
+        progEl.className = 'py-2 px-1 rounded-xl border border-purple-500/30 bg-slate-900/60 text-slate-500 text-center transition truncate font-semibold';
       }
     }
   });
@@ -258,8 +264,8 @@ function goToStep2() {
   var feedback = document.getElementById('usernameFeedback');
   var val = (input.value || '').trim();
   if (val.length < 3) {
-    feedback.className = 'text-[11px] min-h-[18px] text-rose-400 font-bold';
-    feedback.textContent = '⚠️ Please pick a name (at least 3 characters) or tap the Superhero button!';
+    feedback.className = 'text-[11px] min-h-[16px] text-rose-400 font-medium';
+    feedback.textContent = '⚠️ Please enter a name (at least 3 characters).';
     input.focus();
     return;
   }
@@ -267,8 +273,8 @@ function goToStep2() {
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (!data.available) {
-        feedback.className = 'text-[11px] min-h-[18px] text-rose-400 font-bold';
-        feedback.textContent = '⚠️ "' + val + '" is already taken! Try "' + (data.suggestion || (val + '99')) + '" or tap Superhero Randomiser.';
+        feedback.className = 'text-[11px] min-h-[16px] text-rose-400 font-medium';
+        feedback.textContent = '⚠️ "' + val + '" is taken. Try "' + (data.suggestion || (val + '99')) + '".';
         return;
       }
       document.getElementById('heroNamePreview').textContent = val;
@@ -288,7 +294,7 @@ function goToStep3() {
   var feedback = document.getElementById('emailFeedback');
   var val = (emailInput.value || '').trim();
   if (!val || val.indexOf('@') === -1 || val.indexOf('.') === -1) {
-    feedback.textContent = '⚠️ Please enter a valid email address so we can save your challenge progress.';
+    feedback.textContent = '⚠️ Please enter a valid email address.';
     emailInput.focus();
     return;
   }
@@ -307,10 +313,10 @@ function syncPinPreview() {
   if (countEl) countEl.textContent = pin.length;
   var fb = document.getElementById('pinFeedback');
   if (pin.length === 6) {
-    fb.className = 'text-[11px] text-center min-h-[18px] text-emerald-400 font-bold';
-    fb.textContent = '✅ 6-Digit PIN Ready! Tap Launch Challenge below!';
+    fb.className = 'text-[11px] text-center min-h-[16px] text-emerald-400 font-bold';
+    fb.textContent = '✅ PIN Ready! Tap Launch Challenge below!';
   } else {
-    fb.className = 'text-[11px] text-center min-h-[18px] text-slate-400';
+    fb.className = 'text-[11px] text-center min-h-[16px] text-slate-400 font-medium';
     fb.innerHTML = 'Type 6 digits using your number pad (<span id="pinDigitCount">' + pin.length + '</span>/6 digits)';
   }
 }
@@ -319,7 +325,7 @@ function validateStep3Submit() {
   var pin = (document.getElementById('step3Pin').value || '').trim();
   var fb = document.getElementById('pinFeedback');
   if (pin.length !== 6 || !/^[0-9]{6}$/.test(pin)) {
-    fb.className = 'text-[11px] text-center min-h-[18px] text-rose-400 font-bold';
+    fb.className = 'text-[11px] text-center min-h-[16px] text-rose-400 font-medium';
     fb.textContent = '⚠️ Please enter a 6-digit numeric PIN (e.g. 123456).';
     return false;
   }
@@ -328,7 +334,7 @@ function validateStep3Submit() {
   return true;
 }
 
-// Auto-generate a cool superhero name if the input is currently blank
+// Auto-generate a hero name if blank on first visit
 window.addEventListener('DOMContentLoaded', function() {
   var input = document.getElementById('step1Username');
   if (input && !input.value.trim()) {
