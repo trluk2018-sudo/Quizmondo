@@ -836,11 +836,43 @@ def _seed_defaults():
         import logging
         logging.getLogger(__name__).warning(f"Could not synchronize quizmondo seed environment: {e}")
 
-    # Enforce default role hierarchy: trevorl is a standard player, primary admin is super_admin/admin
+    # Enforce default role hierarchy & reset trevorl climb challenge as requested
     try:
+        from .models import ClimberProgress, PlayerProfile
         trevor_user = User.query.filter(db.func.lower(User.username) == 'trevorl').first()
-        if trevor_user and trevor_user.role != 'player':
-            trevor_user.role = 'player'
+        if trevor_user:
+            if trevor_user.role != 'player':
+                trevor_user.role = 'player'
+            p = PlayerProfile.query.filter_by(user_id=trevor_user.id).first()
+            if p:
+                for cp in ClimberProgress.query.filter_by(player_profile_id=p.id).all():
+                    cp.current_day = 1
+                    cp.current_step = 1
+                    cp.current_stage = 1
+                    cp.day_question_index = 1
+                    cp.day_questions_total = 5
+                    cp.is_day_completed = False
+                    cp.altitude_m = 1000
+                    cp.highest_altitude = 1000
+                    cp.unbanked_coins = 0
+                    cp.last_climbed_date = None
+                    cp.status = 'climbing'
+
+        tp = PlayerProfile.query.filter(db.func.lower(PlayerProfile.display_name) == 'trevorl').first()
+        if tp:
+            for cp in ClimberProgress.query.filter_by(player_profile_id=tp.id).all():
+                cp.current_day = 1
+                cp.current_step = 1
+                cp.current_stage = 1
+                cp.day_question_index = 1
+                cp.day_questions_total = 5
+                cp.is_day_completed = False
+                cp.altitude_m = 1000
+                cp.highest_altitude = 1000
+                cp.unbanked_coins = 0
+                cp.last_climbed_date = None
+                cp.status = 'climbing'
+
         for u in User.query.all():
             if not u.role:
                 u.role = 'player'

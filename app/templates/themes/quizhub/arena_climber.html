@@ -72,6 +72,10 @@
           <span class="text-xs font-mono text-amber-400 font-bold">
             STAGE {{ day_meta.stage_number }}/6 &bull; {{ day_meta.stage_name }} ({{ day_meta.days }})
           </span>
+          <a href="{{ url_for('arena.climber_reset') }}" onclick="return confirm('Reset your mountain climb back to Day 1? (Your banked coins remain in your wallet)')"
+             class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600/70 text-slate-300 hover:text-cyan-300 text-[10px] font-mono transition inline-flex items-center gap-1">
+            <span>🔄</span><span>Reset to Day 1</span>
+          </a>
         </div>
         <p class="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
           Ascend 6 major camps over 30 days to reach the 8,848m summit. Secure Camp Safe Havens to protect your permanent progress against falls!
@@ -519,13 +523,8 @@
               {% endif %}
             </button>
             <button type="button" id="cardPushDayBtn" onclick="advanceDay()"
-                    {% if is_locked_for_today or progress.current_day >= 30 %}disabled{% endif %}
-                    class="w-full sm:w-auto py-3 px-6 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-cyan-500/20 transition transform hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed">
-              {% if is_locked_for_today %}
-                🔒 DAY {{ progress.current_day + 1 }} OPENS TOMORROW
-              {% else %}
-                PUSH TO DAY <span id="cardPushNextDayNum">{{ progress.current_day + 1 }}</span> 🧗
-              {% endif %}
+                    class="{% if is_locked_for_today or progress.current_day >= 30 %}hidden{% endif %} w-full sm:w-auto py-3 px-6 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-cyan-500/20 transition transform hover:-translate-y-0.5">
+              PUSH TO DAY <span id="cardPushNextDayNum">{{ progress.current_day + 1 }}</span> 🧗
             </button>
           </div>
 
@@ -579,14 +578,13 @@
                 ✓ COINS SECURED
               {% endif %}
             </button>
+            <div id="safeHavenLockedBadge" class="{% if not is_locked_for_today %}hidden{% endif %} px-3.5 py-2.5 rounded-xl bg-cyan-950/80 border border-cyan-500/30 text-cyan-300 font-mono text-xs flex items-center gap-2">
+              <span>🏕️</span>
+              <span>CAMP SECURED &bull; DAY <span id="havenNextDayNum">{{ progress.current_day + 1 }}</span> UNLOCKS TOMORROW</span>
+            </div>
             <button id="pushDayBtn" onclick="advanceDay()"
-                    {% if is_locked_for_today or not progress.is_day_completed or progress.current_day >= 30 %}disabled{% endif %}
-                    class="w-full sm:w-auto py-3 px-5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-cyan-500/20 transition transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:cursor-not-allowed">
-              {% if is_locked_for_today %}
-                🔒 LOCKED UNTIL TOMORROW
-              {% else %}
-                PUSH TO DAY <span id="pushNextDayNum">{{ progress.current_day + 1 }}</span> 🧗
-              {% endif %}
+                    class="{% if is_locked_for_today or not progress.is_day_completed or progress.current_day >= 30 %}hidden{% endif %} w-full sm:w-auto py-3 px-5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-cyan-500/20 transition transform hover:-translate-y-0.5 active:translate-y-0">
+              PUSH TO DAY <span id="pushNextDayNum">{{ progress.current_day + 1 }}</span> 🧗
             </button>
           </div>
         </div>
@@ -776,14 +774,21 @@
 
     function tick() {
       if (secondsUntilMidnight <= 0) {
-        timerEl.textContent = 'UNLOCKED! REFRESH';
-        var pushBtns = [document.getElementById('cardPushDayBtn'), document.getElementById('pushDayBtn')];
-        pushBtns.forEach(function(b) {
-          if (b) {
-            b.disabled = false;
-            b.innerHTML = 'PUSH TO DAY ' + (currentDay + 1) + ' 🧗';
-          }
-        });
+        timerEl.textContent = 'STAGE UNLOCKED! REFRESH TO CLIMB';
+        var cPush = document.getElementById('cardPushDayBtn');
+        if (cPush) {
+          cPush.classList.remove('hidden');
+          cPush.disabled = false;
+          cPush.innerHTML = 'PUSH TO DAY ' + (currentDay + 1) + ' 🧗';
+        }
+        var hPush = document.getElementById('pushDayBtn');
+        if (hPush) {
+          hPush.classList.remove('hidden');
+          hPush.disabled = false;
+          hPush.innerHTML = 'PUSH TO DAY ' + (currentDay + 1) + ' 🧗';
+        }
+        var hBadge = document.getElementById('safeHavenLockedBadge');
+        if (hBadge) hBadge.classList.add('hidden');
         return;
       }
       secondsUntilMidnight--;
@@ -915,6 +920,17 @@
           var b2 = document.getElementById('cardBankBtn');
           if (b1) { b1.disabled = false; b1.innerHTML = 'BANK COINS NOW 🪙 (+<span id="bankCoinsAmount">' + data.unbanked_coins + '</span>)'; }
           if (b2) { b2.disabled = false; b2.innerHTML = 'BANK COINS NOW 🪙 (+<span id="cardBankCoinsAmount">' + data.unbanked_coins + '</span>)'; }
+
+          // Enforce 24h lockout in UI: hide push to day buttons since stage is locked until tomorrow
+          isLockedForToday = true;
+          var cPush = document.getElementById('cardPushDayBtn');
+          if (cPush) cPush.classList.add('hidden');
+          var hPush = document.getElementById('pushDayBtn');
+          if (hPush) hPush.classList.add('hidden');
+          var hBadge = document.getElementById('safeHavenLockedBadge');
+          if (hBadge) hBadge.classList.remove('hidden');
+          var hNext = document.getElementById('havenNextDayNum');
+          if (hNext) hNext.textContent = data.next_day;
 
           setTimeout(function() {
             banner.classList.add('hidden');
@@ -1271,6 +1287,15 @@
         if (shieldsTxt && data.shields_total > 0) {
           shieldsTxt.innerHTML = '<span class="text-cyan-300 font-bold">🛡️ ' + data.shields_total + ' Shield' + (data.shields_total > 1 ? 's' : '') + '</span>';
         }
+
+        // Enforce 24h lockout in UI: hide push to day buttons since stage is locked until tomorrow
+        isLockedForToday = true;
+        var cPushCamp = document.getElementById('cardPushDayBtn');
+        if (cPushCamp) cPushCamp.classList.add('hidden');
+        var hPushCamp = document.getElementById('pushDayBtn');
+        if (hPushCamp) hPushCamp.classList.add('hidden');
+        var hBadgeCamp = document.getElementById('safeHavenLockedBadge');
+        if (hBadgeCamp) hBadgeCamp.classList.remove('hidden');
 
         setTimeout(function() {
           banner.classList.add('hidden');

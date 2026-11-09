@@ -4482,6 +4482,31 @@ def _pick_climber_question(diff='easy', exclude_id=None):
     return query.offset(random.randint(0, count - 1)).first()
 
 
+@arena_bp.route('/climber/reset', methods=['GET', 'POST'])
+def climber_reset():
+    """Reset active player's expedition back to Day 1 (Self-serve or testing)."""
+    if not session.get('user_id'):
+        return redirect(url_for('arena.player_register', next=url_for('arena.climber')))
+    player = get_current_player(persist=True)
+    season = get_or_create_climber_season()
+    progress = get_or_create_climber_progress(player.id, season.id)
+
+    progress.current_day = 1
+    progress.current_step = 1
+    progress.current_stage = 1
+    progress.day_question_index = 1
+    progress.day_questions_total = 5
+    progress.is_day_completed = False
+    progress.altitude_m = 1000
+    progress.highest_altitude = 1000
+    progress.unbanked_coins = 0
+    progress.last_climbed_date = None
+    progress.status = 'climbing'
+    db.session.commit()
+    flash("Climber challenge reset to Day 1! Ready for your 60-second speed sprint.", "success")
+    return redirect(url_for('arena.climber'))
+
+
 @arena_bp.route('/climber')
 def climber():
     """The Quiz Climber: 30-Day Everest Expedition Screen."""
@@ -4491,6 +4516,22 @@ def climber():
     player = get_current_player(persist=True)
     season = get_or_create_climber_season()
     progress = get_or_create_climber_progress(player.id, season.id)
+
+    # Handle explicit reset request (e.g. ?reset=1 or ?reset=trevorl)
+    if request.args.get('reset') in ('1', 'trevorl', 'true'):
+        progress.current_day = 1
+        progress.current_step = 1
+        progress.current_stage = 1
+        progress.day_question_index = 1
+        progress.day_questions_total = 5
+        progress.is_day_completed = False
+        progress.altitude_m = 1000
+        progress.highest_altitude = 1000
+        progress.unbanked_coins = 0
+        progress.last_climbed_date = None
+        progress.status = 'climbing'
+        db.session.commit()
+        return redirect(url_for('arena.climber'))
 
     day_meta = _calc_day_meta(progress.current_day)
 
