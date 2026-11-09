@@ -1,111 +1,128 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%">
   <defs>
+    <!-- Alpine Daytime Sky Gradient -->
     <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#050814" />
-      <stop offset="30%" stop-color="#0c132a" />
-      <stop offset="65%" stop-color="#161f42" />
-      <stop offset="100%" stop-color="#2a2858" />
+      <stop offset="0%" stop-color="#0f2b5c" />
+      <stop offset="35%" stop-color="#1e40af" />
+      <stop offset="65%" stop-color="#3b82f6" />
+      <stop offset="85%" stop-color="#93c5fd" />
+      <stop offset="100%" stop-color="#dbeafe" />
     </linearGradient>
-    <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9" />
-      <stop offset="35%" stop-color="#cbd5e1" stop-opacity="0.5" />
-      <stop offset="70%" stop-color="#38bdf8" stop-opacity="0.2" />
-      <stop offset="100%" stop-color="#0c132a" stop-opacity="0" />
+
+    <!-- Glowing Mountain Sun / Halo -->
+    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1" />
+      <stop offset="25%" stop-color="#fef08a" stop-opacity="0.8" />
+      <stop offset="60%" stop-color="#60a5fa" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0" />
     </radialGradient>
-    <linearGradient id="everestSnow" x1="0%" y1="0%" x2="50%" y2="100%">
+
+    <!-- Glistening Everest Snow -->
+    <linearGradient id="snowGlint" x1="0%" y1="0%" x2="70%" y2="100%">
       <stop offset="0%" stop-color="#ffffff" />
-      <stop offset="40%" stop-color="#e0f2fe" />
-      <stop offset="100%" stop-color="#7dd3fc" />
+      <stop offset="50%" stop-color="#f0f9ff" />
+      <stop offset="100%" stop-color="#bae6fd" />
     </linearGradient>
-    <linearGradient id="rockGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#111827" />
-      <stop offset="70%" stop-color="#1f2937" />
-      <stop offset="100%" stop-color="#374151" />
+
+    <!-- Illuminated Alpine Ridge -->
+    <linearGradient id="peakIlluminated" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e0e7ff" />
+      <stop offset="40%" stop-color="#a5b4fc" />
+      <stop offset="80%" stop-color="#3730a3" />
+      <stop offset="100%" stop-color="#1e1b4b" />
     </linearGradient>
+
+    <!-- Valley Foothills & Grass/Rock -->
+    <linearGradient id="valleySlope" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="50%" stop-color="#134e4a" />
+      <stop offset="100%" stop-color="#064e3b" />
+    </linearGradient>
+
+    <!-- Tree Cluster Symbol -->
+    <g id="pineTree">
+      <polygon points="0,0 -7,16 -2,16 -9,26 -3,26 -11,38 11,38 3,26 9,26 2,16 7,16" fill="#064e3b" stroke="#022c22" stroke-width="0.8" />
+      <polygon points="0,0 -4,16 0,16 -6,26 0,26 -8,38 0,38" fill="#059669" opacity="0.35" />
+      <rect x="-1.5" y="38" width="3" height="6" fill="#451a03" />
+    </g>
+    <g id="pineCluster">
+      <use href="#pineTree" transform="scale(0.85) translate(-14, 4)" />
+      <use href="#pineTree" transform="scale(1.1) translate(0, 0)" />
+      <use href="#pineTree" transform="scale(0.75) translate(16, 6)" />
+    </g>
   </defs>
 
   <!-- Sky -->
   <rect width="800" height="600" fill="url(#skyGrad)" />
 
-  <!-- Stars -->
-  <g fill="#ffffff" opacity="0.8">
-    <circle cx="90" cy="70" r="1.5" />
-    <circle cx="210" cy="45" r="2" />
-    <circle cx="340" cy="85" r="1.2" />
-    <circle cx="480" cy="60" r="1.8" />
-    <circle cx="610" cy="40" r="1.4" />
-    <circle cx="730" cy="95" r="2" />
-    <circle cx="150" cy="140" r="1.2" />
-    <circle cx="280" cy="120" r="1.5" />
-    <circle cx="560" cy="110" r="1.5" />
-    <circle cx="670" cy="160" r="1.2" />
+  <!-- Alpine Sun Burst -->
+  <circle cx="580" cy="110" r="140" fill="url(#sunGlow)" />
+  <circle cx="580" cy="110" r="26" fill="#ffffff" />
+
+  <!-- Distant High-Alpine Snow Range (Crisp White & Sky Lilac) -->
+  <polygon points="60,600 240,190 390,360 520,170 760,600" fill="url(#peakIlluminated)" />
+  <polygon points="240,190 205,245 270,245" fill="url(#snowGlint)" />
+  <polygon points="520,170 485,230 550,230" fill="url(#snowGlint)" />
+
+  <!-- Everest Summit Pyramid (Bright, Glorious, Snow-Covered) -->
+  <polygon points="170,600 420,80 660,600" fill="#1e1e38" />
+  <!-- Sunlit Face -->
+  <polygon points="420,80 340,240 400,270 420,220 450,280 500,230" fill="url(#snowGlint)" />
+  <!-- Shadow Ridge -->
+  <polygon points="420,80 420,220 450,280 500,230 660,600 420,600" fill="#0f172a" opacity="0.45" />
+
+  <!-- Lower Green Foothills & Glacial Moraine -->
+  <polygon points="0,380 260,340 440,410 700,360 800,420 800,600 0,600" fill="url(#valleySlope)" />
+
+  <!-- Tufts of Evergreen Pine & Fir Trees across Foothills & Basecamp Slopes -->
+  <g id="treeClusters">
+    <use href="#pineCluster" transform="translate(180, 420)" />
+    <use href="#pineCluster" transform="scale(0.8) translate(310, 470)" />
+    <use href="#pineCluster" transform="scale(1.2) translate(230, 430)" />
+    <use href="#pineCluster" transform="scale(0.9) translate(360, 450)" />
+    <use href="#pineCluster" transform="scale(1.3) translate(140, 410)" />
+    <use href="#pineCluster" transform="scale(0.7) translate(470, 500)" />
+    <use href="#pineCluster" transform="scale(1.1) translate(490, 460)" />
+    <use href="#pineCluster" transform="scale(0.85) translate(610, 480)" />
+    <use href="#pineCluster" transform="scale(1.25) translate(660, 440)" />
+    <use href="#pineCluster" transform="scale(0.75) translate(730, 490)" />
   </g>
 
-  <!-- Full Moon -->
-  <circle cx="640" cy="110" r="90" fill="url(#moonGlow)" />
-  <circle cx="640" cy="110" r="32" fill="#f8fafc" />
-
-  <!-- Distant Blue Ridge Mountains -->
-  <polygon points="50,600 220,240 380,420 540,210 750,600" fill="#1e293b" opacity="0.6" />
-  <polygon points="220,240 200,285 240,285" fill="#bae6fd" opacity="0.7" />
-  <polygon points="540,210 515,260 565,260" fill="#bae6fd" opacity="0.7" />
-
-  <!-- Everest Summit -->
-  <polygon points="180,600 450,110 680,600" fill="#18223c" />
-  <polygon points="450,110 395,210 435,230 450,190 470,235 505,200" fill="url(#everestSnow)" />
-  <!-- Shadow Ridge -->
-  <polygon points="450,110 450,190 470,235 505,200 680,600 450,600" fill="#0f172a" opacity="0.45" />
-
-  <!-- Left Climbing Rock Face -->
-  <polygon points="0,0 210,0 170,220 220,400 160,600 0,600" fill="url(#rockGrad)" />
-  <!-- Rock Details & Crags -->
-  <path d="M 0,90 L 195,90 L 160,140 M 0,260 L 180,260 L 150,310 M 0,440 L 190,440 L 150,500" stroke="#4b5563" stroke-width="3" fill="none" opacity="0.6" />
+  <!-- Left Climbing Wall Track & Texture (84px wide) -->
+  <polygon points="0,0 120,0 95,240 115,440 90,600 0,600" fill="#334155" />
+  <!-- Rock Crags & Snow Dusting on Holds -->
+  <path d="M 0,110 L 105,110 L 80,150 M 0,270 L 100,270 L 75,320 M 0,430 L 110,430 L 80,480" stroke="#64748b" stroke-width="3" fill="none" />
+  <path d="M 0,110 L 95,110 M 0,270 L 88,270 M 0,430 L 98,430" stroke="#ffffff" stroke-width="2" fill="none" opacity="0.8" />
 
   <!-- Fixed Vertical Climbing Rope -->
-  <line x1="140" y1="0" x2="140" y2="600" stroke="#facc15" stroke-width="3.5" stroke-dasharray="6,4" />
+  <line x1="58" y1="0" x2="58" y2="600" stroke="#facc15" stroke-width="3.5" stroke-dasharray="7,4" />
 
-  <!-- Climber Silhouette on Rope -->
-  <g transform="translate(116, 240)">
-    <!-- Helmet -->
+  <!-- Animated Climber Puppet Silhouette -->
+  <g transform="translate(34, 280)">
+    <!-- Red Expedition Helmet -->
     <ellipse cx="24" cy="14" rx="11" ry="9" fill="#ef4444" />
     <rect x="22" y="13" width="7" height="3" fill="#fbbf24" rx="1.5" />
-    <!-- Backpack -->
-    <rect x="2" y="24" width="13" height="22" rx="4" fill="#3b82f6" />
-    <!-- Torso -->
-    <path d="M 14,22 L 32,24 L 28,48 L 14,46 Z" fill="#f97316" />
-    <!-- Climbing Harness & Carabiner -->
+    <!-- Blue Pack -->
+    <rect x="2" y="24" width="13" height="22" rx="4" fill="#2563eb" />
+    <!-- Orange Climbing Parka -->
+    <path d="M 14,22 L 32,24 L 28,48 L 14,46 Z" fill="#ea580c" />
+    <!-- Carabiner Harness -->
     <ellipse cx="22" cy="46" rx="8" ry="4" fill="#1e293b" />
     <circle cx="24" cy="46" r="3" fill="#facc15" />
-    <!-- Left Arm reaching up to rope -->
-    <path d="M 18,25 L 24,6 L 24,2" stroke="#f97316" stroke-width="5" stroke-linecap="round" fill="none" />
-    <!-- Right Arm holding rope -->
-    <path d="M 30,27 L 24,18 L 24,2" stroke="#ea580c" stroke-width="5" stroke-linecap="round" fill="none" />
-    <!-- Legs planted on rock -->
+    <!-- Arms Gripping Rope -->
+    <path d="M 18,25 L 24,6 L 24,2" stroke="#ea580c" stroke-width="5" stroke-linecap="round" fill="none" />
+    <path d="M 30,27 L 24,18 L 24,2" stroke="#c2410c" stroke-width="5" stroke-linecap="round" fill="none" />
+    <!-- Boots on Rock Holds -->
     <path d="M 17,46 L 8,62 L -2,66" stroke="#1e293b" stroke-width="5" stroke-linecap="round" fill="none" />
     <path d="M 25,47 L 22,66 L 14,76" stroke="#0f172a" stroke-width="5" stroke-linecap="round" fill="none" />
-    <!-- Boots -->
     <ellipse cx="-2" cy="66" rx="5" ry="3" fill="#fbbf24" />
     <ellipse cx="14" cy="76" rx="5" ry="3" fill="#fbbf24" />
   </g>
 
-  <!-- Ledge Marker Flag (Basecamp / Camp 1) -->
-  <g transform="translate(150, 390)">
-    <line x1="0" y1="0" x2="0" y2="45" stroke="#f8fafc" stroke-width="3" />
-    <polygon points="0,0 45,12 0,24" fill="#10b981" />
-    <text x="10" y="16" font-family="sans-serif" font-weight="900" font-size="10" fill="#ffffff">CAMP 1</text>
-  </g>
-
-  <!-- Falling Snowdrift Details -->
-  <g fill="#ffffff" opacity="0.6">
-    <circle cx="120" cy="180" r="2.5" />
-    <circle cx="280" cy="220" r="3" />
-    <circle cx="360" cy="160" r="2" />
-    <circle cx="480" cy="280" r="3.5" />
-    <circle cx="590" cy="240" r="2" />
-    <circle cx="240" cy="420" r="2.8" />
-    <circle cx="410" cy="460" r="3.2" />
-    <circle cx="630" cy="410" r="2.5" />
-    <circle cx="710" cy="330" r="2" />
-    <circle cx="330" cy="540" r="3" />
+  <!-- Ledge Marker Flag (Basecamp) -->
+  <g transform="translate(68, 430)">
+    <line x1="0" y1="0" x2="0" y2="40" stroke="#f8fafc" stroke-width="2.5" />
+    <polygon points="0,0 40,11 0,22" fill="#10b981" />
+    <text x="8" y="15" font-family="sans-serif" font-weight="900" font-size="9" fill="#ffffff">CAMP 1</text>
   </g>
 </svg>

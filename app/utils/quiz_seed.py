@@ -1,8 +1,53 @@
+
+EVEREST_FACTS = [
+    # Stage 1: Valley & Basecamp (Days 1-5)
+    {"stage": 1, "alt": 1400, "icon": "🌏", "title": "Sacred Names of the Peak", "text": "In Nepal, Everest is known as Sagarmatha, meaning 'Goddess of the Sky'. In Tibet, it is Chomolungma, meaning 'Mother Goddess of the World'."},
+    {"stage": 1, "alt": 1800, "icon": "🚩", "title": "Tibetan Prayer Flags", "text": "The five colors of Buddhist prayer flags hanging along trails symbolize the five elements: Blue for sky, white for air, red for fire, green for water, and yellow for earth."},
+    {"stage": 1, "alt": 2100, "icon": "🌲", "title": "Sub-Alpine Rhododendron Forests", "text": "The lower valleys leading toward the Khumbu region are home to rare musk deer, Himalayan black bears, and dense forests of rhododendrons and blue pines."},
+    {"stage": 1, "alt": 2350, "icon": "🏔️", "title": "Continental Collision", "text": "Mount Everest was formed approximately 50 to 60 million years ago when the Indian tectonic plate collided with the Eurasian plate, pushing the seabed up into the sky."},
+    {"stage": 1, "alt": 2500, "icon": "📜", "title": "Sir George Everest", "text": "The mountain was named in 1865 after Sir George Everest, the British Surveyor General of India who mapped the Great Trigonometrical Survey."},
+
+    # Stage 2: Khumbu Icefall (Days 6-10)
+    {"stage": 2, "alt": 2800, "icon": "❄️", "title": "The Icefall Doctors", "text": "A specialized team of elite Sherpa mountaineers, known as the 'Icefall Doctors', brave the shifting glacier daily to fix safety ropes and aluminum ladders across massive chasms."},
+    {"stage": 2, "alt": 3100, "icon": "🧊", "title": "Moving River of Ice", "text": "The Khumbu Glacier flows continuously at roughly 1 meter per day, meaning crevasses open and massive ice towers (seracs) collapse without warning."},
+    {"stage": 2, "alt": 3400, "icon": "🪜", "title": "Ladder Crossings", "text": "Climbers traverse bottomless glacial cracks using tied-together aluminum construction ladders while wearing steel crampons strapped to their boots."},
+    {"stage": 2, "alt": 3700, "icon": "🦅", "title": "High-Flying Alpine Birds", "text": "Yellow-billed choughs and bar-headed geese are among the few creatures capable of flying over Everest's high glaciers and ridges."},
+    {"stage": 2, "alt": 4000, "icon": "⏱️", "title": "Midnight Traverses", "text": "Expedition teams usually cross the Icefall between 2:00 AM and 5:00 AM, when temperatures are coldest and the ice is frozen solid and most stable."},
+
+    # Stage 3: Western Cwm (Days 11-15)
+    {"stage": 3, "alt": 4300, "icon": "🏜️", "title": "The Valley of Silence", "text": "The Western Cwm is a vast, high-altitude glacial basin enclosed by Everest, Lhotse, and Nuptse. 'Cwm' is a Welsh word for bowl-shaped valley, coined here by George Mallory in 1921."},
+    {"stage": 3, "alt": 4600, "icon": "☀️", "title": "The Solar Oven Effect", "text": "Because pure white snow and towering ice faces reflect 90% of solar radiation, daytime temperatures inside the Cwm can surge above 35°C (95°F), even in freezing ambient air."},
+    {"stage": 3, "alt": 4900, "icon": "💧", "title": "High Acclimatization Rotations", "text": "Expedition climbers hike up to Camps 1, 2, and 3, then climb back down to Basecamp several times over 3 weeks to trigger red blood cell production before the summit attempt."},
+    {"stage": 3, "alt": 5200, "icon": "🏕️", "title": "Advanced Base Camp", "text": "Camp 2 serves as Advanced Base Camp (ABC). It features solar generators, weather satellite links, and full mess tents perched directly on moraine rubble."},
+    {"stage": 3, "alt": 5500, "icon": "🌬️", "title": "Looming Avalanches", "text": "Avalanches peeling off Nuptse's 2,000-meter vertical ridge can create air-blast shockwaves that rush across the Western Cwm in seconds."},
+
+    # Stage 4: Lhotse Face & Yellow Band (Days 16-20)
+    {"stage": 4, "alt": 5800, "icon": "🧗", "title": "1,125m Wall of Pure Blue Ice", "text": "The Lhotse Face is a 40- to 50-degree slope of polished, compacted blue glacial ice that climbers must ascend using jumars (mechanical ascenders) on anchored nylon lines."},
+    {"stage": 4, "alt": 6200, "icon": "🐚", "title": "The Yellow Band Fossils", "text": "The Yellow Band is a distinct geological layer of yellow-brown limestone marble at 7,000m that contains fossilized ocean creatures from the ancient Tethys Sea."},
+    {"stage": 4, "alt": 6500, "icon": "🪓", "title": "Front-Pointing Crampons", "text": "On the Lhotse Face, climbers spend hours standing on only the front two steel points of their boot crampons while hauling heavy packs upwards."},
+    {"stage": 4, "alt": 6750, "icon": "⛺", "title": "Camp 3 Perch", "text": "Camp 3 is carved directly into the sheer ice slope. A tent unclipped from the safety cable would slide 1,000 meters down into the Western Cwm."},
+    {"stage": 4, "alt": 7000, "icon": "🪢", "title": "Fixed Rope Maintenance", "text": "Every spring season, an estimated 10,000 meters of static rope are manually carried up and pinned with snow pickets and ice screws along the route."},
+
+    # Stage 5: South Col & Death Zone (Days 21-25)
+    {"stage": 5, "alt": 7250, "icon": "☠️", "title": "Entering the Death Zone", "text": "Above 8,000 meters (26,247 feet), oxygen levels are only one-third of sea level. The human body burns calories faster than it can process nutrients and cannot survive indefinitely."},
+    {"stage": 5, "alt": 7500, "icon": "💨", "title": "The Jet Stream Winds", "text": "Everest's summit pierces into the lower stratosphere, frequently colliding directly with the high-altitude Jet Stream, unleashing hurricane-force winds over 175 km/h."},
+    {"stage": 5, "alt": 7750, "icon": "🩺", "title": "Hypoxia and Brain Function", "text": "Severe oxygen deprivation slows cognitive function by up to 50%. Mountaineers adhere strictly to turnaround rules ('2:00 PM cutoff') to avoid disorientation in the dark."},
+    {"stage": 5, "alt": 7900, "icon": "🌙", "title": "The South Col Launchpad", "text": "Camp 4 at the South Col is a desolate moonscape strewn with boulders and wind-shredded nylon. Climbers sleep with oxygen masks on before departing for the summit at 9:00 PM."},
+    {"stage": 5, "alt": 8000, "icon": "🫁", "title": "Supplemental Oxygen Flow", "text": "Most modern climbers breathe bottled oxygen at 2 to 4 liters per minute via titanium regulator masks, creating an effective altitude equivalent of 6,000m."},
+
+    # Stage 6: Hillary Step & Summit Ridge (Days 26-30)
+    {"stage": 6, "alt": 8250, "icon": "🌅", "title": "The Balcony Sunrise", "text": "Climbers reach 'The Balcony' (8,400m) around sunrise, witnessing the colossal triangular shadow of Everest cast westward across hundreds of kilometers of cloud cover."},
+    {"stage": 6, "alt": 8500, "icon": "🧭", "title": "The South Summit", "text": "At 8,690m lies the South Summit, a false peak providing the first heart-stopping view of the final knife-edge summit ridge leading to the top."},
+    {"stage": 6, "alt": 8700, "icon": "🧗", "title": "The Hillary Step", "text": "A famous 12-meter near-vertical rock face near the summit named after Sir Edmund Hillary. Following the 2015 earthquake, parts of the rock face shifted into a steep snow ramp."},
+    {"stage": 6, "alt": 8800, "icon": "🤝", "title": "May 29, 1953", "text": "At 11:30 AM on May 29, 1953, Sir Edmund Hillary of New Zealand and Tenzing Norgay Sherpa of Nepal became the first verified humans to stand atop the highest point on Earth."},
+    {"stage": 6, "alt": 8848, "icon": "👑", "title": "8,848.86m (29,031.7 ft)", "text": "In December 2020, Nepal and China officially announced the newly calculated joint elevation of Everest as 8,848.86 meters, confirming the roof of the world!"}
+]
+
 """Initial question seed, packs catalog, pub leagues, and homepage module synchronizer for Quizmondo Arena."""
 import os
 import json
 from datetime import datetime, timedelta
-from ..models import db, QuizQuestion, QuizPack, PubLeague, PageModule, MenuItem, Post, Category, Page, SiteSetting, FeaturedGame, ArenaMatch, ArenaRound
+from ..models import db, QuizQuestion, QuizPack, PubLeague, PageModule, MenuItem, Post, Category, Page, SiteSetting, FeaturedGame, ArenaMatch, ArenaRound, ClimberFact
 from .modules import get_default_config, MODULE_DEFINITIONS
 
 SEED_PACKS = [
@@ -1650,6 +1695,20 @@ def seed_quizmondo_full_environment():
             ))
         db.session.add(SiteSetting(key='featured_games_seeded', value='1'))
         db.session.commit()
+
+    
+    # Seed Everest Expedition Mountain Facts
+    if ClimberFact.query.count() == 0:
+        for f_data in EVEREST_FACTS:
+            db.session.add(ClimberFact(
+                stage_number=f_data["stage"],
+                altitude_m=f_data["alt"],
+                icon=f_data["icon"],
+                title=f_data["title"],
+                fact_text=f_data["text"]
+            ))
+        db.session.commit()
+        print("CLIMBER_FACTS_SEEDED_SUCCESSFULLY")
 
     # Ensure The Quiz Climber and Daily Lucky Wheel slides exist in Featured Games
     if not FeaturedGame.query.filter_by(link_url='/arena/climber').first():

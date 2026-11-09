@@ -1,7 +1,7 @@
 /**
  * Quizmondo Retro Web Audio API Synthesizer
  * Provides 100% dependency-free synthesized sound effects for:
- * - Climber ascents, slips, shields, and summits
+ * - Climber ascents, carabiners, snow crunches, slips, shields, and summits
  * - Vault Spinner mechanical clicks and jackpots
  * - Hero TV carousel CRT blips
  */
@@ -66,6 +66,56 @@
       gain.connect(c.destination);
       osc.start(c.currentTime);
       osc.stop(c.currentTime + 0.15);
+    },
+
+    // Metallic Carabiner Snap
+    carabiner: function(c) {
+      var osc = c.createOscillator();
+      var gain = c.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(1400, c.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(3200, c.currentTime + 0.02);
+      osc.frequency.exponentialRampToValueAtTime(800, c.currentTime + 0.05);
+      gain.gain.setValueAtTime(0.22, c.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.06);
+      osc.connect(gain);
+      gain.connect(c.destination);
+      osc.start(c.currentTime);
+      osc.stop(c.currentTime + 0.07);
+    },
+
+    // Boot crunch in frozen alpine snow
+    crunch: function(c) {
+      var bufferSize = Math.floor(c.sampleRate * 0.08);
+      var buffer = c.createBuffer(1, bufferSize, c.sampleRate);
+      var data = buffer.getChannelData(0);
+      for (var i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (c.sampleRate * 0.03));
+      }
+      var noise = c.createBufferSource();
+      noise.buffer = buffer;
+      var filter = c.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 850;
+      filter.Q.value = 1.2;
+      var gain = c.createGain();
+      gain.gain.setValueAtTime(0.3, c.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, c.currentTime + 0.08);
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(c.destination);
+      noise.start(c.currentTime);
+    },
+
+    // Full Realistic Climbing Move: Carabiner lock + snow crunch + rope pull
+    climbStep: function(c) {
+      sounds.carabiner(c);
+      setTimeout(function() {
+        if (c.state === 'running') sounds.crunch(c);
+      }, 70);
+      setTimeout(function() {
+        if (c.state === 'running') sounds.pull(c);
+      }, 140);
     },
 
     // Slip / fall down the wall

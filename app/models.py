@@ -513,7 +513,7 @@ class PlayerProfile(db.Model):
     matches_played = db.Column(db.Integer, default=0)
     matches_won = db.Column(db.Integer, default=0)
     last_wheel_spin_at = db.Column(db.DateTime, nullable=True)
-    climber_shields = db.Column(db.Integer, default=1)
+    climber_shields = db.Column(db.Integer, default=0)
     is_banned = db.Column(db.Boolean, default=False)
     ban_reason = db.Column(db.String(255), default='')
     # Paused by the player: hidden from public lists, and reversible by signing in
@@ -544,7 +544,7 @@ class PlayerProfile(db.Model):
             'matches_won': self.matches_won,
             'win_rate': round((self.matches_won / self.matches_played * 100), 1) if self.matches_played > 0 else 0,
             'last_wheel_spin_at': self.last_wheel_spin_at.isoformat() if self.last_wheel_spin_at else None,
-            'climber_shields': self.climber_shields if self.climber_shields is not None else 1
+            'climber_shields': self.climber_shields if self.climber_shields is not None else 0
         }
 
 
@@ -1032,14 +1032,16 @@ class ClimberSeason(db.Model):
 
 
 class ClimberProgress(db.Model):
-    """User progress along the vertical rock face for the active Climber season."""
+    """User progress along the vertical rock face for the active 30-day Climber season."""
     __tablename__ = 'climber_progress'
 
     id = db.Column(db.Integer, primary_key=True)
     player_profile_id = db.Column(db.Integer, db.ForeignKey('player_profiles.id'), index=True, nullable=False)
     season_id = db.Column(db.Integer, db.ForeignKey('climber_seasons.id'), index=True, nullable=False)
-    current_tier = db.Column(db.Integer, default=1)  # 1: Basecamp, 2: Camp 1, 3: Camp 2, 4: Summit Push
-    current_step = db.Column(db.Integer, default=1)  # 1-8 total steps
+    current_stage = db.Column(db.Integer, default=1)  # 1: Basecamp, 2: Khumbu, 3: Camp 2, 4: Lhotse, 5: South Col, 6: Summit
+    current_day = db.Column(db.Integer, default=1)    # Day 1-30 of the expedition
+    current_step = db.Column(db.Integer, default=1)   # Step 1-30 overall
+    secured_camp_stage = db.Column(db.Integer, default=1) # Permanent Safe Haven Camp reached
     altitude_m = db.Column(db.Integer, default=1000)
     banked_coins = db.Column(db.Integer, default=0)
     unbanked_coins = db.Column(db.Integer, default=0)
@@ -1048,6 +1050,7 @@ class ClimberProgress(db.Model):
     total_falls = db.Column(db.Integer, default=0)
     total_summits = db.Column(db.Integer, default=0)
     last_question_id = db.Column(db.Integer, nullable=True)
+    last_climbed_date = db.Column(db.Date, nullable=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -1062,4 +1065,26 @@ class UserPostRead(db.Model):
     coins_awarded = db.Column(db.Integer, default=25)
     read_seconds = db.Column(db.Integer, default=15)
     claimed_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class ClimberFact(db.Model):
+    """Historical, terrain, and mountaineering facts unlocked during the 30-day expedition."""
+    __tablename__ = 'climber_facts'
+
+    id = db.Column(db.Integer, primary_key=True)
+    stage_number = db.Column(db.Integer, default=1, index=True)  # 1 to 6
+    altitude_m = db.Column(db.Integer, default=1000)
+    title = db.Column(db.String(120), nullable=False)
+    fact_text = db.Column(db.Text, nullable=False)
+    icon = db.Column(db.String(20), default='⛰️')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class UserClimberFactSeen(db.Model):
+    """Tracks which mountain facts a player has already seen across all months to prevent repeats."""
+    __tablename__ = 'user_climber_facts_seen'
+
+    id = db.Column(db.Integer, primary_key=True)
+    player_profile_id = db.Column(db.Integer, db.ForeignKey('player_profiles.id'), index=True, nullable=False)
+    fact_id = db.Column(db.Integer, db.ForeignKey('climber_facts.id'), index=True, nullable=False)
+    seen_at = db.Column(db.DateTime, default=datetime.utcnow)
 

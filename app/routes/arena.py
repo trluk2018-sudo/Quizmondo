@@ -4,7 +4,7 @@ import secrets
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, flash, current_app, Response
 from sqlalchemy.sql.expression import func
-from ..models import db, User, PlayerProfile, MINIMUM_SIGNUP_AGE, age_gate_config, ArenaMatch, ArenaRound, QuizQuestion, QuizPack, PubLeague, PubLeagueResult, pub_season_label, SiteSetting, slugify, GroupGame, GroupPlayer, ClimberSeason, ClimberProgress, UserPostRead, Post
+from ..models import db, User, PlayerProfile, MINIMUM_SIGNUP_AGE, age_gate_config, ArenaMatch, ArenaRound, QuizQuestion, QuizPack, PubLeague, PubLeagueResult, pub_season_label, SiteSetting, slugify, GroupGame, GroupPlayer, ClimberSeason, ClimberProgress, UserPostRead, Post, ClimberFact, UserClimberFactSeen
 from ..models_quiz_memory import QuestionMemory, MEMORY_LIMIT
 from ..utils.share_card import generate_duel_card_png, generate_pub_card_png
 
@@ -4183,19 +4183,116 @@ def wheel_spin():
 
 
 # ==============================================================================
-# THE QUIZ CLIMBER ("THE WALL")
+# THE QUIZ CLIMBER ("THE WALL" — 30-DAY EXPEDITION STORY)
 # ==============================================================================
 
-CLIMBER_STEPS = [
-    {'step': 1, 'tier': 1, 'tier_name': 'Basecamp Entry', 'altitude': 1000, 'coins': 100, 'diff': 'easy', 'clue': 'Foundation knowledge of geography and world landmarks.'},
-    {'step': 2, 'tier': 1, 'tier_name': 'Khumbu Icefall', 'altitude': 2000, 'coins': 100, 'diff': 'easy', 'clue': 'Navigating crevasses requires swift observation.'},
-    {'step': 3, 'tier': 2, 'tier_name': 'Camp 1 Plateau', 'altitude': 3000, 'coins': 200, 'diff': 'medium', 'clue': 'Thinning air tests science and natural history recall.'},
-    {'step': 4, 'tier': 2, 'tier_name': 'Western Cwm', 'altitude': 4200, 'coins': 250, 'diff': 'medium', 'clue': 'Solar radiation is intense; stay alert for tricky options.'},
-    {'step': 5, 'tier': 3, 'tier_name': 'Lhotse Face', 'altitude': 5500, 'coins': 350, 'diff': 'hard', 'clue': 'Sheer vertical ice wall. Technical accuracy is essential.'},
-    {'step': 6, 'tier': 3, 'tier_name': 'Yellow Band', 'altitude': 6800, 'coins': 400, 'diff': 'hard', 'clue': 'Limestone strata at high altitude. Use field intel clues!'},
-    {'step': 7, 'tier': 4, 'tier_name': 'South Col Death Zone', 'altitude': 8000, 'coins': 600, 'diff': 'hard', 'clue': 'Extreme cold and hypoxia. Keep your shield ready.'},
-    {'step': 8, 'tier': 4, 'tier_name': 'Hillary Step & Summit', 'altitude': 8848, 'coins': 1000, 'diff': 'hard', 'clue': 'The final knife-edge ridge to the top of the world!'}
+EXPEDITION_STAGES = [
+    {
+        'stage': 1,
+        'name': 'Valley Basecamp',
+        'safe_haven': 'Pine Valley Basecamp',
+        'altitude_range': '1,000m – 2,500m',
+        'base_alt': 1000,
+        'max_alt': 2500,
+        'days': 'Days 1–5',
+        'diff': 'easy',
+        'coins_per_step': 50,
+        'clue': 'Trek through pine forests and rhododendron valleys. Acclimatize and prepare supplies.',
+        'icon': '🌲'
+    },
+    {
+        'stage': 2,
+        'name': 'Khumbu Icefall',
+        'safe_haven': 'Camp 1 Plateau',
+        'altitude_range': '2,500m – 4,000m',
+        'base_alt': 2500,
+        'max_alt': 4000,
+        'days': 'Days 6–10',
+        'diff': 'medium',
+        'coins_per_step': 75,
+        'clue': 'Cross bottomless crevasses and dodging unstable seracs on tied aluminum ladders.',
+        'icon': '🪜'
+    },
+    {
+        'stage': 3,
+        'name': 'Western Cwm',
+        'safe_haven': 'Camp 2 Advanced Base',
+        'altitude_range': '4,000m – 5,500m',
+        'base_alt': 4000,
+        'max_alt': 5500,
+        'days': 'Days 11–15',
+        'diff': 'medium',
+        'coins_per_step': 100,
+        'clue': 'Navigate the Valley of Silence under the blazing reflection of Nuptse and Everest.',
+        'icon': '☀️'
+    },
+    {
+        'stage': 4,
+        'name': 'Lhotse Ice Face',
+        'safe_haven': 'Camp 3 Ice Perch',
+        'altitude_range': '5,500m – 7,000m',
+        'base_alt': 5500,
+        'max_alt': 7000,
+        'days': 'Days 16–20',
+        'diff': 'hard',
+        'coins_per_step': 150,
+        'clue': 'Ascend the 1,125m wall of sheer blue ice and cross the prehistoric Yellow Band.',
+        'icon': '🧗'
+    },
+    {
+        'stage': 5,
+        'name': 'South Col Death Zone',
+        'safe_haven': 'Camp 4 High Camp',
+        'altitude_range': '7,000m – 8,000m',
+        'base_alt': 7000,
+        'max_alt': 8000,
+        'days': 'Days 21–25',
+        'diff': 'hard',
+        'coins_per_step': 200,
+        'clue': 'Sub-zero hurricane winds in the Death Zone. Oxygen levels drop to one-third.',
+        'icon': '☠️'
+    },
+    {
+        'stage': 6,
+        'name': 'Hillary Step & Summit',
+        'safe_haven': 'Mount Everest Summit (8,848m)',
+        'altitude_range': '8,000m – 8,848m',
+        'base_alt': 8000,
+        'max_alt': 8848,
+        'days': 'Days 26–30',
+        'diff': 'hard',
+        'coins_per_step': 300,
+        'clue': 'Traverse the knife-edge ridge, conquer the Hillary Step, and touch the sky at 8,848m!',
+        'icon': '👑'
+    }
 ]
+
+
+def _calc_day_meta(day_num):
+    """Compute stage, altitude, and rewards for any day (1 to 30) of the expedition."""
+    day = max(1, min(30, int(day_num)))
+    stage_idx = (day - 1) // 5
+    stage_info = EXPEDITION_STAGES[stage_idx]
+    step_in_stage = (day - 1) % 5 + 1
+    
+    if day == 30:
+        alt = 8848
+    else:
+        span = stage_info['max_alt'] - stage_info['base_alt']
+        alt = stage_info['base_alt'] + int((step_in_stage / 5.0) * span)
+
+    return {
+        'day': day,
+        'stage_number': stage_info['stage'],
+        'stage_name': stage_info['name'],
+        'safe_haven': stage_info['safe_haven'],
+        'altitude': alt,
+        'coins': stage_info['coins_per_step'],
+        'diff': stage_info['diff'],
+        'clue': stage_info['clue'],
+        'icon': stage_info['icon'],
+        'is_stage_gate': (step_in_stage == 5)
+    }
 
 
 def get_or_create_climber_season():
@@ -4203,13 +4300,12 @@ def get_or_create_climber_season():
     month_key = datetime.utcnow().strftime('%Y-%m')
     season = ClimberSeason.query.filter_by(month_key=month_key, is_active=True).first()
     if not season:
-        # Check if sponsor article exists
         sponsor_post = Post.query.filter_by(status='publish').first()
         article_slug = sponsor_post.slug if sponsor_post else ''
 
         season = ClimberSeason(
             month_key=month_key,
-            title='Everest North Ridge Expedition',
+            title='Everest 30-Day Expedition',
             mountain_name='Mount Everest',
             elevation_m=8848,
             sponsor_name='Alpine Dynamics & Mountain Gear',
@@ -4233,8 +4329,10 @@ def get_or_create_climber_progress(player_id, season_id):
         progress = ClimberProgress(
             player_profile_id=player_id,
             season_id=season_id,
-            current_tier=1,
+            current_stage=1,
+            current_day=1,
             current_step=1,
+            secured_camp_stage=1,
             altitude_m=1000,
             banked_coins=0,
             unbanked_coins=0,
@@ -4246,6 +4344,34 @@ def get_or_create_climber_progress(player_id, season_id):
     return progress
 
 
+def _get_unseen_climber_fact(player_id, stage_number):
+    """Retrieve an unseen historical or mountaineering fact for this player from DB."""
+    seen_ids = [row[0] for row in db.session.query(UserClimberFactSeen.fact_id).filter_by(player_profile_id=player_id).all()]
+    query = ClimberFact.query.filter_by(stage_number=stage_number)
+    if seen_ids:
+        query = query.filter(~ClimberFact.id.in_(seen_ids))
+    fact = query.order_by(func.random()).first()
+
+    if not fact:
+        # Fallback to any unseen fact from any stage
+        query_all = ClimberFact.query
+        if seen_ids:
+            query_all = query_all.filter(~ClimberFact.id.in_(seen_ids))
+        fact = query_all.order_by(func.random()).first()
+
+    if not fact:
+        # If all facts seen across months, pick a random fact
+        fact = ClimberFact.query.order_by(func.random()).first()
+
+    if fact and player_id:
+        already = UserClimberFactSeen.query.filter_by(player_profile_id=player_id, fact_id=fact.id).first()
+        if not already:
+            db.session.add(UserClimberFactSeen(player_profile_id=player_id, fact_id=fact.id))
+            db.session.commit()
+
+    return fact
+
+
 def _pick_climber_question(diff='easy', exclude_id=None):
     """Select a playable question for the current altitude tier."""
     query = playable_questions().filter(QuizQuestion.difficulty == diff)
@@ -4253,7 +4379,6 @@ def _pick_climber_question(diff='easy', exclude_id=None):
         query = query.filter(QuizQuestion.id != exclude_id)
     count = query.count()
     if count == 0:
-        # Fallback to any playable question
         query = playable_questions()
         count = query.count()
     if count > 0:
@@ -4264,7 +4389,7 @@ def _pick_climber_question(diff='easy', exclude_id=None):
 
 @arena_bp.route('/climber')
 def climber():
-    """The Quiz Climber: graphical vertical rock face expedition screen."""
+    """The Quiz Climber: 30-Day Everest Expedition Screen."""
     gate = needs_account_to_play('tackle The Quiz Climber expedition')
     if gate:
         return gate
@@ -4272,23 +4397,25 @@ def climber():
     season = get_or_create_climber_season()
     progress = get_or_create_climber_progress(player.id, season.id)
 
-    step_info = CLIMBER_STEPS[min(progress.current_step - 1, len(CLIMBER_STEPS) - 1)]
-    question = _pick_climber_question(diff=step_info['diff'])
+    day_meta = _calc_day_meta(progress.current_day)
+    question = _pick_climber_question(diff=day_meta['diff'])
+    fact = _get_unseen_climber_fact(player.id, day_meta['stage_number'])
 
     return render_template(
         'themes/quizhub/arena_climber.html',
         player=player,
         season=season,
         progress=progress,
-        step_info=step_info,
-        climber_steps=CLIMBER_STEPS,
-        question=question
+        day_meta=day_meta,
+        expedition_stages=EXPEDITION_STAGES,
+        question=question,
+        mountain_fact=fact
     )
 
 
 @arena_bp.route('/climber/answer', methods=['POST'])
 def climber_answer():
-    """Validate answer on the rock wall: climb higher, use shield, or fall."""
+    """Validate answer on the rock wall: climb higher, use shield, or fall to Camp Safe Haven."""
     if not session.get('user_id'):
         return jsonify({
             'success': False,
@@ -4296,6 +4423,7 @@ def climber_answer():
             'login_required': True,
             'redirect': url_for('arena.player_register', next=url_for('arena.climber'))
         }), 401
+
     player = get_current_player(persist=True)
     season = get_or_create_climber_season()
     progress = get_or_create_climber_progress(player.id, season.id)
@@ -4309,22 +4437,20 @@ def climber_answer():
         return jsonify({'success': False, 'error': 'Question not found'}), 404
 
     is_correct = (str(selected).strip().upper() == str(question.correct_option).strip().upper())
-    step_info = CLIMBER_STEPS[min(progress.current_step - 1, len(CLIMBER_STEPS) - 1)]
+    day_meta = _calc_day_meta(progress.current_day)
 
     if is_correct:
-        # Climber advances!
-        coins_gained = step_info['coins']
+        coins_gained = day_meta['coins']
         progress.unbanked_coins += coins_gained
 
-        if progress.current_step >= len(CLIMBER_STEPS):
-            # SUMMIT ACHIEVED!
+        if progress.current_day >= 30:
+            # 8,848M SUMMIT ACHIEVED!
             progress.altitude_m = 8848
             progress.status = 'summit'
             progress.total_summits += 1
             progress.highest_altitude = 8848
 
-            # Auto-bank all unbanked coins + 1,000 Summit Bonus into wallet!
-            summit_bonus = 1000
+            summit_bonus = 1500
             total_awarded = progress.unbanked_coins + summit_bonus
             player.coins = (player.coins or 0) + total_awarded
             progress.banked_coins += total_awarded
@@ -4335,27 +4461,36 @@ def climber_answer():
                 'success': True,
                 'correct': True,
                 'summit': True,
-                'new_step': 8,
+                'new_day': 30,
                 'new_altitude': 8848,
                 'coins_awarded': total_awarded,
                 'wallet_coins': player.coins,
-                'explanation': question.explanation or 'Outstanding summit achievement!'
+                'explanation': question.explanation or 'Outstanding! You have stood atop Mount Everest at 8,848m!'
             })
         else:
-            progress.current_step += 1
-            next_step_info = CLIMBER_STEPS[progress.current_step - 1]
-            progress.altitude_m = next_step_info['altitude']
-            progress.current_tier = next_step_info['tier']
+            progress.current_day += 1
+            progress.current_step = progress.current_day
+            next_day_meta = _calc_day_meta(progress.current_day)
+            progress.altitude_m = next_day_meta['altitude']
+            progress.current_stage = next_day_meta['stage_number']
             progress.highest_altitude = max(progress.highest_altitude, progress.altitude_m)
+
+            # If completed a 5-day stage gate, lock in this camp as permanent safe haven
+            if day_meta['is_stage_gate']:
+                progress.secured_camp_stage = next_day_meta['stage_number']
+
             progress.status = 'climbing'
             db.session.commit()
 
-            next_q = _pick_climber_question(diff=next_step_info['diff'], exclude_id=question.id)
+            next_q = _pick_climber_question(diff=next_day_meta['diff'], exclude_id=question.id)
+            next_fact = _get_unseen_climber_fact(player.id, next_day_meta['stage_number'])
+
             next_q_data = None
             if next_q:
                 next_q_data = {
                     'id': next_q.id,
                     'prompt': next_q.prompt,
+                    'media_url': next_q.media_url or '',
                     'options': next_q.get_options(),
                     'difficulty': next_q.difficulty
                 }
@@ -4364,27 +4499,34 @@ def climber_answer():
                 'success': True,
                 'correct': True,
                 'summit': False,
-                'new_step': progress.current_step,
+                'new_day': progress.current_day,
                 'new_altitude': progress.altitude_m,
                 'unbanked_coins': progress.unbanked_coins,
-                'next_step_info': next_step_info,
+                'secured_camp_stage': progress.secured_camp_stage,
+                'next_day_meta': next_day_meta,
                 'next_question': next_q_data,
-                'explanation': question.explanation or 'Correct answer!'
+                'next_fact': {
+                    'title': next_fact.title if next_fact else '',
+                    'text': next_fact.fact_text if next_fact else '',
+                    'icon': next_fact.icon if next_fact else '⛰️'
+                } if next_fact else None,
+                'explanation': question.explanation or 'Ascent successful! Higher elevation reached.'
             })
 
     else:
-        # INCORRECT
+        # INCORRECT ANSWER
         if (player.climber_shields or 0) > 0:
-            # Shield deflects the fall!
+            # Gear shield deflected the fall!
             player.climber_shields -= 1
             db.session.commit()
 
-            next_q = _pick_climber_question(diff=step_info['diff'], exclude_id=question.id)
+            next_q = _pick_climber_question(diff=day_meta['diff'], exclude_id=question.id)
             next_q_data = None
             if next_q:
                 next_q_data = {
                     'id': next_q.id,
                     'prompt': next_q.prompt,
+                    'media_url': next_q.media_url or '',
                     'options': next_q.get_options(),
                     'difficulty': next_q.difficulty
                 }
@@ -4397,19 +4539,35 @@ def climber_answer():
                 'unbanked_coins': progress.unbanked_coins,
                 'current_altitude': progress.altitude_m,
                 'correct_answer': question.correct_option,
-                'explanation': question.explanation or 'Your climber shield absorbed the fall!',
+                'explanation': question.explanation or 'Your climber shield absorbed the fall! Altitude preserved.',
                 'next_question': next_q_data
             })
         else:
-            # FALL! Unbanked coins are lost, climber slides down to Basecamp
+            # FALL! Unbanked push coins lost; fall back to SECURED CAMP SAFE HAVEN
             lost_coins = progress.unbanked_coins
             progress.unbanked_coins = 0
-            progress.current_step = 1
-            progress.current_tier = 1
-            progress.altitude_m = 1000
+            
+            # Retreat to secured camp stage (starts at day = (secured_camp_stage - 1) * 5 + 1)
+            camp_day = (progress.secured_camp_stage - 1) * 5 + 1
+            progress.current_day = camp_day
+            progress.current_step = camp_day
+            camp_meta = _calc_day_meta(camp_day)
+            progress.altitude_m = camp_meta['altitude']
+            progress.current_stage = progress.secured_camp_stage
             progress.status = 'fallen'
             progress.total_falls += 1
             db.session.commit()
+
+            next_q = _pick_climber_question(diff=camp_meta['diff'], exclude_id=question.id)
+            next_q_data = None
+            if next_q:
+                next_q_data = {
+                    'id': next_q.id,
+                    'prompt': next_q.prompt,
+                    'media_url': next_q.media_url or '',
+                    'options': next_q.get_options(),
+                    'difficulty': next_q.difficulty
+                }
 
             return jsonify({
                 'success': True,
@@ -4417,10 +4575,13 @@ def climber_answer():
                 'shield_saved': False,
                 'fallen': True,
                 'lost_coins': lost_coins,
-                'new_step': 1,
-                'new_altitude': 1000,
+                'retreated_camp': camp_meta['safe_haven'],
+                'new_day': camp_day,
+                'new_altitude': progress.altitude_m,
                 'correct_answer': question.correct_option,
-                'explanation': question.explanation or 'Incorrect answer! You slipped down to Basecamp.'
+                'explanation': question.explanation or ('Incorrect! Slipped back to ' + camp_meta['safe_haven'] + '.'),
+                'next_question': next_q_data,
+                'next_day_meta': camp_meta
             })
 
 
@@ -4434,6 +4595,7 @@ def climber_bank():
             'login_required': True,
             'redirect': url_for('arena.player_register', next=url_for('arena.climber'))
         }), 401
+
     player = get_current_player(persist=True)
     season = get_or_create_climber_season()
     progress = get_or_create_climber_progress(player.id, season.id)
@@ -4453,13 +4615,13 @@ def climber_bank():
         'banked_amount': amount,
         'wallet_coins': player.coins,
         'altitude': progress.altitude_m,
-        'step': progress.current_step
+        'day': progress.current_day
     })
 
 
 @arena_bp.route('/climber/restart', methods=['POST'])
 def climber_restart():
-    """Start a fresh free climb from Basecamp."""
+    """Start fresh from current Camp Safe Haven."""
     if not session.get('user_id'):
         return jsonify({
             'success': False,
@@ -4467,33 +4629,36 @@ def climber_restart():
             'login_required': True,
             'redirect': url_for('arena.player_register', next=url_for('arena.climber'))
         }), 401
+
     player = get_current_player(persist=True)
     season = get_or_create_climber_season()
     progress = get_or_create_climber_progress(player.id, season.id)
 
-    progress.current_step = 1
-    progress.current_tier = 1
-    progress.altitude_m = 1000
+    # Resume from secured camp
+    camp_day = (progress.secured_camp_stage - 1) * 5 + 1
+    progress.current_day = camp_day
+    progress.current_step = camp_day
     progress.unbanked_coins = 0
+    camp_meta = _calc_day_meta(camp_day)
+    progress.altitude_m = camp_meta['altitude']
     progress.status = 'climbing'
     db.session.commit()
 
-    step_info = CLIMBER_STEPS[0]
-    next_q = _pick_climber_question(diff='easy')
+    next_q = _pick_climber_question(diff=camp_meta['diff'])
     next_q_data = None
     if next_q:
         next_q_data = {
             'id': next_q.id,
             'prompt': next_q.prompt,
+            'media_url': next_q.media_url or '',
             'options': next_q.get_options(),
             'difficulty': next_q.difficulty
         }
 
     return jsonify({
         'success': True,
-        'step': 1,
-        'altitude': 1000,
-        'step_info': step_info,
+        'day': camp_day,
+        'altitude': progress.altitude_m,
+        'day_meta': camp_meta,
         'next_question': next_q_data
     })
-
