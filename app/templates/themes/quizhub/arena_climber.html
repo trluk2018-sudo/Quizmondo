@@ -347,7 +347,7 @@
           </div>
 
           <!-- PRE-START SPRINT CARD (Click to start sprint and timer) -->
-          <div id="startSprintCard" class="{% if progress.day_question_index > 1 or day_meta.is_camp_day %}hidden{% endif %} text-center py-8 px-4 rounded-3xl bg-gradient-to-b from-[#131135] via-[#0e0926] to-[#070514] border-2 border-cyan-500/40 shadow-2xl space-y-4 my-2">
+          <div id="startSprintCard" class="{% if progress.day_question_index > 1 or day_meta.is_camp_day or progress.is_day_completed or is_locked_for_today %}hidden{% endif %} text-center py-8 px-4 rounded-3xl bg-gradient-to-b from-[#131135] via-[#0e0926] to-[#070514] border-2 border-cyan-500/40 shadow-2xl space-y-4 my-2">
             <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-500/20 text-cyan-300 text-3xl border border-cyan-400/40 shadow-inner">
               🧗
             </div>
@@ -1308,7 +1308,7 @@
       };
     } else {
       // Day 30 Summit Sprint
-      board.innerHTML = '<button type="button" onclick="completeCampMission('Summit Conquered!')" class="py-4 px-8 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 text-slate-950 font-black font-mono text-sm uppercase tracking-wider shadow-xl animate-pulse">👑 PLANT FLAG ON 8,848M SUMMIT!</button>';
+      board.innerHTML = '<button type="button" onclick="completeCampMission(\'Summit Conquered!\')" class="py-4 px-8 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 text-slate-950 font-black font-mono text-sm uppercase tracking-wider shadow-xl animate-pulse">👑 PLANT FLAG ON 8,848M SUMMIT!</button>';
     }
   }
 

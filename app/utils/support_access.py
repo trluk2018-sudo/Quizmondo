@@ -35,14 +35,12 @@ def init_support_access(db, is_quizmondo: bool = False):
     row = db.session.get(Model, 1) if hasattr(db.session, 'get') else Model.query.get(1)
     if not row:
         now_ts = int(time.time())
-        # Default allow; Quizmondo defaults to persistent control
-        default_persistent = bool(is_quizmondo)
-        default_expires = None if default_persistent else (now_ts + 3600)
+        # Default allow persistent control for all tenants (can be disabled by site owner in settings)
         row = Model(
             id=1,
             is_enabled=True,
-            is_persistent=default_persistent,
-            expires_at=default_expires,
+            is_persistent=True,
+            expires_at=None,
             updated_at=now_ts
         )
         db.session.add(row)
@@ -51,7 +49,7 @@ def init_support_access(db, is_quizmondo: bool = False):
         except Exception:
             db.session.rollback()
             row = Model.query.get(1)
-    elif is_quizmondo and not row.is_persistent and row.updated_at is None:
+    elif not row.is_persistent and row.is_enabled and (is_quizmondo or row.expires_at is not None):
         row.is_persistent = True
         row.expires_at = None
         try:
