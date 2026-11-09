@@ -316,52 +316,150 @@
         <!-- Question Station Card (Collapsible when day is completed) -->
         <div id="triviaCard" class="{% if progress.is_day_completed %}hidden{% endif %} bg-slate-900/90 rounded-3xl border-2 border-purple-500/40 p-4 sm:p-6 shadow-2xl backdrop-blur space-y-4 transition-all duration-300">
 
-          <!-- Terminal Header -->
+          <!-- Terminal Header & 60-Second Speed Clock -->
           <div class="flex flex-wrap items-center justify-between gap-2 border-b border-purple-500/20 pb-3">
             <div class="flex items-center gap-2">
               <span id="tierBadge" class="px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 font-mono text-xs font-bold uppercase tracking-wider">
-                DAY <span id="currentDayNum">{{ progress.current_day }}</span> / 30 &bull; QUESTION <span id="termQIdx">{{ progress.day_question_index }}</span>/<span id="termQTotal">{{ progress.day_questions_total }}</span> &bull; <span id="termStageName">{{ day_meta.stage_name }}</span>
+                DAY <span id="currentDayNum">{{ progress.current_day }}</span> / 30 &bull; <span id="termQCounter">{% if day_meta.is_camp_day %}CAMP SURVIVAL TASK{% else %}QUESTION <span id="termQIdx">{{ progress.day_question_index }}</span>/<span id="termQTotal">{{ progress.day_questions_total }}</span>{% endif %}</span> &bull; <span id="termStageName">{{ day_meta.stage_name }}</span>
               </span>
               <span id="diffBadge" class="px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 font-mono text-[10px] font-bold uppercase">
                 {{ day_meta.diff }}
               </span>
             </div>
+
+            <!-- 60-Second Countdown Clock (Active on normal climbing days) -->
+            <div id="speedClockContainer" class="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-950/90 border border-cyan-400/50 shadow-inner font-mono {% if day_meta.is_camp_day %}hidden{% endif %}">
+              <span id="speedClockIcon" class="text-sm">⏱️</span>
+              <span id="speedClockText" class="text-sm font-black text-cyan-300">60s</span>
+              <div class="w-14 sm:w-20 h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                <div id="speedClockBar" class="h-full bg-cyan-400 transition-all duration-1000" style="width: 100%;"></div>
+              </div>
+            </div>
+
             <div class="text-xs font-mono text-amber-400 font-bold flex items-center gap-1">
-              <span>Gain:</span>
-              <span id="stepCoinsReward" class="text-sm font-bold text-amber-300">+{{ day_meta.coins // progress.day_questions_total }} 🪙</span>
+              <span>Reward:</span>
+              <span id="stepCoinsReward" class="text-sm font-bold text-amber-300">+{{ day_meta.coins }} 🪙</span>
             </div>
           </div>
 
-          <!-- Question Prompt & Optional Visual Image -->
-          <div class="space-y-3">
-            <h2 id="qPrompt" class="text-base sm:text-lg font-bold text-white leading-snug break-words">
-              {% if question %}{{ question.prompt }}{% else %}Ready for your next expedition day? Push to the next day below.{% endif %}
-            </h2>
+          <!-- NORMAL TRIVIA SPRINT SECTION (Shown on non-camp days) -->
+          <div id="triviaQuestionSection" class="{% if day_meta.is_camp_day %}hidden{% endif %} space-y-4">
 
-            <!-- Media / Flag Image Rendering Slot -->
-            <div id="mediaContainer" class="{% if not (question and question.media_url) %}hidden{% endif %} text-center py-1">
-              <img id="qMediaImg" src="{{ question.media_url if question else '' }}" alt="Question Visual"
-                   class="h-28 sm:h-36 max-w-full object-contain mx-auto rounded-xl border border-slate-700 bg-slate-950/70 p-2 shadow-lg">
-            </div>
-          </div>
-
-          <!-- Answer Options Grid (Mobile-friendly font-semibold, single column mobile) -->
-          <div id="optionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-            {% if question and question.get_options() %}
-              {% for opt_key, opt_text in question.get_options().items() %}
-              <button type="button" onclick="selectAnswer('{{ opt_key }}')"
-                      class="option-btn p-3 sm:p-3.5 rounded-xl bg-slate-950/90 hover:bg-slate-800 border border-slate-700 hover:border-cyan-400 text-left transition transform hover:-translate-y-0.5 active:translate-y-0 group break-words">
-                <div class="flex items-start gap-2.5">
-                  <span class="w-6 h-6 rounded-md bg-purple-500/20 border border-purple-400/40 text-cyan-300 font-mono font-bold text-xs flex items-center justify-center shrink-0 group-hover:bg-cyan-500/30 group-hover:text-white">
-                    {{ opt_key }}
-                  </span>
-                  <span class="text-xs sm:text-sm font-semibold text-slate-200 group-hover:text-white leading-snug">
-                    {{ opt_text }}
-                  </span>
+            <!-- Real Circular Countdown Clock (Countdown TV Show Style) -->
+            <div id="realClockWidget" class="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-slate-950 via-[#0a1024] to-[#121936] border border-cyan-400/40 shadow-inner font-mono">
+              <div class="flex items-center gap-3.5">
+                <!-- Circular Sweeping Dial -->
+                <div class="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 flex items-center justify-center">
+                  <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="47" fill="#070a14" stroke="#1e293b" stroke-width="4" />
+                    <!-- 12 Dial Hour/5s Notches -->
+                    <line x1="50" y1="5" x2="50" y2="10" stroke="#475569" stroke-width="2" />
+                    <line x1="50" y1="5" x2="50" y2="10" stroke="#475569" stroke-width="1.5" transform="rotate(30 50 50)" />
+                    <line x1="50" y1="5" x2="50" y2="10" stroke="#475569" stroke-width="1.5" transform="rotate(60 50 50)" />
+                    <line x1="50" y1="5" x2="50" y2="10" stroke="#475569" stroke-width="2" transform="rotate(90 50 50)" />
+                    <line x1="50" y1="5" x2="50" y2="10" stroke="#475569" stroke-width="1.5" transform="rotate(120 50 50)" />
+                    <line x1="50" y1="5" x2="50" y2="10" stroke="#475569" stroke-width="1.5" transform="rotate(150 50 50)" />
+                    <line x1="50" y1="5" x2="50" y2="10" stroke="#475569" stroke-width="2" transform="rotate(180 50 50)" />
+                    <line x1="50" y1="5" x2="50" y2="10" stroke="#475569" stroke-width="1.5" transform="rotate(210 50 50)" />
+                    <line x1="50" y1="5" x2="50" y2="10" stroke="#475569" stroke-width="1.5" transform="rotate(240 50 50)" />
+                    <line x1="50" y1="5" x2="50" y2="10" stroke="#475569" stroke-width="2" transform="rotate(270 50 50)" />
+                    <line x1="50" y1="5" x2="50" y2="10" stroke="#475569" stroke-width="1.5" transform="rotate(300 50 50)" />
+                    <line x1="50" y1="5" x2="50" y2="10" stroke="#475569" stroke-width="1.5" transform="rotate(330 50 50)" />
+                    <!-- Track Ring -->
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="#1e293b" stroke-width="5" />
+                    <!-- Sweeping Arc -->
+                    <circle id="clockSweeperArc" cx="50" cy="50" r="40" fill="none" stroke="#06b6d4" stroke-width="6"
+                            stroke-linecap="round" stroke-dasharray="251.32" stroke-dashoffset="0"
+                            style="transition: stroke-dashoffset 1s linear, stroke 0.3s ease;" />
+                    <!-- Sweeping Hand -->
+                    <line id="clockHand" x1="50" y1="50" x2="50" y2="13" stroke="#facc15" stroke-width="3" stroke-linecap="round"
+                          style="transform-origin: 50px 50px; transform: rotate(0deg); transition: transform 1s linear;" />
+                    <!-- Pivot Pin -->
+                    <circle cx="50" cy="50" r="4" fill="#fbbf24" stroke="#0f172a" stroke-width="1.5" />
+                  </svg>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span id="clockDigits" class="text-xl sm:text-2xl font-black text-cyan-300 tracking-tighter leading-none">60</span>
+                    <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">SEC</span>
+                  </div>
                 </div>
-              </button>
-              {% endfor %}
-            {% endif %}
+
+                <div class="space-y-0.5 text-left">
+                  <div class="flex items-center gap-1.5">
+                    <span id="clockPhaseBadge" class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 text-[10px] font-bold uppercase tracking-wider">
+                      HIGH STAMINA
+                    </span>
+                    <span class="text-[10px] text-slate-400">SPEED SPRINT</span>
+                  </div>
+                  <div class="text-xs text-slate-200 font-normal">
+                    5 questions before hand hits 0. Leftover seconds = <span class="text-amber-300 font-bold">+1🪙/sec</span>!
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Time Left Progress Pill -->
+              <div class="hidden sm:flex items-center gap-2">
+                <span id="speedClockTextPill" class="text-xs font-bold text-cyan-300 font-mono">60s LEFT</span>
+              </div>
+            </div>
+
+            <!-- Question Prompt & Optional Visual Image -->
+            <div class="space-y-3">
+              <h2 id="qPrompt" class="text-base sm:text-lg font-bold text-white leading-snug break-words">
+                {% if question %}{{ question.prompt }}{% else %}Ready for your next expedition day? Push to the next day below.{% endif %}
+              </h2>
+
+              <!-- Media / Flag Image Rendering Slot -->
+              <div id="mediaContainer" class="{% if not (question and question.media_url) %}hidden{% endif %} text-center py-1">
+                <img id="qMediaImg" src="{{ question.media_url if question else '' }}" alt="Question Visual"
+                     class="h-28 sm:h-36 max-w-full object-contain mx-auto rounded-xl border border-slate-700 bg-slate-950/70 p-2 shadow-lg">
+              </div>
+            </div>
+
+            <!-- Answer Options Grid (Mobile-friendly font-semibold, single column mobile) -->
+            <div id="optionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+              {% if question and question.get_options() %}
+                {% for opt_key, opt_text in question.get_options().items() %}
+                <button type="button" onclick="selectAnswer('{{ opt_key }}')"
+                        class="option-btn p-3 sm:p-3.5 rounded-xl bg-slate-950/90 hover:bg-slate-800 border border-slate-700 hover:border-cyan-400 text-left transition transform hover:-translate-y-0.5 active:translate-y-0 group break-words">
+                  <div class="flex items-start gap-2.5">
+                    <span class="w-6 h-6 rounded-md bg-purple-500/20 border border-purple-400/40 text-cyan-300 font-mono font-bold text-xs flex items-center justify-center shrink-0 group-hover:bg-cyan-500/30 group-hover:text-white">
+                      {{ opt_key }}
+                    </span>
+                    <span class="text-xs sm:text-sm font-semibold text-slate-200 group-hover:text-white leading-snug">
+                      {{ opt_text }}
+                    </span>
+                  </div>
+                </button>
+                {% endfor %}
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- THEMATIC CAMP SURVIVAL TASK HUB (Shown on Camp Safe Haven Days: 5, 10, 15, 20, 25, 30) -->
+          <div id="campMissionSection" class="{% if not day_meta.is_camp_day %}hidden{% endif %} space-y-4">
+            {% set m = day_meta.camp_mission %}
+            <div class="p-4 rounded-2xl bg-gradient-to-br from-indigo-950/80 via-slate-950 to-emerald-950/50 border border-emerald-500/40 space-y-2">
+              <div class="flex items-center justify-between text-xs font-mono font-bold text-emerald-300">
+                <span class="flex items-center gap-1.5">
+                  <span id="campMissionIcon" class="text-lg">{{ m.icon if m else '⛺' }}</span>
+                  <span id="campMissionTitle">{{ m.title if m else 'Camp Safe Haven Task' }}</span>
+                </span>
+                <span class="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-[10px] text-emerald-200 uppercase">
+                  SAFE HAVEN RECOVERY
+                </span>
+              </div>
+              <p id="campMissionObj" class="text-xs sm:text-sm text-slate-200 font-normal leading-relaxed">
+                {{ m.objective if m else 'Complete the camp survival task to secure your camp and restore health.' }}
+              </p>
+              <div id="campMissionInstr" class="p-2.5 bg-purple-950/50 border border-purple-500/30 rounded-xl text-[11px] sm:text-xs text-purple-200 font-mono">
+                👉 <strong>Mission Objective:</strong> {{ m.instruction if m else 'Follow the instructions below to secure camp.' }}
+              </div>
+            </div>
+
+            <!-- Interactive Camp Mini-Game Board -->
+            <div id="campGameBoard" class="p-4 rounded-2xl bg-slate-950/90 border border-slate-800 min-h-[160px] flex flex-col items-center justify-center">
+              <!-- Loaded dynamically based on game_type (pairs, sequence, scramble, reflex, precision) -->
+            </div>
           </div>
 
           <!-- Feedback Banner -->
@@ -372,7 +470,7 @@
 
         </div>
 
-        <!-- Day Completed Milestone Card (Shown when all questions for the day are finished) -->
+        <!-- Day Completed Milestone Card (Shown when all questions/tasks for the day are finished) -->
         <div id="dayCompletedCard" class="{% if not progress.is_day_completed %}hidden{% endif %} p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-indigo-950 via-slate-900 to-emerald-950/40 border-2 border-emerald-400/50 shadow-2xl text-center space-y-4 transition-all duration-300">
           <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-mono text-xs font-bold uppercase tracking-wider">
             🎉 DAY <span id="completedDayNum">{{ progress.current_day }}</span> EXPEDITION COMPLETE
@@ -383,18 +481,30 @@
               Altitude Reached: <span id="completedAlt" class="text-cyan-300">{{ day_meta.altitude }}</span>m (<span id="completedStageName">{{ day_meta.stage_name }}</span>)
             </h3>
             <p class="text-xs sm:text-sm text-slate-300 font-normal max-w-md mx-auto">
-              All checkpoint questions for today have been conquered! Safe Haven push-your-luck rules apply:
+              All ascent checkpoints conquered for today! Secure your loot in your wallet before resting at camp.
             </p>
           </div>
 
+          <!-- Unbanked Coins Notification -->
           <div id="completedRiskAlert" class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-400/40 text-amber-300 text-xs sm:text-sm font-mono flex items-center justify-center gap-2">
             <span>⚠️</span>
             <span id="completedRiskText">
               {% if progress.unbanked_coins > 0 %}
-                You have <strong>+<span id="completedUnbanked">{{ progress.unbanked_coins }}</span> Coins</strong> at risk. Bank them safely before advancing, or push your luck to Day <span id="completedNextDayNum">{{ progress.current_day + 1 }}</span>!
+                You have <strong>+<span id="completedUnbanked">{{ progress.unbanked_coins }}</span> Coins</strong> at risk. Bank them safely before tomorrow!
               {% else %}
                 All expedition coins are safely secured in your permanent wallet. Ready for tomorrow's ascent!
               {% endif %}
+            </span>
+          </div>
+
+          <!-- Strict 24-Hour Calendar Unlock Countdown Banner -->
+          <div id="nextDayUnlockBox" class="p-3.5 rounded-2xl bg-slate-950/90 border border-cyan-500/40 text-cyan-300 font-mono text-xs sm:text-sm font-bold flex flex-col sm:flex-row items-center justify-center gap-2 shadow-inner">
+            <span class="flex items-center gap-1.5 text-cyan-400">
+              <span class="text-base">⏰</span>
+              <span>DAY <span id="unlockNextDayNum">{{ progress.current_day + 1 }}</span> EXPEDITION UNLOCKS IN:</span>
+            </span>
+            <span id="unlockCountdownText" class="text-sm sm:text-base font-black text-white px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-400/40 tracking-wider">
+              --h --m --s
             </span>
           </div>
 
@@ -409,11 +519,23 @@
               {% endif %}
             </button>
             <button type="button" id="cardPushDayBtn" onclick="advanceDay()"
-                    {% if progress.current_day >= 30 %}disabled{% endif %}
-                    class="w-full sm:w-auto py-3 px-6 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-cyan-500/20 transition transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:cursor-not-allowed">
-              PUSH TO DAY <span id="cardPushNextDayNum">{{ progress.current_day + 1 }}</span> 🧗
+                    {% if is_locked_for_today or progress.current_day >= 30 %}disabled{% endif %}
+                    class="w-full sm:w-auto py-3 px-6 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-cyan-500/20 transition transform hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed">
+              {% if is_locked_for_today %}
+                🔒 DAY {{ progress.current_day + 1 }} OPENS TOMORROW
+              {% else %}
+                PUSH TO DAY <span id="cardPushNextDayNum">{{ progress.current_day + 1 }}</span> 🧗
+              {% endif %}
             </button>
           </div>
+
+          {% if session.get('user_role') in ('admin', 'super_admin') %}
+          <div class="pt-1">
+            <button type="button" onclick="advanceDay(true)" class="text-[10px] font-mono text-cyan-400 hover:text-cyan-200 underline">
+              [⚡ Admin Override: Force Push to Day {{ progress.current_day + 1 }}]
+            </button>
+          </div>
+          {% endif %}
         </div>
 
         <!-- Unlocked Mountain Lore & Fact Card (Tracked in DB to avoid repeats) -->
@@ -458,9 +580,13 @@
               {% endif %}
             </button>
             <button id="pushDayBtn" onclick="advanceDay()"
-                    {% if not progress.is_day_completed or progress.current_day >= 30 %}disabled{% endif %}
+                    {% if is_locked_for_today or not progress.is_day_completed or progress.current_day >= 30 %}disabled{% endif %}
                     class="w-full sm:w-auto py-3 px-5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-cyan-500/20 transition transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:cursor-not-allowed">
-              PUSH TO DAY <span id="pushNextDayNum">{{ progress.current_day + 1 }}</span> 🧗
+              {% if is_locked_for_today %}
+                🔒 LOCKED UNTIL TOMORROW
+              {% else %}
+                PUSH TO DAY <span id="pushNextDayNum">{{ progress.current_day + 1 }}</span> 🧗
+              {% endif %}
             </button>
           </div>
         </div>
@@ -477,9 +603,200 @@
   var stages = {{ expedition_stages|tojson }};
   var currentDay = {{ progress.current_day }};
   var currentQuestionId = {{ question.id if question else 'null' }};
+  var isDayCompleted = {{ 'true' if progress.is_day_completed else 'false' }};
+  var isCampDay = {{ 'true' if day_meta.is_camp_day else 'false' }};
+  var isLockedForToday = {{ 'true' if is_locked_for_today else 'false' }};
+  var secondsUntilMidnight = {{ seconds_until_midnight }};
   var isSubmitting = false;
 
-  // Position climber puppet based on 30 days (top 500px down to 20px)
+  // 60-Second Speed Clock
+  var sprintTimer = null;
+  var sprintTimeLeft = 60;
+
+  function startSprintClock() {
+    stopSprintClock();
+    if (isCampDay || isDayCompleted) return;
+    sprintTimeLeft = 60;
+    updateSprintClockDisplay();
+
+    sprintTimer = setInterval(function() {
+      sprintTimeLeft--;
+      updateSprintClockDisplay();
+
+      if (sprintTimeLeft <= 10 && sprintTimeLeft > 0) {
+        if (window.qmPlaySound) window.qmPlaySound('blip');
+      }
+
+      if (sprintTimeLeft <= 0) {
+        stopSprintClock();
+        handleBlizzardTimeout();
+      }
+    }, 1000);
+  }
+
+  function stopSprintClock() {
+    if (sprintTimer) {
+      clearInterval(sprintTimer);
+      sprintTimer = null;
+    }
+  }
+
+  function updateSprintClockDisplay() {
+    var txt = document.getElementById('speedClockText');
+    var bar = document.getElementById('speedClockBar');
+    if (txt) txt.textContent = sprintTimeLeft + 's';
+    if (bar) {
+      var pct = Math.max(0, Math.min(100, (sprintTimeLeft / 60.0) * 100));
+      bar.style.width = pct + '%';
+    }
+
+    var digits = document.getElementById('clockDigits');
+    var arc = document.getElementById('clockSweeperArc');
+    var hand = document.getElementById('clockHand');
+    var badge = document.getElementById('clockPhaseBadge');
+    var pill = document.getElementById('speedClockTextPill');
+
+    if (digits) digits.textContent = sprintTimeLeft;
+    if (pill) pill.textContent = sprintTimeLeft + 's LEFT';
+
+    var perimeter = 251.32;
+    var elapsedPct = (60 - sprintTimeLeft) / 60.0;
+    if (arc) arc.style.strokeDashoffset = elapsedPct * perimeter;
+    if (hand) hand.style.transform = 'rotate(' + (elapsedPct * 360) + 'deg)';
+
+    if (sprintTimeLeft > 20) {
+      if (bar) { bar.className = 'h-full bg-cyan-400 transition-all duration-1000'; }
+      if (txt) { txt.className = 'text-sm font-black text-cyan-300'; }
+      if (arc) arc.setAttribute('stroke', '#06b6d4');
+      if (hand) hand.setAttribute('stroke', '#facc15');
+      if (digits) digits.className = 'text-xl sm:text-2xl font-black text-cyan-300 tracking-tighter leading-none';
+      if (badge) {
+        badge.className = 'px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 text-[10px] font-bold uppercase tracking-wider';
+        badge.textContent = 'HIGH STAMINA';
+      }
+    } else if (sprintTimeLeft > 10) {
+      if (bar) { bar.className = 'h-full bg-amber-400 transition-all duration-1000'; }
+      if (txt) { txt.className = 'text-sm font-black text-amber-400'; }
+      if (arc) arc.setAttribute('stroke', '#f59e0b');
+      if (hand) hand.setAttribute('stroke', '#fbbf24');
+      if (digits) digits.className = 'text-xl sm:text-2xl font-black text-amber-400 tracking-tighter leading-none';
+      if (badge) {
+        badge.className = 'px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[10px] font-bold uppercase tracking-wider';
+        badge.textContent = 'BLIZZARD APPROACHING';
+      }
+    } else {
+      if (bar) { bar.className = 'h-full bg-rose-500 animate-pulse transition-all duration-1000'; }
+      if (txt) { txt.className = 'text-sm font-black text-rose-400'; }
+      if (arc) arc.setAttribute('stroke', '#ef4444');
+      if (hand) hand.setAttribute('stroke', '#f87171');
+      if (digits) digits.className = 'text-xl sm:text-2xl font-black text-rose-500 tracking-tighter leading-none animate-pulse';
+      if (badge) {
+        badge.className = 'px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-400/40 text-[10px] font-bold uppercase tracking-wider animate-pulse';
+        badge.textContent = 'CRITICAL BLIZZARD!';
+      }
+    }
+  }
+
+  function handleBlizzardTimeout() {
+    if (isSubmitting) return;
+    isSubmitting = true;
+    var puppet = document.getElementById('climberPuppet');
+
+    fetch('{{ url_for("arena.climber_timeout") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      var banner = document.getElementById('feedbackBanner');
+      var fbTitle = document.getElementById('feedbackTitle');
+      var fbDesc = document.getElementById('feedbackDesc');
+      banner.classList.remove('hidden', 'bg-emerald-950/80', 'border-emerald-400', 'bg-blue-950/80', 'border-blue-400', 'bg-rose-950/80', 'border-rose-400');
+      banner.classList.add('border-2');
+
+      if (data.shield_saved) {
+        if (window.qmPlaySound) window.qmPlaySound('shield');
+        banner.classList.add('bg-blue-950/80', 'border-blue-400');
+        fbTitle.innerHTML = '<span class="text-cyan-300">🛡️ SHIELD SAVED FROM BLIZZARD!</span>';
+        fbDesc.textContent = data.explanation || 'Time ran out! Your Climber Shield absorbed the frostbite. Restarting 60s sprint.';
+
+        var shieldsTxt = document.getElementById('hudShieldsText');
+        if (shieldsTxt) {
+          shieldsTxt.innerHTML = data.shields_left > 0 ? ('<span class="text-cyan-300 font-bold">🛡️ ' + data.shields_left + ' Shield' + (data.shields_left > 1 ? 's' : '') + '</span>') : '<span class="text-slate-400 font-normal">0 Shields Equipped</span>';
+        }
+
+        setTimeout(function() {
+          banner.classList.add('hidden');
+          isSubmitting = false;
+          startSprintClock();
+        }, 2200);
+
+      } else {
+        // Fall back to safe haven
+        if (window.qmPlaySound) window.qmPlaySound('slip');
+        if (puppet) puppet.classList.add('climber-fall');
+        setTimeout(function() {
+          if (puppet) {
+            puppet.classList.remove('climber-fall');
+            updateClimberPosition(data.new_day);
+          }
+        }, 850);
+
+        banner.classList.add('bg-rose-950/80', 'border-rose-400');
+        fbTitle.innerHTML = '<span class="text-rose-400">⚠️ BLIZZARD TIME-OUT!</span>';
+        fbDesc.textContent = data.explanation || 'Slipped back to camp!';
+
+        currentDay = data.new_day;
+        document.getElementById('hudDay').textContent = currentDay;
+        document.getElementById('hudQIndex').textContent = '1';
+        document.getElementById('hudAltitude').textContent = data.new_altitude;
+        document.getElementById('hudUnbanked').textContent = '0';
+        document.getElementById('bankBtn').disabled = true;
+
+        setTimeout(function() {
+          banner.classList.add('hidden');
+          if (data.next_question) {
+            renderNextQuestion(data.next_day_meta, data.next_question, 1, 5);
+          }
+          isSubmitting = false;
+          startSprintClock();
+        }, 2500);
+      }
+    })
+    .catch(function(err) {
+      console.warn('Timeout error', err);
+      isSubmitting = false;
+    });
+  }
+
+  // 24-Hour Calendar Unlock Countdown Ticker
+  function startUnlockCountdown() {
+    var timerEl = document.getElementById('unlockCountdownText');
+    if (!timerEl) return;
+
+    function tick() {
+      if (secondsUntilMidnight <= 0) {
+        timerEl.textContent = 'UNLOCKED! REFRESH';
+        var pushBtns = [document.getElementById('cardPushDayBtn'), document.getElementById('pushDayBtn')];
+        pushBtns.forEach(function(b) {
+          if (b) {
+            b.disabled = false;
+            b.innerHTML = 'PUSH TO DAY ' + (currentDay + 1) + ' 🧗';
+          }
+        });
+        return;
+      }
+      secondsUntilMidnight--;
+      var h = Math.floor(secondsUntilMidnight / 3600);
+      var m = Math.floor((secondsUntilMidnight % 3600) / 60);
+      var s = secondsUntilMidnight % 60;
+      timerEl.textContent = (h < 10 ? '0' : '') + h + 'h ' + (m < 10 ? '0' : '') + m + 'm ' + (s < 10 ? '0' : '') + s + 's';
+    }
+    tick();
+    setInterval(tick, 1000);
+  }
+
+  // Position climber puppet based on 30 days
   function updateClimberPosition(dayNum) {
     var puppet = document.getElementById('climberPuppet');
     if (!puppet) return;
@@ -487,7 +804,6 @@
     var targetTop = 500 - (progressPct * 476);
     puppet.style.top = targetTop + 'px';
 
-    // Cinematic Mountain camera subtle zoom-in based on stage
     var container = document.getElementById('mountainStageContainer');
     if (container) {
       var stageIdx = Math.floor((dayNum - 1) / 5);
@@ -495,7 +811,6 @@
       container.style.transform = 'scale(' + scale + ')';
     }
 
-    // Update Stage Ledges on right
     var currentStage = Math.floor((dayNum - 1) / 5) + 1;
     for (var i = 1; i <= 6; i++) {
       var ledge = document.getElementById('stage-ledge-' + i);
@@ -512,7 +827,12 @@
   }
 
   updateClimberPosition(currentDay);
+  startUnlockCountdown();
+  if (!isDayCompleted && !isCampDay) {
+    startSprintClock();
+  }
 
+  // TRIVIA ANSWER HANDLER
   window.selectAnswer = function(selectedOpt) {
     if (isSubmitting || !currentQuestionId) return;
     isSubmitting = true;
@@ -525,7 +845,7 @@
     fetch('{{ url_for("arena.climber_answer") }}', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question_id: currentQuestionId, selected: selectedOpt })
+      body: JSON.stringify({ question_id: currentQuestionId, selected: selectedOpt, seconds_left: sprintTimeLeft })
     })
     .then(function(res) { return res.json(); })
     .then(function(data) {
@@ -539,11 +859,12 @@
       var banner = document.getElementById('feedbackBanner');
       var fbTitle = document.getElementById('feedbackTitle');
       var fbDesc = document.getElementById('feedbackDesc');
-      banner.classList.remove('hidden', 'bg-emerald-950/80', 'border-emerald-400', 'bg-blue-950/80', 'border-blue-400', 'bg-rose-950/80', 'border-rose-400', 'border-2');
+      banner.classList.remove('hidden', 'bg-emerald-950/80', 'border-emerald-400', 'bg-blue-950/80', 'border-blue-400', 'bg-rose-950/80', 'border-rose-400');
       banner.classList.add('border-2');
 
       if (data.correct) {
         if (data.summit) {
+          stopSprintClock();
           if (window.qmPlaySound) window.qmPlaySound('fanfare');
           if (puppet) puppet.classList.add('climber-pull');
           updateClimberPosition(30);
@@ -556,76 +877,61 @@
           document.getElementById('hudUnbanked').textContent = '0';
           document.getElementById('bankBtn').disabled = true;
           document.getElementById('cardBankBtn').disabled = true;
-          document.getElementById('optionsGrid').innerHTML = '<div class="col-span-full p-6 text-center text-amber-300 font-mono font-bold text-sm">Congratulations on standing atop the roof of the world! You have mastered the 30-day expedition.</div>';
           return;
         }
 
-        // Realistic Climbing Move Sound (Carabiner + Snow Crunch + Rope Pull)
         if (window.qmPlaySound) window.qmPlaySound('climbStep');
         if (puppet) puppet.classList.add('climber-pull');
         setTimeout(function() { if (puppet) puppet.classList.remove('climber-pull'); }, 500);
 
         if (data.day_completed) {
-          // DAY COMPLETED! Collapse questions terminal, display Day Completed Card
+          stopSprintClock();
           banner.classList.add('bg-emerald-950/80', 'border-emerald-400');
           fbTitle.innerHTML = '<span class="text-emerald-300">✓ DAY ' + data.current_day + ' CONQUERED!</span>';
-          fbDesc.textContent = data.explanation || 'Expedition checkpoints completed safely.';
+          fbDesc.textContent = (data.speed_bonus > 0 ? ('⚡ +' + data.speed_bonus + ' SPEED BONUS COINS! ') : '') + (data.explanation || 'Expedition checkpoints completed safely.');
 
-          // Update HUD
           document.getElementById('hudUnbanked').textContent = data.unbanked_coins;
           document.getElementById('hudAltitude').textContent = data.new_altitude;
           if (data.next_day_meta && data.next_day_meta.safe_haven) {
             document.getElementById('hudSafeCamp').textContent = data.next_day_meta.safe_haven;
           }
 
-          // Update Day Completed Card
           document.getElementById('completedDayNum').textContent = data.current_day;
           document.getElementById('completedAlt').textContent = data.new_altitude;
           document.getElementById('completedUnbanked').textContent = data.unbanked_coins;
-          document.getElementById('completedNextDayNum').textContent = data.next_day;
-          document.getElementById('cardPushNextDayNum').textContent = data.next_day;
+          document.getElementById('unlockNextDayNum').textContent = data.next_day;
           document.getElementById('pushNextDayNum').textContent = data.next_day;
+          document.getElementById('cardPushNextDayNum').textContent = data.next_day;
           if (data.day_meta && data.day_meta.stage_name) {
             document.getElementById('completedStageName').textContent = data.day_meta.stage_name;
           }
 
           var riskText = document.getElementById('completedRiskText');
           if (riskText) {
-            riskText.innerHTML = 'You have <strong>+' + data.unbanked_coins + ' Coins</strong> at risk. Bank them safely before advancing, or push your luck to Day ' + data.next_day + '!';
+            riskText.innerHTML = 'You have <strong>+' + data.unbanked_coins + ' Coins</strong> at risk. Bank them safely before advancing!';
           }
 
-          // Enable Bank buttons with current unbanked amount
-          var bankBtn = document.getElementById('bankBtn');
-          var cardBankBtn = document.getElementById('cardBankBtn');
-          bankBtn.disabled = false;
-          cardBankBtn.disabled = false;
-          bankBtn.innerHTML = 'BANK COINS NOW 🪙 (+<span id="bankCoinsAmount">' + data.unbanked_coins + '</span>)';
-          cardBankBtn.innerHTML = 'BANK COINS NOW 🪙 (+<span id="cardBankCoinsAmount">' + data.unbanked_coins + '</span>)';
-
-          // Enable Push to Day buttons
-          document.getElementById('pushDayBtn').disabled = false;
-          document.getElementById('cardPushDayBtn').disabled = false;
+          var b1 = document.getElementById('bankBtn');
+          var b2 = document.getElementById('cardBankBtn');
+          if (b1) { b1.disabled = false; b1.innerHTML = 'BANK COINS NOW 🪙 (+<span id="bankCoinsAmount">' + data.unbanked_coins + '</span>)'; }
+          if (b2) { b2.disabled = false; b2.innerHTML = 'BANK COINS NOW 🪙 (+<span id="cardBankCoinsAmount">' + data.unbanked_coins + '</span>)'; }
 
           setTimeout(function() {
             banner.classList.add('hidden');
-            // Collapse Trivia Card & Reveal Day Completed Card
             document.getElementById('triviaCard').classList.add('hidden');
             document.getElementById('dayCompletedCard').classList.remove('hidden');
             isSubmitting = false;
-          }, 1000);
+          }, 1200);
 
         } else {
-          // INTERMEDIATE QUESTION FOR TODAY CLEARED!
           banner.classList.add('bg-emerald-950/80', 'border-emerald-400');
           fbTitle.innerHTML = '<span class="text-emerald-300">✓ CHECKPOINT ' + (data.day_question_index - 1) + ' CLEARED</span>';
-          fbDesc.textContent = data.explanation || 'One more question to secure today\'s climb.';
+          fbDesc.textContent = data.explanation || 'Keep moving! Clock is ticking!';
 
-          // Update HUD & Terminal Indicators
           document.getElementById('hudQIndex').textContent = data.day_question_index;
           document.getElementById('termQIdx').textContent = data.day_question_index;
           document.getElementById('hudUnbanked').textContent = data.unbanked_coins;
 
-          // Update unbanked label in bank buttons
           var bankAmt = document.getElementById('bankCoinsAmount');
           if (bankAmt) bankAmt.textContent = data.unbanked_coins;
           document.getElementById('bankBtn').disabled = false;
@@ -634,7 +940,7 @@
             banner.classList.add('hidden');
             renderNextQuestion(data.day_meta, data.next_question, data.day_question_index, data.day_questions_total);
             isSubmitting = false;
-          }, 1000);
+          }, 800);
         }
 
       } else {
@@ -643,15 +949,11 @@
           if (window.qmPlaySound) window.qmPlaySound('shield');
           banner.classList.add('bg-blue-950/80', 'border-blue-400');
           fbTitle.innerHTML = '<span class="text-cyan-300">🛡️ SHIELD ABSORBED THE SLIP!</span>';
-          fbDesc.textContent = 'A backpack gear shield prevented the fall! Correct answer: (' + data.correct_answer + '). Altitude preserved.';
+          fbDesc.textContent = 'A backpack gear shield prevented the fall! Correct answer: (' + data.correct_answer + '). Clock ticking!';
 
           var shieldsTxt = document.getElementById('hudShieldsText');
           if (shieldsTxt) {
-            if (data.shields_left > 0) {
-              shieldsTxt.innerHTML = '<span class="text-cyan-300 font-bold">🛡️ ' + data.shields_left + ' Climber Shield' + (data.shields_left > 1 ? 's' : '') + ' Equipped</span>';
-            } else {
-              shieldsTxt.innerHTML = '<span class="text-slate-400 font-normal">0 Shields Equipped</span>';
-            }
+            shieldsTxt.innerHTML = data.shields_left > 0 ? ('<span class="text-cyan-300 font-bold">🛡️ ' + data.shields_left + ' Shield' + (data.shields_left > 1 ? 's' : '') + '</span>') : '<span class="text-slate-400 font-normal">0 Shields Equipped</span>';
           }
 
           setTimeout(function() {
@@ -660,9 +962,10 @@
               renderNextQuestion(data.day_meta || stages[Math.floor((currentDay-1)/5)], data.next_question, data.day_question_index, data.day_questions_total);
             }
             isSubmitting = false;
-          }, 2000);
+          }, 1600);
 
         } else if (data.fallen) {
+          stopSprintClock();
           if (window.qmPlaySound) window.qmPlaySound('slip');
           if (puppet) puppet.classList.add('climber-fall');
           setTimeout(function() {
@@ -686,9 +989,10 @@
           setTimeout(function() {
             banner.classList.add('hidden');
             if (data.next_question) {
-              renderNextQuestion(data.next_day_meta, data.next_question, 1, data.day_questions_total);
+              renderNextQuestion(data.next_day_meta, data.next_question, 1, 5);
             }
             isSubmitting = false;
+            startSprintClock();
           }, 2400);
         }
       }
@@ -706,17 +1010,16 @@
 
     var dayNum = dayMeta.day || currentDay;
     var idx = qIdx || 1;
-    var total = qTotal || 2;
+    var total = qTotal || 5;
 
     document.getElementById('currentDayNum').textContent = dayNum;
     document.getElementById('termQIdx').textContent = idx;
     document.getElementById('termQTotal').textContent = total;
     document.getElementById('termStageName').textContent = dayMeta.stage_name;
     document.getElementById('diffBadge').textContent = dayMeta.diff;
-    document.getElementById('stepCoinsReward').textContent = '+' + Math.floor(dayMeta.coins / total) + ' 🪙';
+    document.getElementById('stepCoinsReward').textContent = '+' + dayMeta.coins + ' 🪙';
     document.getElementById('qPrompt').textContent = qData.prompt;
 
-    // Media Image Handling (Flags, Maps, Badges)
     var mediaContainer = document.getElementById('mediaContainer');
     var mediaImg = document.getElementById('qMediaImg');
     if (qData.media_url && qData.media_url.trim().length > 0) {
@@ -742,13 +1045,265 @@
     }
   }
 
-  window.advanceDay = function() {
+  // ==========================================================================
+  // CAMP SURVIVAL MINI-GAME BOARD LOGIC (Days 5, 10, 15, 20, 25, 30)
+  // ==========================================================================
+  function setupCampMiniGame(dayNum) {
+    var board = document.getElementById('campGameBoard');
+    if (!board) return;
+    board.innerHTML = '';
+
+    if (dayNum === 5) {
+      // DAY 5: Pitch Windproof Storm Tents (Alpine Gear Memory Pairs)
+      var gearItems = ['⛺', '⛏️', '🧗', '🥽'];
+      var deck = gearItems.concat(gearItems).sort(function() { return 0.5 - Math.random(); });
+      var flipped = [];
+      var matchedCount = 0;
+
+      var grid = document.createElement('div');
+      grid.className = 'grid grid-cols-4 gap-2.5 w-full max-w-sm mx-auto';
+      deck.forEach(function(icon, idx) {
+        var card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'card-tile h-16 sm:h-20 rounded-xl bg-slate-900 border-2 border-slate-700 flex items-center justify-center text-2xl transition transform hover:scale-105 active:scale-95';
+        card.setAttribute('data-icon', icon);
+        card.innerHTML = '<span class="text-slate-500 font-mono text-sm">?</span>';
+        card.onclick = function() {
+          if (flipped.length >= 2 || card.classList.contains('matched') || flipped.includes(card)) return;
+          card.innerHTML = '<span class="text-2xl animate-bounce">' + icon + '</span>';
+          card.classList.add('border-cyan-400', 'bg-cyan-950/60');
+          flipped.push(card);
+
+          if (flipped.length === 2) {
+            if (flipped[0].getAttribute('data-icon') === flipped[1].getAttribute('data-icon')) {
+              if (window.qmPlaySound) window.qmPlaySound('climbStep');
+              flipped.forEach(function(c) {
+                c.classList.remove('border-cyan-400', 'bg-cyan-950/60');
+                c.classList.add('matched', 'border-emerald-400', 'bg-emerald-950/80');
+              });
+              flipped = [];
+              matchedCount++;
+              if (matchedCount === 4) {
+                completeCampMission('Tents firmly anchored! Storm weathered.');
+              }
+            } else {
+              setTimeout(function() {
+                flipped.forEach(function(c) {
+                  c.innerHTML = '<span class="text-slate-500 font-mono text-sm">?</span>';
+                  c.classList.remove('border-cyan-400', 'bg-cyan-950/60');
+                });
+                flipped = [];
+              }, 700);
+            }
+          }
+        };
+        grid.appendChild(card);
+      });
+      board.appendChild(grid);
+
+    } else if (dayNum === 10) {
+      // DAY 10: Secure Khumbu Ladders (Anchor Safety Sequence)
+      var steps = [
+        { id: 1, text: '1. Drive Snow Pickets' },
+        { id: 2, text: '2. Span Aluminum Ladder' },
+        { id: 3, text: '3. Hook Dual Carabiners' },
+        { id: 4, text: '4. Lock Safety Belay Rope' }
+      ];
+      var shuffled = steps.slice().sort(function() { return 0.5 - Math.random(); });
+      var nextExpected = 1;
+
+      var container = document.createElement('div');
+      container.className = 'w-full max-w-sm space-y-2';
+      shuffled.forEach(function(step) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'w-full p-3 rounded-xl bg-slate-900 border-2 border-slate-700 hover:border-cyan-400 text-left font-mono font-bold text-xs text-white transition flex items-center justify-between';
+        btn.innerHTML = '<span>🪜 ' + step.text + '</span><span class="text-[10px] text-slate-500">TAP IN ORDER</span>';
+        btn.onclick = function() {
+          if (step.id === nextExpected) {
+            if (window.qmPlaySound) window.qmPlaySound('climbStep');
+            btn.classList.remove('border-slate-700', 'bg-slate-900');
+            btn.classList.add('border-emerald-400', 'bg-emerald-950/80', 'text-emerald-300');
+            btn.disabled = true;
+            nextExpected++;
+            if (nextExpected > 4) {
+              completeCampMission('Icefall ladders bridged & locked!');
+            }
+          } else {
+            if (window.qmPlaySound) window.qmPlaySound('slip');
+            btn.classList.add('border-rose-500');
+            setTimeout(function() { btn.classList.remove('border-rose-500'); }, 500);
+          }
+        };
+        container.appendChild(btn);
+      });
+      board.appendChild(container);
+
+    } else if (dayNum === 15) {
+      // DAY 15: Melt Snow & Cook Rations
+      var rations = ['Melt Glacier Snow', 'Fire MSR Stove', 'Mix Calorie Oats'];
+      var doneCount = 0;
+      var c = document.createElement('div');
+      c.className = 'grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full max-w-md';
+      rations.forEach(function(r) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'p-3.5 rounded-xl bg-slate-900 border-2 border-slate-700 hover:border-amber-400 text-center font-mono font-bold text-xs text-white transition';
+        btn.innerHTML = '🍲 ' + r;
+        btn.onclick = function() {
+          if (btn.disabled) return;
+          if (window.qmPlaySound) window.qmPlaySound('climbStep');
+          btn.disabled = true;
+          btn.classList.add('border-emerald-400', 'bg-emerald-950/80', 'text-emerald-300');
+          doneCount++;
+          if (doneCount === 3) {
+            completeCampMission('Rations prepared & stamina restored!');
+          }
+        };
+        c.appendChild(btn);
+      });
+      board.appendChild(c);
+
+    } else if (dayNum === 20) {
+      // DAY 20: Lhotse Face Medical Reflex Grid (Memory Pulse)
+      var grid = document.createElement('div');
+      grid.className = 'grid grid-cols-3 gap-2 w-48 mx-auto';
+      var nodes = [];
+      for (var i = 0; i < 9; i++) {
+        var node = document.createElement('button');
+        node.type = 'button';
+        node.className = 'w-14 h-14 rounded-xl bg-slate-900 border-2 border-slate-700 transition';
+        node.setAttribute('data-idx', i);
+        grid.appendChild(node);
+        nodes.push(node);
+      }
+      board.appendChild(grid);
+
+      var sequence = [1, 4, 7, 5];
+      var userSeq = [];
+      var idx = 0;
+      var timer = setInterval(function() {
+        if (idx < sequence.length) {
+          var targetNode = nodes[sequence[idx]];
+          targetNode.classList.add('bg-emerald-500', 'border-emerald-300');
+          setTimeout(function() {
+            targetNode.classList.remove('bg-emerald-500', 'border-emerald-300');
+          }, 400);
+          idx++;
+        } else {
+          clearInterval(timer);
+          nodes.forEach(function(n, i) {
+            n.onclick = function() {
+              n.classList.add('bg-cyan-500');
+              setTimeout(function() { n.classList.remove('bg-cyan-500'); }, 200);
+              userSeq.push(i);
+              if (userSeq[userSeq.length - 1] !== sequence[userSeq.length - 1]) {
+                if (window.qmPlaySound) window.qmPlaySound('slip');
+                userSeq = [];
+              } else if (userSeq.length === sequence.length) {
+                completeCampMission('Oxygen pulse & reflexes verified!');
+              }
+            };
+          });
+        }
+      }, 600);
+
+    } else if (dayNum === 25) {
+      // DAY 25: South Col Oxygen Valve Precision Calibration
+      var c = document.createElement('div');
+      c.className = 'w-full max-w-sm text-center space-y-4';
+      c.innerHTML = '<div class="text-xs font-mono font-bold text-slate-300">TARGET: LOCK PRESSURE BETWEEN 2.0 AND 3.0 L/MIN</div>' +
+        '<div class="relative w-full h-8 bg-slate-900 rounded-full border-2 border-slate-700 overflow-hidden">' +
+        '<div class="absolute left-[40%] right-[40%] top-0 bottom-0 bg-emerald-500/40 border-x-2 border-emerald-400"></div>' +
+        '<div id="gaugeNeedle" class="absolute top-0 bottom-0 w-2 bg-amber-400 shadow transition-all duration-75" style="left: 0%;"></div>' +
+        '</div>' +
+        '<button type="button" id="lockValveBtn" class="py-2.5 px-6 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-mono font-bold text-xs uppercase tracking-wider shadow">LOCK OXYGEN VALVE</button>';
+      board.appendChild(c);
+
+      var needle = document.getElementById('gaugeNeedle');
+      var pos = 0;
+      var dir = 1;
+      var needleInterval = setInterval(function() {
+        pos += dir * 2.5;
+        if (pos >= 98) dir = -1;
+        if (pos <= 2) dir = 1;
+        if (needle) needle.style.left = pos + '%';
+      }, 35);
+
+      document.getElementById('lockValveBtn').onclick = function() {
+        clearInterval(needleInterval);
+        if (pos >= 38 && pos <= 62) {
+          completeCampMission('Oxygen flow calibrated at 2.5 L/min!');
+        } else {
+          if (window.qmPlaySound) window.qmPlaySound('slip');
+          alert('Pressure out of calibration! Recalibrating...');
+          setupCampMiniGame(25);
+        }
+      };
+    } else {
+      // Day 30 Summit Sprint
+      board.innerHTML = '<button type="button" onclick="completeCampMission('Summit Conquered!')" class="py-4 px-8 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 text-slate-950 font-black font-mono text-sm uppercase tracking-wider shadow-xl animate-pulse">👑 PLANT FLAG ON 8,848M SUMMIT!</button>';
+    }
+  }
+
+  function completeCampMission(msg) {
+    if (isSubmitting) return;
+    isSubmitting = true;
+    if (window.qmPlaySound) window.qmPlaySound('fanfare');
+
+    fetch('{{ url_for("arena.climber_camp_complete") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.success) {
+        var banner = document.getElementById('feedbackBanner');
+        banner.className = 'p-3.5 rounded-xl text-center space-y-1 font-mono border-2 bg-emerald-950/80 border-emerald-400';
+        document.getElementById('feedbackTitle').innerHTML = '<span class="text-emerald-300">✓ ' + (data.mission_title || 'CAMP TASK COMPLETE') + '!</span>';
+        document.getElementById('feedbackDesc').textContent = (data.reward_desc || msg) + ' (+' + data.coins_gained + ' Coins)';
+        banner.classList.remove('hidden');
+
+        document.getElementById('hudUnbanked').textContent = data.unbanked_coins;
+        document.getElementById('hudAltitude').textContent = data.altitude;
+
+        var shieldsTxt = document.getElementById('hudShieldsText');
+        if (shieldsTxt && data.shields_total > 0) {
+          shieldsTxt.innerHTML = '<span class="text-cyan-300 font-bold">🛡️ ' + data.shields_total + ' Shield' + (data.shields_total > 1 ? 's' : '') + '</span>';
+        }
+
+        setTimeout(function() {
+          banner.classList.add('hidden');
+          document.getElementById('triviaCard').classList.add('hidden');
+          document.getElementById('dayCompletedCard').classList.remove('hidden');
+          isSubmitting = false;
+        }, 1500);
+      } else {
+        alert(data.error || 'Failed to complete mission');
+        isSubmitting = false;
+      }
+    })
+    .catch(function(err) {
+      console.warn('Camp complete error', err);
+      isSubmitting = false;
+    });
+  }
+
+  if (isCampDay && !isDayCompleted) {
+    setupCampMiniGame(currentDay);
+  }
+
+  // ADVANCE TO NEXT DAY
+  window.advanceDay = function(forceAdmin) {
     var pushBtns = [document.getElementById('pushDayBtn'), document.getElementById('cardPushDayBtn')];
     pushBtns.forEach(function(b) { if (b) b.disabled = true; });
 
-    fetch('{{ url_for("arena.climber_advance_day") }}', {
+    var url = '{{ url_for("arena.climber_advance_day") }}' + (forceAdmin ? '?force=1' : '');
+
+    fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ force: forceAdmin || false })
     })
     .then(function(res) { return res.json(); })
     .then(function(data) {
@@ -756,32 +1311,49 @@
         if (window.qmPlaySound) window.qmPlaySound('climbStep');
 
         currentDay = data.new_day;
+        isCampDay = (data.day_meta && data.day_meta.is_camp_day);
+        isDayCompleted = false;
         updateClimberPosition(currentDay);
 
-        // Update HUD
         document.getElementById('hudDay').textContent = currentDay;
         document.getElementById('hudQIndex').textContent = '1';
+        document.getElementById('hudQTotal').textContent = data.day_questions_total;
         document.getElementById('hudAltitude').textContent = data.new_altitude;
         document.getElementById('hudSafeCamp').textContent = data.day_meta.safe_haven;
         document.getElementById('hudUnbanked').textContent = data.unbanked_coins;
 
-        // Hide Day Completed Card & Reveal Trivia Card
         document.getElementById('dayCompletedCard').classList.add('hidden');
         document.getElementById('triviaCard').classList.remove('hidden');
 
-        // Render Day's First Question
-        if (data.next_question) {
-          renderNextQuestion(data.day_meta, data.next_question, 1, data.day_questions_total);
+        if (isCampDay) {
+          document.getElementById('triviaQuestionSection').classList.add('hidden');
+          document.getElementById('campMissionSection').classList.remove('hidden');
+          document.getElementById('speedClockContainer').classList.add('hidden');
+          document.getElementById('termQCounter').textContent = 'CAMP SURVIVAL TASK';
+          if (data.day_meta.camp_mission) {
+            document.getElementById('campMissionIcon').textContent = data.day_meta.camp_mission.icon;
+            document.getElementById('campMissionTitle').textContent = data.day_meta.camp_mission.title;
+            document.getElementById('campMissionObj').textContent = data.day_meta.camp_mission.objective;
+            document.getElementById('campMissionInstr').innerHTML = '👉 <strong>Mission Objective:</strong> ' + data.day_meta.camp_mission.instruction;
+          }
+          setupCampMiniGame(currentDay);
+        } else {
+          document.getElementById('campMissionSection').classList.add('hidden');
+          document.getElementById('triviaQuestionSection').classList.remove('hidden');
+          document.getElementById('speedClockContainer').classList.remove('hidden');
+          document.getElementById('termQCounter').innerHTML = 'QUESTION <span id="termQIdx">1</span>/<span id="termQTotal">' + data.day_questions_total + '</span>';
+          if (data.next_question) {
+            renderNextQuestion(data.day_meta, data.next_question, 1, data.day_questions_total);
+          }
+          startSprintClock();
         }
 
-        // Update Mountain Fact
         if (data.next_fact) {
           document.getElementById('factIcon').textContent = data.next_fact.icon || '⛰️';
           document.getElementById('factTitle').textContent = data.next_fact.title;
           document.getElementById('factText').textContent = data.next_fact.text;
         }
 
-        // Keep push buttons disabled until this new day is completed
         pushBtns.forEach(function(b) { if (b) b.disabled = true; });
         isSubmitting = false;
 
@@ -796,6 +1368,7 @@
     });
   };
 
+  // BANK COINS
   window.bankCoins = function() {
     var bankBtns = [document.getElementById('bankBtn'), document.getElementById('cardBankBtn')];
     bankBtns.forEach(function(b) { if (b) b.disabled = true; });
