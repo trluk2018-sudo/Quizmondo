@@ -26,26 +26,28 @@
   </div>
 
   <!-- Duel Filter Navigation Pills -->
-  <div class="flex flex-wrap items-center gap-2 text-xs font-mono">
-    <a href="{{ url_for('admin.duels', filter='all') }}"
-       class="px-3.5 py-1.5 rounded-lg font-bold transition {% if filter_type == 'all' %}bg-slate-900 text-white shadow{% else %}bg-white border border-slate-300 text-slate-800 hover:bg-slate-100{% endif %}">
-      ⚔️ All Duels ({{ all_matches_count }})
-    </a>
-    <a href="{{ url_for('admin.duels', filter='registered') }}"
-       class="px-3.5 py-1.5 rounded-lg font-bold transition {% if filter_type == 'registered' %}bg-purple-700 text-white shadow{% else %}bg-white border border-slate-300 text-purple-900 hover:bg-purple-50{% endif %}">
-      👑 Registered Players ({{ registered_count }})
-    </a>
-    <a href="{{ url_for('admin.duels', filter='unregistered') }}"
-       class="px-3.5 py-1.5 rounded-lg font-bold transition {% if filter_type == 'unregistered' %}bg-slate-700 text-white shadow{% else %}bg-white border border-slate-300 text-slate-700 hover:bg-slate-100{% endif %}">
-      👤 Unregistered Players ({{ unregistered_count }})
-    </a>
-    <a href="{{ url_for('admin.duels', filter='minigames') }}"
-       class="px-3.5 py-1.5 rounded-lg font-bold transition {% if filter_type == 'minigames' %}bg-emerald-700 text-white shadow{% else %}bg-white border border-slate-300 text-emerald-900 hover:bg-emerald-50{% endif %}">
-      🎮 Mini-Game Challenges ({{ challenges|length }})
+  <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+    <div class="flex flex-wrap items-center gap-2">
+      <a href="{{ url_for('admin.duels', filter='all') }}"
+         class="px-3.5 py-1.5 rounded-lg font-bold transition {% if filter_type == 'all' %}bg-slate-900 text-white shadow{% else %}bg-white border border-slate-300 text-slate-800 hover:bg-slate-100{% endif %}">
+        ⚔️ All Matches ({{ all_matches_count }})
+      </a>
+      <a href="{{ url_for('admin.duels', filter='registered') }}"
+         class="px-3.5 py-1.5 rounded-lg font-bold transition {% if filter_type == 'registered' %}bg-purple-700 text-white shadow{% else %}bg-white border border-slate-300 text-purple-900 hover:bg-purple-50{% endif %}">
+        👑 Registered Players ({{ registered_count }})
+      </a>
+      <a href="{{ url_for('admin.duels', filter='unregistered') }}"
+         class="px-3.5 py-1.5 rounded-lg font-bold transition {% if filter_type == 'unregistered' %}bg-slate-700 text-white shadow{% else %}bg-white border border-slate-300 text-slate-700 hover:bg-slate-100{% endif %}">
+        👤 Unregistered Players ({{ unregistered_count }})
+      </a>
+    </div>
+
+    <!-- Direct Jump to Dedicated 5x Mini-Game Challenges Page -->
+    <a href="{{ url_for('admin.challenges') }}" class="px-3.5 py-1.5 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-900 hover:bg-emerald-100 font-bold transition flex items-center gap-1.5 shadow-sm">
+      <span>🎮</span> <span>5x Mini-Game Challenges Page &rarr;</span>
     </a>
   </div>
 
-  {% if filter_type != 'minigames' %}
   <!-- Bulk Selection Action Bar -->
   <form id="bulkDuelsForm" action="{{ url_for('admin.duels_bulk_delete') }}" method="POST"
         class="flex flex-wrap items-center justify-between gap-3 bg-slate-100 border-2 border-slate-300 rounded-2xl px-4 py-3"
@@ -55,14 +57,14 @@
       <span id="bulkDuelsCount" class="px-2.5 py-1 rounded-full bg-slate-900 text-white font-mono font-black text-[11px]">0 selected</span>
     </div>
     <div class="flex items-center gap-2">
-      <button type="button" onclick="setAllDuelChecks(true)" class="px-3 py-1.5 rounded-lg bg-white border-2 border-slate-300 hover:bg-slate-50 text-slate-900 font-bold text-[11px]">
+      <button type="button" onclick="setAllDuelChecks(true)" class="px-3 py-1.5 rounded-lg bg-white border-2 border-slate-300 hover:bg-slate-50 text-slate-900 font-bold text-[11px] transition">
         Select All
       </button>
-      <button type="button" onclick="setAllDuelChecks(false)" class="px-3 py-1.5 rounded-lg bg-white border-2 border-slate-300 hover:bg-slate-50 text-slate-900 font-bold text-[11px]">
+      <button type="button" onclick="setAllDuelChecks(false)" class="px-3 py-1.5 rounded-lg bg-white border-2 border-slate-300 hover:bg-slate-50 text-slate-900 font-bold text-[11px] transition">
         Clear Selection
       </button>
       <button type="submit" id="bulkDuelsDeleteBtn" disabled
-              class="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-white font-black text-[11px] uppercase shadow">
+              class="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-white font-black text-[11px] uppercase shadow transition">
         🗑️ Delete Selected
       </button>
     </div>
@@ -89,7 +91,7 @@
         <option value="90">Older than 90 days</option>
       </select>
       <input type="password" name="admin_password" required placeholder="Admin Password / PIN" class="px-3 py-2 rounded-lg border-2 border-amber-400 text-xs text-slate-900 font-bold bg-white w-44">
-      <button type="submit" class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-black text-xs uppercase whitespace-nowrap shadow">
+      <button type="submit" class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-black text-xs uppercase whitespace-nowrap shadow transition">
         Clear Abandoned
       </button>
     </form>
@@ -170,11 +172,11 @@
               {{ m.created_at.strftime('%Y-%m-%d %H:%M') if m.created_at else '' }}
             </td>
             <td class="py-2.5 px-3 text-right whitespace-nowrap space-x-1.5">
-              <a href="{{ url_for('arena.match_lobby', match_code=m.match_code) }}" class="px-2.5 py-1 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-900 font-bold text-[11px] inline-block">
+              <a href="{{ url_for('arena.match_lobby', match_code=m.match_code) }}" class="px-2.5 py-1 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-900 font-bold text-[11px] inline-block transition">
                 Open Duel
               </a>
               <form action="{{ url_for('admin.duel_delete', id=m.id) }}" method="POST" class="inline" onsubmit="return confirm('Delete duel #{{ m.match_code }}?');">
-                <button type="submit" class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px]">
+                <button type="submit" class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] transition">
                   Delete
                 </button>
               </form>
@@ -191,82 +193,6 @@
       </table>
     </div>
   </div>
-  {% endif %}
-
-  {% if filter_type in ('all', 'minigames') %}
-  <!-- SECTION: 5-MINI-GAME FRIEND CHALLENGES -->
-  <div class="mt-8 pt-6 border-t-2 border-slate-300 space-y-4">
-    <div class="flex items-center justify-between">
-      <div>
-        <h2 class="text-lg font-black text-slate-900 flex items-center gap-2">
-          <span>🎮</span> <span>5x Mini-Game Challenges (Friend Duels)</span>
-          <span class="text-xs font-mono text-slate-500 font-normal">({{ challenges|length if challenges else 0 }} total)</span>
-        </h2>
-        <p class="text-xs text-slate-600">
-          Turn-based 5-mini-game challenges between players (e.g. Hangman, Sequence, Pic-Swap, etc.).
-        </p>
-      </div>
-    </div>
-
-    <div class="bg-white rounded-2xl border-2 border-slate-300 overflow-hidden shadow-sm">
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs text-slate-700">
-          <thead class="bg-slate-100 text-slate-800 text-[11px] uppercase tracking-wider font-mono border-b border-slate-300">
-            <tr>
-              <th class="py-2.5 px-3">Code</th>
-              <th class="py-2.5 px-3">Creator</th>
-              <th class="py-2.5 px-3 text-center">Score</th>
-              <th class="py-2.5 px-3">Opponent</th>
-              <th class="py-2.5 px-3 text-center">Status</th>
-              <th class="py-2.5 px-3 text-center">Created</th>
-              <th class="py-2.5 px-3 text-center">Expires</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-200">
-            {% for ch in (challenges or []) %}
-            {% set table = ch.standings() %}
-            <tr class="hover:bg-slate-50">
-              <td class="py-2.5 px-3 font-mono font-bold text-indigo-700">
-                #{{ ch.code }}
-              </td>
-              <td class="py-2.5 px-3 font-semibold text-slate-900">
-                {{ ch.creator_name or 'Challenger' }}
-              </td>
-              <td class="py-2.5 px-3 text-center font-mono font-black text-sm">
-                {{ table.creator_wins }} &ndash; {{ table.opponent_wins }}
-              </td>
-              <td class="py-2.5 px-3 font-semibold text-slate-900">
-                {{ ch.opponent_name or 'Awaiting Opponent...' }}
-              </td>
-              <td class="py-2.5 px-3 text-center font-mono">
-                {% if ch.status == 'complete' %}
-                <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">Complete</span>
-                {% elif ch.expired %}
-                <span class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold">Expired</span>
-                {% else %}
-                <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold">In Progress</span>
-                {% endif %}
-              </td>
-              <td class="py-2.5 px-3 text-center font-mono text-slate-500 text-[11px]">
-                {{ ch.created_at.strftime('%b %d') if ch.created_at else '-' }}
-              </td>
-              <td class="py-2.5 px-3 text-center font-mono text-slate-500 text-[11px]">
-                {{ ch.expires_at.strftime('%b %d') if ch.expires_at else '-' }}
-              </td>
-            </tr>
-            {% else %}
-            <tr>
-              <td colspan="7" class="py-8 text-center text-slate-500 font-mono text-xs">
-                No 5-mini-game challenges recorded yet.
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-  {% endif %}
 
 </div>
 

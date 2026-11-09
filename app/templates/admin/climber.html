@@ -1,0 +1,307 @@
+{% extends "admin/base.html" %}
+
+{% block title %}The Quiz Climber Expedition Ops • Quizmondo Control Centre{% endblock %}
+
+{% block content %}
+<div class="w-full space-y-6 text-slate-900">
+
+  <!-- Page Header & Global Reset Actions -->
+  <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-300 pb-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <h1 class="text-2xl font-black text-slate-900">🧗 The Quiz Climber Expedition Ops</h1>
+        <span class="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-900 font-mono font-black text-[11px] border border-purple-300">
+          SEASON: {{ season.month_key if season else 'ACTIVE' }}
+        </span>
+      </div>
+      <p class="text-xs text-slate-600 font-medium mt-1">
+        Monitor 30-day vertical expedition progress, inspect unbanked loot &amp; safe havens, and reset player climb progression.
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <!-- Clear Guest Climber Progress Challengers -->
+      <form action="{{ url_for('admin.climber_delete_unlogged') }}" method="POST"
+            class="flex items-center gap-2 bg-amber-50 border-2 border-amber-300 p-2.5 rounded-xl shadow-sm"
+            onsubmit="return confirm('WARNING: Are you sure you want to permanently delete ALL {{ unlogged_count or 0 }} unlogged-in guest climbers? This will wipe their climber progress so they restart completely fresh from Day 1.');">
+        <span class="text-xs font-black text-amber-900 whitespace-nowrap px-1">👤 Guest Challengers:</span>
+        <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black text-xs uppercase whitespace-nowrap shadow transition"
+                {% if not unlogged_count or unlogged_count <= 0 %}disabled{% endif %}>
+          🗑️ Clear Guest Climbers ({{ unlogged_count or 0 }})
+        </button>
+      </form>
+
+      <!-- Reset ALL Climbers (Protected Action) -->
+      <form action="{{ url_for('admin.climber_progress_reset_all') }}" method="POST"
+            class="flex flex-wrap sm:flex-nowrap items-center gap-2 bg-rose-50 border-2 border-rose-300 p-2.5 rounded-xl shadow-sm"
+            onsubmit="return confirm('WARNING: Are you sure you want to reset ALL users back to Day 1? This will reset all current climb checkpoints across the entire site.');">
+        <span class="text-xs font-black text-rose-900 whitespace-nowrap px-1">⚠️ Reset All Users:</span>
+        <input type="text" name="confirm_text" required placeholder="Type 'RESET ALL'"
+               class="px-3 py-1.5 rounded-lg border-2 border-rose-400 text-xs text-slate-900 font-bold bg-white w-28 uppercase placeholder:normal-case placeholder:font-normal">
+        <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase whitespace-nowrap shadow transition">
+          Reset All Climbers
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Summary Metric Stat Cards -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="p-4 rounded-2xl bg-white border-2 border-slate-200 shadow-sm">
+      <div class="text-[11px] font-bold text-slate-500 uppercase font-mono">Active Climbers</div>
+      <div class="text-2xl font-black text-cyan-600 font-mono mt-1">{{ total_climbers }}</div>
+      <div class="text-[11px] text-slate-500 mt-1">Players on Everest wall</div>
+    </div>
+    <div class="p-4 rounded-2xl bg-white border-2 border-slate-200 shadow-sm">
+      <div class="text-[11px] font-bold text-slate-500 uppercase font-mono">8,848M Summits</div>
+      <div class="text-2xl font-black text-amber-500 font-mono mt-1">👑 {{ summits_count }}</div>
+      <div class="text-[11px] text-slate-500 mt-1">Completed all 30 days</div>
+    </div>
+    <div class="p-4 rounded-2xl bg-white border-2 border-slate-200 shadow-sm">
+      <div class="text-[11px] font-bold text-slate-500 uppercase font-mono">Completed Today</div>
+      <div class="text-2xl font-black text-emerald-600 font-mono mt-1">✓ {{ completed_days_count }}</div>
+      <div class="text-[11px] text-slate-500 mt-1">Conquered today's checkpoints</div>
+    </div>
+    <div class="p-4 rounded-2xl bg-white border-2 border-slate-200 shadow-sm">
+      <div class="text-[11px] font-bold text-slate-500 uppercase font-mono">Coins Banked</div>
+      <div class="text-2xl font-black text-purple-600 font-mono mt-1">🪙 {{ "{:,}".format(total_banked_coins) }}</div>
+      <div class="text-[11px] text-slate-500 mt-1">Secured in wallets</div>
+    </div>
+  </div>
+
+  <!-- Filter & Search Controls Bar -->
+  <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-100 border-2 border-slate-300 rounded-2xl p-3">
+    <form method="GET" action="{{ url_for('admin.climber') }}" class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+      <div class="relative flex-1 sm:w-72">
+        <input type="text" name="q" value="{{ search or '' }}" placeholder="Search player name, username, or email..."
+               class="w-full px-3.5 py-2 rounded-lg border-2 border-slate-300 text-xs text-slate-900 font-semibold focus:outline-none focus:border-cyan-600 bg-white">
+      </div>
+      <select name="stage" class="px-3 py-2 rounded-lg border-2 border-slate-300 text-xs text-slate-900 font-semibold bg-white" onchange="this.form.submit()">
+        <option value="">All Mountain Stages</option>
+        {% for stg in stages %}
+        <option value="{{ stg.stage }}" {% if stage_filter == stg.stage|string %}selected{% endif %}>
+          Stage {{ stg.stage }}: {{ stg.name }} (Days {{ stg.days }})
+        </option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shrink-0 transition">
+        Filter
+      </button>
+      {% if search or stage_filter %}
+      <a href="{{ url_for('admin.climber') }}" class="px-3 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs transition">
+        Clear
+      </a>
+      {% endif %}
+    </form>
+
+    <div class="text-xs font-mono font-bold text-slate-600">
+      Showing {{ climbers|length }} Climber Record{% if climbers|length != 1 %}s{% endif %}
+    </div>
+  </div>
+
+  <!-- Bulk Actions Bar -->
+  <form id="bulkDeleteForm" action="{{ url_for('admin.climber_bulk_delete') }}" method="POST"
+        class="flex flex-wrap items-center justify-between gap-3 bg-slate-100 border-2 border-slate-300 rounded-2xl px-4 py-3"
+        onsubmit="return confirmBulkDelete();">
+    <div class="flex items-center gap-3 text-xs font-bold text-slate-800">
+      <span>☑️ Tick boxes to delete climber progress for specific players.</span>
+      <span id="bulkSelectedCount" class="px-2.5 py-1 rounded-full bg-slate-900 text-white font-mono font-black text-[11px]">0 selected</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" onclick="setAllChecks(true)" class="px-3 py-1.5 rounded-lg bg-white border-2 border-slate-300 hover:bg-slate-50 text-slate-900 font-bold text-[11px] transition">
+        Select All
+      </button>
+      <button type="button" onclick="setAllChecks(false)" class="px-3 py-1.5 rounded-lg bg-white border-2 border-slate-300 hover:bg-slate-50 text-slate-900 font-bold text-[11px] transition">
+        Clear Selection
+      </button>
+      <button type="submit" id="bulkDeleteBtn" disabled
+              class="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-white font-black text-[11px] uppercase shadow transition">
+        🗑️ Delete Selected
+      </button>
+    </div>
+  </form>
+
+  <!-- Climber Progress Table -->
+  <div class="bg-white rounded-2xl border-2 border-slate-300 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-slate-200 border-b-2 border-slate-300 text-slate-900 font-black uppercase tracking-wider">
+          <tr>
+            <th class="py-2.5 px-3 w-10 text-center">
+              <input type="checkbox" id="masterCheckbox" onchange="setAllChecks(this.checked)"
+                     title="Select / deselect all rows"
+                     class="w-4 h-4 accent-rose-600 cursor-pointer align-middle">
+            </th>
+            <th class="py-2.5 px-3">Player / Climber</th>
+            <th class="py-2.5 px-3">Stage &amp; Altitude</th>
+            <th class="py-2.5 px-3 text-center">Current Day</th>
+            <th class="py-2.5 px-3 text-center">Today's Checkpoint</th>
+            <th class="py-2.5 px-3 text-center">Unbanked Loot</th>
+            <th class="py-2.5 px-3 text-center">Banked Coins</th>
+            <th class="py-2.5 px-3 text-right">Expedition Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200">
+          {% for row in climbers %}
+          {% set cp = row.progress %}
+          {% set player = row.player %}
+          {% set user = row.user %}
+          {% set meta = row.meta %}
+          <tr class="hover:bg-slate-50 transition">
+            <!-- Row Checkbox for Bulk Deletion -->
+            <td class="py-2.5 px-3 text-center">
+              <input type="checkbox" form="bulkDeleteForm" name="player_ids" value="{{ player.id if player else 0 }}"
+                     class="row-check w-4 h-4 accent-rose-600 cursor-pointer align-middle"
+                     onchange="refreshSelection()">
+            </td>
+
+            <!-- Player Profile & User Identity -->
+            <td class="py-2.5 px-3">
+              <div class="flex items-center gap-3">
+                <span class="w-9 h-9 rounded-xl bg-purple-100 border border-purple-300 flex items-center justify-center text-base font-bold shrink-0">
+                  {% if player and player.avatar_key == 'quizzy' %}⭐{% elif player and player.avatar_key == 'pixel' %}🤖{% elif player and player.avatar_key == 'nova' %}🚀{% else %}🦉{% endif %}
+                </span>
+                <div>
+                  <div class="font-black text-slate-900 text-sm">
+                    {{ player.display_name if player else 'Unknown' }}
+                  </div>
+                  <div class="text-[11px] text-slate-600 font-mono">
+                    {% if user %}
+                      <span class="text-blue-700 font-bold">@{{ user.username }}</span> &bull; {{ user.email }}
+                    {% elif player %}
+                      <span class="text-slate-500">Guest Session ({{ player.session_key[:10] }}...)</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Stage & Altitude -->
+            <td class="py-2.5 px-3 font-mono">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded font-black text-[10px] uppercase
+                  {% if meta.stage_number == 6 %}bg-amber-100 text-amber-900 border border-amber-300
+                  {% elif meta.stage_number == 5 %}bg-purple-100 text-purple-900 border border-purple-300
+                  {% elif meta.stage_number >= 3 %}bg-blue-100 text-blue-900 border border-blue-300
+                  {% else %}bg-slate-100 text-slate-800 border border-slate-300{% endif %}">
+                  Stage {{ meta.stage_number }}: {{ meta.stage_name }}
+                </span>
+                {% if meta.is_camp_day %}
+                <span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 font-black text-[10px] border border-emerald-300">
+                  ⛺ Safe Haven
+                </span>
+                {% endif %}
+              </div>
+              <div class="text-slate-600 text-[11px] mt-0.5 font-bold">
+                🏔️ {{ "{:,}".format(cp.altitude_m) }}m / 8,848m
+                <span class="text-slate-500 font-normal">({{ ((cp.altitude_m / 8848.0) * 100)|round(1) }}%)</span>
+              </div>
+            </td>
+
+            <!-- Current Day (1 to 30) -->
+            <td class="py-2.5 px-3 text-center font-mono">
+              <span class="inline-block px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-300 text-slate-900 font-black text-xs">
+                Day {{ cp.current_day }}/30
+              </span>
+            </td>
+
+            <!-- Today's Checkpoint -->
+            <td class="py-2.5 px-3 text-center font-mono">
+              {% if cp.status == 'summit' %}
+                <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 font-black text-[10px] uppercase border border-amber-300">
+                  👑 Summit Reached
+                </span>
+              {% elif cp.is_day_completed %}
+                <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-900 font-black text-[10px] uppercase border border-emerald-300">
+                  ✓ Done Today
+                </span>
+              {% else %}
+                <span class="px-2 py-0.5 rounded bg-cyan-50 text-cyan-900 font-black text-[11px] border border-cyan-200">
+                  Q{{ cp.day_question_index }}/{{ cp.day_questions_total }}
+                </span>
+              {% endif %}
+            </td>
+
+            <!-- Unbanked Loot -->
+            <td class="py-2.5 px-3 text-center font-mono">
+              {% if cp.unbanked_coins > 0 %}
+                <span class="px-2 py-0.5 rounded bg-rose-100 text-rose-900 font-black text-[11px] border border-rose-300" title="At risk if a question is failed">
+                  ⚠️ {{ cp.unbanked_coins }} 🪙
+                </span>
+              {% else %}
+                <span class="text-slate-500 font-semibold">0 🪙</span>
+              {% endif %}
+            </td>
+
+            <!-- Banked Coins -->
+            <td class="py-2.5 px-3 text-center font-mono text-purple-900 font-black">
+              🪙 {{ "{:,}".format(cp.banked_coins) }}
+            </td>
+
+            <!-- Action Controls (Day Reset Dropdown + Reset Button) -->
+            <td class="py-2.5 px-3 text-right whitespace-nowrap">
+              <form action="{{ url_for('admin.climber_progress_reset', id=cp.id) }}" method="POST"
+                    class="inline-flex items-center gap-1.5"
+                    onsubmit="return confirm('Reset expedition for {{ player.display_name if player else 'this player' }} to selected day?');">
+                <select name="target_day" class="px-2 py-1 rounded-lg border-2 border-slate-300 bg-white text-slate-900 font-mono text-xs font-bold cursor-pointer">
+                  <option value="1">Day 1 (Restart)</option>
+                  <option value="5" {% if cp.current_day > 5 %}selected{% endif %}>Day 5 (Camp 1)</option>
+                  <option value="10" {% if cp.current_day > 10 %}selected{% endif %}>Day 10 (Camp 2)</option>
+                  <option value="16" {% if cp.current_day > 16 %}selected{% endif %}>Day 16 (Camp 3)</option>
+                  <option value="22" {% if cp.current_day > 22 %}selected{% endif %}>Day 22 (Camp 4)</option>
+                  <option value="27" {% if cp.current_day > 27 %}selected{% endif %}>Day 27 (Camp 5)</option>
+                  <option value="30">Day 30 (Summit Push)</option>
+                </select>
+                <button type="submit" class="px-3 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs uppercase shadow transition">
+                  Reset
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8" class="py-8 text-center text-slate-600 font-semibold">
+              No climbers found matching the current search or stage filter.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function allChecks() {
+  return Array.prototype.slice.call(document.querySelectorAll('.row-check'));
+}
+
+function setAllChecks(state) {
+  allChecks().forEach(function (c) { c.checked = state; });
+  refreshSelection();
+}
+
+function refreshSelection() {
+  var all = allChecks();
+  var picked = all.filter(function (c) { return c.checked; }).length;
+  var countEl = document.getElementById('bulkSelectedCount');
+  if (countEl) countEl.textContent = picked + ' selected';
+  var btn = document.getElementById('bulkDeleteBtn');
+  if (btn) btn.disabled = picked === 0;
+  var master = document.getElementById('masterCheckbox');
+  if (master) {
+    master.checked = picked > 0 && picked === all.length;
+    master.indeterminate = picked > 0 && picked < all.length;
+  }
+}
+
+function confirmBulkDelete() {
+  var picked = allChecks().filter(function (c) { return c.checked; }).length;
+  if (!picked) { return false; }
+  return confirm('Are you sure you want to permanently delete climb expedition progress for ' + picked + ' selected player(s)? Their climb will restart completely fresh from Day 1.');
+}
+
+document.addEventListener('DOMContentLoaded', refreshSelection);
+</script>
+{% endblock %}

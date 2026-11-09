@@ -1882,10 +1882,8 @@ def _verify_admin_password(password_attempt: str) -> bool:
 @admin_bp.route('/duels')
 @login_required
 def duels():
-    from ..models_challenge import GameChallenge
-    
     filter_type = request.args.get('filter', 'all').lower().strip()
-    if filter_type not in ('all', 'registered', 'unregistered', 'minigames'):
+    if filter_type not in ('all', 'registered', 'unregistered'):
         filter_type = 'all'
 
     all_matches = ArenaMatch.query.order_by(ArenaMatch.created_at.desc()).all()
@@ -1902,11 +1900,6 @@ def duels():
     registered_matches = [m for m in all_matches if m.is_registered]
     unregistered_matches = [m for m in all_matches if not m.is_registered]
 
-    try:
-        challenge_rows = GameChallenge.query.order_by(GameChallenge.created_at.desc()).all()
-    except Exception:
-        challenge_rows = []
-
     if filter_type == 'registered':
         matches = registered_matches
     elif filter_type == 'unregistered':
@@ -1920,7 +1913,6 @@ def duels():
         all_matches_count=len(all_matches),
         registered_count=len(registered_matches),
         unregistered_count=len(unregistered_matches),
-        challenges=challenge_rows,
         filter_type=filter_type
     )
 
@@ -2345,40 +2337,45 @@ def players_delete_unlogged():
     return redirect(request.referrer or url_for('admin.players'))
 
 
+@admin_bp.route('/climber/delete-unlogged', methods=['POST'])
 @admin_bp.route('/challenges/delete-unlogged', methods=['POST'])
 @login_required
-def challenges_delete_unlogged():
+def climber_delete_unlogged():
     """Purge all unlogged-in guest climbers strictly from ClimberProgress so their expedition restarts fresh."""
     guest_player_ids = [row[0] for row in db.session.query(PlayerProfile.id).filter(PlayerProfile.user_id.is_(None)).all()]
     if not guest_player_ids:
         flash('No unlogged-in guest climbers found to delete.', 'info')
-        return redirect(url_for('admin.challenges'))
+        return redirect(request.referrer or url_for('admin.climber'))
 
-    # STRICTLY delete only ClimberProgress and facts seen for these guest climbers
     removed = ClimberProgress.query.filter(ClimberProgress.player_profile_id.in_(guest_player_ids)).delete(synchronize_session=False)
     UserClimberFactSeen.query.filter(UserClimberFactSeen.player_profile_id.in_(guest_player_ids)).delete(synchronize_session=False)
     db.session.commit()
 
     flash(f'Successfully cleared climb expedition progress for {removed} guest climber(s). Their climb restarts fresh from Day 1.', 'success')
-    return redirect(url_for('admin.challenges'))
+    return redirect(request.referrer or url_for('admin.climber'))
+
+# Alias for backwards compatibility
+challenges_delete_unlogged = climber_delete_unlogged
 
 
+@admin_bp.route('/climber/bulk-delete', methods=['POST'])
 @admin_bp.route('/challenges/bulk-delete', methods=['POST'])
 @login_required
-def challenges_bulk_delete():
-    """Delete climb progress for selected climbers ticked in the Challenges table, restarting their climb from Day 1."""
+def climber_bulk_delete():
+    """Delete climb progress for selected climbers ticked in the Climber table, restarting their climb from Day 1."""
     ids = [int(v) for v in request.form.getlist('player_ids') if str(v).isdigit()]
     if not ids:
         flash('No climbers were selected.', 'error')
-        return redirect(url_for('admin.challenges'))
+        return redirect(request.referrer or url_for('admin.climber'))
 
-    # STRICTLY delete only ClimberProgress and facts seen for selected climbers
     removed = ClimberProgress.query.filter(ClimberProgress.player_profile_id.in_(ids)).delete(synchronize_session=False)
     UserClimberFactSeen.query.filter(UserClimberFactSeen.player_profile_id.in_(ids)).delete(synchronize_session=False)
     db.session.commit()
 
     flash(f'Successfully reset climb expedition progress for {removed} selected climber(s). They will start fresh on Day 1.', 'success')
-    return redirect(url_for('admin.challenges'))
+    return redirect(request.referrer or url_for('admin.climber'))
+
+challenges_bulk_delete = climber_bulk_delete
 
 
 @admin_bp.route('/players/<int:id>/role', methods=['POST'])
@@ -2765,12 +2762,117 @@ def ad_report(ad_id):
 # CHALLENGES & THE QUIZ CLIMBER EXPEDITION MANAGEMENT
 # ==============================================================================
 
+# ==============================================================================
+# 🎮 MINI-GAME CHALLENGES (5-Mini-Game Friend Duels)
+# ==============================================================================
 @admin_bp.route('/challenges')
 @login_required
 def challenges():
-    """Manage The Quiz Climber 30-day expedition progress & mini-game challenges."""
-    from .arena import _calc_day_meta, EXPEDITION_STAGES
+    """Dedicated admin page for turn-based 5-mini-game challenges between players."""
     from ..models_challenge import GameChallenge
+
+    status_filter = request.args.get('status', 'all').lower().strip()
+
+    try:
+        all_challenges = GameChallenge.query.order_by(GameChallenge.created_at.desc()).all()
+    except Exception:
+        all_challenges = []
+
+    total_count = len(all_challenges)
+    completed_count = sum(1 for ch in all_challenges if ch.status == 'complete')
+    expired_count = sum(1 for ch in all_challenges if ch.expired and ch.status != 'complete')
+    in_progress_count = sum(1 for ch in all_challenges if ch.status in ('waiting', 'active') and not ch.expired)
+
+    if status_filter == 'active':
+        filtered = [ch for ch in all_challenges if ch.status in ('waiting', 'active') and not ch.expired]
+    elif status_filter == 'completed':
+        filtered = [ch for ch in all_challenges if ch.status == 'complete']
+    elif status_filter == 'expired':
+        filtered = [ch for ch in all_challenges if ch.expired and ch.status != 'complete']
+    else:
+        status_filter = 'all'
+        filtered = all_challenges
+
+    return render_template(
+        'admin/challenges.html',
+        challenges=filtered,
+        total_count=total_count,
+        in_progress_count=in_progress_count,
+        completed_count=completed_count,
+        expired_count=expired_count,
+        status_filter=status_filter
+    )
+
+
+@admin_bp.route('/challenges/<int:id>/delete', methods=['POST'])
+@login_required
+def challenge_delete(id):
+    """Delete a 5-mini-game challenge record and its associated scores."""
+    from ..models_challenge import GameChallenge, GameChallengeScore
+    ch = GameChallenge.query.get_or_404(id)
+    code = ch.code
+    try:
+        GameChallengeScore.query.filter_by(challenge_id=ch.id).delete()
+    except Exception:
+        pass
+    db.session.delete(ch)
+    db.session.commit()
+    flash(f'Mini-game challenge #{code} deleted.', 'success')
+    return redirect(request.referrer or url_for('admin.challenges'))
+
+
+@admin_bp.route('/challenges/bulk-delete', methods=['POST'])
+@login_required
+def challenge_bulk_delete():
+    """Delete selected 5-mini-game challenges ticked in the table."""
+    from ..models_challenge import GameChallenge, GameChallengeScore
+    ids = [int(v) for v in request.form.getlist('challenge_ids') if str(v).isdigit()]
+    if not ids:
+        flash('No challenges were selected.', 'error')
+        return redirect(request.referrer or url_for('admin.challenges'))
+
+    try:
+        GameChallengeScore.query.filter(GameChallengeScore.challenge_id.in_(ids)).delete(synchronize_session=False)
+    except Exception:
+        pass
+    removed = GameChallenge.query.filter(GameChallenge.id.in_(ids)).delete(synchronize_session=False)
+    db.session.commit()
+    flash(f'Deleted {removed} selected mini-game challenge(s).', 'success')
+    return redirect(request.referrer or url_for('admin.challenges'))
+
+
+@admin_bp.route('/challenges/clear-expired', methods=['POST'])
+@login_required
+def challenges_clear_expired():
+    """Clear all expired mini-game challenges."""
+    from ..models_challenge import GameChallenge, GameChallengeScore
+    from datetime import datetime
+    now = datetime.utcnow()
+    expired = GameChallenge.query.filter(GameChallenge.expires_at <= now, GameChallenge.status != 'complete').all()
+    if not expired:
+        flash('No expired mini-game challenges found.', 'info')
+        return redirect(url_for('admin.challenges'))
+
+    ids = [ch.id for ch in expired]
+    try:
+        GameChallengeScore.query.filter(GameChallengeScore.challenge_id.in_(ids)).delete(synchronize_session=False)
+    except Exception:
+        pass
+    removed = GameChallenge.query.filter(GameChallenge.id.in_(ids)).delete(synchronize_session=False)
+    db.session.commit()
+    flash(f'Cleared {removed} expired mini-game challenge(s).', 'success')
+    return redirect(url_for('admin.challenges'))
+
+
+# ==============================================================================
+# 🧗 THE QUIZ CLIMBER EXPEDITION OPS (30-Day Mountain Climb)
+# ==============================================================================
+@admin_bp.route('/climber')
+@admin_bp.route('/climber-expedition')
+@login_required
+def climber():
+    """Dedicated admin page for The Quiz Climber 30-day expedition progress."""
+    from .arena import _calc_day_meta, EXPEDITION_STAGES
 
     search = (request.args.get('q') or '').strip()
     stage_filter = request.args.get('stage')
@@ -2806,23 +2908,17 @@ def challenges():
     completed_days_count = ClimberProgress.query.filter_by(is_day_completed=True).count()
     total_banked_coins = db.session.query(db.func.sum(ClimberProgress.banked_coins)).scalar() or 0
 
-    try:
-        challenge_rows = GameChallenge.query.order_by(GameChallenge.created_at.desc()).limit(20).all()
-    except Exception:
-        challenge_rows = []
-
     active_season = ClimberSeason.query.filter_by(is_active=True).first()
-
     unlogged_count = PlayerProfile.query.filter(PlayerProfile.user_id.is_(None)).count()
+
     return render_template(
-        'admin/challenges.html',
+        'admin/climber.html',
         climbers=enriched_climbers,
         total_climbers=total_climbers,
         summits_count=summits_count,
         completed_days_count=completed_days_count,
         total_banked_coins=total_banked_coins,
         stages=EXPEDITION_STAGES,
-        challenges=challenge_rows,
         season=active_season,
         search=search,
         stage_filter=stage_filter,
@@ -2830,6 +2926,7 @@ def challenges():
     )
 
 
+@admin_bp.route('/climber/reset/<int:id>', methods=['POST'])
 @admin_bp.route('/challenges/reset/<int:id>', methods=['POST'])
 @login_required
 def climber_progress_reset(id):
@@ -2838,12 +2935,13 @@ def climber_progress_reset(id):
     progress = db.session.get(ClimberProgress, id)
     if not progress:
         flash('Climber progress record not found.', 'error')
-        return redirect(url_for('admin.challenges'))
+        return redirect(request.referrer or url_for('admin.climber'))
 
     target_day = int(request.form.get('target_day') or 1)
     target_day = max(1, min(30, target_day))
 
-    player_name = progress.player.display_name if progress.player else f"Player #{progress.player_profile_id}"
+    player_name = progress.player.display_name if progress.player else f"Climber #{id}"
+    meta = _calc_day_meta(target_day)
 
     progress.current_day = target_day
     progress.current_step = target_day
@@ -2860,16 +2958,16 @@ def climber_progress_reset(id):
         progress.current_stage = 1
         progress.secured_camp_stage = 1
     else:
-        meta = _calc_day_meta(target_day)
-        progress.altitude_m = meta['altitude']
+        progress.altitude_m = meta['altitude_m']
         progress.current_stage = meta['stage_number']
         progress.secured_camp_stage = meta['stage_number']
 
     db.session.commit()
-    flash(f"Climb progress for {player_name} has been reset to Day {target_day} (Question 1 of 2, 0 coins at risk).", 'success')
-    return redirect(request.referrer or url_for('admin.challenges'))
+    flash(f"Climb progress for {player_name} has been reset to Day {target_day} (Question 1 of 5, 0 coins at risk).", 'success')
+    return redirect(request.referrer or url_for('admin.climber'))
 
 
+@admin_bp.route('/climber/reset-all', methods=['POST'])
 @admin_bp.route('/challenges/reset-all', methods=['POST'])
 @login_required
 def climber_progress_reset_all():
@@ -2877,7 +2975,7 @@ def climber_progress_reset_all():
     confirm_text = (request.form.get('confirm_text') or '').strip().upper()
     if confirm_text != 'RESET ALL':
         flash('Please type "RESET ALL" to confirm resetting all climber progress.', 'error')
-        return redirect(url_for('admin.challenges'))
+        return redirect(request.referrer or url_for('admin.climber'))
 
     count = ClimberProgress.query.count()
     ClimberProgress.query.update({
@@ -2895,7 +2993,7 @@ def climber_progress_reset_all():
     })
     db.session.commit()
     flash(f"Successfully reset climb progress to Day 1 for all {count} player records.", 'success')
-    return redirect(url_for('admin.challenges'))
+    return redirect(request.referrer or url_for('admin.climber'))
 
 
 @admin_bp.route('/players/<int:id>/reset-climber', methods=['POST'])
@@ -2911,10 +3009,11 @@ def player_reset_climber(id):
         ClimberProgress.current_day: 1,
         ClimberProgress.current_step: 1,
         ClimberProgress.day_question_index: 1,
-        ClimberProgress.day_questions_total: 2,
+        ClimberProgress.day_questions_total: 5,
         ClimberProgress.is_day_completed: False,
         ClimberProgress.secured_camp_stage: 1,
         ClimberProgress.altitude_m: 1000,
+        ClimberProgress.highest_altitude: 1000,
         ClimberProgress.unbanked_coins: 0,
         ClimberProgress.status: 'climbing',
         ClimberProgress.last_climbed_date: None

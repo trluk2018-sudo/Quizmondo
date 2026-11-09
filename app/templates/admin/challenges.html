@@ -1,314 +1,200 @@
 {% extends "admin/base.html" %}
 
-{% block title %}Challenges &amp; The Quiz Climber Expedition Ops • Quizmondo Control Centre{% endblock %}
+{% block title %}Mini-Game Challenges (Friend Duels) • Quizmondo Control Centre{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl space-y-6 text-slate-900">
+<div class="w-full space-y-6 text-slate-900">
 
-  <!-- Page Header & Global Reset Actions -->
+  <!-- Page Header -->
   <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-300 pb-4">
     <div>
       <div class="flex items-center gap-2">
-        <h1 class="text-2xl font-black text-slate-900">🧗 Challenges &amp; The Quiz Climber</h1>
-        <span class="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-900 font-mono font-black text-[11px] border border-purple-300">
-          SEASON: {{ season.month_key if season else 'ACTIVE' }}
+        <h1 class="text-2xl font-black text-slate-900">🎮 5x Mini-Game Challenges (Friend Duels)</h1>
+        <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-mono font-black text-[11px] border border-emerald-300">
+          {{ challenges|length }} TOTAL
         </span>
       </div>
       <p class="text-xs text-slate-600 font-medium mt-1">
-        Monitor 30-day vertical expedition progress, inspect unbanked loot &amp; safe havens, and reset player climb progression.
+        Monitor turn-based 5-mini-game challenges between friends (Hangman, Sequence, Pic-Swap, Digit Span, etc.), standings, and expiry.
       </p>
     </div>
 
-    <div class="flex flex-wrap items-center gap-3">
-      <!-- Clear Guest Climber Progress Challengers -->
-      <form action="{{ url_for('admin.challenges_delete_unlogged') }}" method="POST"
-            class="flex items-center gap-2 bg-amber-50 border-2 border-amber-300 p-2.5 rounded-xl shadow-sm"
-            onsubmit="return confirm('WARNING: Are you sure you want to permanently delete ALL {{ unlogged_count or 0 }} unlogged-in guest climbers? This will wipe their climber progress so they restart completely fresh from Day 1.');">
-        <span class="text-xs font-black text-amber-900 whitespace-nowrap px-1">👤 Guest Challengers:</span>
-        <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black text-xs uppercase whitespace-nowrap shadow transition"
-                {% if not unlogged_count or unlogged_count <= 0 %}disabled{% endif %}>
-          🗑️ Clear Guest Climber Progress ({{ unlogged_count or 0 }})
-        </button>
-      </form>
-
-      <!-- Reset ALL Climbers (Protected Action) -->
-      <form action="{{ url_for('admin.climber_progress_reset_all') }}" method="POST"
-            class="flex flex-wrap sm:flex-nowrap items-center gap-2 bg-rose-50 border-2 border-rose-300 p-2.5 rounded-xl shadow-sm"
-            onsubmit="return confirm('WARNING: Are you sure you want to reset ALL users back to Day 1? This will reset all current climb checkpoints across the entire site.');">
-        <span class="text-xs font-black text-rose-900 whitespace-nowrap px-1">⚠️ Reset All Users:</span>
-        <input type="text" name="confirm_text" required placeholder="Type 'RESET ALL'"
-               class="px-3 py-1.5 rounded-lg border-2 border-rose-400 text-xs text-slate-900 font-bold bg-white w-28 uppercase placeholder:normal-case placeholder:font-normal">
-        <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase whitespace-nowrap shadow transition">
-          Reset All Climbers
-        </button>
-      </form>
-    </div>
+    <!-- Clear Expired Challenges (Password Protected) -->
+    <form action="{{ url_for('admin.challenges_clear_expired') }}" method="POST"
+          class="flex flex-wrap sm:flex-nowrap items-center gap-2 bg-amber-50 border-2 border-amber-300 p-2.5 rounded-xl shadow-sm"
+          onsubmit="return confirm('Clear all expired mini-game challenges? Active and completed challenges will be kept.');">
+      <span class="text-xs font-black text-amber-900 whitespace-nowrap px-1">🧹 Expired Challenges:</span>
+      <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-black text-xs uppercase whitespace-nowrap shadow transition">
+        Clear Expired
+      </button>
+    </form>
   </div>
 
-  <!-- Summary Metric Stat Cards -->
+  <!-- Metric Stat Cards -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
     <div class="p-4 rounded-2xl bg-white border-2 border-slate-200 shadow-sm">
-      <div class="text-[11px] font-bold text-slate-500 uppercase font-mono">Active Climbers</div>
-      <div class="text-2xl font-black text-cyan-600 font-mono mt-1">{{ total_climbers }}</div>
-      <div class="text-[11px] text-slate-500 mt-1">Players on Everest wall</div>
+      <div class="text-[11px] font-bold text-slate-500 uppercase font-mono">Total Challenges</div>
+      <div class="text-2xl font-black text-indigo-600 font-mono mt-1">{{ total_count }}</div>
+      <div class="text-[11px] text-slate-500 mt-1">All-time friend challenges</div>
     </div>
     <div class="p-4 rounded-2xl bg-white border-2 border-slate-200 shadow-sm">
-      <div class="text-[11px] font-bold text-slate-500 uppercase font-mono">8,848M Summits</div>
-      <div class="text-2xl font-black text-amber-500 font-mono mt-1">👑 {{ summits_count }}</div>
-      <div class="text-[11px] text-slate-500 mt-1">Completed all 30 days</div>
+      <div class="text-[11px] font-bold text-slate-500 uppercase font-mono">In Progress</div>
+      <div class="text-2xl font-black text-blue-600 font-mono mt-1">⚡ {{ in_progress_count }}</div>
+      <div class="text-[11px] text-slate-500 mt-1">Active match rounds</div>
     </div>
     <div class="p-4 rounded-2xl bg-white border-2 border-slate-200 shadow-sm">
-      <div class="text-[11px] font-bold text-slate-500 uppercase font-mono">Completed Today</div>
-      <div class="text-2xl font-black text-emerald-600 font-mono mt-1">✓ {{ completed_days_count }}</div>
-      <div class="text-[11px] text-slate-500 mt-1">Conquered today's checkpoints</div>
+      <div class="text-[11px] font-bold text-slate-500 uppercase font-mono">Completed</div>
+      <div class="text-2xl font-black text-emerald-600 font-mono mt-1">🏆 {{ completed_count }}</div>
+      <div class="text-[11px] text-slate-500 mt-1">All 5 mini-games resolved</div>
     </div>
     <div class="p-4 rounded-2xl bg-white border-2 border-slate-200 shadow-sm">
-      <div class="text-[11px] font-bold text-slate-500 uppercase font-mono">Coins Banked</div>
-      <div class="text-2xl font-black text-purple-600 font-mono mt-1">🪙 {{ "{:,}".format(total_banked_coins) }}</div>
-      <div class="text-[11px] text-slate-500 mt-1">Secured in wallets</div>
+      <div class="text-[11px] font-bold text-slate-500 uppercase font-mono">Expired</div>
+      <div class="text-2xl font-black text-slate-600 font-mono mt-1">⏳ {{ expired_count }}</div>
+      <div class="text-[11px] text-slate-500 mt-1">Passed 7-day window</div>
     </div>
   </div>
 
-  <!-- Filter & Search Controls Bar -->
-  <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-100 border-2 border-slate-300 rounded-2xl p-3">
-    <form method="GET" action="{{ url_for('admin.challenges') }}" class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-      <div class="relative flex-1 sm:w-72">
-        <input type="text" name="q" value="{{ search or '' }}" placeholder="Search player name, username, or email..."
-               class="w-full px-3.5 py-2 rounded-lg border-2 border-slate-300 text-xs text-slate-900 font-semibold focus:outline-none focus:border-cyan-600 bg-white">
-      </div>
-      <select name="stage" class="px-3 py-2 rounded-lg border-2 border-slate-300 text-xs text-slate-900 font-semibold bg-white" onchange="this.form.submit()">
-        <option value="">All Mountain Stages</option>
-        {% for stg in stages %}
-        <option value="{{ stg.stage }}" {% if stage_filter == stg.stage|string %}selected{% endif %}>
-          Stage {{ stg.stage }}: {{ stg.name }} (Days {{ stg.days }})
-        </option>
-        {% endfor %}
-      </select>
-      <button type="submit" class="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shrink-0 transition">
-        Filter
-      </button>
-      {% if search or stage_filter %}
-      <a href="{{ url_for('admin.challenges') }}" class="px-3 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs transition">
-        Clear
-      </a>
-      {% endif %}
-    </form>
-
-    <div class="text-xs font-mono font-bold text-slate-600">
-      Showing {{ climbers|length }} Climber Record{% if climbers|length != 1 %}s{% endif %}
-    </div>
+  <!-- Filter Navigation Pills -->
+  <div class="flex flex-wrap items-center gap-2 text-xs font-mono">
+    <a href="{{ url_for('admin.challenges', status='all') }}"
+       class="px-3.5 py-1.5 rounded-lg font-bold transition {% if status_filter == 'all' %}bg-slate-900 text-white shadow{% else %}bg-white border border-slate-300 text-slate-800 hover:bg-slate-100{% endif %}">
+      🎮 All Challenges ({{ total_count }})
+    </a>
+    <a href="{{ url_for('admin.challenges', status='active') }}"
+       class="px-3.5 py-1.5 rounded-lg font-bold transition {% if status_filter == 'active' %}bg-blue-600 text-white shadow{% else %}bg-white border border-slate-300 text-blue-900 hover:bg-blue-50{% endif %}">
+      ⚡ In Progress ({{ in_progress_count }})
+    </a>
+    <a href="{{ url_for('admin.challenges', status='completed') }}"
+       class="px-3.5 py-1.5 rounded-lg font-bold transition {% if status_filter == 'completed' %}bg-emerald-600 text-white shadow{% else %}bg-white border border-slate-300 text-emerald-900 hover:bg-emerald-50{% endif %}">
+      🏆 Completed ({{ completed_count }})
+    </a>
+    <a href="{{ url_for('admin.challenges', status='expired') }}"
+       class="px-3.5 py-1.5 rounded-lg font-bold transition {% if status_filter == 'expired' %}bg-slate-700 text-white shadow{% else %}bg-white border border-slate-300 text-slate-700 hover:bg-slate-100{% endif %}">
+      ⏳ Expired ({{ expired_count }})
+    </a>
   </div>
 
-  <!-- Bulk Selection Action Bar for Climbers -->
-  <form id="bulkChallengesForm" action="{{ url_for('admin.challenges_bulk_delete') }}" method="POST"
+  <!-- Bulk Selection Action Bar -->
+  <form id="bulkChallengesForm" action="{{ url_for('admin.challenge_bulk_delete') }}" method="POST"
         class="flex flex-wrap items-center justify-between gap-3 bg-slate-100 border-2 border-slate-300 rounded-2xl px-4 py-3"
-        onsubmit="return confirmBulkClimberDelete();">
+        onsubmit="return confirmBulkChallengeDelete();">
     <div class="flex items-center gap-3 text-xs font-bold text-slate-800">
-      <span>☑️ Tick climbers in the table to delete and restart their progress.</span>
-      <span id="bulkClimbersCount" class="px-2.5 py-1 rounded-full bg-slate-900 text-white font-mono font-black text-[11px]">0 selected</span>
+      <span>☑️ Tick challenges to delete several at once.</span>
+      <span id="bulkChallengesCount" class="px-2.5 py-1 rounded-full bg-slate-900 text-white font-mono font-black text-[11px]">0 selected</span>
     </div>
     <div class="flex items-center gap-2">
-      <button type="button" onclick="setAllClimberChecks(true)" class="px-3 py-1.5 rounded-lg bg-white border-2 border-slate-300 hover:bg-slate-50 text-slate-900 font-bold text-[11px]">
+      <button type="button" onclick="setAllChallengeChecks(true)" class="px-3 py-1.5 rounded-lg bg-white border-2 border-slate-300 hover:bg-slate-50 text-slate-900 font-bold text-[11px] transition">
         Select All
       </button>
-      <button type="button" onclick="selectOnlyGuests()" class="px-3 py-1.5 rounded-lg bg-white border-2 border-slate-300 hover:bg-slate-50 text-amber-900 font-bold text-[11px]">
-        Select Only Guests
-      </button>
-      <button type="button" onclick="setAllClimberChecks(false)" class="px-3 py-1.5 rounded-lg bg-white border-2 border-slate-300 hover:bg-slate-50 text-slate-900 font-bold text-[11px]">
+      <button type="button" onclick="setAllChallengeChecks(false)" class="px-3 py-1.5 rounded-lg bg-white border-2 border-slate-300 hover:bg-slate-50 text-slate-900 font-bold text-[11px] transition">
         Clear Selection
       </button>
-      <button type="submit" id="bulkClimbersDeleteBtn" disabled
-              class="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-white font-black text-[11px] uppercase shadow">
-        🗑️ Reset Selected Climbers
+      <button type="submit" id="bulkChallengesDeleteBtn" disabled
+              class="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-white font-black text-[11px] uppercase shadow transition">
+        🗑️ Delete Selected
       </button>
     </div>
   </form>
 
-  <!-- CLIMBER EXPEDITION PLAYERS TABLE -->
+  <!-- 5-Mini-Game Challenges Table -->
   <div class="bg-white rounded-2xl border-2 border-slate-300 overflow-hidden shadow-sm">
     <div class="overflow-x-auto">
       <table class="w-full text-left text-xs text-slate-700">
-        <thead class="bg-slate-900 text-white text-[11px] uppercase tracking-wider font-mono">
+        <thead class="bg-slate-200 border-b-2 border-slate-300 text-slate-900 font-black uppercase tracking-wider">
           <tr>
-            <th class="py-3.5 px-4 w-10">
-              <input type="checkbox" id="climbersMasterCheck" onchange="setAllClimberChecks(this.checked)"
-                     title="Select / deselect all climbers"
+            <th class="py-2.5 px-3 w-10 text-center">
+              <input type="checkbox" id="challengesMasterCheck" onchange="setAllChallengeChecks(this.checked)"
+                     title="Select / deselect all challenges"
                      class="w-4 h-4 accent-rose-600 cursor-pointer align-middle">
             </th>
-            <th class="py-3.5 px-4">Player</th>
-            <th class="py-3.5 px-4 text-center">Expedition Day</th>
-            <th class="py-3.5 px-4">Stage &amp; Elevation</th>
-            <th class="py-3.5 px-4">Safe Haven Camp</th>
-            <th class="py-3.5 px-4 text-center">Loot Status</th>
-            <th class="py-3.5 px-4 text-center">Status</th>
-            <th class="py-3.5 px-4 text-center">Last Climbed</th>
-            <th class="py-3.5 px-4 text-right">Reset / Set Progress</th>
+            <th class="py-2.5 px-3">Challenge Code</th>
+            <th class="py-2.5 px-3">Creator (Challenger)</th>
+            <th class="py-2.5 px-3 text-center">Mini-Games Score</th>
+            <th class="py-2.5 px-3">Opponent</th>
+            <th class="py-2.5 px-3 text-center">Status</th>
+            <th class="py-2.5 px-3">Created</th>
+            <th class="py-2.5 px-3">Expires / Time Left</th>
+            <th class="py-2.5 px-3 text-right">Actions</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-200">
-          {% for item in climbers %}
-          {% set cp = item.progress %}
-          {% set p = item.player %}
-          {% set u = item.user %}
-          {% set meta = item.meta %}
-          <tr class="hover:bg-cyan-50/40 transition">
-            <td class="py-3.5 px-4 w-10">
-              {% if not u or u.id != session.get('user_id') %}
-              <input type="checkbox" form="bulkChallengesForm" name="player_ids" value="{{ p.id }}"
-                     data-is-guest="{{ '1' if not u else '0' }}"
-                     class="climber-check w-4 h-4 accent-rose-600 cursor-pointer align-middle"
-                     onchange="refreshClimberSelection()">
-              {% else %}
-              <span class="text-slate-400 font-bold text-[11px]" title="Your own account cannot be deleted">—</span>
-              {% endif %}
+          {% for ch in challenges %}
+          {% set table = ch.standings() %}
+          <tr class="hover:bg-slate-50 transition">
+            <td class="py-2.5 px-3 text-center">
+              <input type="checkbox" form="bulkChallengesForm" name="challenge_ids" value="{{ ch.id }}"
+                     class="challenge-check w-4 h-4 accent-rose-600 cursor-pointer align-middle"
+                     onchange="refreshChallengeSelection()">
             </td>
-
-            <!-- Player Info -->
-            <td class="py-3.5 px-4 font-medium text-slate-900">
-              <div class="flex items-center gap-2.5">
-                <span class="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-sm uppercase shrink-0">
-                  {{ p.display_name[:2] if p else '??' }}
+            <td class="py-2.5 px-3 font-mono font-black text-indigo-700 text-sm">
+              <a href="{{ url_for('games_challenge.challenge_lobby', code=ch.code) }}" target="_blank" class="hover:underline flex items-center gap-1" title="Open Challenge Lobby">
+                <span>#{{ ch.code }}</span>
+                <span class="text-[10px] text-slate-400 font-normal">↗</span>
+              </a>
+            </td>
+            <td class="py-2.5 px-3 font-bold text-slate-900">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-purple-100 border border-purple-300 text-purple-900 text-[10px] font-black flex items-center justify-center font-mono">P1</span>
+                <span>{{ ch.creator_name or 'Challenger' }}</span>
+              </div>
+            </td>
+            <td class="py-2.5 px-3 text-center font-mono font-black text-sm whitespace-nowrap">
+              <span class="text-purple-800">{{ table.creator_wins }}</span>
+              <span class="text-slate-400 mx-1">&ndash;</span>
+              <span class="text-cyan-800">{{ table.opponent_wins }}</span>
+            </td>
+            <td class="py-2.5 px-3 font-bold text-slate-900">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-cyan-100 border border-cyan-300 text-cyan-900 text-[10px] font-black flex items-center justify-center font-mono">P2</span>
+                <span class="{% if not ch.opponent_name %}text-slate-500 italic font-normal{% endif %}">
+                  {{ ch.opponent_name or 'Awaiting Opponent...' }}
                 </span>
-                <div class="min-w-0">
-                  <div class="font-bold text-slate-900 truncate">
-                    {{ p.display_name if p else 'Player #' ~ cp.player_profile_id }}
-                    {% if u and u.role in ('admin', 'super_admin') %}
-                    <span class="ml-1 px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 text-[9px] font-black uppercase">Staff</span>
-                    {% endif %}
-                  </div>
-                  <div class="text-[10px] text-slate-500 font-mono truncate">
-                    {{ u.email if u else 'Guest/Local Session' }}
-                  </div>
-                </div>
               </div>
             </td>
-
-            <!-- Expedition Day & Question Index -->
-            <td class="py-3.5 px-4 text-center font-mono">
-              <div class="font-bold text-sm text-cyan-700">
-                DAY {{ cp.current_day }} <span class="text-xs text-slate-400">/ 30</span>
-              </div>
-              {% if cp.is_day_completed %}
-              <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300">
-                ✓ Day Complete
+            <td class="py-2.5 px-3 text-center font-mono whitespace-nowrap">
+              {% if ch.status == 'complete' %}
+              <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 text-[10px] font-black uppercase">
+                🏆 Complete
+              </span>
+              {% elif ch.expired %}
+              <span class="px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-800 text-[10px] font-black uppercase">
+                ⏳ Expired
               </span>
               {% else %}
-              <span class="px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-800 text-[10px] font-bold border border-cyan-300">
-                Q {{ cp.day_question_index }} of {{ cp.day_questions_total or 2 }}
+              <span class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900 text-[10px] font-black uppercase">
+                ⚡ In Progress
               </span>
               {% endif %}
             </td>
-
-            <!-- Stage & Altitude -->
-            <td class="py-3.5 px-4">
-              <div class="font-bold text-slate-900 flex items-center gap-1">
-                <span>{{ meta.icon }}</span>
-                <span>Stage {{ meta.stage_number }}: {{ meta.stage_name }}</span>
-              </div>
-              <div class="text-[11px] text-slate-500 font-mono mt-0.5">
-                Elev: <strong class="text-blue-700">{{ cp.altitude_m }}m</strong> (Peak: {{ cp.highest_altitude }}m)
-              </div>
+            <td class="py-2.5 px-3 font-mono text-slate-600 whitespace-nowrap">
+              {{ ch.created_at.strftime('%Y-%m-%d %H:%M') if ch.created_at else '-' }}
             </td>
-
-            <!-- Safe Haven Camp -->
-            <td class="py-3.5 px-4 font-mono text-[11px]">
-              <div class="text-emerald-700 font-bold truncate">
-                ⛺ {{ meta.safe_haven }}
-              </div>
-              <div class="text-[10px] text-slate-500">
-                Secured: Stage {{ cp.secured_camp_stage }}
-              </div>
-            </td>
-
-            <!-- Loot & Shields -->
-            <td class="py-3.5 px-4 text-center font-mono">
-              <div class="text-xs">
-                {% if cp.unbanked_coins > 0 %}
-                <span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold border border-amber-300 text-[10px]" title="At risk if slipping">
-                  +{{ cp.unbanked_coins }} 🪙 At Risk
-                </span>
-                {% else %}
-                <span class="text-slate-400 text-[10px]">0 At Risk</span>
-                {% endif %}
-              </div>
-              <div class="text-[10px] text-purple-700 font-semibold mt-0.5">
-                Banked: {{ cp.banked_coins }} 🪙
-              </div>
-              {% if p and p.climber_shields and p.climber_shields > 0 %}
-              <div class="text-[10px] text-cyan-700 font-bold">
-                🛡️ {{ p.climber_shields }} Shield{% if p.climber_shields > 1 %}s{% endif %}
-              </div>
-              {% endif %}
-            </td>
-
-            <!-- Status -->
-            <td class="py-3.5 px-4 text-center font-mono">
-              {% if cp.status == 'summit' %}
-              <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 font-black text-[10px] uppercase border border-amber-400">
-                👑 SUMMIT
-              </span>
-              {% elif cp.status == 'day_completed' or cp.is_day_completed %}
-              <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-900 font-black text-[10px] uppercase border border-emerald-400">
-                ✓ DAY COMPLETE
-              </span>
-              {% elif cp.status == 'fallen' %}
-              <span class="px-2.5 py-1 rounded-full bg-rose-100 text-rose-900 font-black text-[10px] uppercase border border-rose-400">
-                ⚠️ FALLEN
-              </span>
+            <td class="py-2.5 px-3 font-mono text-slate-600 whitespace-nowrap">
+              {% if ch.status == 'complete' %}
+                <span class="text-emerald-700 font-bold">Resolved</span>
+              {% elif ch.expired %}
+                <span class="text-rose-700 font-bold">Expired</span>
               {% else %}
-              <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-900 font-black text-[10px] uppercase border border-blue-400">
-                CLIMBING
-              </span>
+                <span class="text-blue-700 font-bold">{{ ch.days_left() }} days left</span>
               {% endif %}
             </td>
-
-            <!-- Last Climbed Date -->
-            <td class="py-3.5 px-4 text-center font-mono text-[11px] text-slate-500">
-              {{ cp.last_climbed_date.strftime('%b %d') if cp.last_climbed_date else cp.updated_at.strftime('%b %d') }}
+            <td class="py-2.5 px-3 text-right whitespace-nowrap space-x-1.5">
+              <a href="{{ url_for('games_challenge.challenge_lobby', code=ch.code) }}" target="_blank"
+                 class="px-2.5 py-1 rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-900 font-bold text-[11px] inline-block transition">
+                View
+              </a>
+              <form action="{{ url_for('admin.challenge_delete', id=ch.id) }}" method="POST" class="inline"
+                    onsubmit="return confirm('Permanently delete mini-game challenge #{{ ch.code }}?');">
+                <button type="submit" class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] transition">
+                  Delete
+                </button>
+              </form>
             </td>
-
-            <!-- Actions: Reset to Day 1 or Jump/Set Day -->
-            <td class="py-3.5 px-4 text-right whitespace-nowrap">
-              <div class="inline-flex items-center gap-1.5">
-
-                <!-- Primary: One-Click Reset to Day 1 -->
-                <form action="{{ url_for('admin.climber_progress_reset', id=cp.id) }}" method="POST" class="inline"
-                      onsubmit="return confirm('Reset The Quiz Climber progress to Day 1 for {{ (p.display_name if p else 'this player')|e }}? All checkpoints for today will be cleared.');">
-                  <input type="hidden" name="target_day" value="1">
-                  <button type="submit" class="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] shadow-sm transition flex items-center gap-1">
-                    <span>🔄</span> <span>Reset Day 1</span>
-                  </button>
-                </form>
-
-                <!-- Advance / Set to Specific Day (for testing & support) -->
-                <form action="{{ url_for('admin.climber_progress_reset', id=cp.id) }}" method="POST" class="inline-flex items-center gap-1">
-                  <select name="target_day" class="px-1.5 py-1 rounded-md border border-slate-300 text-[10px] font-mono bg-white font-bold">
-                    <option value="1">Day 1 (Basecamp)</option>
-                    <option value="5" {% if cp.current_day == 5 %}selected{% endif %}>Day 5 (Stage Gate 1)</option>
-                    <option value="6" {% if cp.current_day == 6 %}selected{% endif %}>Day 6 (Khumbu)</option>
-                    <option value="10" {% if cp.current_day == 10 %}selected{% endif %}>Day 10 (Stage Gate 2)</option>
-                    <option value="11" {% if cp.current_day == 11 %}selected{% endif %}>Day 11 (Cwm)</option>
-                    <option value="15" {% if cp.current_day == 15 %}selected{% endif %}>Day 15 (Stage Gate 3)</option>
-                    <option value="16" {% if cp.current_day == 16 %}selected{% endif %}>Day 16 (Lhotse)</option>
-                    <option value="20" {% if cp.current_day == 20 %}selected{% endif %}>Day 20 (Stage Gate 4)</option>
-                    <option value="21" {% if cp.current_day == 21 %}selected{% endif %}>Day 21 (South Col)</option>
-                    <option value="25" {% if cp.current_day == 25 %}selected{% endif %}>Day 25 (Stage Gate 5)</option>
-                    <option value="26" {% if cp.current_day == 26 %}selected{% endif %}>Day 26 (Hillary Step)</option>
-                    <option value="30" {% if cp.current_day == 30 %}selected{% endif %}>Day 30 (Summit Push)</option>
-                  </select>
-                  <button type="submit" class="px-2 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-white font-bold text-[10px] transition" title="Set player directly to chosen day">
-                    Set
-                  </button>
-                </form>
-
-              </div>
-            </td>
-
           </tr>
           {% else %}
           <tr>
-            <td colspan="8" class="py-12 text-center text-slate-500 font-mono text-sm">
-              No climber expedition progress records found matching your query.
+            <td colspan="9" class="py-8 text-center text-slate-600 font-semibold">
+              No 5-mini-game challenges found for this filter.
             </td>
           </tr>
           {% endfor %}
@@ -317,41 +203,38 @@
     </div>
   </div>
 
-  <script>
-    function refreshClimberSelection() {
-      var checks = document.querySelectorAll('.climber-check');
-      var checkedCount = 0;
-      checks.forEach(function(c) { if (c.checked) checkedCount++; });
-
-      var countBadge = document.getElementById('bulkClimbersCount');
-      if (countBadge) countBadge.textContent = checkedCount + ' selected';
-
-      var delBtn = document.getElementById('bulkClimbersDeleteBtn');
-      if (delBtn) delBtn.disabled = (checkedCount === 0);
-
-      var master = document.getElementById('climbersMasterCheck');
-      if (master) master.checked = (checks.length > 0 && checkedCount === checks.length);
-    }
-
-    function setAllClimberChecks(val) {
-      var checks = document.querySelectorAll('.climber-check');
-      checks.forEach(function(c) { c.checked = val; });
-      refreshClimberSelection();
-    }
-
-    function selectOnlyGuests() {
-      var checks = document.querySelectorAll('.climber-check');
-      checks.forEach(function(c) {
-        c.checked = (c.getAttribute('data-is-guest') === '1');
-      });
-      refreshClimberSelection();
-    }
-
-    function confirmBulkClimberDelete() {
-      var checks = document.querySelectorAll('.climber-check:checked');
-      if (checks.length === 0) return false;
-      return confirm('Are you sure you want to reset expedition progress for the ' + checks.length + ' selected climber(s)? They will restart fresh from Day 1.');
-    }
-  </script>
 </div>
+
+<script>
+function challengeChecks() {
+  return Array.prototype.slice.call(document.querySelectorAll('.challenge-check'));
+}
+
+function setAllChallengeChecks(state) {
+  challengeChecks().forEach(function (c) { c.checked = state; });
+  refreshChallengeSelection();
+}
+
+function refreshChallengeSelection() {
+  var all = challengeChecks();
+  var picked = all.filter(function (c) { return c.checked; }).length;
+  var countEl = document.getElementById('bulkChallengesCount');
+  if (countEl) countEl.textContent = picked + ' selected';
+  var btn = document.getElementById('bulkChallengesDeleteBtn');
+  if (btn) btn.disabled = picked === 0;
+  var master = document.getElementById('challengesMasterCheck');
+  if (master) {
+    master.checked = picked > 0 && picked === all.length;
+    master.indeterminate = picked > 0 && picked < all.length;
+  }
+}
+
+function confirmBulkChallengeDelete() {
+  var picked = challengeChecks().filter(function (c) { return c.checked; }).length;
+  if (!picked) { return false; }
+  return confirm('Permanently delete ' + picked + ' selected mini-game challenge(s)?');
+}
+
+document.addEventListener('DOMContentLoaded', refreshChallengeSelection);
+</script>
 {% endblock %}
