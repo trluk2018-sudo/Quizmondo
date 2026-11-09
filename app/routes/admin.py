@@ -1883,12 +1883,46 @@ def _verify_admin_password(password_attempt: str) -> bool:
 @login_required
 def duels():
     from ..models_challenge import GameChallenge
-    matches = ArenaMatch.query.order_by(ArenaMatch.created_at.desc()).all()
+    
+    filter_type = request.args.get('filter', 'all').lower().strip()
+    if filter_type not in ('all', 'registered', 'unregistered', 'minigames'):
+        filter_type = 'all'
+
+    all_matches = ArenaMatch.query.order_by(ArenaMatch.created_at.desc()).all()
+    
+    # Identify registered user sessions
+    reg_profiles = PlayerProfile.query.filter(PlayerProfile.user_id.isnot(None)).all()
+    reg_sessions = {p.session_key for p in reg_profiles if p.session_key}
+    
+    for m in all_matches:
+        m.p1_is_registered = bool(m.player1_session and m.player1_session in reg_sessions)
+        m.p2_is_registered = bool(m.player2_session and m.player2_session in reg_sessions)
+        m.is_registered = m.p1_is_registered or m.p2_is_registered
+
+    registered_matches = [m for m in all_matches if m.is_registered]
+    unregistered_matches = [m for m in all_matches if not m.is_registered]
+
     try:
         challenge_rows = GameChallenge.query.order_by(GameChallenge.created_at.desc()).all()
     except Exception:
         challenge_rows = []
-    return render_template('admin/duels.html', matches=matches, challenges=challenge_rows)
+
+    if filter_type == 'registered':
+        matches = registered_matches
+    elif filter_type == 'unregistered':
+        matches = unregistered_matches
+    else:
+        matches = all_matches
+
+    return render_template(
+        'admin/duels.html',
+        matches=matches,
+        all_matches_count=len(all_matches),
+        registered_count=len(registered_matches),
+        unregistered_count=len(unregistered_matches),
+        challenges=challenge_rows,
+        filter_type=filter_type
+    )
 
 
 @admin_bp.route('/duels/<int:id>/delete', methods=['POST'])

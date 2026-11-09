@@ -3,7 +3,7 @@
 {% block title %}Live Arena Duels &amp; Stats • Quizmondo Control Centre{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl space-y-6 text-slate-900">
+<div class="w-full space-y-6 text-slate-900">
 
   <!-- Page Header & Password-Gated Clear All Duels Bar -->
   <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-300 pb-4">
@@ -25,6 +25,27 @@
     </form>
   </div>
 
+  <!-- Duel Filter Navigation Pills -->
+  <div class="flex flex-wrap items-center gap-2 text-xs font-mono">
+    <a href="{{ url_for('admin.duels', filter='all') }}"
+       class="px-3.5 py-1.5 rounded-lg font-bold transition {% if filter_type == 'all' %}bg-slate-900 text-white shadow{% else %}bg-white border border-slate-300 text-slate-800 hover:bg-slate-100{% endif %}">
+      ⚔️ All Duels ({{ all_matches_count }})
+    </a>
+    <a href="{{ url_for('admin.duels', filter='registered') }}"
+       class="px-3.5 py-1.5 rounded-lg font-bold transition {% if filter_type == 'registered' %}bg-purple-700 text-white shadow{% else %}bg-white border border-slate-300 text-purple-900 hover:bg-purple-50{% endif %}">
+      👑 Registered Players ({{ registered_count }})
+    </a>
+    <a href="{{ url_for('admin.duels', filter='unregistered') }}"
+       class="px-3.5 py-1.5 rounded-lg font-bold transition {% if filter_type == 'unregistered' %}bg-slate-700 text-white shadow{% else %}bg-white border border-slate-300 text-slate-700 hover:bg-slate-100{% endif %}">
+      👤 Unregistered Players ({{ unregistered_count }})
+    </a>
+    <a href="{{ url_for('admin.duels', filter='minigames') }}"
+       class="px-3.5 py-1.5 rounded-lg font-bold transition {% if filter_type == 'minigames' %}bg-emerald-700 text-white shadow{% else %}bg-white border border-slate-300 text-emerald-900 hover:bg-emerald-50{% endif %}">
+      🎮 Mini-Game Challenges ({{ challenges|length }})
+    </a>
+  </div>
+
+  {% if filter_type != 'minigames' %}
   <!-- Bulk Selection Action Bar -->
   <form id="bulkDuelsForm" action="{{ url_for('admin.duels_bulk_delete') }}" method="POST"
         class="flex flex-wrap items-center justify-between gap-3 bg-slate-100 border-2 border-slate-300 rounded-2xl px-4 py-3"
@@ -74,73 +95,86 @@
     </form>
   </div>
 
+  <!-- Live Arena Duels Table -->
   <div class="bg-white rounded-2xl border-2 border-slate-300 shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-left text-xs">
         <thead class="bg-slate-200 border-b-2 border-slate-300 text-slate-900 font-black uppercase tracking-wider">
           <tr>
-            <th class="py-3.5 px-4 w-10">
+            <th class="py-2.5 px-3 w-10 text-center">
               <input type="checkbox" id="duelsMasterCheck" onchange="setAllDuelChecks(this.checked)"
                      title="Select / deselect all duels"
                      class="w-4 h-4 accent-rose-600 cursor-pointer align-middle">
             </th>
-            <th class="py-3.5 px-4">Match Code</th>
-            <th class="py-3.5 px-4">Player 1 (Challenger)</th>
-            <th class="py-3.5 px-4 text-center">Score</th>
-            <th class="py-3.5 px-4">Player 2 (Opponent)</th>
-            <th class="py-3.5 px-4">Round</th>
-            <th class="py-3.5 px-4">Status</th>
-            <th class="py-3.5 px-4">Created</th>
-            <th class="py-3.5 px-4 text-right">Actions</th>
+            <th class="py-2.5 px-3">Match Code</th>
+            <th class="py-2.5 px-3">Player 1 (Challenger)</th>
+            <th class="py-2.5 px-3 text-center">Score</th>
+            <th class="py-2.5 px-3">Player 2 (Opponent)</th>
+            <th class="py-2.5 px-3">Round</th>
+            <th class="py-2.5 px-3 text-center">Status</th>
+            <th class="py-2.5 px-3">Created</th>
+            <th class="py-2.5 px-3 text-right">Actions</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-200">
           {% for m in matches %}
           <tr class="hover:bg-slate-50 transition">
-            <td class="py-3.5 px-4">
+            <td class="py-2.5 px-3 text-center">
               <input type="checkbox" form="bulkDuelsForm" name="duel_ids" value="{{ m.id }}"
                      class="duel-check w-4 h-4 accent-rose-600 cursor-pointer align-middle"
                      onchange="refreshDuelSelection()">
             </td>
-            <td class="py-3.5 px-4 font-mono font-black text-blue-700">
+            <td class="py-2.5 px-3 font-mono font-black text-blue-700">
               <a href="{{ url_for('arena.match_lobby', match_code=m.match_code) }}" class="hover:underline flex items-center gap-1">
                 <span>#{{ m.match_code }}</span>
               </a>
             </td>
-            <td class="py-3.5 px-4 font-bold text-slate-900">
+            <td class="py-2.5 px-3 font-bold text-slate-900">
               <div class="flex items-center gap-2">
                 <span class="w-6 h-6 rounded-full bg-purple-100 border border-purple-300 text-purple-900 text-[10px] font-black flex items-center justify-center font-mono">P1</span>
                 <span>{{ m.player1_name }}</span>
+                {% if m.p1_is_registered %}
+                  <span class="px-1.5 py-0.5 rounded bg-purple-100 text-purple-900 text-[10px] font-bold font-mono">👑 Reg</span>
+                {% else %}
+                  <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-mono">👤 Guest</span>
+                {% endif %}
               </div>
             </td>
-            <td class="py-3.5 px-4 text-center font-mono font-black text-sm">
+            <td class="py-2.5 px-3 text-center font-mono font-black text-sm whitespace-nowrap">
               <span class="text-purple-800">{{ m.p1_total_score }}</span>
               <span class="text-slate-500 mx-1">-</span>
               <span class="text-cyan-800">{{ m.p2_total_score }}</span>
             </td>
-            <td class="py-3.5 px-4 font-bold text-slate-900">
+            <td class="py-2.5 px-3 font-bold text-slate-900">
               <div class="flex items-center gap-2">
                 <span class="w-6 h-6 rounded-full bg-cyan-100 border border-cyan-300 text-cyan-900 text-[10px] font-black flex items-center justify-center font-mono">P2</span>
                 <span>{{ m.player2_name }}</span>
+                {% if m.is_bot %}
+                  <span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 text-[10px] font-bold font-mono">🤖 Bot</span>
+                {% elif m.p2_is_registered %}
+                  <span class="px-1.5 py-0.5 rounded bg-purple-100 text-purple-900 text-[10px] font-bold font-mono">👑 Reg</span>
+                {% elif m.player2_session %}
+                  <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-mono">👤 Guest</span>
+                {% endif %}
               </div>
             </td>
-            <td class="py-3.5 px-4 font-mono font-bold text-slate-900">
+            <td class="py-2.5 px-3 font-mono font-bold text-slate-900 whitespace-nowrap">
               Round {{ m.current_round }}/6
             </td>
-            <td class="py-3.5 px-4">
-              <span class="px-2.5 py-1 rounded-full font-mono text-[10px] font-black uppercase {% if m.status == 'completed' %}bg-slate-200 text-slate-900{% elif m.status == 'in_progress' %}bg-emerald-100 text-emerald-900{% else %}bg-amber-100 text-amber-900{% endif %}">
+            <td class="py-2.5 px-3 text-center whitespace-nowrap">
+              <span class="px-2.5 py-0.5 rounded-full font-mono text-[10px] font-black uppercase {% if m.status == 'completed' %}bg-slate-200 text-slate-900{% elif m.status == 'in_progress' %}bg-emerald-100 text-emerald-900{% else %}bg-amber-100 text-amber-900{% endif %}">
                 {{ m.status }}
               </span>
             </td>
-            <td class="py-3.5 px-4 text-slate-700 font-mono font-semibold">
+            <td class="py-2.5 px-3 text-slate-700 font-mono font-semibold whitespace-nowrap">
               {{ m.created_at.strftime('%Y-%m-%d %H:%M') if m.created_at else '' }}
             </td>
-            <td class="py-3.5 px-4 text-right whitespace-nowrap space-x-2">
-              <a href="{{ url_for('arena.match_lobby', match_code=m.match_code) }}" class="px-2.5 py-1 rounded bg-blue-100 hover:bg-blue-200 text-blue-900 font-bold text-[11px]">
+            <td class="py-2.5 px-3 text-right whitespace-nowrap space-x-1.5">
+              <a href="{{ url_for('arena.match_lobby', match_code=m.match_code) }}" class="px-2.5 py-1 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-900 font-bold text-[11px] inline-block">
                 Open Duel
               </a>
               <form action="{{ url_for('admin.duel_delete', id=m.id) }}" method="POST" class="inline" onsubmit="return confirm('Delete duel #{{ m.match_code }}?');">
-                <button type="submit" class="px-2.5 py-1 rounded bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px]">
+                <button type="submit" class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px]">
                   Delete
                 </button>
               </form>
@@ -149,7 +183,7 @@
           {% else %}
           <tr>
             <td colspan="9" class="py-8 text-center text-slate-700 font-semibold">
-              No arena matches logged right now.
+              No arena matches found for this filter.
             </td>
           </tr>
           {% endfor %}
@@ -157,6 +191,9 @@
       </table>
     </div>
   </div>
+  {% endif %}
+
+  {% if filter_type in ('all', 'minigames') %}
   <!-- SECTION: 5-MINI-GAME FRIEND CHALLENGES -->
   <div class="mt-8 pt-6 border-t-2 border-slate-300 space-y-4">
     <div class="flex items-center justify-between">
@@ -176,32 +213,32 @@
         <table class="w-full text-left text-xs text-slate-700">
           <thead class="bg-slate-100 text-slate-800 text-[11px] uppercase tracking-wider font-mono border-b border-slate-300">
             <tr>
-              <th class="py-3 px-4">Code</th>
-              <th class="py-3 px-4">Creator</th>
-              <th class="py-3 px-4 text-center">Score</th>
-              <th class="py-3 px-4">Opponent</th>
-              <th class="py-3 px-4 text-center">Status</th>
-              <th class="py-3 px-4 text-center">Created</th>
-              <th class="py-3 px-4 text-center">Expires</th>
+              <th class="py-2.5 px-3">Code</th>
+              <th class="py-2.5 px-3">Creator</th>
+              <th class="py-2.5 px-3 text-center">Score</th>
+              <th class="py-2.5 px-3">Opponent</th>
+              <th class="py-2.5 px-3 text-center">Status</th>
+              <th class="py-2.5 px-3 text-center">Created</th>
+              <th class="py-2.5 px-3 text-center">Expires</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-200">
             {% for ch in (challenges or []) %}
             {% set table = ch.standings() %}
             <tr class="hover:bg-slate-50">
-              <td class="py-3 px-4 font-mono font-bold text-indigo-700">
+              <td class="py-2.5 px-3 font-mono font-bold text-indigo-700">
                 #{{ ch.code }}
               </td>
-              <td class="py-3 px-4 font-semibold text-slate-900">
+              <td class="py-2.5 px-3 font-semibold text-slate-900">
                 {{ ch.creator_name or 'Challenger' }}
               </td>
-              <td class="py-3 px-4 text-center font-mono font-black text-sm">
+              <td class="py-2.5 px-3 text-center font-mono font-black text-sm">
                 {{ table.creator_wins }} &ndash; {{ table.opponent_wins }}
               </td>
-              <td class="py-3 px-4 font-semibold text-slate-900">
+              <td class="py-2.5 px-3 font-semibold text-slate-900">
                 {{ ch.opponent_name or 'Awaiting Opponent...' }}
               </td>
-              <td class="py-3 px-4 text-center font-mono">
+              <td class="py-2.5 px-3 text-center font-mono">
                 {% if ch.status == 'complete' %}
                 <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">Complete</span>
                 {% elif ch.expired %}
@@ -210,10 +247,10 @@
                 <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold">In Progress</span>
                 {% endif %}
               </td>
-              <td class="py-3 px-4 text-center font-mono text-slate-500 text-[11px]">
+              <td class="py-2.5 px-3 text-center font-mono text-slate-500 text-[11px]">
                 {{ ch.created_at.strftime('%b %d') if ch.created_at else '-' }}
               </td>
-              <td class="py-3 px-4 text-center font-mono text-slate-500 text-[11px]">
+              <td class="py-2.5 px-3 text-center font-mono text-slate-500 text-[11px]">
                 {{ ch.expires_at.strftime('%b %d') if ch.expires_at else '-' }}
               </td>
             </tr>
@@ -229,6 +266,7 @@
       </div>
     </div>
   </div>
+  {% endif %}
 
 </div>
 
@@ -245,11 +283,15 @@ function setAllDuelChecks(state) {
 function refreshDuelSelection() {
   var all = duelChecks();
   var picked = all.filter(function (c) { return c.checked; }).length;
-  document.getElementById('bulkDuelsCount').textContent = picked + ' selected';
-  document.getElementById('bulkDuelsDeleteBtn').disabled = picked === 0;
+  var countEl = document.getElementById('bulkDuelsCount');
+  if (countEl) countEl.textContent = picked + ' selected';
+  var btn = document.getElementById('bulkDuelsDeleteBtn');
+  if (btn) btn.disabled = picked === 0;
   var master = document.getElementById('duelsMasterCheck');
-  master.checked = picked > 0 && picked === all.length;
-  master.indeterminate = picked > 0 && picked < all.length;
+  if (master) {
+    master.checked = picked > 0 && picked === all.length;
+    master.indeterminate = picked > 0 && picked < all.length;
+  }
 }
 
 function confirmBulkDuelDelete() {
