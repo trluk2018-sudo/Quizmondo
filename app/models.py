@@ -1000,3 +1000,11 @@ class AdStat(db.Model):
     day = db.Column(db.Date, index=True, nullable=False)
     impressions = db.Column(db.Integer, default=0)
     clicks = db.Column(db.Integer, default=0)
+
+
+class SsoUsedNonce(db.Model):
+    __tablename__ = 'sso_used_nonce'
+
+    nonce = db.Column(db.String(64), primary_key=True)
+    expires_at = db.Column(db.Integer, nullable=False, index=True)
+    used_at = db.Column(db.DateTime, default=datetime.utcnow)

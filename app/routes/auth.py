@@ -50,24 +50,71 @@ def handle_sso():
     token = request.args.get('token', '').strip()
     sso_secret = current_app.config.get('APP_SSO_SECRET') or current_app.config.get('SECRET_KEY', '')
 
-    if not sso_secret or not token:
+    if not token or (not sso_secret and not token.startswith('ed25519.')):
         flash('SSO token or secret missing.', 'error')
         return redirect(url_for('auth.login'))
 
     data = None
-    # 1. Attempt standard itsdangerous signed token (Kangcono cross-instance-sso format)
-    try:
-        from itsdangerous import URLSafeTimedSerializer, BadData, SignatureExpired
-        serializer = URLSafeTimedSerializer(sso_secret, salt='cross-instance-sso')
-        try:
-            data = serializer.loads(token, max_age=300)  # 5-minute validity window
-        except SignatureExpired:
-            flash("That sign-in link has expired. Click 'Log in as' again from the control plane.", "error")
+    # 0. Attempt asymmetric Ed25519 token signed by Kangcono Verify (local PC companion)
+    if token.startswith('ed25519.'):
+        from ..utils.ed25519_sso import verify_ed25519_sso_token
+        data, err = verify_ed25519_sso_token(token, expected_scope='tenant', expected_aud=[request.host])
+        if err == 'expired':
+            flash("That Kangcono Verify sign-in link has expired (60s window).", "error")
             return redirect(url_for('auth.login'))
-        except BadData:
-            data = None
-    except Exception:
-        data = None
+        elif err:
+            flash("Could not verify Kangcono Verify Ed25519 signature.", "error")
+            return redirect(url_for('auth.login'))
+
+    # 1. Attempt standard itsdangerous signed token (Kangcono cross-instance-sso format)
+    if not data:
+        from itsdangerous import URLSafeTimedSerializer, BadData, SignatureExpired
+        from sqlalchemy.exc import IntegrityError
+        import time, hashlib
+        site_name = (
+            os.environ.get('APP_SUBDOMAIN')
+            or os.environ.get('SUBDOMAIN')
+            or current_app.config.get('SUBDOMAIN')
+            or request.host.split('.')[0]
+        ).strip().lower()
+        company_sso_secret = hashlib.sha256(f"{sso_secret}:{site_name}".encode('utf-8')).hexdigest()
+
+        for key_candidate in (company_sso_secret, sso_secret):
+            try:
+                serializer = URLSafeTimedSerializer(key_candidate, salt='cross-instance-sso')
+                data = serializer.loads(token, max_age=60)  # Clamped to 60s
+                break
+            except Exception:
+                continue
+
+        if data:
+            # 1. Site isolation: check destination
+            token_sub = (data.get('sub') or data.get('aud') or '').strip().lower()
+            if token_sub:
+                req_host = (request.host or '').lower().split(':')[0]
+                if token_sub != site_name and token_sub not in req_host:
+                    current_app.logger.warning(f"SSO site mismatch: token for '{token_sub}', host is '{request.host}'")
+                    flash("That sign-in link was issued for a different site and cannot be used here.", "error")
+                    return redirect(url_for('auth.login'))
+
+            # 2. Once-only: single-use nonce
+            nonce = data.get('nonce') or hashlib.sha256(token.encode('utf-8')).hexdigest()
+            from ..models import SsoUsedNonce, db
+            SsoUsedNonce.__table__.create(bind=db.engine, checkfirst=True)
+            now_ts = int(time.time())
+            try:
+                SsoUsedNonce.query.filter(SsoUsedNonce.expires_at < now_ts).delete(synchronize_session=False)
+                db.session.add(SsoUsedNonce(nonce=str(nonce)[:64], expires_at=now_ts + 300))
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+                flash("That sign-in link has already been used. Please request a fresh link.", "error")
+                return redirect(url_for('auth.login'))
+            except Exception:
+                db.session.rollback()
+                if SsoUsedNonce.query.filter_by(nonce=str(nonce)[:64]).first() is not None:
+                    flash("That sign-in link has already been used. Please request a fresh link.", "error")
+                    return redirect(url_for('auth.login'))
 
     # 2. Fallback to legacy HMAC verification if timestamp provided
     if not data:
