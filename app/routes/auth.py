@@ -1,3 +1,4 @@
+import os
 import hmac
 import hashlib
 import time
@@ -136,10 +137,13 @@ def handle_sso():
         flash("Invalid SSO signature. Check that APP_SSO_SECRET matches the control plane.", "error")
         return redirect(url_for('auth.login'))
 
-    uname = data.get('u') or 'admin'
-    user = User.query.filter_by(username=uname).first()
+    uname = (data.get('u') or '').strip()
+    user = User.query.filter_by(username=uname).first() if (uname and uname != '@auto') else None
     if not user:
-        user = User(username=uname, email=f"{uname}@sitebuilder.local", role='admin')
+        user = User.query.filter(User.role.in_(['super_admin', 'admin'])).order_by(User.id.asc()).first()
+    if not user:
+        final_uname = uname if (uname and uname != '@auto') else 'admin'
+        user = User(username=final_uname, email=f"{final_uname}@quizmondo.local", role='admin')
         user.set_password(secrets.token_urlsafe(16))
         db.session.add(user)
         db.session.commit()
