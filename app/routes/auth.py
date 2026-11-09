@@ -148,6 +148,15 @@ def handle_sso():
         db.session.add(user)
         db.session.commit()
 
+    from ..utils.support_access import get_support_access_status
+    sa_status = get_support_access_status(db, is_quizmondo=True)
+    if not sa_status.get('is_active'):
+        if sa_status.get('reason') == 'disabled_by_owner':
+            flash("Support access has been disabled by the site owner. Operator sign-in is not permitted.", "error")
+        else:
+            flash("Support access window has expired. The site owner must enable support access in Settings.", "error")
+        return redirect(url_for('auth.login'))
+
     session['user_id'] = user.id
     session['username'] = user.username
     session['user_role'] = user.role
@@ -291,3 +300,38 @@ def profile():
 
     return render_template('admin/profile.html', user=user, is_impersonation=is_impersonation)
 
+
+
+@auth_bp.route('/extend-support-access', methods=['POST'])
+def extend_support_access_route():
+    if not session.get('impersonation'):
+        flash("Only active support sessions can extend the access window.", "error")
+        return redirect(url_for('auth.login'))
+    try:
+        minutes = int(request.form.get('minutes', 60))
+    except (ValueError, TypeError):
+        minutes = 60
+    from ..utils.support_access import extend_support_access
+    st = extend_support_access(db, additional_minutes=minutes, is_quizmondo=True)
+    flash(f"Support access window extended by {minutes} minutes.", "success")
+    return redirect(request.referrer or url_for('admin.dashboard'))
+
+
+@auth_bp.route('/support-access-toggle', methods=['POST'])
+@login_required
+def toggle_support_access():
+    if session.get('user_role') not in ('admin', 'super_admin'):
+        flash("Only site administrators can change support access settings.", "error")
+        return redirect(request.referrer or url_for('admin.dashboard'))
+    allow = request.form.get('allow_support') in ('1', 'on', 'true', 'True')
+    persistent = request.form.get('persistent_control') in ('1', 'on', 'true', 'True')
+    from ..utils.support_access import update_support_access
+    st = update_support_access(db, enabled=allow, persistent=persistent, duration_minutes=60, is_quizmondo=True)
+    if allow:
+        if st.get('is_persistent'):
+            flash("Support access enabled in Persistent Control mode.", "success")
+        else:
+            flash(f"Support access enabled for 60 minutes ({st.get('remaining_minutes', 60)}m remaining).", "success")
+    else:
+        flash("Support access disabled. SaaS Control Plane operators cannot sign in.", "info")
+    return redirect(request.referrer or url_for('admin.dashboard'))

@@ -155,6 +155,49 @@
       </p>
     </div>
 
+    
+    <!-- SaaS Platform Support Access -->
+    <div class="bg-white border border-slate-200 p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900">
+          SaaS Platform Support Access
+        </h2>
+        {% if support_access_status and support_access_status.is_active %}
+        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">
+          {% if support_access_status.is_persistent %}Active (Persistent Control){% else %}Active ({{ support_access_status.remaining_minutes }}m remaining){% endif %}
+        </span>
+        {% else %}
+        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-rose-100 text-rose-800">
+          Disabled
+        </span>
+        {% endif %}
+      </div>
+
+      <label class="flex items-start gap-3">
+        <input type="checkbox" name="allow_support" value="1"
+               {% if support_access_status and support_access_status.is_enabled %}checked{% endif %}
+               class="mt-0.5 rounded border-slate-300 text-purple-600">
+        <span class="text-xs">
+          <span class="font-bold text-slate-900 block">Allow Support Access (Operator "Log in as")</span>
+          <span class="text-slate-500">
+            Allows the SaaS Control Plane operator to sign in to Quizmondo for technical support and maintenance.
+          </span>
+        </span>
+      </label>
+
+      <label class="flex items-start gap-3 p-3 bg-purple-50/70 border border-purple-100 rounded">
+        <input type="checkbox" name="persistent_control" value="1"
+               {% if support_access_status and support_access_status.is_persistent %}checked{% endif %}
+               class="mt-0.5 rounded border-slate-300 text-purple-600">
+        <span class="text-xs">
+          <span class="font-bold text-purple-950 block">Persistent Control (Do not expire access window)</span>
+          <span class="text-purple-700">
+            Keep operator access active continuously without a 60-minute expiration timer (for platform owner administration).
+          </span>
+        </span>
+      </label>
+    </div>
+
     <button type="submit" class="px-5 py-2.5 bg-slate-900 text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-slate-800">
       Save Security Settings
     </button>

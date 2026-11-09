@@ -184,6 +184,16 @@ def create_app(test_config=None):
         _ensure_schema()
         _seed_defaults()
 
+    
+    @app.context_processor
+    def inject_support_access():
+        try:
+            from .utils.support_access import get_support_access_status
+            is_qm = True
+            return {'support_access_status': get_support_access_status(db, is_quizmondo=is_qm)}
+        except Exception:
+            return {'support_access_status': None}
+
     return app
 
 
