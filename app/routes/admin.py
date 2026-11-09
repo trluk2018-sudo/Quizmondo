@@ -1617,6 +1617,10 @@ def settings_security():
         SiteSetting.set('age_gate_enabled',
                         '1' if request.form.get('age_gate_enabled') else '')
         SiteSetting.set('minimum_signup_age', (request.form.get('minimum_signup_age') or '13').strip())
+        from ..utils.support_access import update_support_access
+        allow_sup = bool(request.form.get('allow_support'))
+        persist_sup = bool(request.form.get('persistent_control'))
+        update_support_access(db, enabled=allow_sup, persistent=persist_sup, duration_minutes=60, is_quizmondo=True)
         flash('Security settings updated.', 'success')
         return redirect(url_for('admin.settings_security'))
 
@@ -1878,8 +1882,13 @@ def _verify_admin_password(password_attempt: str) -> bool:
 @admin_bp.route('/duels')
 @login_required
 def duels():
+    from ..models_challenge import GameChallenge
     matches = ArenaMatch.query.order_by(ArenaMatch.created_at.desc()).all()
-    return render_template('admin/duels.html', matches=matches)
+    try:
+        challenge_rows = GameChallenge.query.order_by(GameChallenge.created_at.desc()).all()
+    except Exception:
+        challenge_rows = []
+    return render_template('admin/duels.html', matches=matches, challenges=challenge_rows)
 
 
 @admin_bp.route('/duels/<int:id>/delete', methods=['POST'])
@@ -2084,7 +2093,7 @@ def players():
         else:
             all_players = [p for p in all_players if p.user_id and all_users.get(p.user_id) and all_users[p.user_id].role == role_filter]
 
-    unlogged_count = PlayerProfile.query.filter(PlayerProfile.user_id.is_(None)).count()
+    unlogged_count = ClimberProgress.query.join(PlayerProfile, ClimberProgress.player_profile_id == PlayerProfile.id).filter(PlayerProfile.user_id.is_(None)).count()
     return render_template(
         'admin/players.html',
         players=all_players,
@@ -2305,31 +2314,36 @@ def players_delete_unlogged():
 @admin_bp.route('/challenges/delete-unlogged', methods=['POST'])
 @login_required
 def challenges_delete_unlogged():
-    """Purge all unlogged-in guest challengers from the Challenges screen so they restart."""
-    guest_ids = [row[0] for row in db.session.query(PlayerProfile.id).filter(PlayerProfile.user_id.is_(None)).all()]
-    if not guest_ids:
-        flash('No unlogged-in guest challengers found to delete.', 'info')
+    """Purge all unlogged-in guest climbers strictly from ClimberProgress so their expedition restarts fresh."""
+    guest_player_ids = [row[0] for row in db.session.query(PlayerProfile.id).filter(PlayerProfile.user_id.is_(None)).all()]
+    if not guest_player_ids:
+        flash('No unlogged-in guest climbers found to delete.', 'info')
         return redirect(url_for('admin.challenges'))
 
-    removed, _ = _cascade_delete_players(guest_ids)
-    flash(f'Successfully deleted {removed} unlogged-in guest challenger(s). Their climb progress has been wiped so they start fresh.', 'success')
+    # STRICTLY delete only ClimberProgress and facts seen for these guest climbers
+    removed = ClimberProgress.query.filter(ClimberProgress.player_profile_id.in_(guest_player_ids)).delete(synchronize_session=False)
+    UserClimberFactSeen.query.filter(UserClimberFactSeen.player_profile_id.in_(guest_player_ids)).delete(synchronize_session=False)
+    db.session.commit()
+
+    flash(f'Successfully cleared climb expedition progress for {removed} guest climber(s). Their climb restarts fresh from Day 1.', 'success')
     return redirect(url_for('admin.challenges'))
 
 
 @admin_bp.route('/challenges/bulk-delete', methods=['POST'])
 @login_required
 def challenges_bulk_delete():
-    """Delete selected climbers ticked in the Challenges table, restarting their progress."""
+    """Delete climb progress for selected climbers ticked in the Challenges table, restarting their climb from Day 1."""
     ids = [int(v) for v in request.form.getlist('player_ids') if str(v).isdigit()]
     if not ids:
         flash('No climbers were selected.', 'error')
         return redirect(url_for('admin.challenges'))
 
-    removed, skipped_self = _cascade_delete_players(ids)
-    msg = f'Successfully deleted {removed} selected climber(s) and wiped their expedition progress.'
-    if skipped_self:
-        msg += ' Your own active administrator account was preserved.'
-    flash(msg, 'success' if removed else 'error')
+    # STRICTLY delete only ClimberProgress and facts seen for selected climbers
+    removed = ClimberProgress.query.filter(ClimberProgress.player_profile_id.in_(ids)).delete(synchronize_session=False)
+    UserClimberFactSeen.query.filter(UserClimberFactSeen.player_profile_id.in_(ids)).delete(synchronize_session=False)
+    db.session.commit()
+
+    flash(f'Successfully reset climb expedition progress for {removed} selected climber(s). They will start fresh on Day 1.', 'success')
     return redirect(url_for('admin.challenges'))
 
 

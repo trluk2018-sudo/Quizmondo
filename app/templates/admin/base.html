@@ -84,16 +84,31 @@
   {% if session.get('impersonation') %}
   <!-- SaaS Support Impersonation Banner -->
   <div class="bg-amber-400 text-slate-950 px-4 py-2 text-xs font-medium flex items-center justify-between border-b border-amber-500 shadow-sm sticky top-0 z-50">
-    <div class="flex items-center gap-2 font-mono">
+    <div class="flex items-center gap-2">
       <svg class="w-4 h-4 text-slate-900 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
       </svg>
-      <span><strong>SaaS Support Mode:</strong> You are signed in via the SaaS Control Plane as <strong>{{ session.get('username') }}</strong>.</span>
+      <span><strong>SaaS Support Mode:</strong> Signed in as <strong>{{ session.get('username') }}</strong>.</span>
+      {% if support_access_status and not support_access_status.is_persistent %}
+      <span class="bg-amber-600/30 px-2 py-0.5 rounded text-[11px] font-mono">⏱️ {{ support_access_status.remaining_minutes }}m remaining</span>
+      {% elif support_access_status and support_access_status.is_persistent %}
+      <span class="bg-amber-600/30 px-2 py-0.5 rounded text-[11px] font-mono">♾️ Persistent Control</span>
+      {% endif %}
     </div>
-    <div class="flex items-center gap-3 font-mono">
+    <div class="flex items-center gap-2">
+      {% if support_access_status and not support_access_status.is_persistent %}
+      <form method="POST" action="{{ url_for('auth.extend_support_access_route') }}" class="inline">
+        <input type="hidden" name="minutes" value="60">
+        <button type="submit" class="bg-slate-900/10 hover:bg-slate-900/20 px-2 py-0.5 rounded text-[11px] font-semibold transition">+60m</button>
+      </form>
+      <form method="POST" action="{{ url_for('auth.extend_support_access_route') }}" class="inline">
+        <input type="hidden" name="minutes" value="240">
+        <button type="submit" class="bg-slate-900/10 hover:bg-slate-900/20 px-2 py-0.5 rounded text-[11px] font-semibold transition">+4h</button>
+      </form>
+      {% endif %}
       {% if session.get('platform_return') %}
       <a href="{{ session.get('platform_return') }}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-900 text-white hover:bg-slate-800 text-[11px] font-semibold transition">
-        &larr; Return to SaaS Control Centre
+        &larr; Return to Control Centre
       </a>
       {% endif %}
       <a href="{{ url_for('auth.end_impersonation') }}" class="underline hover:text-slate-800 text-[11px]">End Session</a>

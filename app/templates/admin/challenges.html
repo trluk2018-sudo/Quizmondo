@@ -20,14 +20,14 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-3">
-      <!-- Delete All Unlogged-in Challengers -->
+      <!-- Clear Guest Climber Progress Challengers -->
       <form action="{{ url_for('admin.challenges_delete_unlogged') }}" method="POST"
             class="flex items-center gap-2 bg-amber-50 border-2 border-amber-300 p-2.5 rounded-xl shadow-sm"
-            onsubmit="return confirm('WARNING: Are you sure you want to permanently delete ALL {{ unlogged_count or 0 }} unlogged-in guest challengers? This will wipe their climber progress so they restart completely fresh from Day 1.');">
+            onsubmit="return confirm('WARNING: Are you sure you want to permanently delete ALL {{ unlogged_count or 0 }} unlogged-in guest climbers? This will wipe their climber progress so they restart completely fresh from Day 1.');">
         <span class="text-xs font-black text-amber-900 whitespace-nowrap px-1">👤 Guest Challengers:</span>
         <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black text-xs uppercase whitespace-nowrap shadow transition"
                 {% if not unlogged_count or unlogged_count <= 0 %}disabled{% endif %}>
-          🗑️ Delete All Unlogged-in ({{ unlogged_count or 0 }})
+          🗑️ Clear Guest Climber Progress ({{ unlogged_count or 0 }})
         </button>
       </form>
 
@@ -119,7 +119,7 @@
       </button>
       <button type="submit" id="bulkClimbersDeleteBtn" disabled
               class="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-white font-black text-[11px] uppercase shadow">
-        🗑️ Delete Selected
+        🗑️ Reset Selected Climbers
       </button>
     </div>
   </form>
@@ -317,79 +317,6 @@
     </div>
   </div>
 
-  <!-- SECTION 2: 5-MINI-GAME FRIEND CHALLENGES -->
-  <div class="mt-8 pt-6 border-t-2 border-slate-200 space-y-4">
-    <div class="flex items-center justify-between">
-      <div>
-        <h2 class="text-lg font-black text-slate-900 flex items-center gap-2">
-          <span>🎮</span> <span>5x Mini-Game Challenges (Friend Duels)</span>
-          <span class="text-xs font-mono text-slate-500 font-normal">({{ challenges|length }} recent)</span>
-        </h2>
-        <p class="text-xs text-slate-600">
-          Weekly turn-based 5-mini-game matches between players.
-        </p>
-      </div>
-    </div>
-
-    <div class="bg-white rounded-2xl border-2 border-slate-300 overflow-hidden shadow-sm">
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs text-slate-700">
-          <thead class="bg-slate-100 text-slate-800 text-[11px] uppercase tracking-wider font-mono border-b border-slate-300">
-            <tr>
-              <th class="py-3 px-4">Code</th>
-              <th class="py-3 px-4">Creator</th>
-              <th class="py-3 px-4 text-center">Score</th>
-              <th class="py-3 px-4">Opponent</th>
-              <th class="py-3 px-4 text-center">Status</th>
-              <th class="py-3 px-4 text-center">Created</th>
-              <th class="py-3 px-4 text-center">Expires</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-200">
-            {% for ch in challenges %}
-            {% set table = ch.standings() %}
-            <tr class="hover:bg-slate-50">
-              <td class="py-3 px-4 font-mono font-bold text-indigo-700">
-                #{{ ch.code }}
-              </td>
-              <td class="py-3 px-4 font-semibold text-slate-900">
-                {{ ch.creator_name or 'Challenger' }}
-              </td>
-              <td class="py-3 px-4 text-center font-mono font-black text-sm">
-                {{ table.creator_wins }} &ndash; {{ table.opponent_wins }}
-              </td>
-              <td class="py-3 px-4 font-semibold text-slate-900">
-                {{ ch.opponent_name or 'Awaiting Opponent...' }}
-              </td>
-              <td class="py-3 px-4 text-center font-mono">
-                {% if ch.status == 'complete' %}
-                <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">Complete</span>
-                {% elif ch.expired %}
-                <span class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold">Expired</span>
-                {% else %}
-                <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold">In Progress</span>
-                {% endif %}
-              </td>
-              <td class="py-3 px-4 text-center font-mono text-slate-500 text-[11px]">
-                {{ ch.created_at.strftime('%b %d') if ch.created_at else '-' }}
-              </td>
-              <td class="py-3 px-4 text-center font-mono text-slate-500 text-[11px]">
-                {{ ch.expires_at.strftime('%b %d') if ch.expires_at else '-' }}
-              </td>
-            </tr>
-            {% else %}
-            <tr>
-              <td colspan="7" class="py-8 text-center text-slate-500 font-mono text-xs">
-                No 5-mini-game challenges recorded yet.
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
   <script>
     function refreshClimberSelection() {
       var checks = document.querySelectorAll('.climber-check');
@@ -423,7 +350,7 @@
     function confirmBulkClimberDelete() {
       var checks = document.querySelectorAll('.climber-check:checked');
       if (checks.length === 0) return false;
-      return confirm('Are you sure you want to permanently delete the ' + checks.length + ' selected player(s)? Their expedition progress will be completely wiped so they restart fresh.');
+      return confirm('Are you sure you want to reset expedition progress for the ' + checks.length + ' selected climber(s)? They will restart fresh from Day 1.');
     }
   </script>
 </div>
