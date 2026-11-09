@@ -2084,12 +2084,14 @@ def players():
         else:
             all_players = [p for p in all_players if p.user_id and all_users.get(p.user_id) and all_users[p.user_id].role == role_filter]
 
+    unlogged_count = PlayerProfile.query.filter(PlayerProfile.user_id.is_(None)).count()
     return render_template(
         'admin/players.html',
         players=all_players,
         users_by_id=all_users,
         search=search,
-        role_filter=role_filter
+        role_filter=role_filter,
+        unlogged_count=unlogged_count
     )
 
 
@@ -2216,36 +2218,119 @@ def player_delete(id):
     return redirect(url_for('admin.players'))
 
 
+def _cascade_delete_players(player_ids):
+    """Safely delete PlayerProfiles and all related foreign-key children (ClimberProgress, facts, matches) so deleting actually restarts the player completely fresh."""
+    if not player_ids:
+        return 0, False
+
+    me = session.get('user_id')
+    removed = 0
+    skipped_self = False
+
+    target_players = PlayerProfile.query.filter(PlayerProfile.id.in_(player_ids)).all()
+    target_ids = []
+    user_ids_to_check = []
+    session_keys = []
+
+    for p in target_players:
+        if p.user_id and p.user_id == me:
+            skipped_self = True
+            continue
+        target_ids.append(p.id)
+        if p.user_id:
+            user_ids_to_check.append(p.user_id)
+        if p.session_key:
+            session_keys.append(p.session_key)
+
+    if not target_ids:
+        return 0, skipped_self
+
+    # 1. Delete associated ClimberProgress records
+    ClimberProgress.query.filter(ClimberProgress.player_profile_id.in_(target_ids)).delete(synchronize_session=False)
+
+    # 2. Delete UserClimberFactSeen records
+    UserClimberFactSeen.query.filter(UserClimberFactSeen.player_profile_id.in_(target_ids)).delete(synchronize_session=False)
+
+    # 3. Clean up arena matches where guest was player1 or player2
+    if session_keys:
+        ArenaMatch.query.filter(
+            (ArenaMatch.player1_session.in_(session_keys)) | (ArenaMatch.player2_session.in_(session_keys))
+        ).delete(synchronize_session=False)
+
+    # 4. Delete PlayerProfiles
+    PlayerProfile.query.filter(PlayerProfile.id.in_(target_ids)).delete(synchronize_session=False)
+
+    # 5. Delete linked non-admin Users
+    for uid in user_ids_to_check:
+        if uid != me:
+            u = db.session.get(User, uid)
+            if u and u.role not in ('super_admin', 'admin'):
+                db.session.delete(u)
+
+    db.session.commit()
+    return len(target_ids), skipped_self
+
+
 @admin_bp.route('/players/bulk-delete', methods=['POST'])
 @login_required
 def players_bulk_delete():
-    """Delete every account ticked in the admin players table in one pass."""
+    """Delete every account ticked in the admin players table in one pass, resetting progress."""
     ids = [int(v) for v in request.form.getlist('player_ids') if str(v).isdigit()]
     if not ids:
         flash('No accounts were selected.', 'error')
         return redirect(request.referrer or url_for('admin.players'))
 
-    me = session.get('user_id')
-    removed = 0
-    skipped_self = False
-    for p in PlayerProfile.query.filter(PlayerProfile.id.in_(ids)).all():
-        if p.user_id and p.user_id == me:
-            skipped_self = True
-            continue
-        uid = p.user_id
-        db.session.delete(p)
-        if uid:
-            u = db.session.get(User, uid)
-            if u and u.id != me:
-                db.session.delete(u)
-        removed += 1
-    db.session.commit()
-
-    msg = f'Deleted {removed} selected user/player account(s).'
+    removed, skipped_self = _cascade_delete_players(ids)
+    msg = f'Deleted {removed} selected user/player account(s) and wiped their climb progress.'
     if skipped_self:
-        msg += ' Your own active administrator account was skipped.'
+        msg += ' Your own active administrator account was preserved.'
     flash(msg, 'success' if removed else 'error')
     return redirect(request.referrer or url_for('admin.players'))
+
+
+@admin_bp.route('/players/delete-unlogged', methods=['POST'])
+@login_required
+def players_delete_unlogged():
+    """Purge all unlogged-in guest challengers in one click so they start fresh."""
+    guest_ids = [row[0] for row in db.session.query(PlayerProfile.id).filter(PlayerProfile.user_id.is_(None)).all()]
+    if not guest_ids:
+        flash('No unlogged-in guest challengers found to delete.', 'info')
+        return redirect(request.referrer or url_for('admin.players'))
+
+    removed, _ = _cascade_delete_players(guest_ids)
+    flash(f'Successfully deleted {removed} unlogged-in guest challenger(s). They will start fresh from Day 1 on their next visit.', 'success')
+    return redirect(request.referrer or url_for('admin.players'))
+
+
+@admin_bp.route('/challenges/delete-unlogged', methods=['POST'])
+@login_required
+def challenges_delete_unlogged():
+    """Purge all unlogged-in guest challengers from the Challenges screen so they restart."""
+    guest_ids = [row[0] for row in db.session.query(PlayerProfile.id).filter(PlayerProfile.user_id.is_(None)).all()]
+    if not guest_ids:
+        flash('No unlogged-in guest challengers found to delete.', 'info')
+        return redirect(url_for('admin.challenges'))
+
+    removed, _ = _cascade_delete_players(guest_ids)
+    flash(f'Successfully deleted {removed} unlogged-in guest challenger(s). Their climb progress has been wiped so they start fresh.', 'success')
+    return redirect(url_for('admin.challenges'))
+
+
+@admin_bp.route('/challenges/bulk-delete', methods=['POST'])
+@login_required
+def challenges_bulk_delete():
+    """Delete selected climbers ticked in the Challenges table, restarting their progress."""
+    ids = [int(v) for v in request.form.getlist('player_ids') if str(v).isdigit()]
+    if not ids:
+        flash('No climbers were selected.', 'error')
+        return redirect(url_for('admin.challenges'))
+
+    removed, skipped_self = _cascade_delete_players(ids)
+    msg = f'Successfully deleted {removed} selected climber(s) and wiped their expedition progress.'
+    if skipped_self:
+        msg += ' Your own active administrator account was preserved.'
+    flash(msg, 'success' if removed else 'error')
+    return redirect(url_for('admin.challenges'))
 
 
 @admin_bp.route('/players/<int:id>/role', methods=['POST'])
@@ -2680,6 +2765,7 @@ def challenges():
 
     active_season = ClimberSeason.query.filter_by(is_active=True).first()
 
+    unlogged_count = PlayerProfile.query.filter(PlayerProfile.user_id.is_(None)).count()
     return render_template(
         'admin/challenges.html',
         climbers=enriched_climbers,
@@ -2691,7 +2777,8 @@ def challenges():
         challenges=challenge_rows,
         season=active_season,
         search=search,
-        stage_filter=stage_filter
+        stage_filter=stage_filter,
+        unlogged_count=unlogged_count
     )
 
 

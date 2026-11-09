@@ -4485,8 +4485,6 @@ def _pick_climber_question(diff='easy', exclude_id=None):
 @arena_bp.route('/climber/reset', methods=['GET', 'POST'])
 def climber_reset():
     """Reset active player's expedition back to Day 1 (Self-serve or testing)."""
-    if not session.get('user_id'):
-        return redirect(url_for('arena.player_register', next=url_for('arena.climber')))
     player = get_current_player(persist=True)
     season = get_or_create_climber_season()
     progress = get_or_create_climber_progress(player.id, season.id)
@@ -4510,9 +4508,6 @@ def climber_reset():
 @arena_bp.route('/climber')
 def climber():
     """The Quiz Climber: 30-Day Everest Expedition Screen."""
-    gate = needs_account_to_play('tackle The Quiz Climber expedition')
-    if gate:
-        return gate
     player = get_current_player(persist=True)
     season = get_or_create_climber_season()
     progress = get_or_create_climber_progress(player.id, season.id)
@@ -4567,15 +4562,9 @@ def climber():
 @arena_bp.route('/climber/answer', methods=['POST'])
 def climber_answer():
     """Validate answer on the rock wall: climb higher, use shield, or fall to Camp Safe Haven."""
-    if not session.get('user_id'):
-        return jsonify({
-            'success': False,
-            'error': 'You must be logged in to climb.',
-            'login_required': True,
-            'redirect': url_for('arena.player_register', next=url_for('arena.climber'))
-        }), 401
-
     player = get_current_player(persist=True)
+    if not player:
+        return jsonify({'success': False, 'error': 'Player profile not found. Please refresh.'}), 401
     season = get_or_create_climber_season()
     progress = get_or_create_climber_progress(player.id, season.id)
 
@@ -4793,10 +4782,9 @@ def climber_answer():
 @arena_bp.route('/climber/camp_complete', methods=['POST'])
 def climber_camp_complete():
     """Complete a Camp Safe Haven survival task (tent pitch, ladder link, rations, reflex check, oxygen)."""
-    if not session.get('user_id'):
-        return jsonify({'success': False, 'error': 'Login required'}), 401
-
     player = get_current_player(persist=True)
+    if not player:
+        return jsonify({'success': False, 'error': 'Player profile not found.'}), 401
     season = get_or_create_climber_season()
     progress = get_or_create_climber_progress(player.id, season.id)
 
@@ -4847,10 +4835,9 @@ def climber_camp_complete():
 @arena_bp.route('/climber/timeout', methods=['POST'])
 def climber_timeout():
     """Handle 60-second blizzard time-out on rock wall."""
-    if not session.get('user_id'):
-        return jsonify({'success': False, 'error': 'Login required'}), 401
-
     player = get_current_player(persist=True)
+    if not player:
+        return jsonify({'success': False, 'error': 'Player profile not found.'}), 401
     season = get_or_create_climber_season()
     progress = get_or_create_climber_progress(player.id, season.id)
 
@@ -4912,15 +4899,9 @@ def climber_timeout():
 @arena_bp.route('/climber/advance_day', methods=['POST'])
 def climber_advance_day():
     """Advance the expedition to the next day after completing today's questions."""
-    if not session.get('user_id'):
-        return jsonify({
-            'success': False,
-            'error': 'You must be logged in to advance.',
-            'login_required': True,
-            'redirect': url_for('arena.player_register', next=url_for('arena.climber'))
-        }), 401
-
     player = get_current_player(persist=True)
+    if not player:
+        return jsonify({'success': False, 'error': 'Player profile not found.'}), 401
     season = get_or_create_climber_season()
     progress = get_or_create_climber_progress(player.id, season.id)
 
@@ -5000,15 +4981,9 @@ def climber_advance_day():
 @arena_bp.route('/climber/bank', methods=['POST'])
 def climber_bank():
     """Push-your-luck Safe Haven: Bank unbanked coins permanently into player wallet."""
-    if not session.get('user_id'):
-        return jsonify({
-            'success': False,
-            'error': 'You must be logged in to bank coins.',
-            'login_required': True,
-            'redirect': url_for('arena.player_register', next=url_for('arena.climber'))
-        }), 401
-
     player = get_current_player(persist=True)
+    if not player:
+        return jsonify({'success': False, 'error': 'Player profile not found.'}), 401
     season = get_or_create_climber_season()
     progress = get_or_create_climber_progress(player.id, season.id)
 
@@ -5034,15 +5009,9 @@ def climber_bank():
 @arena_bp.route('/climber/restart', methods=['POST'])
 def climber_restart():
     """Start fresh from current Camp Safe Haven."""
-    if not session.get('user_id'):
-        return jsonify({
-            'success': False,
-            'error': 'You must be logged in to restart climb.',
-            'login_required': True,
-            'redirect': url_for('arena.player_register', next=url_for('arena.climber'))
-        }), 401
-
     player = get_current_player(persist=True)
+    if not player:
+        return jsonify({'success': False, 'error': 'Player profile not found.'}), 401
     season = get_or_create_climber_season()
     progress = get_or_create_climber_progress(player.id, season.id)
 

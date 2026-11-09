@@ -19,17 +19,30 @@
       </p>
     </div>
 
-    <!-- Reset ALL Climbers (Protected Action) -->
-    <form action="{{ url_for('admin.climber_progress_reset_all') }}" method="POST"
-          class="flex flex-wrap sm:flex-nowrap items-center gap-2 bg-rose-50 border-2 border-rose-300 p-2.5 rounded-xl shadow-sm"
-          onsubmit="return confirm('WARNING: Are you sure you want to reset ALL users back to Day 1? This will reset all current climb checkpoints across the entire site.');">
-      <span class="text-xs font-black text-rose-900 whitespace-nowrap px-1">⚠️ Reset All Users:</span>
-      <input type="text" name="confirm_text" required placeholder="Type 'RESET ALL'"
-             class="px-3 py-1.5 rounded-lg border-2 border-rose-400 text-xs text-slate-900 font-bold bg-white w-32 uppercase placeholder:normal-case placeholder:font-normal">
-      <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase whitespace-nowrap shadow transition">
-        Reset All Climbers
-      </button>
-    </form>
+    <div class="flex flex-wrap items-center gap-3">
+      <!-- Delete All Unlogged-in Challengers -->
+      <form action="{{ url_for('admin.challenges_delete_unlogged') }}" method="POST"
+            class="flex items-center gap-2 bg-amber-50 border-2 border-amber-300 p-2.5 rounded-xl shadow-sm"
+            onsubmit="return confirm('WARNING: Are you sure you want to permanently delete ALL {{ unlogged_count or 0 }} unlogged-in guest challengers? This will wipe their climber progress so they restart completely fresh from Day 1.');">
+        <span class="text-xs font-black text-amber-900 whitespace-nowrap px-1">👤 Guest Challengers:</span>
+        <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black text-xs uppercase whitespace-nowrap shadow transition"
+                {% if not unlogged_count or unlogged_count <= 0 %}disabled{% endif %}>
+          🗑️ Delete All Unlogged-in ({{ unlogged_count or 0 }})
+        </button>
+      </form>
+
+      <!-- Reset ALL Climbers (Protected Action) -->
+      <form action="{{ url_for('admin.climber_progress_reset_all') }}" method="POST"
+            class="flex flex-wrap sm:flex-nowrap items-center gap-2 bg-rose-50 border-2 border-rose-300 p-2.5 rounded-xl shadow-sm"
+            onsubmit="return confirm('WARNING: Are you sure you want to reset ALL users back to Day 1? This will reset all current climb checkpoints across the entire site.');">
+        <span class="text-xs font-black text-rose-900 whitespace-nowrap px-1">⚠️ Reset All Users:</span>
+        <input type="text" name="confirm_text" required placeholder="Type 'RESET ALL'"
+               class="px-3 py-1.5 rounded-lg border-2 border-rose-400 text-xs text-slate-900 font-bold bg-white w-28 uppercase placeholder:normal-case placeholder:font-normal">
+        <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase whitespace-nowrap shadow transition">
+          Reset All Climbers
+        </button>
+      </form>
+    </div>
   </div>
 
   <!-- Summary Metric Stat Cards -->
@@ -86,12 +99,42 @@
     </div>
   </div>
 
+  <!-- Bulk Selection Action Bar for Climbers -->
+  <form id="bulkChallengesForm" action="{{ url_for('admin.challenges_bulk_delete') }}" method="POST"
+        class="flex flex-wrap items-center justify-between gap-3 bg-slate-100 border-2 border-slate-300 rounded-2xl px-4 py-3"
+        onsubmit="return confirmBulkClimberDelete();">
+    <div class="flex items-center gap-3 text-xs font-bold text-slate-800">
+      <span>☑️ Tick climbers in the table to delete and restart their progress.</span>
+      <span id="bulkClimbersCount" class="px-2.5 py-1 rounded-full bg-slate-900 text-white font-mono font-black text-[11px]">0 selected</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" onclick="setAllClimberChecks(true)" class="px-3 py-1.5 rounded-lg bg-white border-2 border-slate-300 hover:bg-slate-50 text-slate-900 font-bold text-[11px]">
+        Select All
+      </button>
+      <button type="button" onclick="selectOnlyGuests()" class="px-3 py-1.5 rounded-lg bg-white border-2 border-slate-300 hover:bg-slate-50 text-amber-900 font-bold text-[11px]">
+        Select Only Guests
+      </button>
+      <button type="button" onclick="setAllClimberChecks(false)" class="px-3 py-1.5 rounded-lg bg-white border-2 border-slate-300 hover:bg-slate-50 text-slate-900 font-bold text-[11px]">
+        Clear Selection
+      </button>
+      <button type="submit" id="bulkClimbersDeleteBtn" disabled
+              class="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-white font-black text-[11px] uppercase shadow">
+        🗑️ Delete Selected
+      </button>
+    </div>
+  </form>
+
   <!-- CLIMBER EXPEDITION PLAYERS TABLE -->
   <div class="bg-white rounded-2xl border-2 border-slate-300 overflow-hidden shadow-sm">
     <div class="overflow-x-auto">
       <table class="w-full text-left text-xs text-slate-700">
         <thead class="bg-slate-900 text-white text-[11px] uppercase tracking-wider font-mono">
           <tr>
+            <th class="py-3.5 px-4 w-10">
+              <input type="checkbox" id="climbersMasterCheck" onchange="setAllClimberChecks(this.checked)"
+                     title="Select / deselect all climbers"
+                     class="w-4 h-4 accent-rose-600 cursor-pointer align-middle">
+            </th>
             <th class="py-3.5 px-4">Player</th>
             <th class="py-3.5 px-4 text-center">Expedition Day</th>
             <th class="py-3.5 px-4">Stage &amp; Elevation</th>
@@ -109,6 +152,16 @@
           {% set u = item.user %}
           {% set meta = item.meta %}
           <tr class="hover:bg-cyan-50/40 transition">
+            <td class="py-3.5 px-4 w-10">
+              {% if not u or u.id != session.get('user_id') %}
+              <input type="checkbox" form="bulkChallengesForm" name="player_ids" value="{{ p.id }}"
+                     data-is-guest="{{ '1' if not u else '0' }}"
+                     class="climber-check w-4 h-4 accent-rose-600 cursor-pointer align-middle"
+                     onchange="refreshClimberSelection()">
+              {% else %}
+              <span class="text-slate-400 font-bold text-[11px]" title="Your own account cannot be deleted">—</span>
+              {% endif %}
+            </td>
 
             <!-- Player Info -->
             <td class="py-3.5 px-4 font-medium text-slate-900">
@@ -337,5 +390,41 @@
     </div>
   </div>
 
+  <script>
+    function refreshClimberSelection() {
+      var checks = document.querySelectorAll('.climber-check');
+      var checkedCount = 0;
+      checks.forEach(function(c) { if (c.checked) checkedCount++; });
+
+      var countBadge = document.getElementById('bulkClimbersCount');
+      if (countBadge) countBadge.textContent = checkedCount + ' selected';
+
+      var delBtn = document.getElementById('bulkClimbersDeleteBtn');
+      if (delBtn) delBtn.disabled = (checkedCount === 0);
+
+      var master = document.getElementById('climbersMasterCheck');
+      if (master) master.checked = (checks.length > 0 && checkedCount === checks.length);
+    }
+
+    function setAllClimberChecks(val) {
+      var checks = document.querySelectorAll('.climber-check');
+      checks.forEach(function(c) { c.checked = val; });
+      refreshClimberSelection();
+    }
+
+    function selectOnlyGuests() {
+      var checks = document.querySelectorAll('.climber-check');
+      checks.forEach(function(c) {
+        c.checked = (c.getAttribute('data-is-guest') === '1');
+      });
+      refreshClimberSelection();
+    }
+
+    function confirmBulkClimberDelete() {
+      var checks = document.querySelectorAll('.climber-check:checked');
+      if (checks.length === 0) return false;
+      return confirm('Are you sure you want to permanently delete the ' + checks.length + ' selected player(s)? Their expedition progress will be completely wiped so they restart fresh.');
+    }
+  </script>
 </div>
 {% endblock %}
