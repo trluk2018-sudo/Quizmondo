@@ -4644,10 +4644,16 @@ def climber_answer():
             })
         else:
             # ALL 5 QUESTIONS COMPLETED!
-            # Award remaining clock seconds as speed bonus
             speed_bonus = seconds_left
             if speed_bonus > 0:
                 progress.unbanked_coins += speed_bonus
+
+            # AUTOMATICALLY SECURE ALL EARNED COINS INTO PERMANENT WALLET!
+            coins_won_today = progress.unbanked_coins
+            if coins_won_today > 0:
+                player.coins = (player.coins or 0) + coins_won_today
+                progress.banked_coins = (progress.banked_coins or 0) + coins_won_today
+                progress.unbanked_coins = 0
 
             progress.is_day_completed = True
             progress.altitude_m = day_meta['altitude']
@@ -4661,10 +4667,9 @@ def climber_answer():
                 progress.highest_altitude = 8848
 
                 summit_bonus = 1500
-                total_awarded = progress.unbanked_coins + summit_bonus
-                player.coins = (player.coins or 0) + total_awarded
-                progress.banked_coins += total_awarded
-                progress.unbanked_coins = 0
+                total_awarded = coins_won_today + summit_bonus
+                player.coins = (player.coins or 0) + summit_bonus
+                progress.banked_coins = (progress.banked_coins or 0) + summit_bonus
                 db.session.commit()
 
                 return jsonify({
@@ -4678,9 +4683,11 @@ def climber_answer():
                     'new_altitude': 8848,
                     'coins_gained': coins_awarded_this_q,
                     'speed_bonus': speed_bonus,
+                    'coins_won_today': total_awarded,
                     'coins_awarded': total_awarded,
                     'wallet_coins': player.coins,
-                    'explanation': question.explanation or 'Outstanding! You have stood atop Mount Everest at 8,848m!'
+                    'safe_haven': 'Everest Summit (8,848m)',
+                    'explanation': 'Safely reached the Summit of Mount Everest at 8,848m! All coins secured to your wallet!'
                 })
 
             if day_meta['is_stage_gate']:
@@ -4703,12 +4710,15 @@ def climber_answer():
                 'day_questions_total': total_q,
                 'coins_gained': coins_awarded_this_q,
                 'speed_bonus': speed_bonus,
-                'unbanked_coins': progress.unbanked_coins,
+                'coins_won_today': coins_won_today,
+                'unbanked_coins': 0,
+                'wallet_coins': player.coins,
                 'new_altitude': progress.altitude_m,
                 'secured_camp_stage': progress.secured_camp_stage,
                 'day_meta': day_meta,
                 'next_day_meta': next_day_meta,
-                'explanation': question.explanation or f"Day {progress.current_day} expedition complete! Camp reached safely."
+                'safe_haven': day_meta.get('safe_haven') or 'Camp Safe Haven',
+                'explanation': f"Safely arrived at {day_meta['safe_haven']}! +{coins_won_today} 🪙 secured to your wallet."
             })
 
     else:
@@ -4760,6 +4770,12 @@ def climber_answer():
             })
         else:
             # ALL 5 QUESTIONS COMPLETED (even if 5th was incorrect)
+            coins_won_today = progress.unbanked_coins
+            if coins_won_today > 0:
+                player.coins = (player.coins or 0) + coins_won_today
+                progress.banked_coins = (progress.banked_coins or 0) + coins_won_today
+                progress.unbanked_coins = 0
+
             progress.is_day_completed = True
             progress.altitude_m = day_meta['altitude']
             progress.highest_altitude = max(progress.highest_altitude, progress.altitude_m)
@@ -4782,13 +4798,16 @@ def climber_answer():
                 'next_day': next_day_num,
                 'day_question_index': total_q,
                 'day_questions_total': total_q,
-                'unbanked_coins': progress.unbanked_coins,
+                'coins_won_today': coins_won_today,
+                'unbanked_coins': 0,
+                'wallet_coins': player.coins,
                 'new_altitude': progress.altitude_m,
                 'secured_camp_stage': progress.secured_camp_stage,
                 'day_meta': day_meta,
                 'next_day_meta': next_day_meta,
+                'safe_haven': day_meta.get('safe_haven') or 'Camp Safe Haven',
                 'correct_answer': question.correct_option,
-                'explanation': ('🛡️ Shield absorbed slip! ' if shield_saved else f'⚠️ Slip on last hold! ') + f"Day {progress.current_day} expedition complete! Camp reached safely."
+                'explanation': ('🛡️ Shield absorbed slip! ' if shield_saved else f'⚠️ Slip on last hold! ') + f"Safely arrived at {day_meta['safe_haven']}."
             })
 
 
@@ -4816,6 +4835,13 @@ def climber_camp_complete():
     if bonus_shield > 0:
         player.climber_shields = (player.climber_shields or 0) + bonus_shield
 
+    # Auto-secure all coins on camp mission completion
+    coins_won_today = progress.unbanked_coins
+    if coins_won_today > 0:
+        player.coins = (player.coins or 0) + coins_won_today
+        progress.banked_coins = (progress.banked_coins or 0) + coins_won_today
+        progress.unbanked_coins = 0
+
     progress.is_day_completed = True
     progress.altitude_m = day_meta['altitude']
     progress.highest_altitude = max(progress.highest_altitude, progress.altitude_m)
@@ -4833,15 +4859,19 @@ def climber_camp_complete():
         'mission_title': mission.get('title'),
         'reward_desc': mission.get('reward_desc'),
         'coins_gained': coins_gained,
+        'coins_won_today': coins_won_today,
+        'unbanked_coins': 0,
+        'wallet_coins': player.coins,
         'bonus_shield': bonus_shield,
         'shields_total': player.climber_shields or 0,
-        'unbanked_coins': progress.unbanked_coins,
         'altitude': progress.altitude_m,
         'secured_camp_stage': progress.secured_camp_stage,
         'current_day': progress.current_day,
         'next_day': next_day_num,
         'day_meta': day_meta,
-        'next_day_meta': next_day_meta
+        'next_day_meta': next_day_meta,
+        'safe_haven': day_meta.get('safe_haven') or 'Camp Safe Haven',
+        'explanation': f"Safely secured {day_meta['safe_haven']}! +{coins_won_today} 🪙 safely banked in your wallet."
     })
 
 
@@ -4866,6 +4896,12 @@ def climber_timeout():
         lost_coins = progress.unbanked_coins
         progress.unbanked_coins = 0
 
+    coins_won_today = progress.unbanked_coins
+    if coins_won_today > 0:
+        player.coins = (player.coins or 0) + coins_won_today
+        progress.banked_coins = (progress.banked_coins or 0) + coins_won_today
+        progress.unbanked_coins = 0
+
     progress.is_day_completed = True
     progress.last_climbed_date = datetime.utcnow().date()
     progress.status = 'day_completed'
@@ -4884,12 +4920,15 @@ def climber_timeout():
         'next_day': next_day_num,
         'day_question_index': 5,
         'day_questions_total': 5,
-        'unbanked_coins': progress.unbanked_coins,
+        'coins_won_today': coins_won_today,
+        'unbanked_coins': 0,
+        'wallet_coins': player.coins,
         'new_altitude': progress.altitude_m,
         'secured_camp_stage': progress.secured_camp_stage,
         'day_meta': day_meta,
         'next_day_meta': next_day_meta,
-        'explanation': ('🛡️ Climber Shield absorbed the frostbite! ' if shield_saved else f'⚠️ Blizzard struck as 60-second speed clock expired! Lost +{lost_coins} unbanked coins. ') + f'Day {progress.current_day} sprint complete. Rest at Camp Safe Haven until tomorrow!'
+        'safe_haven': day_meta.get('safe_haven') or 'Camp Safe Haven',
+        'explanation': ('🛡️ Climber Shield absorbed the frostbite! ' if shield_saved else f'⚠️ Blizzard struck as 60-second speed clock expired! ') + f"Safely arrived at {day_meta['safe_haven']}! Rest until tomorrow."
     })
 
 

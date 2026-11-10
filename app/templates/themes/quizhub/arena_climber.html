@@ -527,62 +527,52 @@
         {% endif %}
 
         <!-- Day Completed Milestone Card (Shown when all questions/tasks for the day are finished) -->
-        <div id="dayCompletedCard" class="{% if not progress.is_day_completed %}hidden{% endif %} p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-indigo-950 via-slate-900 to-emerald-950/40 border-2 border-emerald-400/50 shadow-2xl text-center space-y-4 transition-all duration-300">
-          <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-mono text-xs font-bold uppercase tracking-wider">
-            🎉 DAY <span id="completedDayNum">{{ progress.current_day }}</span> EXPEDITION COMPLETE
+        <div id="dayCompletedCard" class="{% if not progress.is_day_completed %}hidden{% endif %} p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-slate-950 via-[#0e1628] to-emerald-950/60 border-2 border-emerald-400/60 shadow-2xl text-center space-y-5 transition-all duration-300">
+          
+          <!-- Safe Haven Location Banner -->
+          <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-mono text-xs sm:text-sm font-bold uppercase tracking-wider shadow-inner">
+            ⛺ SAFELY AT <span id="completedSafeHaven">{{ day_meta.safe_haven|upper }}</span> (<span id="completedAlt">{{ day_meta.altitude }}</span>M)
           </div>
 
-          <div class="space-y-1">
-            <h3 class="text-lg sm:text-xl font-bold text-white font-mono">
-              Altitude Reached: <span id="completedAlt" class="text-cyan-300">{{ day_meta.altitude }}</span>m (<span id="completedStageName">{{ day_meta.stage_name }}</span>)
+          <div class="space-y-1.5">
+            <h3 class="text-xl sm:text-2xl font-black text-white font-mono tracking-wide">
+              DAY <span id="completedDayNum">{{ progress.current_day }}</span> ASCENT CONQUERED! 🧗
             </h3>
-            <p class="text-xs sm:text-sm text-slate-300 font-normal max-w-md mx-auto">
-              All ascent checkpoints conquered for today! Secure your loot in your wallet before resting at camp.
+            <p id="completedSubMsg" class="text-xs sm:text-sm text-slate-300 font-normal max-w-md mx-auto">
+              All 5 checkpoints cleared today! Your camp is secured and equipment is stowed safely.
             </p>
           </div>
 
-          <!-- Unbanked Coins Notification -->
-          <div id="completedRiskAlert" class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-400/40 text-amber-300 text-xs sm:text-sm font-mono flex items-center justify-center gap-2">
-            <span>⚠️</span>
-            <span id="completedRiskText">
-              {% if progress.unbanked_coins > 0 %}
-                You have <strong>+<span id="completedUnbanked">{{ progress.unbanked_coins }}</span> Coins</strong> at risk. Bank them safely before tomorrow!
-              {% else %}
-                All expedition coins are safely secured in your permanent wallet. Ready for tomorrow's ascent!
-              {% endif %}
+          <!-- Coins Auto-Secured Celebration Box (Clean, Fluid, Zero-Friction) -->
+          <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-emerald-500/20 to-teal-500/15 border-2 border-amber-400/60 text-amber-300 font-mono flex flex-col sm:flex-row items-center justify-center gap-3 shadow-lg">
+            <span class="text-3xl">🪙</span>
+            <div class="text-center sm:text-left">
+              <div class="text-white text-base sm:text-lg font-black tracking-wide">
+                +<span id="completedCoinsWon">{{ day_meta.coins }}</span> COINS SECURED DIRECTLY TO YOUR WALLET!
+              </div>
+              <div class="text-xs sm:text-sm text-emerald-300 font-medium">
+                No manual banking needed &bull; safely banked in your permanent profile!
+              </div>
+            </div>
+            <span class="px-3 py-1 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/50 text-xs font-bold uppercase tracking-wider">
+              ✓ SECURED
             </span>
           </div>
 
           <!-- Strict 24-Hour Calendar Unlock Countdown Banner -->
-          <div id="nextDayUnlockBox" class="p-3.5 rounded-2xl bg-slate-950/90 border border-cyan-500/40 text-cyan-300 font-mono text-xs sm:text-sm font-bold flex flex-col sm:flex-row items-center justify-center gap-2 shadow-inner">
+          <div id="nextDayUnlockBox" class="p-4 rounded-2xl bg-slate-950/90 border border-cyan-500/40 text-cyan-300 font-mono text-xs sm:text-sm font-bold flex flex-col sm:flex-row items-center justify-center gap-2 shadow-inner">
             <span class="flex items-center gap-1.5 text-cyan-400">
               <span class="text-base">⏰</span>
               <span>DAY <span id="unlockNextDayNum">{{ progress.current_day + 1 }}</span> EXPEDITION UNLOCKS IN:</span>
             </span>
-            <span id="unlockCountdownText" class="text-sm sm:text-base font-black text-white px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-400/40 tracking-wider">
+            <span id="unlockCountdownText" class="text-base sm:text-lg font-black text-white px-3 py-1 rounded-lg bg-cyan-950/90 border border-cyan-400/50 tracking-wider shadow-md">
               --h --m --s
             </span>
           </div>
 
-          <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-            <button type="button" id="cardBankBtn" onclick="bankCoins()"
-                    {% if progress.unbanked_coins <= 0 %}disabled{% endif %}
-                    class="w-full sm:w-auto py-3 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:cursor-not-allowed">
-              {% if progress.unbanked_coins > 0 %}
-                BANK COINS NOW 🪙 (+<span id="cardBankCoinsAmount">{{ progress.unbanked_coins }}</span>)
-              {% else %}
-                ✓ COINS SECURED IN WALLET
-              {% endif %}
-            </button>
-            <button type="button" id="cardPushDayBtn" onclick="advanceDay()"
-                    class="{% if is_locked_for_today or progress.current_day >= 30 %}hidden{% endif %} w-full sm:w-auto py-3 px-6 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-cyan-500/20 transition transform hover:-translate-y-0.5">
-              PUSH TO DAY <span id="cardPushNextDayNum">{{ progress.current_day + 1 }}</span> 🧗
-            </button>
-          </div>
-
           {% if session.get('user_role') in ('admin', 'super_admin') %}
           <div class="pt-1">
-            <button type="button" onclick="advanceDay(true)" class="text-[10px] font-mono text-cyan-400 hover:text-cyan-200 underline">
+            <button type="button" onclick="advanceDay(true)" class="text-[11px] font-mono text-cyan-400 hover:text-cyan-200 underline">
               [⚡ Admin Override: Force Push to Day {{ progress.current_day + 1 }}]
             </button>
           </div>
@@ -609,7 +599,7 @@
         </div>
 
         <!-- Push-Your-Luck Safe Haven Banking Console (Brushed Titanium & Gold Vault) -->
-        <div id="safeHavenConsole" class="bg-gradient-to-br from-slate-950 via-slate-900 to-[#141226] rounded-2xl border-2 border-amber-400/40 p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div id="safeHavenConsole" class="{% if progress.is_day_completed or is_locked_for_today %}hidden{% endif %} bg-gradient-to-br from-slate-950 via-slate-900 to-[#141226] rounded-2xl border-2 border-amber-400/40 p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div class="space-y-1 text-center sm:text-left">
             <div class="flex items-center justify-center sm:justify-start gap-2 text-amber-400 font-mono text-xs font-bold uppercase tracking-wider">
               <span>🏦 SAFE HAVEN BANKING</span>
@@ -820,17 +810,7 @@
 
       setTimeout(function() {
         banner.classList.add('hidden');
-        var tCard = document.getElementById('triviaCard');
-        if (tCard) {
-          tCard.style.display = 'none';
-          tCard.classList.add('hidden');
-        }
-        var dCard = document.getElementById('dayCompletedCard');
-        if (dCard) {
-          dCard.style.display = 'block';
-          dCard.classList.remove('hidden');
-        }
-        startUnlockCountdown();
+        showDayCompletedCard(data);
         isSubmitting = false;
       }, 1800);
     })
@@ -838,6 +818,59 @@
       console.warn('Timeout error', err);
       isSubmitting = false;
     });
+  }
+
+  // Celebration Card when today's 5 checkpoints are completed
+  function showDayCompletedCard(data) {
+    var tCard = document.getElementById('triviaCard');
+    if (tCard) {
+      tCard.style.display = 'none';
+      tCard.classList.add('hidden');
+    }
+    var shConsole = document.getElementById('safeHavenConsole');
+    if (shConsole) {
+      shConsole.style.display = 'none';
+      shConsole.classList.add('hidden');
+    }
+
+    var safeHavenEl = document.getElementById('completedSafeHaven');
+    if (safeHavenEl) {
+      var shName = data.safe_haven || (data.day_meta && data.day_meta.safe_haven) || (data.next_day_meta && data.next_day_meta.safe_haven) || 'Pine Valley Basecamp';
+      safeHavenEl.textContent = String(shName).toUpperCase();
+    }
+    var altEl = document.getElementById('completedAlt');
+    if (altEl) altEl.textContent = data.new_altitude || (data.day_meta && data.day_meta.altitude) || '1300';
+    var dayEl = document.getElementById('completedDayNum');
+    if (dayEl) dayEl.textContent = data.current_day || currentDay || '1';
+    var coinsEl = document.getElementById('completedCoinsWon');
+    if (coinsEl) {
+      coinsEl.textContent = (data.coins_won_today !== undefined ? data.coins_won_today : (data.coins_awarded || data.coins_gained || (data.day_meta && data.day_meta.coins) || '50'));
+    }
+    var unlockNextEl = document.getElementById('unlockNextDayNum');
+    if (unlockNextEl) unlockNextEl.textContent = data.next_day || (parseInt(data.current_day || currentDay || 1) + 1);
+
+    var dCard = document.getElementById('dayCompletedCard');
+    if (dCard) {
+      dCard.style.display = 'block';
+      dCard.classList.remove('hidden');
+    }
+
+    var unbankedEl = document.getElementById('hudUnbanked');
+    if (unbankedEl) unbankedEl.textContent = '0';
+
+    if (data.wallet_coins !== undefined) {
+      var wc = document.getElementById('hudWalletCoins');
+      if (wc) wc.textContent = data.wallet_coins;
+    }
+
+    isDayCompleted = true;
+    isLockedForToday = true;
+
+    if (window.qmPlaySound) {
+      window.qmPlaySound('bank');
+      setTimeout(function() { if (window.qmPlaySound) window.qmPlaySound('fanfare'); }, 300);
+    }
+    startUnlockCountdown();
   }
 
   // 24-Hour Calendar Unlock Countdown Ticker
@@ -989,63 +1022,14 @@
           stopSprintClock();
           updateCheckpointPills(5, true);
           updateClimberPosition(data.current_day, 5);
-          if (window.qmPlaySound) window.qmPlaySound('fanfare');
 
           banner.classList.add('bg-emerald-950/80', 'border-emerald-400');
           fbTitle.innerHTML = '<span class="text-emerald-300">✓ DAY ' + data.current_day + ' CONQUERED! (5/5 CHECKPOINTS)</span>';
           fbDesc.textContent = (data.speed_bonus > 0 ? ('⚡ +' + data.speed_bonus + ' SPEED BONUS COINS! ') : '') + (data.explanation || 'Expedition checkpoints completed safely.');
 
-          document.getElementById('hudUnbanked').textContent = data.unbanked_coins;
-          document.getElementById('hudAltitude').textContent = data.new_altitude;
-          if (data.next_day_meta && data.next_day_meta.safe_haven) {
-            document.getElementById('hudSafeCamp').textContent = data.next_day_meta.safe_haven;
-          }
-
-          document.getElementById('completedDayNum').textContent = data.current_day;
-          document.getElementById('completedAlt').textContent = data.new_altitude;
-          document.getElementById('completedUnbanked').textContent = data.unbanked_coins;
-          document.getElementById('unlockNextDayNum').textContent = data.next_day;
-          document.getElementById('pushNextDayNum').textContent = data.next_day;
-          document.getElementById('cardPushNextDayNum').textContent = data.next_day;
-          if (data.day_meta && data.day_meta.stage_name) {
-            document.getElementById('completedStageName').textContent = data.day_meta.stage_name;
-          }
-
-          var riskText = document.getElementById('completedRiskText');
-          if (riskText) {
-            riskText.innerHTML = 'You have <strong>+' + data.unbanked_coins + ' Coins</strong> at risk. Bank them safely before advancing!';
-          }
-
-          var b1 = document.getElementById('bankBtn');
-          var b2 = document.getElementById('cardBankBtn');
-          if (b1) { b1.disabled = false; b1.innerHTML = 'BANK COINS NOW 🪙 (+<span id="bankCoinsAmount">' + data.unbanked_coins + '</span>)'; }
-          if (b2) { b2.disabled = false; b2.innerHTML = 'BANK COINS NOW 🪙 (+<span id="cardBankCoinsAmount">' + data.unbanked_coins + '</span>)'; }
-
-          // Enforce 24h lockout in UI: hide push to day buttons since stage is locked until tomorrow
-          isDayCompleted = true;
-          isLockedForToday = true;
-          var cPush = document.getElementById('cardPushDayBtn');
-          if (cPush) cPush.classList.add('hidden');
-          var hPush = document.getElementById('pushDayBtn');
-          if (hPush) hPush.classList.add('hidden');
-          var hBadge = document.getElementById('safeHavenLockedBadge');
-          if (hBadge) hBadge.classList.remove('hidden');
-          var hNext = document.getElementById('havenNextDayNum');
-          if (hNext) hNext.textContent = data.next_day;
-
           setTimeout(function() {
             banner.classList.add('hidden');
-            var tCard = document.getElementById('triviaCard');
-            if (tCard) {
-              tCard.style.display = 'none';
-              tCard.classList.add('hidden');
-            }
-            var dCard = document.getElementById('dayCompletedCard');
-            if (dCard) {
-              dCard.style.display = 'block';
-              dCard.classList.remove('hidden');
-            }
-            startUnlockCountdown();
+            showDayCompletedCard(data);
             isSubmitting = false;
           }, 1200);
 
@@ -1084,35 +1068,9 @@
           fbTitle.innerHTML = '<span class="text-amber-300">✓ 5 CHECKPOINTS COMPLETED</span>';
           fbDesc.textContent = data.explanation || ('Day ' + data.current_day + ' expedition completed. Rest at Camp Safe Haven.');
 
-          document.getElementById('hudUnbanked').textContent = data.unbanked_coins;
-          document.getElementById('hudAltitude').textContent = data.new_altitude;
-          document.getElementById('completedDayNum').textContent = data.current_day;
-          document.getElementById('completedAlt').textContent = data.new_altitude;
-          document.getElementById('completedUnbanked').textContent = data.unbanked_coins;
-          document.getElementById('unlockNextDayNum').textContent = data.next_day;
-          document.getElementById('pushNextDayNum').textContent = data.next_day;
-          document.getElementById('cardPushNextDayNum').textContent = data.next_day;
-
-          isDayCompleted = true;
-          isLockedForToday = true;
-          var cPush = document.getElementById('cardPushDayBtn');
-          if (cPush) cPush.classList.add('hidden');
-          var hPush = document.getElementById('pushDayBtn');
-          if (hPush) hPush.classList.add('hidden');
-
           setTimeout(function() {
             banner.classList.add('hidden');
-            var tCard = document.getElementById('triviaCard');
-            if (tCard) {
-              tCard.style.display = 'none';
-              tCard.classList.add('hidden');
-            }
-            var dCard = document.getElementById('dayCompletedCard');
-            if (dCard) {
-              dCard.style.display = 'block';
-              dCard.classList.remove('hidden');
-            }
-            startUnlockCountdown();
+            showDayCompletedCard(data);
             isSubmitting = false;
           }, 1400);
 
@@ -1462,8 +1420,7 @@
 
         setTimeout(function() {
           banner.classList.add('hidden');
-          document.getElementById('triviaCard').classList.add('hidden');
-          document.getElementById('dayCompletedCard').classList.remove('hidden');
+          showDayCompletedCard(data);
           isSubmitting = false;
         }, 1500);
       } else {
@@ -1512,6 +1469,11 @@
 
         document.getElementById('dayCompletedCard').classList.add('hidden');
         document.getElementById('triviaCard').classList.remove('hidden');
+        var shConsole = document.getElementById('safeHavenConsole');
+        if (shConsole) {
+          shConsole.style.display = '';
+          shConsole.classList.remove('hidden');
+        }
 
         if (isCampDay) {
           document.getElementById('triviaQuestionSection').classList.add('hidden');
