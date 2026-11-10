@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two-Factor Authentication - {{ system_settings.company_name or 'Portal' }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-6">
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100">
+        <div class="p-8 sm:p-10">
+            <div class="text-center mb-8">
+                <div class="text-5xl mb-3">🛡️</div>
+                <h1 class="text-2xl font-bold text-slate-800">Two-Factor Authentication</h1>
+                {% if method == 'totp' %}
+                <p class="text-sm text-slate-500 mt-2">Enter the 6-digit code from your <b>Authenticator App</b> (or a backup recovery code).</p>
+                {% else %}
+                <p class="text-sm text-slate-500 mt-2">A secure verification code has been sent to</p>
+                <p class="text-sm font-bold text-blue-600 mt-0.5">{{ email | mask_email }}</p>
+                {% endif %}
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="mb-6 p-4 rounded-xl text-sm font-bold {% if category == 'error' %}bg-red-50 text-red-700 border border-red-100{% elif category == 'warning' %}bg-amber-50 text-amber-800 border border-amber-200{% else %}bg-green-50 text-green-700 border border-green-100{% endif %}">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <form method="POST" class="space-y-6">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Verification Code</label>
+                    <input type="text" name="code" maxlength="12" required autofocus autocomplete="one-time-code"
+                           class="w-full text-center text-2xl sm:text-3xl font-bold tracking-[0.25em] border-2 border-slate-200 p-4 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all placeholder:text-slate-200 uppercase"
+                           placeholder="000000">
+                    <p class="text-xs text-slate-400 text-center mt-2">
+                        {% if has_totp %}Enter 6-digit code or 9-character recovery code (XXXX-XXXX){% else %}Enter the 6-digit code received via email{% endif %}
+                    </p>
+                </div>
+
+                <button type="submit" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-4 rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0">
+                    Verify & Access System
+                </button>
+            </form>
+
+            <div class="mt-6 pt-4 border-t border-slate-100 flex flex-col items-center gap-3 text-xs">
+                {% if can_send_email %}
+                <a href="{{ url_for('auth.send_email_2fa') }}" class="font-bold text-blue-600 hover:text-blue-800 transition">
+                    ✉️ Send code by email instead
+                </a>
+                {% endif %}
+                <a href="{{ url_for('auth.login') }}" class="font-bold text-slate-400 hover:text-slate-600 transition uppercase tracking-widest">
+                    &larr; Back to Login
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

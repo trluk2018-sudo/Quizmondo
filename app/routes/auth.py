@@ -211,6 +211,12 @@ def login():
 
         if user and user.check_password(password) and user.is_active:
             throttle.clear(guard)
+            # Quizmondo 2FA: OFF by default. Only prompt if explicitly enabled by admin.
+            if getattr(user, 'totp_enabled', False) and user.totp_secret:
+                session['pending_2fa_user_id'] = user.id
+                session['pending_2fa_next'] = request.args.get('next')
+                return redirect(url_for('auth.verify_2fa'))
+
             session.permanent = True
             session['user_id'] = user.id
             session['username'] = user.username
@@ -357,3 +363,50 @@ def toggle_support_access():
     else:
         flash("Support access disabled. SaaS Control Plane operators cannot sign in.", "info")
     return redirect(request.referrer or url_for('admin.dashboard'))
+
+
+@auth_bp.route('/verify-2fa', methods=['GET', 'POST'])
+def verify_2fa():
+    user_id = session.get('pending_2fa_user_id')
+    if not user_id:
+        return redirect(url_for('auth.login'))
+    user = User.query.get(user_id)
+    if not user or not getattr(user, 'totp_enabled', False):
+        session.pop('pending_2fa_user_id', None)
+        return redirect(url_for('auth.login'))
+
+    if request.method == 'POST':
+        from ..utils.totp import verify_totp, verify_and_consume_recovery_code
+        code = (request.form.get('code') or '').strip().replace(' ', '')
+        good = False
+        recovery_used = False
+
+        if len(code) == 6 and code.isdigit():
+            if verify_totp(user.totp_secret, code):
+                good = True
+
+        if not good and len(code) in (8, 9):
+            valid_rec, updated_rec = verify_and_consume_recovery_code(code, user.totp_recovery_codes)
+            if valid_rec:
+                good = True
+                recovery_used = True
+                user.totp_recovery_codes = updated_rec
+                db.session.commit()
+
+        if good:
+            next_url = session.pop('pending_2fa_next', None)
+            session.pop('pending_2fa_user_id', None)
+            session.permanent = True
+            session['user_id'] = user.id
+            session['username'] = user.username
+            session['user_role'] = user.role or 'player'
+            session['is_creator'] = user.role in ('super_admin', 'admin', 'quizmaster', 'creator')
+            if recovery_used:
+                flash('Signed in with backup recovery code. Please generate new recovery codes.', 'warning')
+            else:
+                flash('Two-factor verification successful.', 'success')
+            return redirect(next_url or url_for('admin.dashboard'))
+        else:
+            flash('Invalid verification code.', 'error')
+
+    return render_template('auth/verify_2fa.html', email=user.email, method='totp', has_totp=True)

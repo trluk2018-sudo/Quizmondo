@@ -42,6 +42,10 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), default='admin')  # admin, editor, author
+    is_2fa_enabled = db.Column(db.Boolean, default=False)
+    totp_secret = db.Column(db.String(64), nullable=True)
+    totp_enabled = db.Column(db.Boolean, default=False)
+    totp_recovery_codes = db.Column(db.Text, nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

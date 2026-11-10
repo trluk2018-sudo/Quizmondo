@@ -1642,6 +1642,7 @@ def settings_security():
         staff=staff,
         age_gate=age_gate,
         mail_ready=mail.mail_ready(),
+        current_admin=db.session.get(User, session.get('user_id')),
     )
 
 
@@ -3021,3 +3022,61 @@ def player_reset_climber(id):
     db.session.commit()
     flash(f"Climb progress for {profile.display_name} has been reset to Day 1.", 'success')
     return redirect(request.referrer or url_for('admin.players'))
+
+
+@admin_bp.route('/totp/setup', methods=['POST'])
+@login_required
+def totp_setup():
+    from ..utils.totp import generate_totp_secret, format_secret_for_display, get_totp_uri, generate_recovery_codes
+    u = db.session.get(User, session.get('user_id'))
+    if not u or u.role not in ('admin', 'super_admin'):
+        return jsonify({'error': 'Unauthorized'}), 403
+    sec = generate_totp_secret()
+    plain_codes, hashed_codes = generate_recovery_codes(8)
+    session['pending_totp_secret'] = sec
+    session['pending_totp_recovery'] = hashed_codes
+    uri = get_totp_uri(sec, u.username, issuer='Quizmondo')
+    return jsonify({
+        'secret': sec,
+        'formatted_secret': format_secret_for_display(sec),
+        'uri': uri,
+        'recovery_codes': plain_codes
+    })
+
+
+@admin_bp.route('/totp/confirm', methods=['POST'])
+@login_required
+def totp_confirm():
+    import json
+    from ..utils.totp import verify_totp
+    u = db.session.get(User, session.get('user_id'))
+    if not u or u.role not in ('admin', 'super_admin'):
+        return jsonify({'error': 'Unauthorized'}), 403
+    data = request.get_json(silent=True) or request.form
+    code = (data.get('code') or '').strip().replace(' ', '')
+    sec = session.get('pending_totp_secret')
+    hashed_codes = session.get('pending_totp_recovery')
+    if not sec or not code:
+        return jsonify({'success': False, 'error': 'Missing secret or code'}), 400
+    if verify_totp(sec, code):
+        u.totp_secret = sec
+        u.totp_enabled = True
+        u.totp_recovery_codes = json.dumps(hashed_codes)
+        db.session.commit()
+        session.pop('pending_totp_secret', None)
+        session.pop('pending_totp_recovery', None)
+        return jsonify({'success': True})
+    return jsonify({'success': False, 'error': 'Invalid 6-digit code'}), 400
+
+
+@admin_bp.route('/totp/disable', methods=['POST'])
+@login_required
+def totp_disable():
+    u = db.session.get(User, session.get('user_id'))
+    if not u or u.role not in ('admin', 'super_admin'):
+        return jsonify({'error': 'Unauthorized'}), 403
+    u.totp_enabled = False
+    u.totp_secret = None
+    u.totp_recovery_codes = None
+    db.session.commit()
+    return jsonify({'success': True})

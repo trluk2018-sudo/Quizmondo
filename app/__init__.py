@@ -223,6 +223,14 @@ def _ensure_schema():
                 db.session.execute(text("ALTER TABLE users ADD COLUMN date_of_birth DATE"))
             if 'age_confirmed_at' not in cols_users:
                 db.session.execute(text("ALTER TABLE users ADD COLUMN age_confirmed_at DATETIME"))
+            if 'is_2fa_enabled' not in cols_users:
+                db.session.execute(text("ALTER TABLE users ADD COLUMN is_2fa_enabled BOOLEAN DEFAULT 0"))
+            if 'totp_secret' not in cols_users:
+                db.session.execute(text("ALTER TABLE users ADD COLUMN totp_secret VARCHAR(64)"))
+            if 'totp_enabled' not in cols_users:
+                db.session.execute(text("ALTER TABLE users ADD COLUMN totp_enabled BOOLEAN DEFAULT 0"))
+            if 'totp_recovery_codes' not in cols_users:
+                db.session.execute(text("ALTER TABLE users ADD COLUMN totp_recovery_codes TEXT"))
 
         cols_pages = [row[1] for row in db.session.execute(text("PRAGMA table_info(pages)")).fetchall()]
         if cols_pages:
