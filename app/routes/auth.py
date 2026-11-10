@@ -72,15 +72,28 @@ def handle_sso():
         from itsdangerous import URLSafeTimedSerializer, BadData, SignatureExpired
         from sqlalchemy.exc import IntegrityError
         import time, hashlib
-        site_name = (
-            os.environ.get('APP_SUBDOMAIN')
-            or os.environ.get('SUBDOMAIN')
-            or current_app.config.get('SUBDOMAIN')
-            or request.host.split('.')[0]
-        ).strip().lower()
-        company_sso_secret = hashlib.sha256(f"{sso_secret}:{site_name}".encode('utf-8')).hexdigest()
+        # Determine all candidate subdomains for this tenant to handle variations
+        candidate_subdomains = set()
+        for cand in [
+            os.environ.get('APP_SUBDOMAIN'),
+            os.environ.get('SUBDOMAIN'),
+            current_app.config.get('SUBDOMAIN'),
+            request.host.split(':')[0].split('.')[0],
+        ]:
+            if cand:
+                c = cand.strip().lower()
+                candidate_subdomains.add(c)
+                candidate_subdomains.add(c.replace('-', ''))
+                candidate_subdomains.add(c.replace('_', ''))
 
-        for key_candidate in (company_sso_secret, sso_secret):
+        # Each company gets its own key (derived from master APP_SSO_SECRET plus site name).
+        # Master APP_SSO_SECRET is NEVER accepted directly as a decryption key (M2).
+        candidate_keys = [
+            hashlib.sha256(f"{sso_secret}:{sub}".encode('utf-8')).hexdigest()
+            for sub in candidate_subdomains
+        ]
+
+        for key_candidate in candidate_keys:
             try:
                 serializer = URLSafeTimedSerializer(key_candidate, salt='cross-instance-sso')
                 data = serializer.loads(token, max_age=60)  # Clamped to 60s
@@ -89,14 +102,23 @@ def handle_sso():
                 continue
 
         if data:
-            # 1. Site isolation: check destination
+            # 1. Site isolation: require site identity (sub / aud) and check destination (M2)
             token_sub = (data.get('sub') or data.get('aud') or '').strip().lower()
-            if token_sub:
-                req_host = (request.host or '').lower().split(':')[0]
-                if token_sub != site_name and token_sub not in req_host:
-                    current_app.logger.warning(f"SSO site mismatch: token for '{token_sub}', host is '{request.host}'")
-                    flash("That sign-in link was issued for a different site and cannot be used here.", "error")
-                    return redirect(url_for('auth.login'))
+            if not token_sub:
+                current_app.logger.warning("SSO token missing required site identity (sub/aud)")
+                flash("That sign-in link is missing site identity and cannot be used.", "error")
+                return redirect(url_for('auth.login'))
+
+            req_host = (request.host or '').lower().split(':')[0]
+            site_matches = (
+                token_sub in candidate_subdomains
+                or token_sub.replace('-', '') in candidate_subdomains
+                or token_sub in req_host
+            )
+            if not site_matches:
+                current_app.logger.warning(f"SSO site mismatch: token for '{token_sub}', host is '{request.host}'")
+                flash("That sign-in link was issued for a different site and cannot be used here.", "error")
+                return redirect(url_for('auth.login'))
 
             # 2. Once-only: single-use nonce
             nonce = data.get('nonce') or hashlib.sha256(token.encode('utf-8')).hexdigest()

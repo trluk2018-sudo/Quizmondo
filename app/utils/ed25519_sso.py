@@ -205,7 +205,7 @@ def reset_pinned_key_with_admin_password(username: str, password: str) -> tuple[
         u = User.query.filter_by(username=username).first()
         if not u or not u.check_password(password):
             return False, "Invalid admin credentials."
-        if getattr(u, 'role', '') not in ('admin', 'super_admin'):
+        if getattr(u, 'role', '') != 'super_admin':
             return False, "Super-admin privileges required."
         ok = reset_pinned_public_key()
         if ok:
@@ -343,6 +343,40 @@ def verify_ed25519_sso_token(token: str, public_key_b64: str = None, expected_sc
         _USED_NONCES[nonce] = exp
         if len(_USED_NONCES) > 500:
             _purge_expired_nonces(now)
+
+        # M3 Replay Protection: persist nonces in database table across Gunicorn workers and restarts
+        try:
+            from flask import has_app_context
+            if has_app_context():
+                try:
+                    from ..models.audit import SsoUsedNonce
+                    from ..models import db
+                except (ImportError, ValueError):
+                    try:
+                        from ..models import SsoUsedNonce, db
+                    except (ImportError, ValueError):
+                        SsoUsedNonce, db = None, None
+
+                if SsoUsedNonce and db:
+                    from sqlalchemy.exc import IntegrityError
+                    SsoUsedNonce.__table__.create(bind=db.engine, checkfirst=True)
+                    try:
+                        SsoUsedNonce.query.filter(SsoUsedNonce.expires_at < now).delete(synchronize_session=False)
+                    except Exception:
+                        pass
+                    try:
+                        existing = SsoUsedNonce.query.filter_by(nonce=str(nonce)[:64]).first()
+                        if existing:
+                            return None, 'nonce_replayed'
+                        db.session.add(SsoUsedNonce(nonce=str(nonce)[:64], expires_at=exp or (now + 300)))
+                        db.session.commit()
+                    except IntegrityError:
+                        db.session.rollback()
+                        return None, 'nonce_replayed'
+                    except Exception:
+                        db.session.rollback()
+        except Exception:
+            pass
 
     if expected_scope and payload.get('scope') != expected_scope:
         return None, 'wrong_scope'

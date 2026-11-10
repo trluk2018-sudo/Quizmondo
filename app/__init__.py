@@ -8,7 +8,21 @@ def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
 
     # Resolve platform / tenant environment configurations
-    secret_key = os.environ.get('APP_SECRET_KEY') or os.environ.get('SECRET_KEY') or 'sitebuilder-express-insecure-dev-key'
+    is_prod = bool(
+        os.environ.get('COOLIFY_APP_NAME')
+        or os.environ.get('COOLIFY_RESOURCE_UUID')
+        or os.environ.get('FLASK_ENV') == 'production'
+        or os.environ.get('ENVIRONMENT') == 'production'
+    )
+    secret_key = os.environ.get('APP_SECRET_KEY') or os.environ.get('SECRET_KEY')
+    if not secret_key:
+        if is_prod:
+            raise RuntimeError("CRITICAL SECURITY ERROR: APP_SECRET_KEY must be provided via environment in production.")
+        secret_key = 'sitebuilder-express-insecure-dev-key'
+
+    sso_sec = os.environ.get('APP_SSO_SECRET') or os.environ.get('SSO_SECRET')
+    if is_prod and not sso_sec:
+        raise RuntimeError("CRITICAL SECURITY ERROR: APP_SSO_SECRET must be provided via environment in production.")
     db_url = os.environ.get('APP_DATABASE_URL') or os.environ.get('DATABASE_URL') or f"sqlite:///{os.path.join(app.instance_path, 'sitebuilder.sqlite')}"
     if db_url.startswith('postgres://'):
         db_url = db_url.replace('postgres://', 'postgresql://', 1)
