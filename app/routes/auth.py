@@ -122,7 +122,10 @@ def handle_sso():
 
             # 2. Once-only: single-use nonce
             nonce = data.get('nonce') or hashlib.sha256(token.encode('utf-8')).hexdigest()
-            from ..models import SsoUsedNonce, db
+            # db is already imported at module level; naming it here too makes
+            # it local to this whole function, so every earlier db.session use
+            # raises UnboundLocalError before this line ever runs.
+            from ..models import SsoUsedNonce
             SsoUsedNonce.__table__.create(bind=db.engine, checkfirst=True)
             now_ts = int(time.time())
             try:

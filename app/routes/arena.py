@@ -1043,8 +1043,8 @@ def _build_round_comparison(r: ArenaRound) -> list:
         comparison.append({
             'q_num': idx,
             'prompt': q.prompt,
-            'correct_option': q.correct_option_option,
-            'correct_text': opts.get(q.correct_option_option, q.correct_option_option),
+            'correct_option': q.correct_option,
+            'correct_text': opts.get(q.correct_option, q.correct_option),
             'p1_choice': c1,
             'p1_text': opts.get(c1, c1) if c1 in opts else ('Timed Out' if c1 == 'TIMEOUT' else c1),
             'p1_correct': bool(a1.get('is_correct')),
@@ -1497,7 +1497,7 @@ def submit_round(match_code):
         time_taken = round(max(0.5, float(q_limit - time_left)), 1)
         total_time_sec = round(total_time_sec + time_taken, 1)
 
-        is_correct = (choice == q.correct_option_option)
+        is_correct = (choice == q.correct_option)
         points_awarded = 0
         if is_correct:
             correct_count += 1
@@ -1509,7 +1509,7 @@ def submit_round(match_code):
             'question_id': q.id,
             'prompt': q.prompt,
             'selected': choice,
-            'correct_option': q.correct_option_option,
+            'correct_option': q.correct_option,
             'is_correct': is_correct,
             'time_left': time_left,
             'time_taken': time_taken,
@@ -1544,9 +1544,9 @@ def submit_round(match_code):
             # A miss has to land on an option that is actually wrong. This used to
             # be hard-coded to 'B', so whenever B was the right answer the results
             # screen showed the bot picking the correct line and marked it wrong.
-            wrong_options = [k for k in (q.get_options() or {}) if k != q.correct_option_option]
-            bot_choice = q.correct_option_option if bot_correct else (
-                random.choice(wrong_options) if wrong_options else q.correct_option_option)
+            wrong_options = [k for k in (q.get_options() or {}) if k != q.correct_option]
+            bot_choice = q.correct_option if bot_correct else (
+                random.choice(wrong_options) if wrong_options else q.correct_option)
             bot_detailed.append({
                 'question_id': q.id,
                 'selected': bot_choice,
@@ -2469,7 +2469,7 @@ def score_pub_answers(state, round_num, raw_answers, cfg, total_rounds):
             continue
         counted.add(qid)
         q = QuizQuestion.query.get(qid)
-        if not q or not item.get('choice') or item.get('choice') != q.correct_option_option:
+        if not q or not item.get('choice') or item.get('choice') != q.correct_option:
             continue
         try:
             remaining = int(item.get('remaining') or 0)
@@ -3482,7 +3482,7 @@ def group_questions(game):
 
 def score_group_answer(question, choice, seconds_left, limit):
     """Same shape as the pub quiz: right answer plus whatever clock is left."""
-    if not question or not choice or choice != question.correct_option_option:
+    if not question or not choice or choice != question.correct_option:
         return 0
     seconds_left = max(0, min(int(limit), int(seconds_left or 0)))
     return 100 + seconds_left * 2
@@ -3506,8 +3506,8 @@ def settle_group_question(game):
             correct = random.random() < GROUP_BOT_ACCURACY
             # Bots never look superhuman: they use up a believable slice of the clock
             left = random.randint(1, max(1, int(limit * 0.6)))
-            choice = question.correct_option_option if correct else next(
-                (o for o in ('A', 'B', 'C', 'D') if o != question.correct_option_option), 'A'
+            choice = question.correct_option if correct else next(
+                (o for o in ('A', 'B', 'C', 'D') if o != question.correct_option), 'A'
             )
             points = score_group_answer(question, choice, left, limit)
         else:
@@ -3793,7 +3793,7 @@ def group_state(code):
         }
     if game.status in ('reveal', 'finished') and question:
         payload['reveal'] = {
-            'correct_option': question.correct_option_option,
+            'correct_option': question.correct_option,
             'explanation': question.explanation,
             'prompt': question.prompt,
             'your_answer': (seat.get_answers().get(str(idx)) or {}) if seat else {}
