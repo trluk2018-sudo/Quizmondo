@@ -122,7 +122,7 @@ def handle_sso():
 
             # 2. Once-only: single-use nonce
             nonce = data.get('nonce') or hashlib.sha256(token.encode('utf-8')).hexdigest()
-            from ..models import SsoUsedNonce, db
+            from ..models import SsoUsedNonce
             SsoUsedNonce.__table__.create(bind=db.engine, checkfirst=True)
             now_ts = int(time.time())
             try:
