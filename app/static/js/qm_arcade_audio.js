@@ -38,19 +38,32 @@
   document.addEventListener('touchstart', unlock, { once: true, passive: true });
 
   var sounds = {
-    // Mechanical peg tick on lucky wheel or step movement
+    // Real Mechanical Clock TICK (sharp escapement transient click, ZERO tonal beep)
     tick: function(c) {
-      var osc = c.createOscillator();
+      var bufferSize = Math.floor(c.sampleRate * 0.025);
+      var buffer = c.createBuffer(1, bufferSize, c.sampleRate);
+      var data = buffer.getChannelData(0);
+      for (var i = 0; i < bufferSize; i++) {
+        var decay = Math.exp(-i / (c.sampleRate * 0.0035));
+        data[i] = ((Math.random() * 2 - 1) * 0.8) * decay;
+      }
+      var noise = c.createBufferSource();
+      noise.buffer = buffer;
+
+      // Bandpass filter to isolate the crisp mechanical "tick" wood/metal clock sound
+      var filter = c.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(2400, c.currentTime);
+      filter.Q.setValueAtTime(2.8, c.currentTime);
+
       var gain = c.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(520, c.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(140, c.currentTime + 0.035);
-      gain.gain.setValueAtTime(0.18, c.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.035);
-      osc.connect(gain);
+      gain.gain.setValueAtTime(0.35, c.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.024);
+
+      noise.connect(filter);
+      filter.connect(gain);
       gain.connect(c.destination);
-      osc.start(c.currentTime);
-      osc.stop(c.currentTime + 0.04);
+      noise.start(c.currentTime);
     },
 
     // Climber rope pull / step ascend
@@ -198,36 +211,40 @@
       osc.stop(c.currentTime + 0.06);
     },
 
-    // Intense high-tension urgent clock tick for the final 15 seconds
+    // Intense Mechanical Double-Tick (Urgent rapid escapement "tick-tack", crisp mechanical wood/metal click, ZERO electronic beep)
     urgentTick: function(c) {
-      var osc = c.createOscillator();
-      var gain = c.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(880, c.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(1200, c.currentTime + 0.04);
-      gain.gain.setValueAtTime(0.24, c.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.045);
-      osc.connect(gain);
-      gain.connect(c.destination);
-      osc.start(c.currentTime);
-      osc.stop(c.currentTime + 0.05);
+      var playMechClick = function(timeOffset, freq, vol) {
+        var bufferSize = Math.floor(c.sampleRate * 0.022);
+        var buffer = c.createBuffer(1, bufferSize, c.sampleRate);
+        var data = buffer.getChannelData(0);
+        for (var i = 0; i < bufferSize; i++) {
+          var decay = Math.exp(-i / (c.sampleRate * 0.003));
+          data[i] = (Math.random() * 2 - 1) * decay;
+        }
+        var noise = c.createBufferSource();
+        noise.buffer = buffer;
+        var filter = c.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(freq, c.currentTime + timeOffset);
+        filter.Q.setValueAtTime(3.2, c.currentTime + timeOffset);
 
+        var gain = c.createGain();
+        gain.gain.setValueAtTime(vol, c.currentTime + timeOffset);
+        gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + timeOffset + 0.021);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(c.destination);
+        noise.start(c.currentTime + timeOffset);
+      };
+
+      // Crisp lead click (2800 Hz) followed by immediate wood rebound click (1900 Hz) 45ms later
+      playMechClick(0, 2800, 0.45);
       setTimeout(function() {
-        if (c.state !== 'running') return;
-        try {
-          var osc2 = c.createOscillator();
-          var gain2 = c.createGain();
-          osc2.type = 'triangle';
-          osc2.frequency.setValueAtTime(1400, c.currentTime);
-          osc2.frequency.exponentialRampToValueAtTime(1760, c.currentTime + 0.03);
-          gain2.gain.setValueAtTime(0.28, c.currentTime);
-          gain2.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.035);
-          osc2.connect(gain2);
-          gain2.connect(c.destination);
-          osc2.start(c.currentTime);
-          osc2.stop(c.currentTime + 0.04);
-        } catch(e) {}
-      }, 40);
+        if (c.state === 'running') {
+          playMechClick(0, 1900, 0.35);
+        }
+      }, 45);
     }
   };
 
