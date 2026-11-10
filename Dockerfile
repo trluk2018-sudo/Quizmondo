@@ -15,6 +15,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PORT=8000
 
+# Create unprivileged system user (UID/GID 1000)
+RUN groupadd -r -g 1000 appuser && \
+    useradd -r -u 1000 -g appuser -d /app -s /sbin/nologin appuser
+
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
@@ -30,6 +34,11 @@ COPY . .
 # Copy compiled CSS from Stage 1
 COPY --from=css-builder /build/app/static/css/tailwind.min.css ./app/static/css/tailwind.min.css
 
+RUN mkdir -p /app/instance /app/uploads /app/data && \
+    chmod +x /app/docker-entrypoint.sh 2>/dev/null || true && \
+    chown -R appuser:appuser /app
+
 EXPOSE 8000
 
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--threads", "4", "run:app"]
