@@ -4712,9 +4712,22 @@ def climber_answer():
             })
 
     else:
-        # INCORRECT ANSWER
+        # INCORRECT ANSWER: advance to next question of 5 without adding coins
+        lost_coins = 0
+        shield_saved = False
         if (player.climber_shields or 0) > 0:
             player.climber_shields -= 1
+            shield_saved = True
+            db.session.commit()
+        else:
+            lost_coins = progress.unbanked_coins
+            progress.unbanked_coins = 0
+
+        if curr_idx < total_q:
+            # Advance to next question of 5
+            progress.day_question_index = curr_idx + 1
+            progress.is_day_completed = False
+            progress.status = 'climbing'
             db.session.commit()
 
             next_q = _pick_climber_question(diff=day_meta['diff'], exclude_id=question.id)
@@ -4731,61 +4744,51 @@ def climber_answer():
             return jsonify({
                 'success': True,
                 'correct': False,
-                'shield_saved': True,
-                'shields_left': player.climber_shields,
+                'day_completed': False,
+                'shield_saved': shield_saved,
+                'shields_left': player.climber_shields or 0,
+                'lost_coins': lost_coins,
                 'current_day': progress.current_day,
                 'day_question_index': progress.day_question_index,
-                'day_questions_total': progress.day_questions_total,
+                'day_questions_total': total_q,
                 'unbanked_coins': progress.unbanked_coins,
                 'current_altitude': progress.altitude_m,
                 'correct_answer': question.correct_option,
-                'explanation': question.explanation or 'Your climber shield absorbed the fall! Altitude preserved.',
-                'next_question': next_q_data
+                'explanation': ('🛡️ Climber Shield absorbed the slip! ' if shield_saved else f'⚠️ Slip! Lost +{lost_coins} unbanked coins. ') + (question.explanation or f'Correct answer was ({question.correct_option}). Keep moving, clock is ticking!'),
+                'next_question': next_q_data,
+                'day_meta': day_meta
             })
         else:
-            lost_coins = progress.unbanked_coins
-            progress.unbanked_coins = 0
-
-            camp_day = (progress.secured_camp_stage - 1) * 5 + 1
-            progress.current_day = camp_day
-            progress.current_step = camp_day
-            progress.day_question_index = 1
-            progress.is_day_completed = False
-            camp_meta = _calc_day_meta(camp_day)
-            progress.altitude_m = camp_meta['altitude']
-            progress.current_stage = progress.secured_camp_stage
-            progress.day_questions_total = 1 if camp_meta.get('is_camp_day') else 5
-            progress.status = 'fallen'
-            progress.total_falls += 1
+            # ALL 5 QUESTIONS COMPLETED (even if 5th was incorrect)
+            progress.is_day_completed = True
+            progress.altitude_m = day_meta['altitude']
+            progress.highest_altitude = max(progress.highest_altitude, progress.altitude_m)
+            progress.last_climbed_date = datetime.utcnow().date()
+            progress.status = 'day_completed'
             db.session.commit()
 
-            next_q = _pick_climber_question(diff=camp_meta['diff'], exclude_id=question.id)
-            next_q_data = None
-            if next_q:
-                next_q_data = {
-                    'id': next_q.id,
-                    'prompt': next_q.prompt,
-                    'media_url': next_q.media_url or '',
-                    'options': next_q.get_options(),
-                    'difficulty': next_q.difficulty
-                }
+            next_day_num = progress.current_day + 1
+            next_day_meta = _calc_day_meta(next_day_num)
 
             return jsonify({
                 'success': True,
                 'correct': False,
-                'shield_saved': False,
-                'fallen': True,
+                'day_completed': True,
+                'summit': False,
+                'shield_saved': shield_saved,
+                'shields_left': player.climber_shields or 0,
                 'lost_coins': lost_coins,
-                'retreated_camp': camp_meta['safe_haven'],
-                'current_day': camp_day,
-                'new_day': camp_day,
-                'day_question_index': 1,
-                'day_questions_total': progress.day_questions_total,
+                'current_day': progress.current_day,
+                'next_day': next_day_num,
+                'day_question_index': total_q,
+                'day_questions_total': total_q,
+                'unbanked_coins': progress.unbanked_coins,
                 'new_altitude': progress.altitude_m,
+                'secured_camp_stage': progress.secured_camp_stage,
+                'day_meta': day_meta,
+                'next_day_meta': next_day_meta,
                 'correct_answer': question.correct_option,
-                'explanation': question.explanation or ('Incorrect! Slipped back to ' + camp_meta['safe_haven'] + '.'),
-                'next_question': next_q_data,
-                'next_day_meta': camp_meta
+                'explanation': ('🛡️ Shield absorbed slip! ' if shield_saved else f'⚠️ Slip on last hold! ') + f"Day {progress.current_day} expedition complete! Camp reached safely."
             })
 
 
@@ -4844,7 +4847,7 @@ def climber_camp_complete():
 
 @arena_bp.route('/climber/timeout', methods=['POST'])
 def climber_timeout():
-    """Handle 60-second blizzard time-out on rock wall."""
+    """Handle 60-second blizzard time-out on rock wall: completes today's sprint."""
     player = get_current_player(persist=True)
     if not player:
         return jsonify({'success': False, 'error': 'Player profile not found.'}), 401
@@ -4853,57 +4856,41 @@ def climber_timeout():
 
     day_meta = _calc_day_meta(progress.current_day)
 
+    shield_saved = False
+    lost_coins = 0
     if (player.climber_shields or 0) > 0:
         player.climber_shields -= 1
+        shield_saved = True
         db.session.commit()
-        return jsonify({
-            'success': True,
-            'shield_saved': True,
-            'shields_left': player.climber_shields,
-            'explanation': 'Time ran out! Your Climber Shield absorbed the blizzard frostbite! Resetting the 60s sprint clock.'
-        })
     else:
         lost_coins = progress.unbanked_coins
         progress.unbanked_coins = 0
-        camp_day = (progress.secured_camp_stage - 1) * 5 + 1
-        progress.current_day = camp_day
-        progress.current_step = camp_day
-        progress.day_question_index = 1
-        progress.is_day_completed = False
-        camp_meta = _calc_day_meta(camp_day)
-        progress.altitude_m = camp_meta['altitude']
-        progress.current_stage = progress.secured_camp_stage
-        progress.day_questions_total = 1 if camp_meta.get('is_camp_day') else 5
-        progress.status = 'fallen'
-        progress.total_falls += 1
-        db.session.commit()
 
-        next_q = _pick_climber_question(diff=camp_meta['diff'])
-        next_q_data = None
-        if next_q:
-            next_q_data = {
-                'id': next_q.id,
-                'prompt': next_q.prompt,
-                'media_url': next_q.media_url or '',
-                'options': next_q.get_options(),
-                'difficulty': next_q.difficulty
-            }
+    progress.is_day_completed = True
+    progress.last_climbed_date = datetime.utcnow().date()
+    progress.status = 'day_completed'
+    db.session.commit()
 
-        return jsonify({
-            'success': True,
-            'shield_saved': False,
-            'fallen': True,
-            'lost_coins': lost_coins,
-            'retreated_camp': camp_meta['safe_haven'],
-            'current_day': camp_day,
-            'new_day': camp_day,
-            'day_question_index': 1,
-            'day_questions_total': progress.day_questions_total,
-            'new_altitude': progress.altitude_m,
-            'explanation': 'Blizzard frostbite caught you as time expired! Slipped back to ' + camp_meta['safe_haven'] + '.',
-            'next_question': next_q_data,
-            'next_day_meta': camp_meta
-        })
+    next_day_num = progress.current_day + 1
+    next_day_meta = _calc_day_meta(next_day_num)
+
+    return jsonify({
+        'success': True,
+        'day_completed': True,
+        'shield_saved': shield_saved,
+        'shields_left': player.climber_shields or 0,
+        'lost_coins': lost_coins,
+        'current_day': progress.current_day,
+        'next_day': next_day_num,
+        'day_question_index': 5,
+        'day_questions_total': 5,
+        'unbanked_coins': progress.unbanked_coins,
+        'new_altitude': progress.altitude_m,
+        'secured_camp_stage': progress.secured_camp_stage,
+        'day_meta': day_meta,
+        'next_day_meta': next_day_meta,
+        'explanation': ('🛡️ Climber Shield absorbed the frostbite! ' if shield_saved else f'⚠️ Blizzard struck as 60-second speed clock expired! Lost +{lost_coins} unbanked coins. ') + f'Day {progress.current_day} sprint complete. Rest at Camp Safe Haven until tomorrow!'
+    })
 
 
 @arena_bp.route('/climber/advance_day', methods=['POST'])

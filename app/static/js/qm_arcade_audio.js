@@ -196,6 +196,38 @@
       gain.connect(c.destination);
       osc.start(c.currentTime);
       osc.stop(c.currentTime + 0.06);
+    },
+
+    // Intense high-tension urgent clock tick for the final 15 seconds
+    urgentTick: function(c) {
+      var osc = c.createOscillator();
+      var gain = c.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(880, c.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1200, c.currentTime + 0.04);
+      gain.gain.setValueAtTime(0.24, c.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.045);
+      osc.connect(gain);
+      gain.connect(c.destination);
+      osc.start(c.currentTime);
+      osc.stop(c.currentTime + 0.05);
+
+      setTimeout(function() {
+        if (c.state !== 'running') return;
+        try {
+          var osc2 = c.createOscillator();
+          var gain2 = c.createGain();
+          osc2.type = 'triangle';
+          osc2.frequency.setValueAtTime(1400, c.currentTime);
+          osc2.frequency.exponentialRampToValueAtTime(1760, c.currentTime + 0.03);
+          gain2.gain.setValueAtTime(0.28, c.currentTime);
+          gain2.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.035);
+          osc2.connect(gain2);
+          gain2.connect(c.destination);
+          osc2.start(c.currentTime);
+          osc2.stop(c.currentTime + 0.04);
+        } catch(e) {}
+      }, 40);
     }
   };
 

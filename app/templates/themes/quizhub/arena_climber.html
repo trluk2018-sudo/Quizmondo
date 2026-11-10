@@ -373,6 +373,33 @@
           <!-- NORMAL TRIVIA SPRINT SECTION (Shown on non-camp days when sprint is started) -->
           <div id="triviaQuestionSection" class="{% if progress.day_question_index <= 1 or day_meta.is_camp_day %}hidden{% endif %} space-y-4">
 
+            <!-- 5-CHECKPOINT DAILY PROGRESSION TRACKER -->
+            <div class="p-2.5 sm:p-3 rounded-2xl bg-slate-950/80 border border-purple-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2 font-mono shadow-inner">
+              <div class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1.5">
+                <span class="text-amber-400">📍</span>
+                <span>DAY {{ progress.current_day }} CHECKPOINTS:</span>
+                <span id="checkpointProgressText" class="text-cyan-300 font-bold ml-1">Question {{ progress.day_question_index }} of 5</span>
+              </div>
+              <div class="grid grid-cols-5 gap-1.5 sm:gap-2 flex-1">
+                {% for i in range(1, 6) %}
+                <div id="qCheckpoint-{{ i }}"
+                     class="checkpoint-pill py-1.5 px-1.5 sm:px-2 rounded-xl border text-center transition-all duration-300 flex items-center justify-center gap-1
+                            {% if i < progress.day_question_index %}
+                              bg-emerald-950/80 border-emerald-400/80 text-emerald-300 font-bold shadow-sm shadow-emerald-500/20
+                            {% elif i == progress.day_question_index %}
+                              bg-cyan-950/90 border-cyan-400 text-cyan-200 ring-2 ring-cyan-400/40 font-black shadow-md shadow-cyan-500/30
+                            {% else %}
+                              bg-slate-900/60 border-slate-800 text-slate-500
+                            {% endif %}">
+                  <span class="text-[10px] sm:text-xs font-mono font-bold">Q{{ i }}</span>
+                  <span id="qCheckpointIcon-{{ i }}" class="text-[10px] sm:text-xs">
+                    {% if i < progress.day_question_index %}✓{% elif i == progress.day_question_index %}🧗{% else %}○{% endif %}
+                  </span>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+
             <!-- Real Circular Countdown Clock (Countdown TV Show Style) -->
             <div id="realClockWidget" class="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-slate-950 via-[#0a1024] to-[#121936] border border-cyan-400/40 shadow-inner font-mono">
               <div class="flex items-center gap-3.5">
@@ -636,18 +663,44 @@
   var sprintTimer = null;
   var sprintTimeLeft = 60;
 
+  function updateCheckpointPills(qIdx, isDone) {
+    var pText = document.getElementById('checkpointProgressText');
+    if (pText) {
+      pText.textContent = isDone ? 'All 5 Conquered!' : ('Question ' + (qIdx || 1) + ' of 5');
+    }
+    for (var i = 1; i <= 5; i++) {
+      var pill = document.getElementById('qCheckpoint-' + i);
+      var icon = document.getElementById('qCheckpointIcon-' + i);
+      if (!pill || !icon) continue;
+      if (isDone || i < qIdx) {
+        pill.className = 'checkpoint-pill py-1.5 px-1.5 sm:px-2 rounded-xl border text-center transition-all duration-300 flex items-center justify-center gap-1 bg-emerald-950/80 border-emerald-400/80 text-emerald-300 font-bold shadow-sm shadow-emerald-500/20';
+        icon.textContent = '✓';
+      } else if (i === qIdx) {
+        pill.className = 'checkpoint-pill py-1.5 px-1.5 sm:px-2 rounded-xl border text-center transition-all duration-300 flex items-center justify-center gap-1 bg-cyan-950/90 border-cyan-400 text-cyan-200 ring-2 ring-cyan-400/40 font-black shadow-md shadow-cyan-500/30 scale-105';
+        icon.textContent = '🧗';
+      } else {
+        pill.className = 'checkpoint-pill py-1.5 px-1.5 sm:px-2 rounded-xl border text-center transition-all duration-300 flex items-center justify-center gap-1 bg-slate-900/60 border-slate-800 text-slate-500';
+        icon.textContent = '○';
+      }
+    }
+  }
+
   function startSprintClock() {
     stopSprintClock();
     if (isCampDay || isDayCompleted) return;
     sprintTimeLeft = 60;
     updateSprintClockDisplay();
+    if (window.qmPlaySound) window.qmPlaySound('tick');
 
     sprintTimer = setInterval(function() {
       sprintTimeLeft--;
       updateSprintClockDisplay();
 
-      if (sprintTimeLeft <= 10 && sprintTimeLeft > 0) {
-        if (window.qmPlaySound) window.qmPlaySound('blip');
+      // Sound ticking right from sixty, and more intense in final 15 seconds!
+      if (sprintTimeLeft > 15) {
+        if (window.qmPlaySound) window.qmPlaySound('tick');
+      } else if (sprintTimeLeft > 0) {
+        if (window.qmPlaySound) window.qmPlaySound('urgentTick');
       }
 
       if (sprintTimeLeft <= 0) {
@@ -696,7 +749,7 @@
     if (arc) arc.style.strokeDashoffset = elapsedPct * perimeter;
     if (hand) hand.style.transform = 'rotate(' + (elapsedPct * 360) + 'deg)';
 
-    if (sprintTimeLeft > 20) {
+    if (sprintTimeLeft > 15) {
       if (bar) { bar.className = 'h-full bg-cyan-400 transition-all duration-1000'; }
       if (txt) { txt.className = 'text-sm font-black text-cyan-300'; }
       if (arc) arc.setAttribute('stroke', '#06b6d4');
@@ -706,25 +759,25 @@
         badge.className = 'px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 text-[10px] font-bold uppercase tracking-wider';
         badge.textContent = 'HIGH STAMINA';
       }
-    } else if (sprintTimeLeft > 10) {
-      if (bar) { bar.className = 'h-full bg-amber-400 transition-all duration-1000'; }
-      if (txt) { txt.className = 'text-sm font-black text-amber-400'; }
+    } else if (sprintTimeLeft > 5) {
+      if (bar) { bar.className = 'h-full bg-amber-400 animate-pulse transition-all duration-500'; }
+      if (txt) { txt.className = 'text-sm font-black text-amber-400 animate-pulse'; }
       if (arc) arc.setAttribute('stroke', '#f59e0b');
       if (hand) hand.setAttribute('stroke', '#fbbf24');
-      if (digits) digits.className = 'text-xl sm:text-2xl font-black text-amber-400 tracking-tighter leading-none';
+      if (digits) digits.className = 'text-xl sm:text-2xl font-black text-amber-400 tracking-tighter leading-none scale-105';
       if (badge) {
-        badge.className = 'px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[10px] font-bold uppercase tracking-wider';
-        badge.textContent = 'BLIZZARD APPROACHING';
+        badge.className = 'px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[10px] font-bold uppercase tracking-wider animate-pulse';
+        badge.textContent = '⚠️ FINAL 15 SECONDS!';
       }
     } else {
-      if (bar) { bar.className = 'h-full bg-rose-500 animate-pulse transition-all duration-1000'; }
-      if (txt) { txt.className = 'text-sm font-black text-rose-400'; }
+      if (bar) { bar.className = 'h-full bg-rose-500 animate-pulse transition-all duration-300'; }
+      if (txt) { txt.className = 'text-sm font-black text-rose-400 animate-bounce'; }
       if (arc) arc.setAttribute('stroke', '#ef4444');
       if (hand) hand.setAttribute('stroke', '#f87171');
-      if (digits) digits.className = 'text-xl sm:text-2xl font-black text-rose-500 tracking-tighter leading-none animate-pulse';
+      if (digits) digits.className = 'text-xl sm:text-2xl font-black text-rose-500 tracking-tighter leading-none animate-ping';
       if (badge) {
         badge.className = 'px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-400/40 text-[10px] font-bold uppercase tracking-wider animate-pulse';
-        badge.textContent = 'CRITICAL BLIZZARD!';
+        badge.textContent = '🔥 CRITICAL BLIZZARD!';
       }
     }
   }
@@ -732,7 +785,6 @@
   function handleBlizzardTimeout() {
     if (isSubmitting) return;
     isSubmitting = true;
-    var puppet = document.getElementById('climberPuppet');
 
     fetch('{{ url_for("arena.climber_timeout") }}', {
       method: 'POST',
@@ -746,54 +798,41 @@
       banner.classList.remove('hidden', 'bg-emerald-950/80', 'border-emerald-400', 'bg-blue-950/80', 'border-blue-400', 'bg-rose-950/80', 'border-rose-400');
       banner.classList.add('border-2');
 
-      if (data.shield_saved) {
-        if (window.qmPlaySound) window.qmPlaySound('shield');
-        banner.classList.add('bg-blue-950/80', 'border-blue-400');
-        fbTitle.innerHTML = '<span class="text-cyan-300">🛡️ SHIELD SAVED FROM BLIZZARD!</span>';
-        fbDesc.textContent = data.explanation || 'Time ran out! Your Climber Shield absorbed the frostbite. Restarting 60s sprint.';
+      if (window.qmPlaySound) window.qmPlaySound('slip');
+      banner.classList.add('bg-rose-950/80', 'border-rose-400');
+      fbTitle.innerHTML = '<span class="text-rose-400">⏱️ BLIZZARD TIME-OUT!</span>';
+      fbDesc.textContent = data.explanation || '60 seconds expired! Safe Haven reached. Rest until tomorrow!';
 
-        var shieldsTxt = document.getElementById('hudShieldsText');
-        if (shieldsTxt) {
-          shieldsTxt.innerHTML = data.shields_left > 0 ? ('<span class="text-cyan-300 font-bold">🛡️ ' + data.shields_left + ' Shield' + (data.shields_left > 1 ? 's' : '') + '</span>') : '<span class="text-slate-400 font-normal">0 Shields Equipped</span>';
+      document.getElementById('hudUnbanked').textContent = data.unbanked_coins;
+      document.getElementById('completedDayNum').textContent = data.current_day;
+      document.getElementById('completedAlt').textContent = data.new_altitude;
+      document.getElementById('completedUnbanked').textContent = data.unbanked_coins;
+      document.getElementById('unlockNextDayNum').textContent = data.next_day;
+      document.getElementById('pushNextDayNum').textContent = data.next_day;
+      document.getElementById('cardPushNextDayNum').textContent = data.next_day;
+
+      isDayCompleted = true;
+      isLockedForToday = true;
+      var cPush = document.getElementById('cardPushDayBtn');
+      if (cPush) cPush.classList.add('hidden');
+      var hPush = document.getElementById('pushDayBtn');
+      if (hPush) hPush.classList.add('hidden');
+
+      setTimeout(function() {
+        banner.classList.add('hidden');
+        var tCard = document.getElementById('triviaCard');
+        if (tCard) {
+          tCard.style.display = 'none';
+          tCard.classList.add('hidden');
         }
-
-        setTimeout(function() {
-          banner.classList.add('hidden');
-          isSubmitting = false;
-          startSprintClock();
-        }, 2200);
-
-      } else {
-        // Fall back to safe haven
-        if (window.qmPlaySound) window.qmPlaySound('slip');
-        if (puppet) puppet.classList.add('climber-fall');
-        setTimeout(function() {
-          if (puppet) {
-            puppet.classList.remove('climber-fall');
-            updateClimberPosition(data.new_day);
-          }
-        }, 850);
-
-        banner.classList.add('bg-rose-950/80', 'border-rose-400');
-        fbTitle.innerHTML = '<span class="text-rose-400">⚠️ BLIZZARD TIME-OUT!</span>';
-        fbDesc.textContent = data.explanation || 'Slipped back to camp!';
-
-        currentDay = data.new_day;
-        document.getElementById('hudDay').textContent = currentDay;
-        document.getElementById('hudQIndex').textContent = '1';
-        document.getElementById('hudAltitude').textContent = data.new_altitude;
-        document.getElementById('hudUnbanked').textContent = '0';
-        document.getElementById('bankBtn').disabled = true;
-
-        setTimeout(function() {
-          banner.classList.add('hidden');
-          if (data.next_question) {
-            renderNextQuestion(data.next_day_meta, data.next_question, 1, 5);
-          }
-          isSubmitting = false;
-          startSprintClock();
-        }, 2500);
-      }
+        var dCard = document.getElementById('dayCompletedCard');
+        if (dCard) {
+          dCard.style.display = 'block';
+          dCard.classList.remove('hidden');
+        }
+        startUnlockCountdown();
+        isSubmitting = false;
+      }, 1800);
     })
     .catch(function(err) {
       console.warn('Timeout error', err);
@@ -835,13 +874,18 @@
     setInterval(tick, 1000);
   }
 
-  // Position climber puppet based on 30 days
-  function updateClimberPosition(dayNum) {
+  // Position climber puppet based on 30 days and 5 checkpoint questions
+  function updateClimberPosition(dayNum, qIdx) {
     var puppet = document.getElementById('climberPuppet');
     if (!puppet) return;
-    var progressPct = (dayNum - 1) / 29.0;
+    var qStep = Math.max(1, Math.min(5, qIdx || 1));
+    var fractionOfDay = (qStep - 1) / 5.0;
+    var totalProgress = (dayNum - 1) + fractionOfDay;
+    var progressPct = totalProgress / 29.0;
+    progressPct = Math.max(0, Math.min(1.0, progressPct));
     var targetTop = 500 - (progressPct * 476);
     puppet.style.top = targetTop + 'px';
+    puppet.style.transition = 'top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
 
     var container = document.getElementById('mountainStageContainer');
     if (container) {
@@ -923,7 +967,8 @@
           stopSprintClock();
           if (window.qmPlaySound) window.qmPlaySound('fanfare');
           if (puppet) puppet.classList.add('climber-pull');
-          updateClimberPosition(30);
+          updateClimberPosition(30, 5);
+          updateCheckpointPills(5, true);
 
           banner.classList.add('bg-amber-950/80', 'border-amber-400');
           fbTitle.innerHTML = '<span class="text-amber-300">👑 EVEREST SUMMIT REACHED! 8,848M!</span>';
@@ -942,8 +987,12 @@
 
         if (data.day_completed) {
           stopSprintClock();
+          updateCheckpointPills(5, true);
+          updateClimberPosition(data.current_day, 5);
+          if (window.qmPlaySound) window.qmPlaySound('fanfare');
+
           banner.classList.add('bg-emerald-950/80', 'border-emerald-400');
-          fbTitle.innerHTML = '<span class="text-emerald-300">✓ DAY ' + data.current_day + ' CONQUERED!</span>';
+          fbTitle.innerHTML = '<span class="text-emerald-300">✓ DAY ' + data.current_day + ' CONQUERED! (5/5 CHECKPOINTS)</span>';
           fbDesc.textContent = (data.speed_bonus > 0 ? ('⚡ +' + data.speed_bonus + ' SPEED BONUS COINS! ') : '') + (data.explanation || 'Expedition checkpoints completed safely.');
 
           document.getElementById('hudUnbanked').textContent = data.unbanked_coins;
@@ -973,6 +1022,7 @@
           if (b2) { b2.disabled = false; b2.innerHTML = 'BANK COINS NOW 🪙 (+<span id="cardBankCoinsAmount">' + data.unbanked_coins + '</span>)'; }
 
           // Enforce 24h lockout in UI: hide push to day buttons since stage is locked until tomorrow
+          isDayCompleted = true;
           isLockedForToday = true;
           var cPush = document.getElementById('cardPushDayBtn');
           if (cPush) cPush.classList.add('hidden');
@@ -995,6 +1045,7 @@
               dCard.style.display = 'block';
               dCard.classList.remove('hidden');
             }
+            startUnlockCountdown();
             isSubmitting = false;
           }, 1200);
 
@@ -1011,16 +1062,61 @@
           if (bankAmt) bankAmt.textContent = data.unbanked_coins;
           document.getElementById('bankBtn').disabled = false;
 
+          updateCheckpointPills(data.day_question_index, false);
+          updateClimberPosition(data.current_day, data.day_question_index);
+
           setTimeout(function() {
             banner.classList.add('hidden');
-            renderNextQuestion(data.day_meta, data.next_question, data.day_question_index, data.day_questions_total);
+            renderNextQuestion(data.day_meta, data.next_question, data.day_question_index, 5);
             isSubmitting = false;
           }, 800);
         }
 
       } else {
         // INCORRECT ANSWER
-        if (data.shield_saved) {
+        if (data.day_completed) {
+          // 5th question finished, day completes!
+          stopSprintClock();
+          updateCheckpointPills(5, true);
+          updateClimberPosition(data.current_day, 5);
+
+          banner.classList.add('bg-amber-950/80', 'border-amber-400');
+          fbTitle.innerHTML = '<span class="text-amber-300">✓ 5 CHECKPOINTS COMPLETED</span>';
+          fbDesc.textContent = data.explanation || ('Day ' + data.current_day + ' expedition completed. Rest at Camp Safe Haven.');
+
+          document.getElementById('hudUnbanked').textContent = data.unbanked_coins;
+          document.getElementById('hudAltitude').textContent = data.new_altitude;
+          document.getElementById('completedDayNum').textContent = data.current_day;
+          document.getElementById('completedAlt').textContent = data.new_altitude;
+          document.getElementById('completedUnbanked').textContent = data.unbanked_coins;
+          document.getElementById('unlockNextDayNum').textContent = data.next_day;
+          document.getElementById('pushNextDayNum').textContent = data.next_day;
+          document.getElementById('cardPushNextDayNum').textContent = data.next_day;
+
+          isDayCompleted = true;
+          isLockedForToday = true;
+          var cPush = document.getElementById('cardPushDayBtn');
+          if (cPush) cPush.classList.add('hidden');
+          var hPush = document.getElementById('pushDayBtn');
+          if (hPush) hPush.classList.add('hidden');
+
+          setTimeout(function() {
+            banner.classList.add('hidden');
+            var tCard = document.getElementById('triviaCard');
+            if (tCard) {
+              tCard.style.display = 'none';
+              tCard.classList.add('hidden');
+            }
+            var dCard = document.getElementById('dayCompletedCard');
+            if (dCard) {
+              dCard.style.display = 'block';
+              dCard.classList.remove('hidden');
+            }
+            startUnlockCountdown();
+            isSubmitting = false;
+          }, 1400);
+
+        } else if (data.shield_saved) {
           if (window.qmPlaySound) window.qmPlaySound('shield');
           banner.classList.add('bg-blue-950/80', 'border-blue-400');
           fbTitle.innerHTML = '<span class="text-cyan-300">🛡️ SHIELD ABSORBED THE SLIP!</span>';
@@ -1031,44 +1127,40 @@
             shieldsTxt.innerHTML = data.shields_left > 0 ? ('<span class="text-cyan-300 font-bold">🛡️ ' + data.shields_left + ' Shield' + (data.shields_left > 1 ? 's' : '') + '</span>') : '<span class="text-slate-400 font-normal">0 Shields Equipped</span>';
           }
 
+          document.getElementById('hudQIndex').textContent = data.day_question_index;
+          document.getElementById('termQIdx').textContent = data.day_question_index;
+          updateCheckpointPills(data.day_question_index, false);
+          updateClimberPosition(data.current_day, data.day_question_index);
+
           setTimeout(function() {
             banner.classList.add('hidden');
             if (data.next_question) {
-              renderNextQuestion(data.day_meta || stages[Math.floor((currentDay-1)/5)], data.next_question, data.day_question_index, data.day_questions_total);
+              renderNextQuestion(data.day_meta || stages[Math.floor((currentDay-1)/5)], data.next_question, data.day_question_index, 5);
             }
             isSubmitting = false;
-          }, 1600);
+          }, 1400);
 
-        } else if (data.fallen) {
-          stopSprintClock();
+        } else {
+          // Slip on rock hold (unbanked coins lost, but advances to next question)
           if (window.qmPlaySound) window.qmPlaySound('slip');
-          if (puppet) puppet.classList.add('climber-fall');
-          setTimeout(function() {
-            if (puppet) {
-              puppet.classList.remove('climber-fall');
-              updateClimberPosition(data.new_day);
-            }
-          }, 850);
-
           banner.classList.add('bg-rose-950/80', 'border-rose-400');
-          fbTitle.innerHTML = '<span class="text-rose-400">⚠️ SLIPPED BACK TO ' + data.retreated_camp.toUpperCase() + '!</span>';
-          fbDesc.textContent = 'Accrued unbanked coins (' + data.lost_coins + ' 🪙) lost. Correct answer: (' + data.correct_answer + '). Camp progress secured!';
+          fbTitle.innerHTML = '<span class="text-rose-400">⚠️ SLIP ON HOLD!</span>';
+          fbDesc.textContent = data.explanation || ('Lost +' + data.lost_coins + ' unbanked coins! Correct: (' + data.correct_answer + '). Keep moving!');
 
-          currentDay = data.new_day;
-          document.getElementById('hudDay').textContent = currentDay;
-          document.getElementById('hudQIndex').textContent = '1';
-          document.getElementById('hudAltitude').textContent = data.new_altitude;
-          document.getElementById('hudUnbanked').textContent = '0';
-          document.getElementById('bankBtn').disabled = true;
+          document.getElementById('hudQIndex').textContent = data.day_question_index;
+          document.getElementById('termQIdx').textContent = data.day_question_index;
+          document.getElementById('hudUnbanked').textContent = data.unbanked_coins;
+
+          updateCheckpointPills(data.day_question_index, false);
+          updateClimberPosition(data.current_day, data.day_question_index);
 
           setTimeout(function() {
             banner.classList.add('hidden');
             if (data.next_question) {
-              renderNextQuestion(data.next_day_meta, data.next_question, 1, 5);
+              renderNextQuestion(data.day_meta, data.next_question, data.day_question_index, 5);
             }
             isSubmitting = false;
-            startSprintClock();
-          }, 2400);
+          }, 1400);
         }
       }
     })
@@ -1088,6 +1180,18 @@
     var total = qTotal || 5;
 
     document.getElementById('currentDayNum').textContent = dayNum;
+    document.getElementById('hudDay').textContent = dayNum;
+    document.getElementById('hudQIndex').textContent = idx;
+    document.getElementById('hudQTotal').textContent = total;
+    document.getElementById('termQIdx').textContent = idx;
+    document.getElementById('termQTotal').textContent = total;
+    document.getElementById('termStageName').textContent = dayMeta.stage_name;
+    document.getElementById('diffBadge').textContent = dayMeta.diff;
+    document.getElementById('stepCoinsReward').textContent = '+' + dayMeta.coins + ' 🪙';
+    document.getElementById('qPrompt').textContent = qData.prompt;
+
+    updateCheckpointPills(idx, false);
+    updateClimberPosition(dayNum, idx);
     document.getElementById('termQIdx').textContent = idx;
     document.getElementById('termQTotal').textContent = total;
     document.getElementById('termStageName').textContent = dayMeta.stage_name;
