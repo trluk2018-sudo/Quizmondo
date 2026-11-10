@@ -388,8 +388,8 @@
         <button type="button" data-duel-tab="turn"
                 class="qm-tab shrink-0 px-2.5 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wide sm:tracking-wider whitespace-nowrap transition flex items-center gap-1.5 sm:gap-2">
           <span>⚡</span><span>Your turn</span>
-          {% if incoming_challenges or bot_matches or my_games_challenges.your_turn %}
-          <span class="px-1.5 py-0.5 rounded-full bg-emerald-400 text-slate-950 text-[10px] font-black">{{ (incoming_challenges|length) + (bot_matches|length) + (my_games_challenges.your_turn|length) }}</span>
+          {% if your_move_matches or bot_matches or my_games_challenges.your_turn %}
+          <span class="px-1.5 py-0.5 rounded-full bg-emerald-400 text-slate-950 text-[10px] font-black">{{ (your_move_matches|length) + (bot_matches|length) + (my_games_challenges.your_turn|length) }}</span>
           {% endif %}
         </button>
         <button type="button" data-duel-tab="waiting"
@@ -397,8 +397,8 @@
           {# "Waiting on them" pushes Friends off the edge of a 375px screen,
              and three tabs should all be visible without scrolling for one. #}
           <span>⏳</span><span class="sm:hidden">Waiting</span><span class="hidden sm:inline">Waiting on them</span>
-          {% if outgoing_invites or my_games_challenges.waiting %}
-          <span class="px-1.5 py-0.5 rounded-full bg-slate-700 text-slate-200 text-[10px] font-black">{{ (outgoing_invites|length) + (my_games_challenges.waiting|length) }}</span>
+          {% if waiting_matches or my_games_challenges.waiting %}
+          <span class="px-1.5 py-0.5 rounded-full bg-slate-700 text-slate-200 text-[10px] font-black">{{ (waiting_matches|length) + (my_games_challenges.waiting|length) }}</span>
           {% endif %}
         </button>
         <button type="button" data-duel-tab="friends"
@@ -409,21 +409,23 @@
 
       <div data-duel-panel="turn" class="space-y-6">
       <!-- SECTION 1: INCOMING CHALLENGES (People Who Invited You) -->
-      {% if incoming_challenges %}
+      {% if your_move_matches %}
       <div class="space-y-3 font-mono">
         <div class="flex items-center justify-between border-b border-purple-500/20 pb-2">
           <h3 class="text-base font-black text-cyan-300 flex items-center gap-2">
-            <span>📥</span> CHALLENGES FOR YOU ({{ incoming_challenges|length }})
+            <span>📥</span> YOUR MOVE ({{ your_move_matches|length }})
           </h3>
-          <span class="text-[11px] text-slate-400">People who challenged you</span>
+          <span class="text-[11px] text-slate-400">Duels waiting on you</span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {% for m in incoming_challenges %}
-          {% set opponent_name = m.player1_name %}
-          {% set opponent_avatar = m.player1_avatar %}
-          {% set is_completed = (m.status == 'completed') %}
-          {% set my_turn = (not is_completed) and (m.current_turn == 2) %}
+          {% for m in your_move_matches %}
+          {# Either side of a match can land in this list now, so the card reads
+             the viewer's own side off the match rather than assuming player 1. #}
+          {% set opponent_name = m.qm_opponent_name %}
+          {% set opponent_avatar = m.qm_opponent_avatar %}
+          {% set is_completed = m.qm_completed %}
+          {% set my_turn = m.qm_my_turn %}
 
           <div data-duel-card="{{ m.match_code }}" class="p-4 sm:p-5 rounded-2xl bg-slate-950/90 border-2 {% if is_completed %}border-amber-400/60 bg-amber-950/15{% elif my_turn %}border-emerald-500/70 bg-emerald-950/20 shadow-lg{% else %}border-purple-500/20{% endif %} flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 transition hover:border-cyan-400">
             <div class="flex items-center gap-3 min-w-0">
@@ -431,13 +433,17 @@
               <div class="space-y-0.5 min-w-0">
                 <div class="flex items-center gap-1.5 flex-wrap">
                   <span class="font-mono font-bold text-sm text-white truncate">{{ opponent_name }}</span>
+                  {% if m.qm_i_created %}
+                  <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[9px] font-bold uppercase">You Challenged</span>
+                  {% else %}
                   <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[9px] font-bold uppercase">Challenged You</span>
+                  {% endif %}
                 </div>
                 <div data-duel-meta="{{ m.match_code }}" class="text-xs font-mono {% if is_completed %}text-amber-300 font-bold{% else %}text-slate-400{% endif %}">
                   {% if is_completed %}
-                  Completed (6/6) &bull; Final: {{ m.p2_total_score }} - {{ m.p1_total_score }}
+                  Completed (6/6) &bull; Final: {{ m.qm_my_score }} - {{ m.qm_their_score }}
                   {% else %}
-                  Round {{ m.current_round }}/6 &bull; Score: {{ m.p2_total_score }} - {{ m.p1_total_score }}
+                  Round {{ m.current_round }}/6 &bull; Score: {{ m.qm_my_score }} - {{ m.qm_their_score }}
                   {% endif %}
                 </div>
               </div>
@@ -533,7 +539,7 @@
         </div>
       </div>
       {% endif %}
-        {% if not incoming_challenges and not bot_matches and not my_games_challenges.your_turn %}
+        {% if not your_move_matches and not bot_matches and not my_games_challenges.your_turn %}
         <p class="p-5 rounded-2xl bg-slate-950/70 border border-purple-500/20 text-xs font-mono text-slate-400 text-center">
           Nothing is waiting on you. Challenge a friend above, or take on Cyber Bot Nova.
         </p>
@@ -578,19 +584,21 @@
       <div class="space-y-3 font-mono">
         <div class="flex items-center justify-between border-b border-purple-500/20 pb-2">
           <h3 class="text-base font-black text-emerald-300 flex items-center gap-2">
-            <span>📤</span> INVITES &amp; DUELS YOU SENT ({{ outgoing_invites|length }})
+            <span>📤</span> WAITING ON THEM ({{ waiting_matches|length }})
           </h3>
-          <span class="text-[11px] text-slate-400">WhatsApp &amp; Online Invites</span>
+          <span class="text-[11px] text-slate-400">Their move, plus invites not yet accepted</span>
         </div>
 
-        {% if outgoing_invites %}
+        {% if waiting_matches %}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {% for m in outgoing_invites %}
-          {% set opponent_name = m.player2_name %}
-          {% set opponent_avatar = m.player2_avatar %}
-          {% set is_completed = (m.status == 'completed') %}
-          {% set my_turn = (not is_completed) and (m.current_turn == 1) %}
-          {% set is_pending_friend = (not m.player2_session or m.player2_session in ('pending_invite', 'online_matchmaking', '')) and m.current_round == 1 %}
+          {% for m in waiting_matches %}
+          {# Either side of a match can land in this list now, so the card reads
+             the viewer's own side off the match rather than assuming player 1. #}
+          {% set opponent_name = m.qm_opponent_name %}
+          {% set opponent_avatar = m.qm_opponent_avatar %}
+          {% set is_completed = m.qm_completed %}
+          {% set my_turn = m.qm_my_turn %}
+          {% set is_pending_friend = m.qm_unaccepted and m.current_round == 1 %}
 
           <div data-duel-card="{{ m.match_code }}" class="p-4 sm:p-5 rounded-2xl bg-slate-950/80 border-2 {% if is_completed %}border-amber-400/60 bg-amber-950/15{% elif is_pending_friend %}border-purple-500/40 bg-purple-950/10{% elif my_turn %}border-emerald-500/60 bg-emerald-950/10{% else %}border-purple-500/20{% endif %} flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 transition hover:border-cyan-400">
             <div class="flex items-center gap-3 min-w-0">
@@ -600,17 +608,19 @@
                   <span class="font-mono font-bold text-sm text-white truncate">{{ opponent_name }}</span>
                   {% if is_pending_friend %}
                   <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[9px] font-bold uppercase">WhatsApp Invite</span>
+                  {% elif m.qm_i_created %}
+                  <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[9px] font-bold uppercase">You Challenged</span>
                   {% else %}
-                  <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[9px] font-bold uppercase">Invited by You</span>
+                  <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[9px] font-bold uppercase">Challenged You</span>
                   {% endif %}
                 </div>
                 <div data-duel-meta="{{ m.match_code }}" class="text-xs font-mono {% if is_completed %}text-amber-300 font-bold{% else %}text-slate-400{% endif %}">
                   {% if is_completed %}
-                  Completed (6/6) &bull; Final: {{ m.p1_total_score }} - {{ m.p2_total_score }}
+                  Completed (6/6) &bull; Final: {{ m.qm_my_score }} - {{ m.qm_their_score }}
                   {% elif is_pending_friend %}
                   Waiting for friend to accept (Round 1)
                   {% else %}
-                  Round {{ m.current_round }}/6 &bull; Score: {{ m.p1_total_score }} - {{ m.p2_total_score }}
+                  Round {{ m.current_round }}/6 &bull; Score: {{ m.qm_my_score }} - {{ m.qm_their_score }}
                   {% endif %}
                 </div>
               </div>
@@ -648,7 +658,7 @@
         </div>
         {% else %}
         <div class="p-6 rounded-2xl bg-slate-950/60 border border-purple-500/20 text-center font-mono space-y-2">
-          <div class="text-xs text-slate-400">No outgoing invites waiting right now.</div>
+          <div class="text-xs text-slate-400">Nothing waiting on anyone else right now.</div>
           <p class="text-[11px] text-slate-500">Tap "Challenge a Friend" above to send an invite on WhatsApp!</p>
         </div>
         {% endif %}

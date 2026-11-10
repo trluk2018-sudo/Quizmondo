@@ -840,21 +840,49 @@ def dashboard():
             if len(active_matches) >= 12:
                 break
 
-    # Categorize matches into clear dedicated sections
-    # 1. Duels Sent TO You (where you were challenged by a friend or online player)
-    incoming_challenges = []
-    # 2. Invites & Challenges YOU Sent (recent WhatsApp invites, direct friend challenges, online challenges)
-    outgoing_invites = []
+    # Categorize matches by WHOSE TURN IT IS, not by who created the duel.
+    #
+    # Splitting on creator looked right and was wrong in both directions: a duel
+    # you started sat under "waiting on them" even on the rounds where it was
+    # your move, and a duel you were challenged to sat under "your turn" even
+    # while you were waiting. Wendy never saw a live round-3 duel she had
+    # created, because "invites you sent" reads as "not accepted yet"; Amy saw
+    # the same duel nagging her for a turn she had already taken.
+    #
+    # 1. Duels where it is your move
+    your_move_matches = []
+    # 2. Duels waiting on the other player, plus invites nobody has accepted yet
+    waiting_matches = []
     # 3. Solo / Bot Nova training matches
     bot_matches = []
 
     for m in active_matches:
+        # Each card needs to know which side of the match the viewer is on, since
+        # either side can now appear in either list.
+        is_p1 = (m.player1_session == player.session_key)
+        m.qm_i_created = is_p1
+        m.qm_opponent_name = (m.player2_name if is_p1 else m.player1_name)
+        m.qm_opponent_avatar = (m.player2_avatar if is_p1 else m.player1_avatar)
+        m.qm_my_score = (m.p1_total_score if is_p1 else m.p2_total_score)
+        m.qm_their_score = (m.p2_total_score if is_p1 else m.p1_total_score)
+        m.qm_completed = (m.status == 'completed')
+        m.qm_unaccepted = bool(
+            is_p1
+            and (not m.player2_session
+                 or m.player2_session in ('pending_invite', 'online_matchmaking', ''))
+        )
+        m.qm_my_turn = bool(
+            not m.qm_completed
+            and not m.qm_unaccepted
+            and m.is_player_turn(player.session_key)
+        )
+
         if m.is_bot:
             bot_matches.append(m)
-        elif m.player1_session == player.session_key:
-            outgoing_invites.append(m)
+        elif m.qm_my_turn:
+            your_move_matches.append(m)
         else:
-            incoming_challenges.append(m)
+            waiting_matches.append(m)
 
     # Live group lobbies, with enough detail for the dashboard to draw the seats
     group_lobbies = []
@@ -890,8 +918,8 @@ def dashboard():
         my_games_challenges=_dashboard_challenges(player.session_key),
         completed_battles_summary=completed_battles_summary,
         active_matches=active_matches,
-        incoming_challenges=incoming_challenges,
-        outgoing_invites=outgoing_invites,
+        your_move_matches=your_move_matches,
+        waiting_matches=waiting_matches,
         bot_matches=bot_matches,
         history_matches=history_matches,
         friends_roster=friends_roster,
