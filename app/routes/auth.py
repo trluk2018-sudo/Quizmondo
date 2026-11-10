@@ -122,9 +122,6 @@ def handle_sso():
 
             # 2. Once-only: single-use nonce
             nonce = data.get('nonce') or hashlib.sha256(token.encode('utf-8')).hexdigest()
-            # db is already imported at module level; naming it here too makes
-            # it local to this whole function, so every earlier db.session use
-            # raises UnboundLocalError before this line ever runs.
             from ..models import SsoUsedNonce
             SsoUsedNonce.__table__.create(bind=db.engine, checkfirst=True)
             now_ts = int(time.time())
@@ -167,11 +164,9 @@ def handle_sso():
     if not user:
         user = User.query.filter(User.role.in_(['super_admin', 'admin'])).order_by(User.id.asc()).first()
     if not user:
-        final_uname = uname if (uname and uname != '@auto') else 'admin'
-        user = User(username=final_uname, email=f"{final_uname}@quizmondo.local", role='admin')
-        user.set_password(secrets.token_urlsafe(16))
-        db.session.add(user)
-        db.session.commit()
+        current_app.logger.error("SSO rejected: No administrative account found in database to sign into.")
+        flash("Sign-in failed: No administrative account exists on this instance to sign into.", "error")
+        return redirect(url_for('auth.login'))
 
     from ..utils.support_access import get_support_access_status
     sa_status = get_support_access_status(db, is_quizmondo=True)
