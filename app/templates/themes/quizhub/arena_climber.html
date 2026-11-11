@@ -50,6 +50,56 @@
     100% { transform: translateY(380px) rotate(0deg); }
   }
 
+  /* A correct answer is a real move up the rope: haul, swing, plant.
+     The old reward was a 3px shift, which nobody could see. */
+  .climber-ascend { animation: climberAscend 760ms cubic-bezier(.3,.9,.3,1); }
+  @keyframes climberAscend {
+    0%   { transform: translateY(0) rotate(0deg) scaleY(1); }
+    22%  { transform: translateY(10px) rotate(-3deg) scaleY(.94); }  /* crouch */
+    55%  { transform: translateY(-14px) rotate(4deg) scaleY(1.06); } /* haul */
+    78%  { transform: translateY(3px) rotate(-2deg) scaleY(.98); }   /* plant */
+    100% { transform: translateY(0) rotate(0deg) scaleY(1); }
+  }
+
+  /* Snow kicked off the holds as the boots bite. */
+  .qm-puff {
+    position: absolute;
+    width: 7px; height: 7px;
+    border-radius: 9999px;
+    background: rgba(226, 240, 255, .92);
+    pointer-events: none;
+    z-index: 19;
+    animation: qmPuff 680ms ease-out forwards;
+  }
+  @keyframes qmPuff {
+    0%   { opacity: .95; transform: translate(0,0) scale(1); }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(.3); }
+  }
+
+  /* The metres gained, floating off the climber. */
+  .qm-altfloat {
+    position: absolute;
+    z-index: 25;
+    font-family: ui-monospace, monospace;
+    font-weight: 900;
+    font-size: 13px;
+    color: #6ee7b7;
+    text-shadow: 0 2px 8px rgba(0,0,0,.85);
+    pointer-events: none;
+    animation: qmAltFloat 1100ms ease-out forwards;
+  }
+  @keyframes qmAltFloat {
+    0%   { opacity: 0; transform: translateY(6px) scale(.85); }
+    20%  { opacity: 1; transform: translateY(-2px) scale(1.06); }
+    100% { opacity: 0; transform: translateY(-42px) scale(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .climber-ascend { animation: none; }
+    .qm-puff { display: none; }
+    .qm-altfloat { animation: none; opacity: 1; }
+  }
+
   /* Active Ledge Highlight */
   .ledge-active {
     box-shadow: 0 0 20px rgba(56, 189, 248, 0.5), inset 0 0 12px rgba(56, 189, 248, 0.25);
@@ -643,6 +693,13 @@
   var isLockedForToday = {{ 'true' if is_locked_for_today else 'false' }};
   var secondsUntilMidnight = {{ seconds_until_midnight }};
   var isSubmitting = false;
+  /* How many questions make up today, and where the altimeter starts and
+     ends, so the climb and the altitude can be shown moving per question
+     rather than only when the day is banked. */
+  var dayQuestionsTotal = {{ progress.day_questions_total or 5 }};
+  var currentQIndex = {{ progress.day_question_index or 1 }};
+  var dayStartAltitude = {{ progress.altitude_m or 1000 }};
+  var dayTargetAltitude = {{ day_meta.altitude or progress.altitude_m or 1000 }};
 
   // 60-Second Speed Clock
   var sprintTimer = null;
@@ -903,17 +960,104 @@
   }
 
   // Position climber puppet based on 30 days and 5 checkpoint questions
-  function updateClimberPosition(dayNum, qIdx) {
+  /* The wall shows TODAY's pitch, not the whole 29-day expedition.
+     Spread over 29 days the climber moved 3.28px per correct answer -- less
+     than a tenth of his own height, so the reward for getting one right was
+     invisible and the whole screen felt static. A day is a pitch: five
+     questions take him the height of the wall, about 95px a time. Progress
+     up the mountain itself is what the stage ledges, the altimeter and the
+     day counter are for. */
+  var CLIMB_BOTTOM = 500, CLIMB_TOP = 24;
+
+  /* A move on the rope, heard as well as seen: the haul, the carabiner
+     taking the load, then boots biting the snow. One flat blip never
+     sounded like climbing. */
+  function playAscentSounds() {
+    if (!window.qmPlaySound) return;
+    window.qmPlaySound('pull');
+    setTimeout(function () { if (window.qmPlaySound) window.qmPlaySound('carabiner'); }, 170);
+    setTimeout(function () { if (window.qmPlaySound) window.qmPlaySound('crunch'); }, 340);
+  }
+
+  /* Snow knocked off the holds, thrown down and out from the boots. */
+  function kickSnow(puppet) {
+    var wall = puppet && puppet.parentElement;
+    if (!wall) return;
+    var top = parseFloat(puppet.style.top || '500');
+    for (var i = 0; i < 7; i++) {
+      var p = document.createElement('span');
+      p.className = 'qm-puff';
+      p.style.left = (14 + Math.random() * 26) + 'px';
+      p.style.top = (top + 44 + Math.random() * 8) + 'px';
+      p.style.setProperty('--dx', (Math.random() * 46 - 20).toFixed(0) + 'px');
+      p.style.setProperty('--dy', (26 + Math.random() * 34).toFixed(0) + 'px');
+      p.style.animationDelay = (i * 26) + 'ms';
+      wall.appendChild(p);
+      (function (el) { setTimeout(function () { el.remove(); }, 1000); })(p);
+    }
+  }
+
+  /* The metres gained, floating off him as he tops out the move. */
+  function floatMetres(puppet, metres) {
+    var wall = puppet && puppet.parentElement;
+    if (!wall || !metres) return;
+    var el = document.createElement('div');
+    el.className = 'qm-altfloat';
+    el.textContent = '+' + metres + 'm';
+    el.style.left = '56px';
+    el.style.top = (parseFloat(puppet.style.top || '500') + 4) + 'px';
+    wall.appendChild(el);
+    setTimeout(function () { el.remove(); }, 1200);
+  }
+
+  /* Run the altimeter up to where this move puts him, rather than jumping. */
+  function countAltitudeTo(target) {
+    var el = document.getElementById('hudAltitude');
+    if (!el) return;
+    var from = parseInt(el.textContent.replace(/[^0-9]/g, ''), 10) || 0;
+    if (from === target) return;
+    var started = null, dur = 700;
+    function frame(ts) {
+      if (started === null) started = ts;
+      var t = Math.min(1, (ts - started) / dur);
+      var eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = Math.round(from + (target - from) * eased);
+      if (t < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  /* Everything a correct answer should do, in one place. */
+  function celebrateAscent(qIdx, dayDone) {
+    var puppet = document.getElementById('climberPuppet');
+    var steps = Math.max(1, dayQuestionsTotal || 5);
+    var done = dayDone ? steps : Math.max(0, Math.min(steps, (qIdx || 1) - 1));
+    var span = Math.max(0, (dayTargetAltitude || 0) - (dayStartAltitude || 0));
+    var reached = Math.round((dayStartAltitude || 0) + span * (done / steps));
+    var prevDone = Math.max(0, done - 1);
+    var prevAlt = Math.round((dayStartAltitude || 0) + span * (prevDone / steps));
+
+    playAscentSounds();
+    if (puppet) {
+      puppet.classList.remove('climber-ascend');
+      void puppet.offsetWidth;            // restart the animation
+      puppet.classList.add('climber-ascend');
+      setTimeout(function () { puppet.classList.remove('climber-ascend'); }, 800);
+      setTimeout(function () { kickSnow(puppet); }, 180);
+      floatMetres(puppet, reached - prevAlt);
+    }
+    countAltitudeTo(reached);
+  }
+
+  function updateClimberPosition(dayNum, qIdx, dayDone) {
     var puppet = document.getElementById('climberPuppet');
     if (!puppet) return;
-    var qStep = Math.max(1, Math.min(5, qIdx || 1));
-    var fractionOfDay = (qStep - 1) / 5.0;
-    var totalProgress = (dayNum - 1) + fractionOfDay;
-    var progressPct = totalProgress / 29.0;
-    progressPct = Math.max(0, Math.min(1.0, progressPct));
-    var targetTop = 500 - (progressPct * 476);
+    var steps = Math.max(1, dayQuestionsTotal || 5);
+    var done = dayDone ? steps : Math.max(0, Math.min(steps, (qIdx || 1) - 1));
+    var frac = done / steps;
+    var targetTop = CLIMB_BOTTOM - (frac * (CLIMB_BOTTOM - CLIMB_TOP));
     puppet.style.top = targetTop + 'px';
-    puppet.style.transition = 'top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    puppet.style.transition = 'top 0.7s cubic-bezier(0.34, 1.4, 0.5, 1)';
 
     var container = document.getElementById('mountainStageContainer');
     if (container) {
@@ -937,7 +1081,7 @@
     }
   }
 
-  updateClimberPosition(currentDay);
+  updateClimberPosition(currentDay, currentQIndex, isDayCompleted);
   startUnlockCountdown();
   window.startSprintNow = function() {
     var startCard = document.getElementById('startSprintCard');
@@ -995,7 +1139,7 @@
           stopSprintClock();
           if (window.qmPlaySound) window.qmPlaySound('fanfare');
           if (puppet) puppet.classList.add('climber-pull');
-          updateClimberPosition(30, 5);
+          updateClimberPosition(30, 5, true);
           updateCheckpointPills(5, true);
 
           banner.classList.add('bg-amber-950/80', 'border-amber-400');
@@ -1009,14 +1153,12 @@
           return;
         }
 
-        if (window.qmPlaySound) window.qmPlaySound('climbStep');
-        if (puppet) puppet.classList.add('climber-pull');
-        setTimeout(function() { if (puppet) puppet.classList.remove('climber-pull'); }, 500);
+        celebrateAscent(data.day_question_index, !!data.day_completed);
 
         if (data.day_completed) {
           stopSprintClock();
           updateCheckpointPills(5, true);
-          updateClimberPosition(data.current_day, 5);
+          updateClimberPosition(data.current_day, 5, true);
 
           banner.classList.add('bg-emerald-950/80', 'border-emerald-400');
           fbTitle.innerHTML = '<span class="text-emerald-300">✓ DAY ' + data.current_day + ' CONQUERED! (5/5 CHECKPOINTS)</span>';
@@ -1057,7 +1199,7 @@
           // 5th question finished, day completes!
           stopSprintClock();
           updateCheckpointPills(5, true);
-          updateClimberPosition(data.current_day, 5);
+          updateClimberPosition(data.current_day, 5, true);
 
           banner.classList.add('bg-amber-950/80', 'border-amber-400');
           fbTitle.innerHTML = '<span class="text-amber-300">✓ 5 CHECKPOINTS COMPLETED</span>';
@@ -1453,7 +1595,7 @@
         currentDay = data.new_day;
         isCampDay = (data.day_meta && data.day_meta.is_camp_day);
         isDayCompleted = false;
-        updateClimberPosition(currentDay);
+        updateClimberPosition(currentDay, currentQIndex, isDayCompleted);
 
         document.getElementById('hudDay').textContent = currentDay;
         document.getElementById('hudQIndex').textContent = '1';
