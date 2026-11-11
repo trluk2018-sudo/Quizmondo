@@ -41,4 +41,20 @@ RUN mkdir -p /app/instance /app/uploads /app/data && \
 EXPOSE 8000
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--threads", "4", "run:app"]
+# Access logging to stdout, so `docker logs` has a record of every request and
+# how long it took. Without it the container logged only its boot lines, and a
+# slow or hanging request left no trace anywhere to diagnose from.
+#
+# %(D)s is the time taken in microseconds -- the field worth having, since it
+# is what makes a slow request findable:
+#   docker logs <container> | awk '$NF+0 > 1000000'   # slower than a second
+#
+# --timeout is set to gunicorn's own default rather than changed, so it is
+# visible and deliberate instead of implied.
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", \
+     "--workers", "2", "--threads", "4", \
+     "--timeout", "30", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-", \
+     "--access-logformat", "%(h)s \"%(r)s\" %(s)s %(b)sb %(D)sus", \
+     "run:app"]
