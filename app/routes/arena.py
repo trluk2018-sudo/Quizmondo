@@ -906,12 +906,12 @@ def dashboard():
         else:
             waiting_matches.append(m)
 
-    # One running character, on whichever duel is furthest along and needs you.
-    # Every in-flight card gets the animated ring; only this one gets the runner.
-    runner_candidates = [m for m in (your_move_matches + bot_matches)
+    # Every in-flight card gets the animated ring; the single duel that is
+    # furthest along and needs you also breathes, so one card stands out.
+    urgent_candidates = [m for m in (your_move_matches + bot_matches)
                          if not m.qm_completed and not m.qm_unaccepted]
-    runner_candidates.sort(key=lambda m: -(m.current_round or 0))
-    runner_code = runner_candidates[0].match_code if runner_candidates else None
+    urgent_candidates.sort(key=lambda m: -(m.current_round or 0))
+    urgent_code = urgent_candidates[0].match_code if urgent_candidates else None
 
     # Live group lobbies, with enough detail for the dashboard to draw the seats
     group_lobbies = []
@@ -949,7 +949,7 @@ def dashboard():
         active_matches=active_matches,
         your_move_matches=your_move_matches,
         waiting_matches=waiting_matches,
-        runner_code=runner_code,
+        urgent_code=urgent_code,
         bot_matches=bot_matches,
         history_matches=history_matches,
         friends_roster=friends_roster,
@@ -1010,16 +1010,16 @@ def hub():
                 'code': ch['code'],
             })
 
-    # Whatever needs you most goes first, and only that one gets the runner --
-    # a character circling every card stops pointing at anything.
+    # Whatever needs you most goes first, and only that one breathes --
+    # a marker on every card stops pointing at anything.
     in_progress.sort(key=lambda i: (not i['my_turn'], -i['pct']))
-    runner_code = in_progress[0]['code'] if in_progress else None
+    urgent_code = in_progress[0]['code'] if in_progress else None
 
     return render_template(
         'themes/quizhub/arena_hub.html',
         player=player,
         in_progress=in_progress,
-        runner_code=runner_code,
+        urgent_code=urgent_code,
         your_turn_count=sum(1 for i in in_progress if i['my_turn']),
         completed_battles_summary=_dashboard_completed(player),
         avatars=AVATAR_PRESETS,

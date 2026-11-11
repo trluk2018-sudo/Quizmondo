@@ -185,8 +185,7 @@
 
           {# Colour runs round every duel still in play; see qmg-fx.css. #}
           {% set live = not is_completed %}
-          <div data-duel-card="{{ m.match_code }}" class="{% if live %}qm-live {% endif %}p-4 sm:p-5 rounded-2xl bg-slate-950/90 border-2 {% if is_completed %}border-amber-400/60 bg-amber-950/15{% elif my_turn %}border-emerald-500/70 bg-emerald-950/20 shadow-lg{% else %}border-purple-500/20{% endif %} flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 transition hover:border-cyan-400">
-            {% if live and m.match_code == runner_code %}<span class="qm-runner" aria-hidden="true">🏃</span>{% endif %}
+          <div data-duel-card="{{ m.match_code }}" class="{% if live %}qm-live {% endif %}{% if live and m.match_code == urgent_code %}qm-urgent {% endif %}p-4 sm:p-5 rounded-2xl bg-slate-950/90 border-2 {% if is_completed %}border-amber-400/60 bg-amber-950/15{% elif my_turn %}border-emerald-500/70 bg-emerald-950/20 shadow-lg{% else %}border-purple-500/20{% endif %} flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 transition hover:border-cyan-400">
             <div class="flex items-center gap-3 min-w-0">
               {{ render_avatar_badge(opponent_avatar, opponent_name, 'md') }}
               <div class="space-y-0.5 min-w-0">
@@ -244,8 +243,7 @@
           {% for m in bot_matches %}
           {% set is_completed = (m.status == 'completed') %}
           {% set live = not is_completed %}
-          <div data-duel-card="{{ m.match_code }}" class="{% if live %}qm-live {% endif %}p-4 rounded-2xl bg-slate-950/80 border border-purple-500/30 flex items-center justify-between gap-4">
-            {% if live and m.match_code == runner_code %}<span class="qm-runner" aria-hidden="true">🏃</span>{% endif %}
+          <div data-duel-card="{{ m.match_code }}" class="{% if live %}qm-live {% endif %}{% if live and m.match_code == urgent_code %}qm-urgent {% endif %}p-4 rounded-2xl bg-slate-950/80 border border-purple-500/30 flex items-center justify-between gap-4">
             <div class="flex items-center gap-3 min-w-0">
               {{ render_avatar_badge('nova', 'Cyber Bot Nova', 'md') }}
               <div class="space-y-0.5 min-w-0">
@@ -363,7 +361,7 @@
 
           {# An invite nobody has taken is not in flight, so it gets no ring. #}
           {% set live = (not is_completed) and (not is_pending_friend) %}
-          <div data-duel-card="{{ m.match_code }}" class="{% if live %}qm-live {% endif %}p-4 sm:p-5 rounded-2xl bg-slate-950/80 border-2 {% if is_completed %}border-amber-400/60 bg-amber-950/15{% elif is_pending_friend %}border-purple-500/40 bg-purple-950/10{% elif my_turn %}border-emerald-500/60 bg-emerald-950/10{% else %}border-purple-500/20{% endif %} flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 transition hover:border-cyan-400">
+          <div data-duel-card="{{ m.match_code }}" class="{% if live %}qm-live {% endif %}{% if live and m.match_code == urgent_code %}qm-urgent {% endif %}p-4 sm:p-5 rounded-2xl bg-slate-950/80 border-2 {% if is_completed %}border-amber-400/60 bg-amber-950/15{% elif is_pending_friend %}border-purple-500/40 bg-purple-950/10{% elif my_turn %}border-emerald-500/60 bg-emerald-950/10{% else %}border-purple-500/20{% endif %} flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 transition hover:border-cyan-400">
             <div class="flex items-center gap-3 min-w-0">
               {{ render_avatar_badge(opponent_avatar, opponent_name, 'md') }}
               <div class="space-y-0.5 min-w-0">

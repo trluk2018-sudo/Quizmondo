@@ -730,10 +730,10 @@
       DUEL_STATE_CLASSES.forEach(function(c) { card.classList.remove(c); });
       classes.forEach(function(c) { card.classList.add(c); });
       card.classList.toggle('qm-live', !!live);
-      if (!live) {
-        var runner = card.querySelector('.qm-runner');
-        if (runner) runner.remove();
-      }
+      /* A finished duel is not in flight and is not urgent: drop both markers.
+         While it is still live the server decides which single card breathes,
+         so leave that alone. */
+      if (!live) card.classList.remove('qm-urgent');
     }
 
     function updateDashboardCardsLive(activeStates) {

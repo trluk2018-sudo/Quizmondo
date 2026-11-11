@@ -150,9 +150,9 @@
    .qm-live       colour running around the border. Goes on EVERY game in
                   flight, so "something is happening here" reads at a glance
                   down a list.
-   .qm-runner     a character jogging the perimeter. Goes on exactly ONE card,
-                  the most urgent, so it points at what to do next. Five of
-                  these on one screen is a zoo, not a hint.
+   .qm-urgent     a slow, light breath of glow. Goes on exactly ONE card, the
+                  most urgent, so it points at what to do next without
+                  competing with the ring for attention.
 
    The ring is a masked pseudo-element rather than a rotating conic gradient,
    because rotating a conic gradient on a card that is not square skews it,
@@ -200,39 +200,24 @@
   70%      { box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); opacity: .75; }
 }
 
-/* The runner. Its parent needs .qm-live (for position: relative); the emoji is
-   set as content so a template only has to add the class. Flipped horizontally
-   on the way back so it always faces where it is going. */
-.qm-runner {
-  position: absolute;
-  top: -11px;
-  left: 0;
-  width: 1.15rem;
-  height: 1.15rem;
-  font-size: 1.05rem;
-  line-height: 1;
-  text-align: center;
-  pointer-events: none;
-  z-index: 2;
-  animation: qmRunLap 7s linear infinite;
+/* The most urgent card breathes. Slow and shallow on purpose: it sits under a
+   border that is already cycling colour, so anything stronger would fight it.
+   Only box-shadow animates, which the compositor handles without reflowing the
+   card or nudging anything around it. */
+.qm-urgent {
+  animation: qmUrgentBreath 2.8s ease-in-out infinite;
 }
 
-@keyframes qmRunLap {
-  0%   { top: -11px; left: 0; transform: scaleX(1); }
-  24%  { top: -11px; left: calc(100% - 1.15rem); transform: scaleX(1); }
-  26%  { top: -11px; left: calc(100% - 1.15rem); transform: scaleX(1); }
-  49%  { top: calc(100% - 4px); left: calc(100% - 1.15rem); transform: scaleX(1); }
-  51%  { top: calc(100% - 4px); left: calc(100% - 1.15rem); transform: scaleX(-1); }
-  74%  { top: calc(100% - 4px); left: 0; transform: scaleX(-1); }
-  76%  { top: calc(100% - 4px); left: 0; transform: scaleX(-1); }
-  99%  { top: -11px; left: 0; transform: scaleX(-1); }
-  100% { top: -11px; left: 0; transform: scaleX(1); }
+@keyframes qmUrgentBreath {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+  50%      { box-shadow: 0 0 18px 2px rgba(52, 211, 153, .28); }
 }
 
 /* Motion is decoration here, never the only way to read the state: the ring
-   stays as a solid gradient border and the runner simply sits still. */
+   settles into a solid gradient border and the urgent card simply stops
+   breathing. Both keep their colour. */
 @media (prefers-reduced-motion: reduce) {
   .qm-live::before { animation: none; background-size: 100% 100%; }
   .qm-live-dot { animation: none; }
-  .qm-runner { animation: none; }
+  .qm-urgent { animation: none; box-shadow: 0 0 14px 1px rgba(52, 211, 153, .22); }
 }
