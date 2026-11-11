@@ -7,6 +7,11 @@
 
    It names the game when there is one, and the page otherwise. #}
 {% set rotate_subject = game.title if (game is defined and game and game.title) else none %}
+{# The Climber is the one screen laid out FOR landscape -- questions on one
+   side, the mountain on the other -- so it must never be told to turn
+   upright. It opts out by setting wants_landscape. #}
+{% set _skip_rotate_hint = (wants_landscape is defined and wants_landscape) %}
+{% if not _skip_rotate_hint %}
 
 <div id="qmgRotate" class="qmg-rotate">
   <div class="text-center space-y-4 px-8">
@@ -136,3 +141,4 @@
   review();
 })();
 </script>
+{% endif %}

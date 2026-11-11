@@ -1,4 +1,6 @@
 {% extends "themes/quizhub/base.html" %}
+{# Laid out for landscape, so never nag the player to turn upright. #}
+{% set wants_landscape = true %}
 
 {% block title %}The Quiz Climber &mdash; 30-Day Everest Expedition &mdash; {{ site_title }}{% endblock %}
 
@@ -100,6 +102,72 @@
     .qm-altfloat { animation: none; opacity: 1; }
   }
 
+  /* ---------------------------------------------------------------------
+     Layout.
+
+     The split used to arrive only at lg (1024px). A phone held sideways is
+     about 812px, so it fell back to stacking: mountain on top, questions
+     below, and the climb scrolled out of sight exactly when you were earning
+     it. You could not watch yourself climb while you played, which is the
+     whole point of the screen.
+
+     So the split follows the ORIENTATION rather than the width. Held
+     sideways, the questions take the left and the mountain the right, full
+     height, both on screen at once. Held upright it still works: the
+     mountain shrinks and sticks to the top of the screen, so the climb stays
+     in view while you answer rather than scrolling away.
+     --------------------------------------------------------------------- */
+
+  /* Sideways on a phone or small tablet: the full two-panel view.
+
+     The stage is lifted out of the page flow and pinned over it. Laying it
+     out in place was not enough: the header, nav strip, expedition banner,
+     HUD and backpack bar pushed it 548px down a 360px-tall screen, so the
+     game still began below the fold and you scrolled to play. Pinned, the
+     screen is the game, which is the point of turning the phone at all. */
+  @media (orientation: landscape) and (max-height: 620px) {
+    #climbStage {
+      position: fixed;
+      inset: 0;
+      z-index: 45;
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+      padding: 8px;
+      margin: 0;
+      background: #090317;
+      overflow: hidden;
+    }
+    /* Nothing behind it should scroll while it is up. */
+    body:has(#climbStage) { overflow: hidden; }
+    #climbTerminal {
+      order: 1;                 /* questions left */
+      flex: 1 1 56%;
+      min-width: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    #climbWall {
+      order: 2;                 /* mountain right */
+      flex: 0 0 40%;
+      height: auto !important;  /* fills the row instead of a fixed 580px */
+      align-self: stretch;
+    }
+    /* Reclaim the page chrome; the stage wants the screen. */
+    #climbPage { padding-top: .5rem !important; padding-bottom: .5rem !important; }
+    #climbPage > div { gap: .5rem; }
+  }
+
+  /* Upright on a phone: keep the climb on screen while answering. */
+  @media (orientation: portrait) and (max-width: 1023px) {
+    #climbWall {
+      position: sticky;
+      top: 6px;
+      z-index: 30;
+      height: 300px !important;
+    }
+  }
+
   /* Active Ledge Highlight */
   .ledge-active {
     box-shadow: 0 0 20px rgba(56, 189, 248, 0.5), inset 0 0 12px rgba(56, 189, 248, 0.25);
@@ -111,7 +179,7 @@
   }
 </style>
 
-<div class="min-h-screen bg-slate-950 text-white py-6 sm:py-10 px-3 sm:px-6 lg:px-8">
+<div id="climbPage" class="min-h-screen bg-slate-950 text-white py-6 sm:py-10 px-3 sm:px-6 lg:px-8">
   <div class="max-w-6xl mx-auto space-y-6">
 
     <!-- Top Expedition Narrative Banner -->
@@ -209,10 +277,12 @@
     </div>
 
     <!-- Main Expedition Wall & Interactive Trivia Stage -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <div id="climbStage" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-      <!-- LEFT: The Graphical Mountain & Wall (5 Cols) -->
-      <div class="lg:col-span-5 relative rounded-3xl overflow-hidden border-2 border-purple-500/50 shadow-2xl bg-slate-950 h-[580px] select-none">
+      <!-- The mountain. Sits right of the questions in landscape, above them
+           in portrait, where it stays stuck to the top of the screen so the
+           climb is still in view while you answer. -->
+      <div id="climbWall" class="lg:col-span-5 relative rounded-3xl overflow-hidden border-2 border-purple-500/50 shadow-2xl bg-slate-950 h-[580px] select-none">
 
         <!-- High-Fidelity Illuminated Mountain Background with Pine Trees -->
         <div id="mountainStageContainer" class="mountain-pan absolute inset-0 w-full h-full pointer-events-none">
@@ -363,8 +433,9 @@
 
       </div>
 
-      <!-- RIGHT: Interactive Terminal, Fact Card & Push-Your-Luck Console (7 Cols) -->
-      <div class="lg:col-span-7 space-y-5">
+      <!-- The questions. First in the source, so in landscape they take the
+           left and the mountain the right without reordering anything. -->
+      <div id="climbTerminal" class="lg:col-span-7 space-y-5">
 
         {% if not progress.is_day_completed %}
         <!-- Question Station Card (Collapsible when day is completed) -->
@@ -623,6 +694,15 @@
           </div>
           {% endif %}
         </div>
+
+        {# The day is over and there is nothing left to do here until tomorrow,
+           so give them the way out rather than leaving them on a finished
+           screen. It matters most in landscape, where the stage covers the
+           page and the normal navigation is behind it. #}
+        <a href="{{ url_for('arena.hub') }}"
+           class="block w-full text-center py-3 px-5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-purple-500/40 hover:border-cyan-400 text-slate-200 hover:text-white font-mono font-bold text-xs uppercase tracking-wider transition">
+          &larr; Back to My Hub
+        </a>
 
         <!-- Unlocked Mountain Lore & Fact Card (Tracked in DB to avoid repeats) -->
         <div id="factCard" class="p-4 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/40 border border-indigo-500/30 shadow-lg space-y-1.5">
@@ -967,7 +1047,16 @@
      questions take him the height of the wall, about 95px a time. Progress
      up the mountain itself is what the stage ledges, the altimeter and the
      day counter are for. */
-  var CLIMB_BOTTOM = 500, CLIMB_TOP = 24;
+  /* The wall is 580px upright, 300px when it is stuck to the top of a phone
+     screen, and whatever the row gives it in landscape. So the foot and the
+     crest of the climb are measured off the element rather than hard-coded,
+     or the climber ends up hanging in mid-air or buried below the frame. */
+  function climbBounds() {
+    var wall = document.getElementById('climbWall');
+    var h = (wall && wall.clientHeight) || 580;
+    var sprite = 62;                       // the puppet's own height plus a little
+    return { bottom: Math.max(40, h - sprite), top: 18 };
+  }
 
   /* A move on the rope, heard as well as seen: the haul, the carabiner
      taking the load, then boots biting the snow. One flat blip never
@@ -1049,13 +1138,17 @@
     countAltitudeTo(reached);
   }
 
+  var _lastClimb = { day: 1, idx: 1, done: false };
+
   function updateClimberPosition(dayNum, qIdx, dayDone) {
     var puppet = document.getElementById('climberPuppet');
     if (!puppet) return;
+    _lastClimb = { day: dayNum, idx: qIdx, done: !!dayDone };
     var steps = Math.max(1, dayQuestionsTotal || 5);
     var done = dayDone ? steps : Math.max(0, Math.min(steps, (qIdx || 1) - 1));
     var frac = done / steps;
-    var targetTop = CLIMB_BOTTOM - (frac * (CLIMB_BOTTOM - CLIMB_TOP));
+    var b = climbBounds();
+    var targetTop = b.bottom - (frac * (b.bottom - b.top));
     puppet.style.top = targetTop + 'px';
     puppet.style.transition = 'top 0.7s cubic-bezier(0.34, 1.4, 0.5, 1)';
 
@@ -1082,6 +1175,25 @@
   }
 
   updateClimberPosition(currentDay, currentQIndex, isDayCompleted);
+
+  /* Turning the phone swaps the layout and with it the wall's height, so put
+     the climber back on the hold he is actually on. Debounced, because the
+     resize fires in a burst as the browser chrome settles. */
+  var _reflowTimer;
+  function reflowClimber() {
+    clearTimeout(_reflowTimer);
+    _reflowTimer = setTimeout(function () {
+      updateClimberPosition(_lastClimb.day, _lastClimb.idx, _lastClimb.done);
+    }, 200);
+  }
+  window.addEventListener('orientationchange', reflowClimber);
+  window.addEventListener('resize', reflowClimber);
+  /* The first placement runs before the layout has settled, so the wall may
+     still be reporting its upright 580px when the landscape rules are about
+     to make it 364. Place him again once the browser has actually laid the
+     page out, or he starts off below the bottom of the screen. */
+  requestAnimationFrame(reflowClimber);
+  window.addEventListener('load', reflowClimber);
   startUnlockCountdown();
   window.startSprintNow = function() {
     var startCard = document.getElementById('startSprintCard');
