@@ -89,6 +89,31 @@
     .qm-navstrip > a, .qm-navstrip > button {
       min-height: 44px;
     }
+
+    /* Slide cues. The fade at the edge says there is more, but only if you
+       already know to read it that way; a faint chevron on the bottom line
+       says which way to push. Each one appears only while there is actually
+       something that way to scroll to. */
+    .qm-navstrip-wrap { position: relative; }
+    .qm-navstrip-cue {
+      position: absolute;
+      bottom: 2px;
+      font-size: 12px;
+      line-height: 1;
+      font-weight: 700;
+      color: rgba(196, 181, 253, .5);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .18s ease;
+    }
+    .qm-navstrip-cue-l { left: 5px; }
+    .qm-navstrip-cue-r { right: 5px; }
+    .qm-navstrip-wrap.qm-has-left .qm-navstrip-cue-l,
+    .qm-navstrip-wrap.qm-has-right .qm-navstrip-cue-r { opacity: 1; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .qm-navstrip-cue { transition: none; }
+    }
   </style>
 
   {% if settings.get('google_analytics_id') %}
@@ -249,7 +274,8 @@
     </div>
 
     <!-- Mobile Quick-Access Pill Bar (Always visible on mobile for effortless 1-tap navigation!) -->
-    <div id="qmNavStrip" class="qm-navstrip lg:hidden border-t border-purple-500/20 bg-[#090318]/95 px-3 py-2 flex items-center justify-start gap-1.5 overflow-x-auto no-scrollbar font-mono text-[11px]">
+    <div id="qmNavStripWrap" class="qm-navstrip-wrap lg:hidden">
+    <div id="qmNavStrip" class="qm-navstrip border-t border-purple-500/20 bg-[#090318]/95 px-3 py-2 flex items-center justify-start gap-1.5 overflow-x-auto no-scrollbar font-mono text-[11px]">
       {# My Hub leads: it is where you are, before what you can play. It takes
          the slot the "Add App" button used to hold, which was a duplicate of
          the button already on the page, so the strip is no longer longer. #}
@@ -274,6 +300,9 @@
       <a href="{{ url_for('arena.leaderboard') }}" class="px-2.5 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1 transition {% if request.path == '/arena/leaderboard' %}bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold{% else %}text-slate-300{% endif %}">
         <span>🏆</span><span>Ranks</span>
       </a>
+    </div>
+      <span class="qm-navstrip-cue qm-navstrip-cue-l" aria-hidden="true">&lsaquo;</span>
+      <span class="qm-navstrip-cue qm-navstrip-cue-r" aria-hidden="true">&rsaquo;</span>
     </div>
 
     <!-- Mobile Navigation Drawer -->
@@ -547,10 +576,17 @@
       // Drop the nav strip's fade once there is nothing further to scroll to,
       // so it only ever promises more when there is more.
       var strip = document.getElementById('qmNavStrip');
+      var stripWrap = document.getElementById('qmNavStripWrap');
       if (strip) {
         var syncStripFade = function () {
           var atEnd = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 2;
           strip.classList.toggle('qm-navstrip-end', atEnd);
+          if (stripWrap) {
+            // A chevron only shows while there is something that way to reach,
+            // so the strip never points at an edge it is already against.
+            stripWrap.classList.toggle('qm-has-left', strip.scrollLeft > 2);
+            stripWrap.classList.toggle('qm-has-right', !atEnd);
+          }
         };
         strip.addEventListener('scroll', syncStripFade, { passive: true });
         window.addEventListener('resize', syncStripFade);
@@ -730,10 +766,13 @@
       DUEL_STATE_CLASSES.forEach(function(c) { card.classList.remove(c); });
       classes.forEach(function(c) { card.classList.add(c); });
       card.classList.toggle('qm-live', !!live);
-      /* A finished duel is not in flight and is not urgent: drop both markers.
-         While it is still live the server decides which single card breathes,
-         so leave that alone. */
-      if (!live) card.classList.remove('qm-urgent');
+      /* A finished duel is not in flight and is not the one to play next, so
+         the ring goes and the travelling light goes with it. While it is still
+         live the server decides which single card carries the light. */
+      if (!live) {
+        var spark = card.querySelector('.qm-urgent-spark');
+        if (spark) spark.remove();
+      }
     }
 
     function updateDashboardCardsLive(activeStates) {

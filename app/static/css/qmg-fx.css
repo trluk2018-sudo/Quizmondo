@@ -150,9 +150,10 @@
    .qm-live       colour running around the border. Goes on EVERY game in
                   flight, so "something is happening here" reads at a glance
                   down a list.
-   .qm-urgent     a slow, light breath of glow. Goes on exactly ONE card, the
-                  most urgent, so it points at what to do next without
-                  competing with the ring for attention.
+   .qm-urgent     a point of light travelling slowly around the border line.
+                  Goes on exactly ONE card, the newest game in progress, so it
+                  points at what to do next. On every card it would be
+                  decoration rather than a hint.
 
    The ring is a masked pseudo-element rather than a rotating conic gradient,
    because rotating a conic gradient on a card that is not square skews it,
@@ -200,24 +201,58 @@
   70%      { box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); opacity: .75; }
 }
 
-/* The most urgent card breathes. Slow and shallow on purpose: it sits under a
-   border that is already cycling colour, so anything stronger would fight it.
-   Only box-shadow animates, which the compositor handles without reflowing the
-   card or nudging anything around it. */
-.qm-urgent {
-  animation: qmUrgentBreath 2.8s ease-in-out infinite;
+/* A point of light making slow laps of the border line. Its parent is a
+   .qm-live card, which is already position: relative.
+
+   The default path is the four straight edges, which every browser can do and
+   which cuts the rounded corners very slightly. Where offset-path understands
+   rect(), the @supports block below upgrades it to the real rounded outline,
+   so the light actually follows the corner. */
+.qm-urgent-spark {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: #f8fafc;
+  box-shadow: 0 0 6px 2px rgba(34, 211, 238, .9),
+              0 0 16px 5px rgba(168, 85, 247, .45);
+  pointer-events: none;
+  z-index: 3;
+  animation: qmSparkLap 9s linear infinite;
 }
 
-@keyframes qmUrgentBreath {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
-  50%      { box-shadow: 0 0 18px 2px rgba(52, 211, 153, .28); }
+@keyframes qmSparkLap {
+  0%   { top: -4px; left: -4px; }
+  25%  { top: -4px; left: calc(100% - 3px); }
+  50%  { top: calc(100% - 3px); left: calc(100% - 3px); }
+  75%  { top: calc(100% - 3px); left: -4px; }
+  100% { top: -4px; left: -4px; }
+}
+
+@supports (offset-path: rect(0 100% 100% 0 round 1rem)) {
+  .qm-urgent-spark {
+    top: 0;
+    left: 0;
+    /* Matches the cards' rounded-2xl (1rem), traced 2px outside the edge so
+       the light sits on the ring rather than inside it. */
+    offset-path: rect(-2px calc(100% + 2px) calc(100% + 2px) -2px round 1rem);
+    offset-distance: 0%;
+    offset-rotate: 0deg;
+    animation-name: qmSparkOrbit;
+  }
+
+  @keyframes qmSparkOrbit {
+    to { offset-distance: 100%; }
+  }
 }
 
 /* Motion is decoration here, never the only way to read the state: the ring
-   settles into a solid gradient border and the urgent card simply stops
-   breathing. Both keep their colour. */
+   settles into a solid gradient border, and the light simply parks at the top
+   left corner of the card it was pointing at. */
 @media (prefers-reduced-motion: reduce) {
   .qm-live::before { animation: none; background-size: 100% 100%; }
   .qm-live-dot { animation: none; }
-  .qm-urgent { animation: none; box-shadow: 0 0 14px 1px rgba(52, 211, 153, .22); }
+  .qm-urgent-spark { animation: none; }
 }

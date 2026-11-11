@@ -54,10 +54,11 @@
       {% if in_progress %}
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         {% for item in in_progress %}
-        {# The ring marks everything in flight; only the single most urgent one
-           also breathes, so it still points somewhere. #}
+        {# The ring marks everything in flight; only the newest one also carries
+           the travelling point of light, so it still points somewhere. #}
         <a href="{{ item.url }}" data-hub-card="{{ item.code }}"
-           class="qm-live {% if item.code == urgent_code %}qm-urgent {% endif %}block p-4 sm:p-5 rounded-2xl bg-slate-950/85 border-2 {% if item.my_turn %}border-emerald-500/40{% else %}border-purple-500/20{% endif %} space-y-3 transition hover:bg-slate-900/80">
+           class="qm-live block p-4 sm:p-5 rounded-2xl bg-slate-950/85 border-2 {% if item.my_turn %}border-emerald-500/40{% else %}border-purple-500/20{% endif %} space-y-3 transition hover:bg-slate-900/80">
+          {% if item.code == urgent_code %}<span class="qm-urgent-spark" aria-hidden="true"></span>{% endif %}
           <div class="flex items-center justify-between gap-3">
             <div class="flex items-center gap-3 min-w-0">
               {% if item.avatar %}{{ render_avatar_badge(item.avatar, item.opponent, 'md') }}{% else %}

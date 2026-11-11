@@ -906,11 +906,11 @@ def dashboard():
         else:
             waiting_matches.append(m)
 
-    # Every in-flight card gets the animated ring; the single duel that is
-    # furthest along and needs you also breathes, so one card stands out.
+    # Every in-flight card gets the animated ring; the card at the top of the
+    # list -- the most recently played, since the query is newest first -- also
+    # carries the travelling point of light.
     urgent_candidates = [m for m in (your_move_matches + bot_matches)
                          if not m.qm_completed and not m.qm_unaccepted]
-    urgent_candidates.sort(key=lambda m: -(m.current_round or 0))
     urgent_code = urgent_candidates[0].match_code if urgent_candidates else None
 
     # Live group lobbies, with enough detail for the dashboard to draw the seats
