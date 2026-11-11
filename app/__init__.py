@@ -18,12 +18,12 @@ def create_app(test_config=None):
     if not secret_key:
         if is_prod:
             raise RuntimeError("CRITICAL SECURITY ERROR: APP_SECRET_KEY must be provided via environment in production.")
-        secret_key = 'sitebuilder-express-insecure-dev-key'
+        secret_key = 'quizmondo-insecure-dev-key'
 
     sso_sec = os.environ.get('APP_SSO_SECRET') or os.environ.get('SSO_SECRET')
     if is_prod and not sso_sec:
         raise RuntimeError("CRITICAL SECURITY ERROR: APP_SSO_SECRET must be provided via environment in production.")
-    db_url = os.environ.get('APP_DATABASE_URL') or os.environ.get('DATABASE_URL') or f"sqlite:///{os.path.join(app.instance_path, 'sitebuilder.sqlite')}"
+    db_url = os.environ.get('APP_DATABASE_URL') or os.environ.get('DATABASE_URL') or f"sqlite:///{os.path.join(app.instance_path, 'app.db')}"
     if db_url.startswith('postgres://'):
         db_url = db_url.replace('postgres://', 'postgresql://', 1)
 
