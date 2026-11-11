@@ -4517,6 +4517,39 @@ def get_or_create_climber_season():
     return season
 
 
+def _roll_climber_day(progress):
+    """Move the expedition on to the next day once the 24-hour lock expires.
+
+    Finishing a day set is_day_completed, banked the coins and stamped
+    last_climbed_date, and the answer endpoint even worked out next_day_num to
+    tell the browser about -- but nothing ever wrote current_day back. So the
+    climb stayed on day 1 for good: while the lock held you were told to come
+    back tomorrow, and when it lifted the day was still flagged complete, so
+    no question was picked and the same day sat there finished. That is the
+    "keeps restarting at day 1, no progress saved" everyone was seeing.
+
+    One day per visit, not one per day elapsed: missing a week should not skip
+    a week of the mountain.
+    """
+    if not progress.is_day_completed:
+        return False
+    today = datetime.utcnow().date()
+    if progress.last_climbed_date and progress.last_climbed_date >= today:
+        return False  # still locked for today
+    if (progress.current_day or 1) >= 30:
+        return False  # summited; the expedition stands finished
+
+    progress.current_day = (progress.current_day or 1) + 1
+    progress.current_step = progress.current_day
+    meta = _calc_day_meta(progress.current_day)
+    progress.current_stage = meta['stage_number']
+    progress.day_questions_total = 1 if meta.get('is_camp_day') else 5
+    progress.day_question_index = 1
+    progress.is_day_completed = False
+    progress.status = 'climbing'
+    return True
+
+
 def get_or_create_climber_progress(player_id, season_id):
     """Retrieve or initialize player climb progress for active season."""
     progress = ClimberProgress.query.filter_by(
@@ -4546,7 +4579,9 @@ def get_or_create_climber_progress(player_id, season_id):
         db.session.add(progress)
         db.session.commit()
     else:
-        changed = False
+        # Roll the day on first, so the repairs below work on the day the
+        # climber is actually starting rather than the one they finished.
+        changed = _roll_climber_day(progress)
         day_meta = _calc_day_meta(progress.current_day or 1)
         expected_total = 1 if day_meta.get('is_camp_day') else 5
         if progress.day_questions_total != expected_total:

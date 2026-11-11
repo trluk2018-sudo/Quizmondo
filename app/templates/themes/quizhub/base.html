@@ -164,7 +164,7 @@
         <!-- Navigation Links -->
         {# Tight between md and lg, where seven links, the bell and Sign In have
            to share a tablet's width; the roomier lg spacing is unchanged. #}
-        <nav class="hidden lg:flex items-center space-x-2 lg:space-x-6 text-xs font-semibold text-slate-200 font-mono">
+        <nav class="hidden lg:flex items-center space-x-2 lg:space-x-5 text-sm font-semibold text-slate-200 font-mono">
           <a href="{{ url_for('arena.hub') }}" class="hover:text-cyan-400 transition py-1 flex items-center gap-1 {% if request.path.startswith('/arena/hub') %}text-cyan-400 font-bold{% else %}text-purple-300 font-bold{% endif %}">
             <span>🛰️</span> My Hub
           </a>
@@ -275,29 +275,29 @@
 
     <!-- Mobile Quick-Access Pill Bar (Always visible on mobile for effortless 1-tap navigation!) -->
     <div id="qmNavStripWrap" class="qm-navstrip-wrap lg:hidden">
-    <div id="qmNavStrip" class="qm-navstrip border-t border-purple-500/20 bg-[#090318]/95 px-3 py-2 flex items-center justify-start gap-1.5 overflow-x-auto no-scrollbar font-mono text-[11px]">
+    <div id="qmNavStrip" class="qm-navstrip border-t border-purple-500/20 bg-[#090318]/95 px-3 py-2 flex items-center justify-start gap-1.5 overflow-x-auto no-scrollbar font-mono text-[13px]">
       {# My Hub leads: it is where you are, before what you can play. It takes
          the slot the "Add App" button used to hold, which was a duplicate of
          the button already on the page, so the strip is no longer longer. #}
-      <a href="{{ url_for('arena.hub') }}" class="px-2.5 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1 transition {% if request.path.startswith('/arena/hub') %}bg-purple-600/30 text-cyan-300 border border-cyan-400/50 font-bold{% else %}text-purple-200 font-bold{% endif %}">
+      <a href="{{ url_for('arena.hub') }}" class="px-3 py-2 rounded-lg whitespace-nowrap flex items-center gap-1 transition {% if request.path.startswith('/arena/hub') %}bg-purple-600/30 text-cyan-300 border border-cyan-400/50 font-bold{% else %}text-purple-200 font-bold{% endif %}">
         <span>🛰️</span><span>My Hub</span>
       </a>
-      <a href="{{ url_for('arena.dashboard') }}" class="px-2.5 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1 transition {% if request.path.startswith('/arena') and not request.path.startswith('/arena/hub') and not request.path.startswith('/arena/packs') and not request.path.startswith('/arena/leagues') and not request.path.startswith('/arena/leaderboard') %}bg-purple-600/30 text-cyan-300 border border-cyan-400/50 font-bold{% else %}text-purple-200 font-bold{% endif %}">
+      <a href="{{ url_for('arena.dashboard') }}" class="px-3 py-2 rounded-lg whitespace-nowrap flex items-center gap-1 transition {% if request.path.startswith('/arena') and not request.path.startswith('/arena/hub') and not request.path.startswith('/arena/packs') and not request.path.startswith('/arena/leagues') and not request.path.startswith('/arena/leaderboard') %}bg-purple-600/30 text-cyan-300 border border-cyan-400/50 font-bold{% else %}text-purple-200 font-bold{% endif %}">
         <span>⚔️</span><span>Duels</span>
         {% if active_duel_turns_count and active_duel_turns_count > 0 %}
         <span class="px-1.5 py-0.2 rounded-full bg-emerald-400 text-slate-950 font-black text-[9px]">{{ active_duel_turns_count }}</span>
         {% endif %}
       </a>
-      <a href="{{ url_for('games.hub') }}" class="px-2.5 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1 transition {% if request.path.startswith('/games') %}bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold{% else %}text-slate-300{% endif %}">
+      <a href="{{ url_for('games.hub') }}" class="px-3 py-2 rounded-lg whitespace-nowrap flex items-center gap-1 transition {% if request.path.startswith('/games') %}bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold{% else %}text-slate-300{% endif %}">
         <span>🎮</span><span>Mini Games</span>
       </a>
-      <a href="{{ url_for('arena.packs_directory') }}" class="px-2.5 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1 transition {% if request.path.startswith('/arena/packs') %}bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold{% else %}text-slate-300{% endif %}">
+      <a href="{{ url_for('arena.packs_directory') }}" class="px-3 py-2 rounded-lg whitespace-nowrap flex items-center gap-1 transition {% if request.path.startswith('/arena/packs') %}bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold{% else %}text-slate-300{% endif %}">
         <span>📦</span><span>Decks</span>
       </a>
-      <a href="{{ url_for('arena.leagues') }}" class="px-2.5 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1 transition {% if request.path.startswith('/arena/leagues') %}bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold{% else %}text-slate-300{% endif %}">
+      <a href="{{ url_for('arena.leagues') }}" class="px-3 py-2 rounded-lg whitespace-nowrap flex items-center gap-1 transition {% if request.path.startswith('/arena/leagues') %}bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold{% else %}text-slate-300{% endif %}">
         <span>🍻</span><span>Pub Quiz</span>
       </a>
-      <a href="{{ url_for('arena.leaderboard') }}" class="px-2.5 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1 transition {% if request.path == '/arena/leaderboard' %}bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold{% else %}text-slate-300{% endif %}">
+      <a href="{{ url_for('arena.leaderboard') }}" class="px-3 py-2 rounded-lg whitespace-nowrap flex items-center gap-1 transition {% if request.path == '/arena/leaderboard' %}bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold{% else %}text-slate-300{% endif %}">
         <span>🏆</span><span>Ranks</span>
       </a>
     </div>
