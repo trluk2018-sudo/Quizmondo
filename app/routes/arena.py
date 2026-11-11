@@ -4489,8 +4489,50 @@ def _calc_day_meta(day_num):
         'icon': stage_info['icon'],
         'is_stage_gate': (step_in_stage == 5),
         'is_camp_day': is_camp_day,
-        'camp_mission': mission
+        'camp_mission': mission,
+        # A camp is somewhere you ARRIVE, at the end of its five days -- not
+        # somewhere you already are. Every day of a stage used to announce the
+        # stage's camp, so finishing day 1 told you that you were "safely at
+        # Pine Valley Basecamp", which is where the expedition starts from.
+        # camp_secured is the camp you have actually reached, and only on the
+        # day you reach it; next_camp is the one you are still climbing to.
+        'camp_secured': (stage_info['safe_haven'] if is_camp_day else None),
+        'next_camp': stage_info['safe_haven'],
+        'step_in_stage': step_in_stage,
     }
+
+
+def _day_arrival(day_meta):
+    """How to describe where a finished day leaves you.
+
+    Reaching a camp happens on the last day of its stage. On the other four
+    you have gained height and the camp is still above you, so saying you are
+    "safely at" it is both wrong and deflating -- the first day of the whole
+    expedition used to announce that you had arrived at the basecamp you set
+    off from.
+    """
+    alt = '{:,}m'.format(day_meta['altitude'])
+    if day_meta.get('camp_secured'):
+        return {
+            'where': day_meta['camp_secured'],
+            'headline': 'Secured %s' % day_meta['camp_secured'],
+            'detail': 'Camp secured at %s.' % alt,
+        }
+    return {
+        'where': alt,
+        'headline': 'Climbed to %s' % alt,
+        'detail': '%s is still above you -- %s to go.' % (
+            day_meta['next_camp'], '{:,}m'.format(
+                max(0, _stage_top(day_meta) - day_meta['altitude']))),
+    }
+
+
+def _stage_top(day_meta):
+    """The altitude of the camp this stage ends at."""
+    for st in EXPEDITION_STAGES:
+        if st['stage'] == day_meta['stage_number']:
+            return st['max_alt']
+    return day_meta['altitude']
 
 
 def get_or_create_climber_season():
@@ -4640,9 +4682,16 @@ def _pick_climber_question(diff='easy', exclude_id=None):
     return query.offset(random.randint(0, count - 1)).first()
 
 
-@arena_bp.route('/climber/reset', methods=['GET', 'POST'])
+@arena_bp.route('/climber/reset', methods=['POST'])
 def climber_reset():
-    """Reset active player's expedition back to Day 1 (Self-serve or testing)."""
+    """Start the expedition again from Day 1.
+
+    POST only, deliberately. It used to answer GET as well, so merely
+    fetching the URL threw away a player's progress -- a prefetch, a
+    restored tab or a link someone shared was enough, with nothing to
+    confirm and no way back. A real player lost a part-finished expedition
+    to exactly that.
+    """
     player = get_current_player(persist=True)
     season = get_or_create_climber_season()
     progress = get_or_create_climber_progress(player.id, season.id)
@@ -4672,22 +4721,6 @@ def climber():
     player = get_current_player(persist=True)
     season = get_or_create_climber_season()
     progress = get_or_create_climber_progress(player.id, season.id)
-
-    # Handle explicit reset request (e.g. ?reset=1 or ?reset=trevorl)
-    if request.args.get('reset') in ('1', 'trevorl', 'true'):
-        progress.current_day = 1
-        progress.current_step = 1
-        progress.current_stage = 1
-        progress.day_question_index = 1
-        progress.day_questions_total = 5
-        progress.is_day_completed = False
-        progress.altitude_m = 1000
-        progress.highest_altitude = 1000
-        progress.unbanked_coins = 0
-        progress.last_climbed_date = None
-        progress.status = 'climbing'
-        db.session.commit()
-        return redirect(url_for('arena.climber'))
 
     day_meta = _calc_day_meta(progress.current_day)
 
@@ -4875,8 +4908,9 @@ def climber_answer():
                 'secured_camp_stage': progress.secured_camp_stage,
                 'day_meta': day_meta,
                 'next_day_meta': next_day_meta,
-                'safe_haven': day_meta.get('safe_haven') or 'Camp Safe Haven',
-                'explanation': f"Safely arrived at {day_meta['safe_haven']}! +{coins_won_today} 🪙 secured to your wallet."
+                'safe_haven': _day_arrival(day_meta)['where'],
+                'arrival': _day_arrival(day_meta),
+                'explanation': f"{_day_arrival(day_meta)['headline']}. +{coins_won_today} 🪙 secured to your wallet."
             })
 
     else:
@@ -4963,9 +4997,10 @@ def climber_answer():
                 'secured_camp_stage': progress.secured_camp_stage,
                 'day_meta': day_meta,
                 'next_day_meta': next_day_meta,
-                'safe_haven': day_meta.get('safe_haven') or 'Camp Safe Haven',
+                'safe_haven': _day_arrival(day_meta)['where'],
+                'arrival': _day_arrival(day_meta),
                 'correct_answer': question.correct_option,
-                'explanation': ('🛡️ Shield absorbed slip! ' if shield_saved else f'⚠️ Slip on last hold! ') + f"Safely arrived at {day_meta['safe_haven']}."
+                'explanation': ('🛡️ Shield absorbed the slip! ' if shield_saved else '⚠️ Slip on the last hold! ') + f"{_day_arrival(day_meta)['headline']}."
             })
 
 
@@ -5028,8 +5063,9 @@ def climber_camp_complete():
         'next_day': next_day_num,
         'day_meta': day_meta,
         'next_day_meta': next_day_meta,
-        'safe_haven': day_meta.get('safe_haven') or 'Camp Safe Haven',
-        'explanation': f"Safely secured {day_meta['safe_haven']}! +{coins_won_today} 🪙 safely banked in your wallet."
+        'safe_haven': _day_arrival(day_meta)['where'],
+        'arrival': _day_arrival(day_meta),
+        'explanation': f"{_day_arrival(day_meta)['headline']}. +{coins_won_today} 🪙 safely banked in your wallet."
     })
 
 
@@ -5085,8 +5121,9 @@ def climber_timeout():
         'secured_camp_stage': progress.secured_camp_stage,
         'day_meta': day_meta,
         'next_day_meta': next_day_meta,
-        'safe_haven': day_meta.get('safe_haven') or 'Camp Safe Haven',
-        'explanation': ('🛡️ Climber Shield absorbed the frostbite! ' if shield_saved else f'⚠️ Blizzard struck as 60-second speed clock expired! ') + f"Safely arrived at {day_meta['safe_haven']}! Rest until tomorrow."
+        'safe_haven': _day_arrival(day_meta)['where'],
+        'arrival': _day_arrival(day_meta),
+        'explanation': ('🛡️ Climber Shield absorbed the frostbite! ' if shield_saved else '⚠️ Blizzard struck as the 60-second clock expired! ') + f"{_day_arrival(day_meta)['headline']}. Rest until tomorrow."
     })
 
 

@@ -319,8 +319,10 @@
       </div>
       <div class="p-3 rounded-xl bg-slate-900/90 border border-emerald-500/40 shadow">
         <div class="text-[10px] font-mono text-slate-400 uppercase font-semibold">SAFE HAVEN CAMP</div>
-        <div class="text-xs sm:text-sm font-bold text-emerald-300 font-mono truncate" id="hudSafeCamp" title="{{ day_meta.safe_haven }}">
-          {{ day_meta.safe_haven }}
+        {# The camp you have actually secured, or the start if none yet --
+           not the camp this stage is still climbing towards. #}
+        <div class="text-xs sm:text-sm font-bold text-emerald-300 font-mono truncate" id="hudSafeCamp" title="{{ day_meta.next_camp }}">
+          {% if progress.secured_camp_stage and progress.secured_camp_stage > 1 %}{{ expedition_stages[progress.secured_camp_stage - 2].safe_haven }}{% else %}Pine Valley Basecamp (start){% endif %}
         </div>
       </div>
       <div class="col-span-2 sm:col-span-1 p-3 rounded-xl bg-slate-900/90 border border-purple-500/40 flex items-center justify-between sm:justify-center gap-2 shadow">
@@ -734,7 +736,7 @@
           
           <!-- Safe Haven Location Banner -->
           <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-mono text-xs sm:text-sm font-bold uppercase tracking-wider shadow-inner">
-            ⛺ SAFELY AT <span id="completedSafeHaven">{{ day_meta.safe_haven|upper }}</span> (<span id="completedAlt">{{ day_meta.altitude }}</span>M)
+            {% if day_meta.camp_secured %}⛺ SECURED <span id="completedSafeHaven">{{ day_meta.camp_secured|upper }}</span>{% else %}🧗 CLIMBED TO <span id="completedSafeHaven">{{ '{:,}'.format(day_meta.altitude) }}M</span> &bull; {{ day_meta.next_camp|upper }} ABOVE{% endif %} (<span id="completedAlt">{{ day_meta.altitude }}</span>M)
           </div>
 
           <div class="space-y-1.5">
@@ -1049,7 +1051,13 @@
 
     var safeHavenEl = document.getElementById('completedSafeHaven');
     if (safeHavenEl) {
-      var shName = data.safe_haven || (data.day_meta && data.day_meta.safe_haven) || (data.next_day_meta && data.next_day_meta.safe_haven) || 'Pine Valley Basecamp';
+      /* Where the day actually left you: a camp only on the day you reach
+         it, otherwise the height gained. The old fallback chain ended at
+         'Pine Valley Basecamp', so a missing value announced the camp you
+         started from. */
+      var arrival = data.arrival || (data.day_meta && data.day_meta.arrival);
+      var shName = (arrival && arrival.where) || data.safe_haven ||
+                   (data.day_meta && data.day_meta.altitude ? data.day_meta.altitude + 'm' : 'the next ledge');
       safeHavenEl.textContent = String(shName).toUpperCase();
     }
     var altEl = document.getElementById('completedAlt');
