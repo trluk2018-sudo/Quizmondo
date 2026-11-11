@@ -228,7 +228,7 @@
     #questionBlock > * + * { margin-top: 0 !important; }
     #questionBlock #qPrompt { flex: 1 1 auto; min-width: 0; }
     #mediaContainer { padding: 0 !important; flex: 0 0 auto; }
-    #mediaContainer img { max-height: 68px !important; width: auto !important; }
+    #mediaContainer img { max-height: 68px; width: auto !important; }
 
     /* The finished-day card has to fit too: it is the success message, and a
        congratulation you have to scroll to read is not one. */
@@ -369,125 +369,132 @@
       <div id="climbWall" class="lg:col-span-5 lg:order-2 relative rounded-3xl overflow-hidden border-2 border-purple-500/50 shadow-2xl bg-slate-950 h-[580px] select-none">
 
         <!-- High-Fidelity Illuminated Mountain Background with Pine Trees -->
-        <div id="mountainStageContainer" class="mountain-pan absolute inset-0 w-full h-full pointer-events-none">
-          <svg class="w-full h-full object-cover" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 700" preserveAspectRatio="none">
-            <defs>
-              <!-- Bright Alpine Dawn/Dusk Gradient -->
-              <linearGradient id="skyExpGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="#0c2340" />
-                <stop offset="30%" stop-color="#1d4ed8" />
-                <stop offset="65%" stop-color="#60a5fa" />
-                <stop offset="85%" stop-color="#bae6fd" />
-                <stop offset="100%" stop-color="#e0f2fe" />
-              </linearGradient>
+        <!-- The camera. Everything the climb happens on -- mountain, snow,
+             rope and climber -- moves together, so zooming in follows him up
+             the face instead of sliding the backdrop out from under him. The
+             stage ledges stay outside it: they are labels, not scenery. -->
+        <div id="climbCamera" class="absolute inset-0 origin-top">
+          <div id="mountainStageContainer" class="mountain-pan absolute inset-0 w-full h-full pointer-events-none">
+            <svg class="w-full h-full object-cover" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 700" preserveAspectRatio="none">
+              <defs>
+                <!-- Bright Alpine Dawn/Dusk Gradient -->
+                <linearGradient id="skyExpGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#0c2340" />
+                  <stop offset="30%" stop-color="#1d4ed8" />
+                  <stop offset="65%" stop-color="#60a5fa" />
+                  <stop offset="85%" stop-color="#bae6fd" />
+                  <stop offset="100%" stop-color="#e0f2fe" />
+                </linearGradient>
 
-              <!-- Sun Halo -->
-              <radialGradient id="sunGlow2" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#ffffff" stop-opacity="1" />
-                <stop offset="35%" stop-color="#fef08a" stop-opacity="0.8" />
-                <stop offset="70%" stop-color="#93c5fd" stop-opacity="0.3" />
-                <stop offset="100%" stop-color="#60a5fa" stop-opacity="0" />
-              </radialGradient>
+                <!-- Sun Halo -->
+                <radialGradient id="sunGlow2" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#ffffff" stop-opacity="1" />
+                  <stop offset="35%" stop-color="#fef08a" stop-opacity="0.8" />
+                  <stop offset="70%" stop-color="#93c5fd" stop-opacity="0.3" />
+                  <stop offset="100%" stop-color="#60a5fa" stop-opacity="0" />
+                </radialGradient>
 
-              <!-- Glistening Snow Gradient -->
-              <linearGradient id="snowGlint2" x1="0%" y1="0%" x2="60%" y2="100%">
-                <stop offset="0%" stop-color="#ffffff" />
-                <stop offset="50%" stop-color="#f0f9ff" />
-                <stop offset="100%" stop-color="#bae6fd" />
-              </linearGradient>
+                <!-- Glistening Snow Gradient -->
+                <linearGradient id="snowGlint2" x1="0%" y1="0%" x2="60%" y2="100%">
+                  <stop offset="0%" stop-color="#ffffff" />
+                  <stop offset="50%" stop-color="#f0f9ff" />
+                  <stop offset="100%" stop-color="#bae6fd" />
+                </linearGradient>
 
-              <!-- Pine Tree Symbol -->
-              <g id="treeSymbol">
-                <polygon points="0,0 -6,14 -2,14 -8,24 -3,24 -10,36 10,36 3,24 8,24 2,14 6,14" fill="#064e3b" stroke="#022c22" stroke-width="0.7" />
-                <polygon points="0,0 -3,14 0,14 -5,24 0,24 -7,36 0,36" fill="#10b981" opacity="0.35" />
-                <rect x="-1" y="36" width="2" height="5" fill="#3b1d11" />
+                <!-- Pine Tree Symbol -->
+                <g id="treeSymbol">
+                  <polygon points="0,0 -6,14 -2,14 -8,24 -3,24 -10,36 10,36 3,24 8,24 2,14 6,14" fill="#064e3b" stroke="#022c22" stroke-width="0.7" />
+                  <polygon points="0,0 -3,14 0,14 -5,24 0,24 -7,36 0,36" fill="#10b981" opacity="0.35" />
+                  <rect x="-1" y="36" width="2" height="5" fill="#3b1d11" />
+                </g>
+                <g id="treeTuft">
+                  <use href="#treeSymbol" transform="scale(0.8) translate(-12, 4)" />
+                  <use href="#treeSymbol" transform="scale(1.05) translate(0, 0)" />
+                  <use href="#treeSymbol" transform="scale(0.7) translate(14, 6)" />
+                </g>
+              </defs>
+
+              <!-- Sky -->
+              <rect width="500" height="700" fill="url(#skyExpGrad2)" />
+
+              <!-- Sun -->
+              <circle cx="390" cy="80" r="100" fill="url(#sunGlow2)" />
+              <circle cx="390" cy="80" r="22" fill="#ffffff" />
+
+              <!-- Far Snow Peaks (Bright illuminated lilac & snow glint) -->
+              <polygon points="80,700 210,210 330,360 450,160 500,700" fill="#312e81" opacity="0.85" />
+              <polygon points="210,210 180,260 240,260" fill="url(#snowGlint2)" />
+              <polygon points="450,160 420,210 480,210" fill="url(#snowGlint2)" />
+
+              <!-- Main Everest Summit Pyramid -->
+              <polygon points="130,700 350,90 520,700" fill="#1e1b4b" />
+              <!-- Sunlit Snow Face -->
+              <polygon points="350,90 280,230 330,250 350,210 370,255 420,215" fill="url(#snowGlint2)" />
+              <polygon points="350,90 350,210 370,255 420,215 520,700 350,700" fill="#0f172a" opacity="0.45" />
+
+              <!-- Lower Valley Slopes & Moraine -->
+              <polygon points="0,450 180,410 340,480 500,430 500,700 0,700" fill="#1e293b" />
+              <polygon points="0,520 220,490 380,560 500,510 500,700 0,700" fill="#064e3b" opacity="0.6" />
+
+              <!-- Tufts of Evergreen Pine Trees across Basecamp Slopes -->
+              <g id="valleyTrees">
+                <use href="#treeTuft" transform="translate(110, 520)" />
+                <use href="#treeTuft" transform="scale(0.85) translate(220, 560)" />
+                <use href="#treeTuft" transform="scale(1.15) translate(150, 540)" />
+                <use href="#treeTuft" transform="scale(0.9) translate(280, 550)" />
+                <use href="#treeTuft" transform="scale(1.2) translate(360, 530)" />
+                <use href="#treeTuft" transform="scale(0.8) translate(430, 580)" />
               </g>
-              <g id="treeTuft">
-                <use href="#treeSymbol" transform="scale(0.8) translate(-12, 4)" />
-                <use href="#treeSymbol" transform="scale(1.05) translate(0, 0)" />
-                <use href="#treeSymbol" transform="scale(0.7) translate(14, 6)" />
-              </g>
-            </defs>
 
-            <!-- Sky -->
-            <rect width="500" height="700" fill="url(#skyExpGrad2)" />
+              <!-- Vertical Left Rock Wall (Width: 84px track) -->
+              <polygon points="0,0 84,0 76,240 88,440 78,700 0,700" fill="#334155" />
+              <path d="M 0,110 L 80,110 L 65,160 M 0,310 L 82,310 L 60,370 M 0,510 L 84,510 L 62,570" stroke="#64748b" stroke-width="2.5" fill="none" opacity="0.8" />
+              <!-- Snow Dusting on Holds -->
+              <path d="M 0,110 L 74,110 M 0,310 L 76,310 M 0,510 L 78,510" stroke="#ffffff" stroke-width="2" fill="none" opacity="0.75" />
+            </svg>
+          </div>
 
-            <!-- Sun -->
-            <circle cx="390" cy="80" r="100" fill="url(#sunGlow2)" />
-            <circle cx="390" cy="80" r="22" fill="#ffffff" />
+          <!-- Dynamic Falling Snow Simulation Layer -->
+          <div id="snowLayer" class="snow-canvas">
+            {% for i in range(28) %}
+            <div class="snow-flake" style="
+              left: {{ (i * 3.7) % 100 }}%;
+              width: {{ 2 + (i % 4) }}px;
+              height: {{ 2 + (i % 4) }}px;
+              animation-duration: {{ 3.5 + (i % 4) }}s;
+              animation-delay: -{{ (i * 0.4) }}s;
+            "></div>
+            {% endfor %}
+          </div>
 
-            <!-- Far Snow Peaks (Bright illuminated lilac & snow glint) -->
-            <polygon points="80,700 210,210 330,360 450,160 500,700" fill="#312e81" opacity="0.85" />
-            <polygon points="210,210 180,260 240,260" fill="url(#snowGlint2)" />
-            <polygon points="450,160 420,210 480,210" fill="url(#snowGlint2)" />
+          <!-- Vertical Fixed Climbing Rope (Left X: 42px) -->
+          <div class="absolute top-0 bottom-0 left-[42px] w-[3px] bg-amber-400 border-l border-amber-500 z-10 opacity-90"></div>
 
-            <!-- Main Everest Summit Pyramid -->
-            <polygon points="130,700 350,90 520,700" fill="#1e1b4b" />
-            <!-- Sunlit Snow Face -->
-            <polygon points="350,90 280,230 330,250 350,210 370,255 420,215" fill="url(#snowGlint2)" />
-            <polygon points="350,90 350,210 370,255 420,215 520,700 350,700" fill="#0f172a" opacity="0.45" />
-
-            <!-- Lower Valley Slopes & Moraine -->
-            <polygon points="0,450 180,410 340,480 500,430 500,700 0,700" fill="#1e293b" />
-            <polygon points="0,520 220,490 380,560 500,510 500,700 0,700" fill="#064e3b" opacity="0.6" />
-
-            <!-- Tufts of Evergreen Pine Trees across Basecamp Slopes -->
-            <g id="valleyTrees">
-              <use href="#treeTuft" transform="translate(110, 520)" />
-              <use href="#treeTuft" transform="scale(0.85) translate(220, 560)" />
-              <use href="#treeTuft" transform="scale(1.15) translate(150, 540)" />
-              <use href="#treeTuft" transform="scale(0.9) translate(280, 550)" />
-              <use href="#treeTuft" transform="scale(1.2) translate(360, 530)" />
-              <use href="#treeTuft" transform="scale(0.8) translate(430, 580)" />
-            </g>
-
-            <!-- Vertical Left Rock Wall (Width: 84px track) -->
-            <polygon points="0,0 84,0 76,240 88,440 78,700 0,700" fill="#334155" />
-            <path d="M 0,110 L 80,110 L 65,160 M 0,310 L 82,310 L 60,370 M 0,510 L 84,510 L 62,570" stroke="#64748b" stroke-width="2.5" fill="none" opacity="0.8" />
-            <!-- Snow Dusting on Holds -->
-            <path d="M 0,110 L 74,110 M 0,310 L 76,310 M 0,510 L 78,510" stroke="#ffffff" stroke-width="2" fill="none" opacity="0.75" />
-          </svg>
+          <!-- Animated Climber Puppet (Tied to Rope on Left Track, ZERO overlap with text) -->
+          <div id="climberPuppet" class="climber-puppet absolute left-[18px] z-20" style="top: 500px;">
+            <svg width="48" height="58" viewBox="0 0 48 58" fill="none">
+              <!-- Helmet -->
+              <ellipse cx="24" cy="11" rx="10" ry="8" fill="#ef4444" stroke="#b91c1c" stroke-width="1.5" />
+              <rect x="22" y="10" width="7" height="3" fill="#fbbf24" rx="1" />
+              <!-- Backpack -->
+              <rect x="4" y="20" width="12" height="20" rx="3" fill="#2563eb" stroke="#1d4ed8" stroke-width="1.5" />
+              <!-- Torso Jacket -->
+              <path d="M 14,18 L 32,20 L 29,40 L 15,38 Z" fill="#ea580c" />
+              <!-- Harness & Carabiner -->
+              <ellipse cx="22" cy="38" rx="8" ry="3" fill="#1e293b" />
+              <circle cx="24" cy="38" r="2.5" fill="#facc15" />
+              <!-- Arms Gripping Rope -->
+              <path d="M 17,20 L 24,4 L 24,0" stroke="#ea580c" stroke-width="4" stroke-linecap="round" fill="none" />
+              <path d="M 30,22 L 24,14 L 24,0" stroke="#c2410c" stroke-width="4" stroke-linecap="round" fill="none" />
+              <!-- Boots planted on holds -->
+              <path d="M 18,38 L 10,50 L 3,53" stroke="#0f172a" stroke-width="4" stroke-linecap="round" fill="none" />
+              <path d="M 26,39 L 23,52 L 17,56" stroke="#1e293b" stroke-width="4" stroke-linecap="round" fill="none" />
+              <ellipse cx="3" cy="53" rx="4" ry="2.5" fill="#fbbf24" />
+              <ellipse cx="17" cy="56" rx="4" ry="2.5" fill="#fbbf24" />
+            </svg>
+          </div>
         </div>
 
-        <!-- Dynamic Falling Snow Simulation Layer -->
-        <div id="snowLayer" class="snow-canvas">
-          {% for i in range(28) %}
-          <div class="snow-flake" style="
-            left: {{ (i * 3.7) % 100 }}%;
-            width: {{ 2 + (i % 4) }}px;
-            height: {{ 2 + (i % 4) }}px;
-            animation-duration: {{ 3.5 + (i % 4) }}s;
-            animation-delay: -{{ (i * 0.4) }}s;
-          "></div>
-          {% endfor %}
-        </div>
-
-        <!-- Vertical Fixed Climbing Rope (Left X: 42px) -->
-        <div class="absolute top-0 bottom-0 left-[42px] w-[3px] bg-amber-400 border-l border-amber-500 z-10 opacity-90"></div>
-
-        <!-- Animated Climber Puppet (Tied to Rope on Left Track, ZERO overlap with text) -->
-        <div id="climberPuppet" class="climber-puppet absolute left-[18px] z-20" style="top: 500px;">
-          <svg width="48" height="58" viewBox="0 0 48 58" fill="none">
-            <!-- Helmet -->
-            <ellipse cx="24" cy="11" rx="10" ry="8" fill="#ef4444" stroke="#b91c1c" stroke-width="1.5" />
-            <rect x="22" y="10" width="7" height="3" fill="#fbbf24" rx="1" />
-            <!-- Backpack -->
-            <rect x="4" y="20" width="12" height="20" rx="3" fill="#2563eb" stroke="#1d4ed8" stroke-width="1.5" />
-            <!-- Torso Jacket -->
-            <path d="M 14,18 L 32,20 L 29,40 L 15,38 Z" fill="#ea580c" />
-            <!-- Harness & Carabiner -->
-            <ellipse cx="22" cy="38" rx="8" ry="3" fill="#1e293b" />
-            <circle cx="24" cy="38" r="2.5" fill="#facc15" />
-            <!-- Arms Gripping Rope -->
-            <path d="M 17,20 L 24,4 L 24,0" stroke="#ea580c" stroke-width="4" stroke-linecap="round" fill="none" />
-            <path d="M 30,22 L 24,14 L 24,0" stroke="#c2410c" stroke-width="4" stroke-linecap="round" fill="none" />
-            <!-- Boots planted on holds -->
-            <path d="M 18,38 L 10,50 L 3,53" stroke="#0f172a" stroke-width="4" stroke-linecap="round" fill="none" />
-            <path d="M 26,39 L 23,52 L 17,56" stroke="#1e293b" stroke-width="4" stroke-linecap="round" fill="none" />
-            <ellipse cx="3" cy="53" rx="4" ry="2.5" fill="#fbbf24" />
-            <ellipse cx="17" cy="56" rx="4" ry="2.5" fill="#fbbf24" />
-          </svg>
-        </div>
 
         <!-- 6 Stage Ledges (Arranged on Right Side X: 84px to 100%, NEVER collides with Climber) -->
         <div class="absolute inset-y-4 left-[78px] right-3 flex flex-col-reverse justify-between z-10 pointer-events-none">
@@ -931,6 +938,7 @@
     var qSec = document.getElementById('triviaQuestionSection');
     if (qSec) qSec.classList.remove('hidden');
     startSprintClock();
+    cameraFollow(false);
     if (window.qmPlaySound) window.qmPlaySound('climbStep');
   };
 
@@ -1159,6 +1167,22 @@
      first and then the options, within floors that keep it readable. If a
      question is so long that even the floor overflows, the panel scrolls --
      but that is now the rare exception rather than the normal case. */
+  /* Size a question's picture by its shape, not one number for all of them.
+     A flag is wide, so 68px of height still reads clearly. A club badge or
+     the outline of a country is roughly square, and at the same 68px it is a
+     smudge -- those get room, and cost little width because they are narrow. */
+  function sizeQuestionMedia() {
+    var img = document.getElementById('qMediaImg');
+    if (!img || !img.naturalWidth || !img.naturalHeight) return;
+    if (!window.matchMedia ||
+        !window.matchMedia('(orientation: landscape) and (max-height: 620px)').matches) {
+      img.style.maxHeight = '';     // upright has the room; leave it alone
+      return;
+    }
+    var ratio = img.naturalWidth / img.naturalHeight;
+    img.style.maxHeight = (ratio >= 1.4 ? 68 : 112) + 'px';
+  }
+
   function fitLandscapePanel() {
     var t = document.getElementById('climbTerminal');
     var q = document.getElementById('qPrompt');
@@ -1169,6 +1193,7 @@
     if (og) og.style.fontSize = '';
     var resetImg = document.getElementById('qMediaImg');
     if (resetImg) resetImg.style.maxHeight = '';
+    sizeQuestionMedia();
 
     if (!window.matchMedia ||
         !window.matchMedia('(orientation: landscape) and (max-height: 620px)').matches) {
@@ -1281,6 +1306,7 @@
     var prevAlt = Math.round((dayStartAltitude || 0) + span * (prevDone / steps));
 
     playAscentSounds();
+    setTimeout(function () { cameraFollow(false); }, 120);
     if (puppet) {
       puppet.classList.remove('climber-ascend');
       void puppet.offsetWidth;            // restart the animation
@@ -1290,6 +1316,53 @@
       floatMetres(puppet, reached - prevAlt);
     }
     countAltitudeTo(reached);
+  }
+
+  /* The camera. While a day is being played it pushes in and follows the
+     climber up the face, so a move on the rope is something you watch
+     closely rather than a small shift on a distant mountain. When the day is
+     done it pulls back to the whole expedition, which is the moment to see
+     how far up you now are and what is still above you. */
+  var CAMERA_ZOOM = 1.6;
+
+  function setMountainZoom(zoomedIn, immediate) {
+    var cam = document.getElementById('climbCamera');
+    var wall = document.getElementById('climbWall');
+    var puppet = document.getElementById('climberPuppet');
+    if (!cam || !wall) return;
+
+    cam.style.transition = immediate
+      ? 'none'
+      : 'transform 950ms cubic-bezier(.25,.8,.3,1)';
+
+    if (!zoomedIn) {
+      cam.style.transform = 'none';
+      return;
+    }
+
+    var h = wall.clientHeight || 580;
+    var top = parseFloat((puppet && puppet.style.top) || '0') || 0;
+    var focus = top + 29;                       // the climber's middle
+    var ty = (h * 0.55) - (focus * CAMERA_ZOOM);
+    /* Never pan past the ends of the face, or the zoom shows empty space
+       above the summit or below the valley. */
+    ty = Math.max(h - (h * CAMERA_ZOOM), Math.min(0, ty));
+    cam.style.transform = 'translateY(' + ty.toFixed(1) + 'px) scale(' + CAMERA_ZOOM + ')';
+  }
+
+  /* Honour a reduced-motion preference: hold the wide view and never move. */
+  function cameraAllowed() {
+    return !(window.matchMedia &&
+             window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+
+  function cameraFollow(immediate) {
+    if (!cameraAllowed()) { setMountainZoom(false, true); return; }
+    setMountainZoom(true, immediate);
+  }
+
+  function cameraPullBack() {
+    setMountainZoom(false, false);
   }
 
   var _lastClimb = { day: 1, idx: 1, done: false };
@@ -1306,12 +1379,8 @@
     puppet.style.top = targetTop + 'px';
     puppet.style.transition = 'top 0.7s cubic-bezier(0.34, 1.4, 0.5, 1)';
 
-    var container = document.getElementById('mountainStageContainer');
-    if (container) {
-      var stageIdx = Math.floor((dayNum - 1) / 5);
-      var scale = 1.0 + (stageIdx * 0.05);
-      container.style.transform = 'scale(' + scale + ')';
-    }
+    /* The per-stage scale used to live here. The camera owns zoom now, and
+       two transforms fighting over the same view only ever compounded. */
 
     var currentStage = Math.floor((dayNum - 1) / 5) + 1;
     for (var i = 1; i <= 6; i++) {
@@ -1349,7 +1418,26 @@
   requestAnimationFrame(reflowClimber);
   window.addEventListener('load', reflowClimber);
 
+  /* Open on the view that suits where the player is: the whole mountain when
+     the day is finished or not yet begun, close in when a day is under way. */
+  function cameraInitial() {
+    var midDay = !isDayCompleted && !isLockedForToday && (currentQIndex > 1);
+    if (midDay) { cameraFollow(true); } else { setMountainZoom(false, true); }
+  }
+  cameraInitial();
+  requestAnimationFrame(cameraInitial);
+  window.addEventListener('orientationchange', function () { setTimeout(cameraInitial, 300); });
+
   /* Refit the panel on the same beats: first paint, rotation, resize. */
+  (function () {
+    var mimg = document.getElementById('qMediaImg');
+    if (mimg) {
+      mimg.addEventListener('load', function () {
+        sizeQuestionMedia();
+        fitLandscapePanel();
+      });
+    }
+  })();
   fitLandscapePanel();
   requestAnimationFrame(fitLandscapePanel);
   window.addEventListener('load', fitLandscapePanel);
@@ -1362,6 +1450,7 @@
     var qSec = document.getElementById('triviaQuestionSection');
     if (qSec) qSec.classList.remove('hidden');
     startSprintClock();
+    cameraFollow(false);
     if (window.qmPlaySound) window.qmPlaySound('climbStep');
   };
 
@@ -1440,6 +1529,9 @@
           setTimeout(function() {
             banner.classList.add('hidden');
             showDayCompletedCard(data);
+            /* The day is won: pull back so the whole expedition is in view,
+               which is when how far you have come means something. */
+            cameraPullBack();
             isSubmitting = false;
           }, 1200);
 
