@@ -156,6 +156,88 @@
     /* Reclaim the page chrome; the stage wants the screen. */
     #climbPage { padding-top: .5rem !important; padding-bottom: .5rem !important; }
     #climbPage > div { gap: .5rem; }
+
+    /* The left panel carries the timer, the question and the result of
+       answering it. Nothing else. Measured on a 760x380 screen the panel has
+       364px and the content wanted 1164px, so it scrolled -- and a question
+       you have to scroll to read is worse than no landscape mode at all.
+       Everything cut here is either already on the mountain (the climb, the
+       stage, the altitude) or can wait until the day is banked. */
+    #climbTerminal #factCard,
+    #climbTerminal #safeHavenConsole,
+    #climbTerminal #dayCheckpointTracker,
+    #climbTerminal #realClockWidget {
+      display: none !important;
+    }
+    /* The big dial goes; the header keeps the compact countdown pill, which
+       is the same clock in a tenth of the height. */
+    #triviaCardHeader { padding-bottom: .25rem; }
+    #triviaCardHeader #tierBadge,
+    #triviaCardHeader #diffBadge { display: none; }
+    #triviaCard {
+      padding: .6rem .7rem !important;
+      border-radius: 1rem;
+    }
+    #triviaQuestionSection { gap: .5rem; }
+    #triviaQuestionSection > * + * { margin-top: .4rem !important; }
+    #qPrompt { font-size: .95rem; line-height: 1.3; }
+    #optionsGrid { gap: .4rem !important; padding-top: 0 !important; }
+    #optionsGrid button { padding: .4rem .55rem !important; font-size: .8rem; }
+    #feedbackBanner { padding: .4rem .55rem !important; font-size: .75rem; }
+    #climbTerminal { gap: .5rem; }
+    #climbTerminal > * + * { margin-top: .5rem !important; }
+
+    /* The panel bounds itself rather than trusting the content to be small.
+       Timer, options and result are fixed furniture; the prompt takes the
+       space that is left and scrolls inside its own box if a question is
+       genuinely enormous. So the timer and the answers are always on screen
+       and the panel itself never scrolls -- which is the thing to avoid. */
+    #climbTerminal { display: flex; flex-direction: column; }
+    #triviaCard {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+    #triviaQuestionSection {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+    #triviaCardHeader,
+    #optionsGrid,
+    #feedbackBanner { flex: 0 0 auto; }
+    #questionBlock {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      align-items: flex-start;
+    }
+
+    /* A flag or picture is part of the question, so it stays -- but stacked
+       above the prompt it was 152px, the single biggest thing in the panel,
+       and the panel only just fits without it. Side by side the picture
+       costs almost no extra height, because the prompt sits next to it
+       rather than above it. */
+    #questionBlock {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+    #questionBlock > * + * { margin-top: 0 !important; }
+    #questionBlock #qPrompt { flex: 1 1 auto; min-width: 0; }
+    #mediaContainer { padding: 0 !important; flex: 0 0 auto; }
+    #mediaContainer img { max-height: 68px !important; width: auto !important; }
+
+    /* The finished-day card has to fit too: it is the success message, and a
+       congratulation you have to scroll to read is not one. */
+    #dayCompletedCard {
+      padding: .75rem .9rem !important;
+      border-radius: 1rem;
+    }
+    #dayCompletedCard > * + * { margin-top: .5rem !important; }
+    #dayCompletedCard #factCard { display: none !important; }
   }
 
   /* Upright on a phone: keep the climb on screen while answering. */
@@ -282,7 +364,7 @@
       <!-- The mountain. Sits right of the questions in landscape, above them
            in portrait, where it stays stuck to the top of the screen so the
            climb is still in view while you answer. -->
-      <div id="climbWall" class="lg:col-span-5 relative rounded-3xl overflow-hidden border-2 border-purple-500/50 shadow-2xl bg-slate-950 h-[580px] select-none">
+      <div id="climbWall" class="lg:col-span-5 lg:order-2 relative rounded-3xl overflow-hidden border-2 border-purple-500/50 shadow-2xl bg-slate-950 h-[580px] select-none">
 
         <!-- High-Fidelity Illuminated Mountain Background with Pine Trees -->
         <div id="mountainStageContainer" class="mountain-pan absolute inset-0 w-full h-full pointer-events-none">
@@ -435,14 +517,14 @@
 
       <!-- The questions. First in the source, so in landscape they take the
            left and the mountain the right without reordering anything. -->
-      <div id="climbTerminal" class="lg:col-span-7 space-y-5">
+      <div id="climbTerminal" class="lg:col-span-7 lg:order-1 space-y-5">
 
         {% if not progress.is_day_completed %}
         <!-- Question Station Card (Collapsible when day is completed) -->
         <div id="triviaCard" class="bg-slate-900/90 rounded-3xl border-2 border-purple-500/40 p-4 sm:p-6 shadow-2xl backdrop-blur space-y-4 transition-all duration-300">
 
           <!-- Terminal Header & 60-Second Speed Clock -->
-          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-purple-500/20 pb-3">
+          <div id="triviaCardHeader" class="flex flex-wrap items-center justify-between gap-2 border-b border-purple-500/20 pb-3">
             <div class="flex items-center gap-2">
               <span id="tierBadge" class="px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 font-mono text-xs font-bold uppercase tracking-wider">
                 DAY <span id="currentDayNum">{{ progress.current_day }}</span> / 30 &bull; <span id="termQCounter">{% if day_meta.is_camp_day %}CAMP SURVIVAL TASK{% else %}QUESTION <span id="termQIdx">{{ progress.day_question_index }}</span>/<span id="termQTotal">{{ progress.day_questions_total }}</span>{% endif %}</span> &bull; <span id="termStageName">{{ day_meta.stage_name }}</span>
@@ -495,7 +577,7 @@
           <div id="triviaQuestionSection" class="{% if progress.day_question_index <= 1 or day_meta.is_camp_day %}hidden{% endif %} space-y-4">
 
             <!-- 5-CHECKPOINT DAILY PROGRESSION TRACKER -->
-            <div class="p-2.5 sm:p-3 rounded-2xl bg-slate-950/80 border border-purple-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2 font-mono shadow-inner">
+            <div id="dayCheckpointTracker" class="p-2.5 sm:p-3 rounded-2xl bg-slate-950/80 border border-purple-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2 font-mono shadow-inner">
               <div class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1.5">
                 <span class="text-amber-400">📍</span>
                 <span>DAY {{ progress.current_day }} CHECKPOINTS:</span>
@@ -579,7 +661,7 @@
             </div>
 
             <!-- Question Prompt & Optional Visual Image -->
-            <div class="space-y-3">
+            <div id="questionBlock" class="space-y-3">
               <h2 id="qPrompt" class="text-base sm:text-lg font-bold text-white leading-snug break-words">
                 {% if question %}{{ question.prompt }}{% else %}Ready for your next expedition day? Push to the next day below.{% endif %}
               </h2>
@@ -693,16 +775,16 @@
             </button>
           </div>
           {% endif %}
+
+          {# The day is over and nothing can be done here until tomorrow, so
+             give them the way out. It matters most in landscape, where the
+             stage covers the page and the usual navigation is behind it. #}
+          <a href="{{ url_for('arena.hub') }}"
+             class="block w-full text-center py-2.5 px-5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-purple-500/40 hover:border-cyan-400 text-slate-200 hover:text-white font-mono font-bold text-xs uppercase tracking-wider transition">
+            &larr; Back to My Hub
+          </a>
         </div>
 
-        {# The day is over and there is nothing left to do here until tomorrow,
-           so give them the way out rather than leaving them on a finished
-           screen. It matters most in landscape, where the stage covers the
-           page and the normal navigation is behind it. #}
-        <a href="{{ url_for('arena.hub') }}"
-           class="block w-full text-center py-3 px-5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-purple-500/40 hover:border-cyan-400 text-slate-200 hover:text-white font-mono font-bold text-xs uppercase tracking-wider transition">
-          &larr; Back to My Hub
-        </a>
 
         <!-- Unlocked Mountain Lore & Fact Card (Tracked in DB to avoid repeats) -->
         <div id="factCard" class="p-4 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/40 border border-indigo-500/30 shadow-lg space-y-1.5">
@@ -1058,6 +1140,68 @@
     return { bottom: Math.max(40, h - sprite), top: 18 };
   }
 
+  /* Make the left panel fit, whatever the question turns out to be.
+
+     Trimming padding got a typical question in with nothing to spare, but
+     prompts are not a fixed length: a long one overflowed by 67px and a very
+     long one by 165px, and no amount of fixed trimming can cover that. So
+     the panel measures itself and eases the type down until it fits, prompt
+     first and then the options, within floors that keep it readable. If a
+     question is so long that even the floor overflows, the panel scrolls --
+     but that is now the rare exception rather than the normal case. */
+  function fitLandscapePanel() {
+    var t = document.getElementById('climbTerminal');
+    var q = document.getElementById('qPrompt');
+    var og = document.getElementById('optionsGrid');
+    if (!t || !q) return;
+
+    q.style.fontSize = '';
+    if (og) og.style.fontSize = '';
+    var resetImg = document.getElementById('qMediaImg');
+    if (resetImg) resetImg.style.maxHeight = '';
+
+    if (!window.matchMedia ||
+        !window.matchMedia('(orientation: landscape) and (max-height: 620px)').matches) {
+      return;   // upright has the whole page to scroll; nothing to squeeze
+    }
+
+    /* The panel now bounds itself, so it never reports overflow -- the
+       question box absorbs it and scrolls instead. But a question you have
+       to scroll to finish reading is its own problem, so what we measure is
+       whether the QUESTION still overflows its box, and shrink until the
+       whole of it shows. */
+    var qb = document.getElementById('questionBlock');
+    function overflowing() {
+      if (t.scrollHeight > t.clientHeight + 1) return true;
+      return !!(qb && qb.scrollHeight > qb.clientHeight + 1);
+    }
+
+    var guard = 0;
+    var size = 15;
+    q.style.fontSize = size + 'px';
+    while (overflowing() && size > 10.5 && guard++ < 30) {
+      size -= 0.5;
+      q.style.fontSize = size + 'px';
+    }
+    if (og) {
+      var osize = 12.8;
+      while (overflowing() && osize > 10 && guard++ < 60) {
+        osize -= 0.4;
+        og.style.fontSize = osize + 'px';
+      }
+    }
+    /* Last resort on a really long question: give the picture less room.
+       It is the one thing left that can yield without costing words. */
+    var mimg = document.getElementById('qMediaImg');
+    if (mimg && mimg.offsetHeight) {
+      var cap = 68;
+      while (overflowing() && cap > 38 && guard++ < 90) {
+        cap -= 4;
+        mimg.style.maxHeight = cap + 'px';
+      }
+    }
+  }
+
   /* A move on the rope, heard as well as seen: the haul, the carabiner
      taking the load, then boots biting the snow. One flat blip never
      sounded like climbing. */
@@ -1194,6 +1338,13 @@
      page out, or he starts off below the bottom of the screen. */
   requestAnimationFrame(reflowClimber);
   window.addEventListener('load', reflowClimber);
+
+  /* Refit the panel on the same beats: first paint, rotation, resize. */
+  fitLandscapePanel();
+  requestAnimationFrame(fitLandscapePanel);
+  window.addEventListener('load', fitLandscapePanel);
+  window.addEventListener('orientationchange', function () { setTimeout(fitLandscapePanel, 250); });
+  window.addEventListener('resize', function () { setTimeout(fitLandscapePanel, 220); });
   startUnlockCountdown();
   window.startSprintNow = function() {
     var startCard = document.getElementById('startSprintCard');
@@ -1429,6 +1580,7 @@
         '</div>';
       grid.appendChild(btn);
     }
+    fitLandscapePanel();
   }
 
   // ==========================================================================
