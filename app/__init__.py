@@ -140,6 +140,35 @@ def create_app(test_config=None):
     app.register_blueprint(account_bp)
     app.register_blueprint(ads_bp)
 
+    # Only the requests worth reading about: the ones that broke, and the ones
+    # that took long enough for somebody to notice. An access log of every hit
+    # would be almost entirely the five-second notification poll, and anyone
+    # reading it would stop reading it.
+    SLOW_REQUEST_MS = 1500
+
+    @app.before_request
+    def _mark_request_start():
+        from flask import g
+        import time
+        g._qm_started = time.monotonic()
+
+    @app.after_request
+    def log_slow_or_failed(response):
+        from flask import g, request as req
+        import time
+        started = getattr(g, '_qm_started', None)
+        if started is None:
+            return response
+        ms = int((time.monotonic() - started) * 1000)
+        # 404s are mostly scanners looking for WordPress; they are noise.
+        failed = response.status_code >= 500
+        if failed or ms >= SLOW_REQUEST_MS:
+            app.logger.warning(
+                '%s %s %s %dms%s',
+                req.method, req.full_path.rstrip('?'), response.status_code, ms,
+                '  <-- SLOW' if (ms >= SLOW_REQUEST_MS and not failed) else '')
+        return response
+
     @app.after_request
     def never_cache_pages(response):
         """Serve pages fresh, and let static files keep their caching.
