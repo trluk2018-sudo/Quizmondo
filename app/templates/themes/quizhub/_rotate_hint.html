@@ -1,0 +1,138 @@
+{# "Turn your device upright", on every page rather than only in mini games.
+
+   The trigger watches the space actually left on screen rather than guessing
+   from the device, because the real problem is usually not the screen but
+   what is covering it: in landscape an on-screen keyboard can take half the
+   height, which on a phone leaves almost nothing of the page showing.
+
+   It names the game when there is one, and the page otherwise. #}
+{% set rotate_subject = game.title if (game is defined and game and game.title) else none %}
+
+<div id="qmgRotate" class="qmg-rotate">
+  <div class="text-center space-y-4 px-8">
+    <div class="text-5xl qmg-rotate-icon">📱</div>
+    <h2 class="text-xl font-black font-mono text-white">Turn your device upright</h2>
+    <p id="qmgRotateWhy" class="text-xs font-mono text-slate-400 leading-relaxed max-w-xs mx-auto">
+      {% if rotate_subject %}{{ rotate_subject }} is{% else %}Quizmondo is{% endif %}
+      laid out for a portrait screen — sideways leaves too little room to use it properly.
+    </p>
+    <button type="button" id="qmgRotateDismiss"
+            class="px-5 py-2.5 rounded-2xl border border-purple-500/40 text-slate-300 hover:text-white hover:border-cyan-400 font-mono font-bold text-[11px] uppercase tracking-wider transition">
+      Carry on anyway
+    </button>
+  </div>
+</div>
+
+<style>
+  .qmg-rotate { display: none; }
+  .qmg-rotate.qmg-rotate-on {
+    display: flex; align-items: center; justify-content: center;
+    position: fixed; inset: 0; z-index: 60;
+    background: rgba(9, 3, 23, .97); backdrop-filter: blur(6px);
+  }
+  .qmg-rotate.qmg-rotate-off { display: none !important; }
+  /* Fallback for anything without visualViewport: a short landscape screen on
+     a touch device, so a small desktop window is left alone. */
+  @media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+    .qmg-rotate.qmg-rotate-fallback { display: flex; align-items: center; justify-content: center;
+      position: fixed; inset: 0; z-index: 60; background: rgba(9, 3, 23, .97); }
+  }
+  .qmg-rotate-icon { animation: qmgTip 1.8s ease-in-out infinite; }
+  @keyframes qmgTip {
+    0%, 55%, 100% { transform: rotate(-90deg); }
+    75%, 90% { transform: rotate(0deg); }
+  }
+  @media (prefers-reduced-motion: reduce) { .qmg-rotate-icon { animation: none; } }
+</style>
+
+<script>
+(function () {
+  var panel = document.getElementById('qmgRotate');
+  var why = document.getElementById('qmgRotateWhy');
+  var btn = document.getElementById('qmgRotateDismiss');
+  if (!panel || !btn) return;
+
+  /* Dismissal lasts the browsing session, not just this page. While this
+     lived only in mini games a page-local flag was enough; site-wide, it
+     would have asked again on every single navigation. */
+  var KEY = 'qm_rotate_dismissed';
+  var dismissed = false;
+  try { dismissed = sessionStorage.getItem(KEY) === '1'; } catch (e) { /* private mode */ }
+
+  var SUBJECT = {{ (rotate_subject or 'Quizmondo') | tojson }};
+
+  btn.addEventListener('click', function () {
+    dismissed = true;
+    try { sessionStorage.setItem(KEY, '1'); } catch (e) { /* private mode */ }
+    panel.classList.add('qmg-rotate-off');
+  });
+
+  if (dismissed) {
+    panel.classList.add('qmg-rotate-off');
+    return;
+  }
+
+  var vv = window.visualViewport;
+  if (!vv) {
+    // Old browser: fall back to the plain short-landscape media query
+    panel.classList.add('qmg-rotate-fallback');
+    return;
+  }
+
+  // Below this there is not enough height left for the page plus its controls.
+  var MIN_HEIGHT = 480;
+
+  /* Only ever ask a phone. A short, wide desktop window is landscape and under
+     the height threshold too, and telling someone at a laptop to turn their
+     device upright is nonsense -- it only never happened before because this
+     lived on game pages alone. A coarse pointer plus a short side no bigger
+     than a large phone is the test; tablets fail it on size. */
+  function isPhone() {
+    var coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    var shortSide = window.screen
+      ? Math.min(window.screen.width || 0, window.screen.height || 0) : 0;
+    return !!coarse && shortSide > 0 && shortSide <= 500;
+  }
+
+  if (!isPhone()) return;
+
+  // Which way up the device is held, asked of the device rather than worked
+  // out from the viewport. An on screen keyboard shrinks the visual viewport
+  // so far that a portrait phone briefly measures wider than it is tall - on
+  // an iPhone 16 Pro, 393 wide against about 390 left below the keyboard -
+  // which is how this panel used to appear while the phone was upright.
+  function isLandscape() {
+    if (window.matchMedia) return window.matchMedia('(orientation: landscape)').matches;
+    return (window.screen && window.screen.width > window.screen.height);
+  }
+
+  function review() {
+    if (dismissed) return;
+    var landscape = isLandscape();
+    var cramped = vv.height < MIN_HEIGHT;
+    // A keyboard is up when the visual viewport is a good deal shorter than
+    // the window itself. Only used to word the message.
+    var keyboardUp = (window.innerHeight - vv.height) > 120;
+
+    if (landscape && cramped) {
+      why.textContent = keyboardUp
+        ? 'The keyboard is covering most of the screen. Turning upright gives ' +
+          SUBJECT + ' room for both.'
+        : SUBJECT + ' is laid out for a portrait screen — sideways leaves ' +
+          'too little room to use it properly.';
+      panel.classList.add('qmg-rotate-on');
+    } else {
+      panel.classList.remove('qmg-rotate-on');
+    }
+  }
+
+  vv.addEventListener('resize', review);
+  window.addEventListener('orientationchange', function () { setTimeout(review, 250); });
+  if (window.matchMedia) {
+    var mq = window.matchMedia('(orientation: landscape)');
+    if (mq.addEventListener) mq.addEventListener('change', review);
+    else if (mq.addListener) mq.addListener(review);
+  }
+  review();
+})();
+</script>

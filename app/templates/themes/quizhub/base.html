@@ -427,6 +427,11 @@
     {% block content %}{% endblock %}
   </main>
 
+  {# Every page is laid out upright, not just the mini games, so the rotate
+     hint lives here rather than in the games shell. It only shows itself on a
+     landscape screen with too little height left to work with. #}
+  {% include "themes/quizhub/_rotate_hint.html" %}
+
   <!-- TriviaMatrix Footer -->
   <footer class="bg-slate-950 text-slate-400 mt-20 pt-16 pb-8 border-t border-cyan-500/30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
