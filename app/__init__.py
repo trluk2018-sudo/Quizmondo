@@ -261,6 +261,12 @@ def _ensure_schema():
             if 'totp_recovery_codes' not in cols_users:
                 db.session.execute(text("ALTER TABLE users ADD COLUMN totp_recovery_codes TEXT"))
 
+        # How many of today's Climber questions were right, so a bad day
+        # costs height instead of carrying you up anyway.
+        cols_climb = [row[1] for row in db.session.execute(text("PRAGMA table_info(climber_progress)")).fetchall()]
+        if cols_climb and 'day_correct_count' not in cols_climb:
+            db.session.execute(text("ALTER TABLE climber_progress ADD COLUMN day_correct_count INTEGER DEFAULT 0"))
+
         cols_pages = [row[1] for row in db.session.execute(text("PRAGMA table_info(pages)")).fetchall()]
         if cols_pages:
             if 'excerpt' not in cols_pages:

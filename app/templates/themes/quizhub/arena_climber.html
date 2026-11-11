@@ -736,7 +736,9 @@
           
           <!-- Safe Haven Location Banner -->
           <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-mono text-xs sm:text-sm font-bold uppercase tracking-wider shadow-inner">
-            {% if day_meta.camp_secured %}⛺ SECURED <span id="completedSafeHaven">{{ day_meta.camp_secured|upper }}</span>{% else %}🧗 CLIMBED TO <span id="completedSafeHaven">{{ '{:,}'.format(day_meta.altitude) }}M</span> &bull; {{ day_meta.next_camp|upper }} ABOVE{% endif %} (<span id="completedAlt">{{ day_meta.altitude }}</span>M)
+            {# Where the climber actually got to, which after a poor day is
+               short of the day's target and may be where they started. #}
+            {% if day_meta.camp_secured and progress.altitude_m >= day_meta.altitude %}⛺ SECURED <span id="completedSafeHaven">{{ day_meta.camp_secured|upper }}</span>{% elif progress.day_correct_count == 0 %}🧗 NO HEIGHT GAINED &bull; STILL AT <span id="completedSafeHaven">{{ '{:,}'.format(progress.altitude_m) }}M</span>{% else %}🧗 CLIMBED TO <span id="completedSafeHaven">{{ '{:,}'.format(progress.altitude_m) }}M</span> &bull; {{ day_meta.next_camp|upper }} ABOVE{% endif %} (<span id="completedAlt">{{ progress.altitude_m }}</span>M)
           </div>
 
           <div class="space-y-1.5">

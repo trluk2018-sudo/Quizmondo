@@ -4312,8 +4312,8 @@ def wheel_spin():
 EXPEDITION_STAGES = [
     {
         'stage': 1,
-        'name': 'Valley Basecamp',
-        'safe_haven': 'Pine Valley Basecamp',
+        'name': 'Pine Valley Ascent',
+        'safe_haven': 'Pine Ridge Camp',
         'altitude_range': '1,000m – 2,500m',
         'base_alt': 1000,
         'max_alt': 2500,
@@ -4502,7 +4502,29 @@ def _calc_day_meta(day_num):
     }
 
 
-def _day_arrival(day_meta):
+def _apply_day_altitude(progress, day_meta):
+    """Move the climber by what the day was actually worth.
+
+    The day's full altitude used to be awarded however the questions went,
+    so getting all five wrong carried you up the mountain exactly as fast as
+    getting all five right, and the climb meant nothing. Now you gain the
+    fraction of the day you earned: five out of five reaches the day's
+    target, none leaves you on the ledge you started on.
+
+    Targets stay absolute, so a weak day costs you height without putting
+    the summit out of reach -- a clean day afterwards closes the gap again.
+    """
+    total = max(1, progress.day_questions_total or 5)
+    correct = max(0, min(total, progress.day_correct_count or 0))
+    start = progress.altitude_m or 0
+    target = day_meta['altitude']
+    gain = int(round((target - start) * (correct / float(total))))
+    progress.altitude_m = max(start, start + gain)
+    progress.highest_altitude = max(progress.highest_altitude or 0, progress.altitude_m)
+    return {'correct': correct, 'total': total, 'gained': max(0, gain)}
+
+
+def _day_arrival(day_meta, progress=None):
     """How to describe where a finished day leaves you.
 
     Reaching a camp happens on the last day of its stage. On the other four
@@ -4510,20 +4532,43 @@ def _day_arrival(day_meta):
     "safely at" it is both wrong and deflating -- the first day of the whole
     expedition used to announce that you had arrived at the basecamp you set
     off from.
+
+    With a progress row it reports where the climber ACTUALLY is, which after
+    a bad day is short of the day's target, and may be exactly where they
+    started.
     """
-    alt = '{:,}m'.format(day_meta['altitude'])
-    if day_meta.get('camp_secured'):
+    reached = day_meta['altitude'] if progress is None else (progress.altitude_m or 0)
+    alt = '{:,}m'.format(reached)
+    correct = None if progress is None else (progress.day_correct_count or 0)
+    total = 5 if progress is None else max(1, progress.day_questions_total or 5)
+
+    if correct == 0:
+        return {
+            'where': alt,
+            'headline': 'No height gained -- still at %s' % alt,
+            'detail': 'None right today, so the ropes stayed where they were. '
+                      '%s is still above you.' % day_meta['next_camp'],
+            'correct': correct, 'total': total,
+        }
+
+    if day_meta.get('camp_secured') and reached >= day_meta['altitude']:
         return {
             'where': day_meta['camp_secured'],
             'headline': 'Secured %s' % day_meta['camp_secured'],
             'detail': 'Camp secured at %s.' % alt,
+            'correct': correct, 'total': total,
         }
+
+    short = day_meta['altitude'] - reached
     return {
         'where': alt,
         'headline': 'Climbed to %s' % alt,
-        'detail': '%s is still above you -- %s to go.' % (
-            day_meta['next_camp'], '{:,}m'.format(
-                max(0, _stage_top(day_meta) - day_meta['altitude']))),
+        'detail': ('%s is still above you -- %s to go.' % (
+            day_meta['next_camp'],
+            '{:,}m'.format(max(0, _stage_top(day_meta) - reached)))
+            + ('' if short <= 0 else
+               " You fell %s short of today's target." % '{:,}m'.format(short))),
+        'correct': correct, 'total': total,
     }
 
 
@@ -4576,7 +4621,13 @@ def _roll_climber_day(progress):
     if not progress.is_day_completed:
         return False
     today = datetime.utcnow().date()
-    if progress.last_climbed_date and progress.last_climbed_date >= today:
+    if not progress.last_climbed_date:
+        # Finished, but with no record of when. Rolling on would hand out a
+        # free day every time the page loaded, so treat it as finished today
+        # and let the normal lock apply.
+        progress.last_climbed_date = today
+        return False
+    if progress.last_climbed_date >= today:
         return False  # still locked for today
     if (progress.current_day or 1) >= 30:
         return False  # summited; the expedition stands finished
@@ -4587,6 +4638,7 @@ def _roll_climber_day(progress):
     progress.current_stage = meta['stage_number']
     progress.day_questions_total = 1 if meta.get('is_camp_day') else 5
     progress.day_question_index = 1
+    progress.day_correct_count = 0
     progress.is_day_completed = False
     progress.status = 'climbing'
     return True
@@ -4610,6 +4662,7 @@ def get_or_create_climber_progress(player_id, season_id):
             current_step=1,
             day_question_index=1,
             day_questions_total=total_q,
+            day_correct_count=0,
             is_day_completed=False,
             secured_camp_stage=1,
             altitude_m=1000,
@@ -4701,6 +4754,7 @@ def climber_reset():
     progress.current_stage = 1
     progress.day_question_index = 1
     progress.day_questions_total = 5
+    progress.day_correct_count = 0
     progress.is_day_completed = False
     progress.altitude_m = 1000
     progress.highest_altitude = 1000
@@ -4787,6 +4841,10 @@ def climber_answer():
         return jsonify({'success': False, 'error': 'Question not found'}), 404
 
     is_correct = (str(selected).strip().upper() == str(question.correct_option).strip().upper())
+    if is_correct:
+        # Counted here, once, so the day's climb can be worked out from how
+        # the day actually went rather than assumed.
+        progress.day_correct_count = (progress.day_correct_count or 0) + 1
     day_meta = _calc_day_meta(progress.current_day)
     total_q = progress.day_questions_total or 5
     curr_idx = progress.day_question_index or 1
@@ -4847,7 +4905,7 @@ def climber_answer():
                 progress.unbanked_coins = 0
 
             progress.is_day_completed = True
-            progress.altitude_m = day_meta['altitude']
+            _apply_day_altitude(progress, day_meta)
             progress.highest_altitude = max(progress.highest_altitude, progress.altitude_m)
             progress.last_climbed_date = datetime.utcnow().date()
 
@@ -4908,9 +4966,9 @@ def climber_answer():
                 'secured_camp_stage': progress.secured_camp_stage,
                 'day_meta': day_meta,
                 'next_day_meta': next_day_meta,
-                'safe_haven': _day_arrival(day_meta)['where'],
-                'arrival': _day_arrival(day_meta),
-                'explanation': f"{_day_arrival(day_meta)['headline']}. +{coins_won_today} 🪙 secured to your wallet."
+                'safe_haven': _day_arrival(day_meta, progress)['where'],
+                'arrival': _day_arrival(day_meta, progress),
+                'explanation': f"{_day_arrival(day_meta, progress)['headline']}. +{coins_won_today} 🪙 secured to your wallet."
             })
 
     else:
@@ -4969,7 +5027,7 @@ def climber_answer():
                 progress.unbanked_coins = 0
 
             progress.is_day_completed = True
-            progress.altitude_m = day_meta['altitude']
+            _apply_day_altitude(progress, day_meta)
             progress.highest_altitude = max(progress.highest_altitude, progress.altitude_m)
             progress.last_climbed_date = datetime.utcnow().date()
             progress.status = 'day_completed'
@@ -4997,10 +5055,10 @@ def climber_answer():
                 'secured_camp_stage': progress.secured_camp_stage,
                 'day_meta': day_meta,
                 'next_day_meta': next_day_meta,
-                'safe_haven': _day_arrival(day_meta)['where'],
-                'arrival': _day_arrival(day_meta),
+                'safe_haven': _day_arrival(day_meta, progress)['where'],
+                'arrival': _day_arrival(day_meta, progress),
                 'correct_answer': question.correct_option,
-                'explanation': ('🛡️ Shield absorbed the slip! ' if shield_saved else '⚠️ Slip on the last hold! ') + f"{_day_arrival(day_meta)['headline']}."
+                'explanation': ('🛡️ Shield absorbed the slip! ' if shield_saved else '⚠️ Slip on the last hold! ') + f"{_day_arrival(day_meta, progress)['headline']}."
             })
 
 
@@ -5036,7 +5094,7 @@ def climber_camp_complete():
         progress.unbanked_coins = 0
 
     progress.is_day_completed = True
-    progress.altitude_m = day_meta['altitude']
+    _apply_day_altitude(progress, day_meta)
     progress.highest_altitude = max(progress.highest_altitude, progress.altitude_m)
     progress.secured_camp_stage = min(6, day_meta['stage_number'] + 1)
     progress.last_climbed_date = datetime.utcnow().date()
@@ -5063,9 +5121,9 @@ def climber_camp_complete():
         'next_day': next_day_num,
         'day_meta': day_meta,
         'next_day_meta': next_day_meta,
-        'safe_haven': _day_arrival(day_meta)['where'],
-        'arrival': _day_arrival(day_meta),
-        'explanation': f"{_day_arrival(day_meta)['headline']}. +{coins_won_today} 🪙 safely banked in your wallet."
+        'safe_haven': _day_arrival(day_meta, progress)['where'],
+        'arrival': _day_arrival(day_meta, progress),
+        'explanation': f"{_day_arrival(day_meta, progress)['headline']}. +{coins_won_today} 🪙 safely banked in your wallet."
     })
 
 
@@ -5121,9 +5179,9 @@ def climber_timeout():
         'secured_camp_stage': progress.secured_camp_stage,
         'day_meta': day_meta,
         'next_day_meta': next_day_meta,
-        'safe_haven': _day_arrival(day_meta)['where'],
-        'arrival': _day_arrival(day_meta),
-        'explanation': ('🛡️ Climber Shield absorbed the frostbite! ' if shield_saved else '⚠️ Blizzard struck as the 60-second clock expired! ') + f"{_day_arrival(day_meta)['headline']}. Rest until tomorrow."
+        'safe_haven': _day_arrival(day_meta, progress)['where'],
+        'arrival': _day_arrival(day_meta, progress),
+        'explanation': ('🛡️ Climber Shield absorbed the frostbite! ' if shield_saved else '⚠️ Blizzard struck as the 60-second clock expired! ') + f"{_day_arrival(day_meta, progress)['headline']}. Rest until tomorrow."
     })
 
 
@@ -5170,7 +5228,7 @@ def climber_advance_day():
     progress.day_questions_total = 1 if day_meta.get('is_camp_day') else 5
     progress.is_day_completed = False
 
-    progress.altitude_m = day_meta['altitude']
+    _apply_day_altitude(progress, day_meta)
     progress.current_stage = day_meta['stage_number']
     progress.highest_altitude = max(progress.highest_altitude, progress.altitude_m)
     progress.status = 'climbing'

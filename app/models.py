@@ -1049,6 +1049,9 @@ class ClimberProgress(db.Model):
     current_step = db.Column(db.Integer, default=1)   # Step 1-30 overall
     day_question_index = db.Column(db.Integer, default=1)  # 1 to day_questions_total
     day_questions_total = db.Column(db.Integer, default=2) # 2 questions to complete the day
+    # How many of today's questions were answered correctly, so the day's
+    # climb can be earned rather than handed over regardless.
+    day_correct_count = db.Column(db.Integer, default=0)
     is_day_completed = db.Column(db.Boolean, default=False)
     secured_camp_stage = db.Column(db.Integer, default=1) # Permanent Safe Haven Camp reached
     altitude_m = db.Column(db.Integer, default=1000)
