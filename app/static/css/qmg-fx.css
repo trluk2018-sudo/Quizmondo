@@ -141,3 +141,98 @@
   .qmg-spark { display: none; }
   .qmg-banner-on { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
+
+/* ---------------------------------------------------------------------------
+   In-progress markers for duels, challenges and lobbies.
+
+   Two separate signals, because they answer different questions:
+
+   .qm-live       colour running around the border. Goes on EVERY game in
+                  flight, so "something is happening here" reads at a glance
+                  down a list.
+   .qm-runner     a character jogging the perimeter. Goes on exactly ONE card,
+                  the most urgent, so it points at what to do next. Five of
+                  these on one screen is a zoo, not a hint.
+
+   The ring is a masked pseudo-element rather than a rotating conic gradient,
+   because rotating a conic gradient on a card that is not square skews it,
+   and @property (which would animate the angle instead) is still missing on
+   older phone browsers. A long gradient slid across the masked ring reads as
+   colour travelling around the box and works everywhere.
+   --------------------------------------------------------------------------- */
+
+.qm-live { position: relative; }
+
+.qm-live::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  padding: 2px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #22d3ee, #a855f7, #ec4899, #f59e0b, #22d3ee);
+  background-size: 300% 100%;
+  /* Punch the middle out so only the 2px ring paints. */
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: qmLiveRun 3.2s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes qmLiveRun {
+  from { background-position: 0 0; }
+  to   { background-position: 300% 0; }
+}
+
+/* A badge that pulses alongside the ring, for the "IN PROGRESS" label. */
+.qm-live-dot {
+  display: inline-block;
+  width: .5rem;
+  height: .5rem;
+  border-radius: 9999px;
+  background: #34d399;
+  animation: qmLiveDot 1.6s ease-in-out infinite;
+}
+
+@keyframes qmLiveDot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, .7); opacity: 1; }
+  70%      { box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); opacity: .75; }
+}
+
+/* The runner. Its parent needs .qm-live (for position: relative); the emoji is
+   set as content so a template only has to add the class. Flipped horizontally
+   on the way back so it always faces where it is going. */
+.qm-runner {
+  position: absolute;
+  top: -11px;
+  left: 0;
+  width: 1.15rem;
+  height: 1.15rem;
+  font-size: 1.05rem;
+  line-height: 1;
+  text-align: center;
+  pointer-events: none;
+  z-index: 2;
+  animation: qmRunLap 7s linear infinite;
+}
+
+@keyframes qmRunLap {
+  0%   { top: -11px; left: 0; transform: scaleX(1); }
+  24%  { top: -11px; left: calc(100% - 1.15rem); transform: scaleX(1); }
+  26%  { top: -11px; left: calc(100% - 1.15rem); transform: scaleX(1); }
+  49%  { top: calc(100% - 4px); left: calc(100% - 1.15rem); transform: scaleX(1); }
+  51%  { top: calc(100% - 4px); left: calc(100% - 1.15rem); transform: scaleX(-1); }
+  74%  { top: calc(100% - 4px); left: 0; transform: scaleX(-1); }
+  76%  { top: calc(100% - 4px); left: 0; transform: scaleX(-1); }
+  99%  { top: -11px; left: 0; transform: scaleX(-1); }
+  100% { top: -11px; left: 0; transform: scaleX(1); }
+}
+
+/* Motion is decoration here, never the only way to read the state: the ring
+   stays as a solid gradient border and the runner simply sits still. */
+@media (prefers-reduced-motion: reduce) {
+  .qm-live::before { animation: none; background-size: 100% 100%; }
+  .qm-live-dot { animation: none; }
+  .qm-runner { animation: none; }
+}

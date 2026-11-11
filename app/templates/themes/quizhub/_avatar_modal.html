@@ -1,0 +1,126 @@
+{# Avatar picker, opened by the avatar in the player HUD.
+
+   Included wherever the HUD is -- currently the Hub page -- and carrying
+   its own behaviour, so the two cannot be separated by accident again.
+
+   Expects: player, avatars (AVATAR_PRESETS). #}
+<!-- AVATAR EDIT MODAL (24 Player Avatars; Nova is reserved exclusively for Cyber Bot Nova) -->
+<div id="avatarModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-sm">
+  <div class="bg-slate-950 border-2 border-purple-500/50 rounded-3xl p-5 sm:p-7 max-w-2xl w-full space-y-4 shadow-2xl max-h-[92vh] flex flex-col">
+    <div class="flex items-center justify-between border-b border-purple-500/20 pb-3 shrink-0">
+      <div>
+        <h3 class="text-base sm:text-lg font-black font-mono text-white">Choose Your Arena Avatar ({{ avatars|length }} Champions)</h3>
+        <p class="text-[11px] font-mono text-slate-400">Tap any avatar below to equip</p>
+      </div>
+      <button type="button" onclick="closeAvatarModal()" class="text-slate-400 hover:text-white text-2xl px-2">&times;</button>
+    </div>
+
+    <div id="avatarSavedToast" class="hidden p-3 rounded-xl bg-emerald-950/90 border border-emerald-400/60 text-emerald-300 font-mono text-xs font-bold text-center shrink-0">
+      ✅ Mascot updated!
+    </div>
+
+    <form id="avatarForm" action="{{ url_for('arena.update_profile') }}" method="POST" class="space-y-4 font-mono text-xs flex-1 overflow-y-auto pr-1">
+      <div>
+        <label class="block text-slate-300 font-bold mb-1">Display Name</label>
+        <input type="text" id="avatarDisplayNameInput" name="display_name" value="{{ player.display_name }}" maxlength="30" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-purple-500/30 text-white focus:outline-none focus:border-cyan-400">
+      </div>
+
+      <div>
+        <label class="block text-slate-300 font-bold mb-2">Tap Any Avatar to Equip ({{ avatars|length }} Choices)</label>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5" id="avatarCardsGrid">
+          {% for av in avatars %}
+          <label id="avatarCard_{{ av.key }}" onclick="selectAvatarCard('{{ av.key }}', '{{ av.name }}')" class="avatar-card-option p-2.5 rounded-2xl border-2 {% if player.avatar_key == av.key %}border-cyan-400 bg-cyan-950/40{% else %}border-purple-500/20 bg-slate-900/60{% endif %} cursor-pointer flex flex-col items-center gap-1 transition hover:border-cyan-400 relative text-center">
+            <input type="radio" id="avatarRadio_{{ av.key }}" name="avatar_key" value="{{ av.key }}" class="hidden" {% if player.avatar_key == av.key %}checked{% endif %}>
+            {{ render_avatar_badge(av.key, av.name, 'sm') }}
+            <span class="font-bold text-white text-xs mt-0.5">{{ av.name }}</span>
+            <span class="text-[9px] text-slate-400 truncate max-w-full">{{ av.badge }}</span>
+            <span id="avatarBadge_{{ av.key }}" data-avatar-key="{{ av.key }}" class="avatar-badge-pill mt-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase {% if player.avatar_key == av.key %}bg-cyan-500 text-slate-950{% else %}bg-slate-800 text-slate-400{% endif %}">
+              {% if player.avatar_key == av.key %}✓ EQUIPPED{% else %}TAP TO EQUIP{% endif %}
+            </span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="pt-2 flex justify-end gap-3 sticky bottom-0 bg-slate-950 py-2 border-t border-purple-500/20">
+        <button type="button" onclick="closeAvatarModal()" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 font-bold">Close</button>
+        <button type="submit" class="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-slate-950 font-black uppercase">Save Profile</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  /* Tabs, not a menu: the same strip scrolls on a phone and sits in a row on
+     a desktop, so there is one thing to style rather than two. */
+  .qm-tab { background: rgba(15, 23, 42, .8); border: 1px solid rgba(168, 85, 247, .25); color: #cbd5e1; min-height: 44px; }
+  .qm-tab:hover { border-color: rgba(34, 211, 238, .55); color: #fff; }
+  .qm-tab.qm-tab-on { background: linear-gradient(90deg, rgba(168, 85, 247, .35), rgba(34, 211, 238, .3)); border-color: rgba(34, 211, 238, .7); color: #fff; }
+</style>
+<script src="/static/js/quiz-audio.js"></script>
+
+<script>
+// Modal logic
+function openAvatarModal() {
+  document.getElementById('avatarModal').classList.remove('hidden');
+}
+function closeAvatarModal() {
+  document.getElementById('avatarModal').classList.add('hidden');
+}
+
+function selectAvatarCard(avatarKey, avatarName) {
+  var radio = document.getElementById('avatarRadio_' + avatarKey);
+  if (radio) radio.checked = true;
+
+  var allCards = document.querySelectorAll('.avatar-card-option');
+  allCards.forEach(function(card) {
+    card.className = 'avatar-card-option p-2.5 rounded-2xl border-2 border-purple-500/20 bg-slate-900/60 cursor-pointer flex flex-col items-center gap-1 transition hover:border-cyan-400 relative text-center';
+  });
+  var activeCard = document.getElementById('avatarCard_' + avatarKey);
+  if (activeCard) {
+    activeCard.className = 'avatar-card-option p-2.5 rounded-2xl border-2 border-cyan-400 bg-cyan-950/40 cursor-pointer flex flex-col items-center gap-1 transition hover:border-cyan-400 relative text-center';
+  }
+
+  var allPills = document.querySelectorAll('.avatar-badge-pill');
+  allPills.forEach(function(b) {
+    if (b.getAttribute('data-avatar-key') === avatarKey) {
+      b.className = 'avatar-badge-pill mt-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-cyan-500 text-slate-950';
+      b.textContent = '✓ EQUIPPED';
+    } else {
+      b.className = 'avatar-badge-pill mt-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-slate-800 text-slate-400';
+      b.textContent = 'TAP TO EQUIP';
+    }
+  });
+
+  var displayNameInput = document.getElementById('avatarDisplayNameInput');
+  var dispName = displayNameInput ? displayNameInput.value : '';
+  var formData = new FormData();
+  formData.append('avatar_key', avatarKey);
+  if (dispName) formData.append('display_name', dispName);
+
+  var toast = document.getElementById('avatarSavedToast');
+  if (toast) {
+    toast.textContent = '✨ Equipping ' + avatarName + '...';
+    toast.classList.remove('hidden');
+  }
+
+  fetch("{{ url_for('arena.update_profile') }}", {
+    method: 'POST',
+    headers: { 'Accept': 'application/json' },
+    body: formData
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (toast) {
+      toast.textContent = '✅ ' + avatarName + ' Equipped! Refreshing mascot...';
+    }
+    setTimeout(function() {
+      window.location.reload();
+    }, 450);
+  })
+  .catch(function() {
+    var form = document.getElementById('avatarForm');
+    if (form) form.submit();
+  });
+}
+</script>

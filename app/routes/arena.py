@@ -717,6 +717,10 @@ def api_notifications():
             'current_round': m.current_round,
             'p1_total_score': m.p1_total_score,
             'p2_total_score': m.p2_total_score,
+            # Oriented to whoever is asking, so the live refresh cannot undo the
+            # card's "you first" score a few seconds after the page renders.
+            'my_score': m.p1_total_score if is_p1 else m.p2_total_score,
+            'their_score': m.p2_total_score if is_p1 else m.p1_total_score,
             'status': m.status
         }
 
@@ -756,6 +760,8 @@ def api_notifications():
             'current_round': 6,
             'p1_total_score': cm.p1_total_score,
             'p2_total_score': cm.p2_total_score,
+            'my_score': cm.p1_total_score if is_p1 else cm.p2_total_score,
+            'their_score': cm.p2_total_score if is_p1 else cm.p1_total_score,
             'status': 'completed'
         }
         alerts.append({
@@ -781,12 +787,12 @@ def api_notifications():
     })
 
 
-@arena_bp.route('/')
-def dashboard():
-    """Arena Hub: Active duels, Completed Duels ready for Rematch, Friends & Group Challenges, leaderboards preview, and quick play."""
-    player = get_current_player(persist=False)
-    
-    # Active matches where player is participant
+def _live_matches_for(player):
+    """Every duel of this player's still in play, with current_turn self-healed.
+
+    Shared by the duels dashboard and the Hub overview so the two pages can
+    never disagree about whose move it is.
+    """
     raw_active = ArenaMatch.query.filter(
         (ArenaMatch.player1_session == player.session_key) | (ArenaMatch.player2_session == player.session_key),
         ArenaMatch.status.in_(['waiting', 'in_progress'])
@@ -813,7 +819,41 @@ def dashboard():
     if dirty:
         db.session.commit()
 
-    active_matches = [m for m in raw_active if m.status in ('waiting', 'in_progress')]
+    return [m for m in raw_active if m.status in ('waiting', 'in_progress')]
+
+
+def _annotate_match(m, player_key):
+    """Attach the viewer's own side of a match, for the duel cards.
+
+    Either player can appear in either list now, so a card can no longer work
+    out who the opponent is from which list it was rendered in.
+    """
+    is_p1 = (m.player1_session == player_key)
+    m.qm_i_created = is_p1
+    m.qm_opponent_name = (m.player2_name if is_p1 else m.player1_name)
+    m.qm_opponent_avatar = (m.player2_avatar if is_p1 else m.player1_avatar)
+    m.qm_my_score = (m.p1_total_score if is_p1 else m.p2_total_score)
+    m.qm_their_score = (m.p2_total_score if is_p1 else m.p1_total_score)
+    m.qm_completed = (m.status == 'completed')
+    m.qm_unaccepted = bool(
+        is_p1
+        and (not m.player2_session
+             or m.player2_session in ('pending_invite', 'online_matchmaking', ''))
+    )
+    m.qm_my_turn = bool(
+        not m.qm_completed
+        and not m.qm_unaccepted
+        and m.is_player_turn(player_key)
+    )
+    return m
+
+
+@arena_bp.route('/')
+def dashboard():
+    """Arena Hub: Active duels, Completed Duels ready for Rematch, Friends & Group Challenges, leaderboards preview, and quick play."""
+    player = get_current_player(persist=False)
+
+    active_matches = _live_matches_for(player)
 
     # Finished matches
     history_matches = ArenaMatch.query.filter(
@@ -857,25 +897,7 @@ def dashboard():
     bot_matches = []
 
     for m in active_matches:
-        # Each card needs to know which side of the match the viewer is on, since
-        # either side can now appear in either list.
-        is_p1 = (m.player1_session == player.session_key)
-        m.qm_i_created = is_p1
-        m.qm_opponent_name = (m.player2_name if is_p1 else m.player1_name)
-        m.qm_opponent_avatar = (m.player2_avatar if is_p1 else m.player1_avatar)
-        m.qm_my_score = (m.p1_total_score if is_p1 else m.p2_total_score)
-        m.qm_their_score = (m.p2_total_score if is_p1 else m.p1_total_score)
-        m.qm_completed = (m.status == 'completed')
-        m.qm_unaccepted = bool(
-            is_p1
-            and (not m.player2_session
-                 or m.player2_session in ('pending_invite', 'online_matchmaking', ''))
-        )
-        m.qm_my_turn = bool(
-            not m.qm_completed
-            and not m.qm_unaccepted
-            and m.is_player_turn(player.session_key)
-        )
+        _annotate_match(m, player.session_key)
 
         if m.is_bot:
             bot_matches.append(m)
@@ -883,6 +905,13 @@ def dashboard():
             your_move_matches.append(m)
         else:
             waiting_matches.append(m)
+
+    # One running character, on whichever duel is furthest along and needs you.
+    # Every in-flight card gets the animated ring; only this one gets the runner.
+    runner_candidates = [m for m in (your_move_matches + bot_matches)
+                         if not m.qm_completed and not m.qm_unaccepted]
+    runner_candidates.sort(key=lambda m: -(m.current_round or 0))
+    runner_code = runner_candidates[0].match_code if runner_candidates else None
 
     # Live group lobbies, with enough detail for the dashboard to draw the seats
     group_lobbies = []
@@ -920,6 +949,7 @@ def dashboard():
         active_matches=active_matches,
         your_move_matches=your_move_matches,
         waiting_matches=waiting_matches,
+        runner_code=runner_code,
         bot_matches=bot_matches,
         history_matches=history_matches,
         friends_roster=friends_roster,
@@ -928,6 +958,71 @@ def dashboard():
         top_players=top_players,
         packs=packs,
         avatars=AVATAR_PRESETS
+    )
+
+
+@arena_bp.route('/hub')
+def hub():
+    """My Hub: who you are, what is in flight, and what you have finished.
+
+    The duels page was doing three jobs at once -- identity, history and "what
+    can I play next" -- which is why it read as cluttered. Identity and history
+    moved here; the duels page keeps only the things you can act on. Anything
+    in progress is summarised here and played from there, so the Hub is never
+    the only route into a game already running.
+    """
+    player = get_current_player(persist=False)
+
+    live = [_annotate_match(m, player.session_key) for m in _live_matches_for(player)]
+    challenges = _dashboard_challenges(player.session_key)
+
+    in_progress = []
+    for m in live:
+        if m.qm_unaccepted:
+            continue  # nobody has taken the other seat, so nothing is in flight
+        in_progress.append({
+            'kind': 'duel',
+            'kind_label': 'Bot practice' if m.is_bot else 'Quiz duel',
+            'opponent': m.qm_opponent_name,
+            'avatar': m.qm_opponent_avatar,
+            'detail': 'Round %s of 6' % m.current_round,
+            'score': '%s - %s' % (m.qm_my_score, m.qm_their_score),
+            'pct': int(min(100, max(0, ((m.current_round - 1) / 6.0) * 100))),
+            'my_turn': m.qm_my_turn,
+            'url': url_for('arena.match_lobby', match_code=m.match_code),
+            'code': m.match_code,
+        })
+
+    for bucket, mine in (('your_turn', True), ('waiting', False)):
+        for ch in challenges[bucket]:
+            if not ch['accepted']:
+                continue
+            in_progress.append({
+                'kind': 'challenge',
+                'kind_label': '5 mini games',
+                'opponent': ch['opponent'],
+                'avatar': None,
+                'detail': '%s of %s played' % (ch['played'], ch['total']),
+                'score': 'you %s-%s' % (ch['you'], ch['them']),
+                'pct': int((ch['played'] / float(ch['total'])) * 100) if ch['total'] else 0,
+                'my_turn': mine,
+                'url': url_for('games.challenge', code=ch['code']),
+                'code': ch['code'],
+            })
+
+    # Whatever needs you most goes first, and only that one gets the runner --
+    # a character circling every card stops pointing at anything.
+    in_progress.sort(key=lambda i: (not i['my_turn'], -i['pct']))
+    runner_code = in_progress[0]['code'] if in_progress else None
+
+    return render_template(
+        'themes/quizhub/arena_hub.html',
+        player=player,
+        in_progress=in_progress,
+        runner_code=runner_code,
+        your_turn_count=sum(1 for i in in_progress if i['my_turn']),
+        completed_battles_summary=_dashboard_completed(player),
+        avatars=AVATAR_PRESETS,
     )
 
 
