@@ -25,11 +25,11 @@
   </g>
 
   <g transform="translate(56,150)">
-    <rect x="0" y="-34" width="138" height="24" rx="6" fill="#f472b6"/>
-    <text x="11" y="-17" font-size="12" font-weight="900" fill="#0b041c" letter-spacing="2" textLength="116" lengthAdjust="spacingAndGlyphs">QUIZMONDO GUIDE</text>
-    <text x="0" y="22" font-size="46" font-weight="900" fill="url(#ink)" textLength="374" lengthAdjust="spacingAndGlyphs">Run a pub quiz</text>
-    <text x="0" y="62" font-size="18" font-weight="500" fill="#fbbf24" opacity=".95" textLength="279" lengthAdjust="spacingAndGlyphs">Tables, rounds and a big screen</text>
-    <rect x="0" y="86" width="96" height="5" rx="2.5" fill="#f472b6"/>
+    <rect x="0" y="-56" width="138" height="24" rx="6" fill="#f472b6"/>
+    <text x="11" y="-39" font-size="12" font-weight="900" fill="#0b041c" letter-spacing="2" textLength="116" lengthAdjust="spacingAndGlyphs">QUIZMONDO GUIDE</text>
+    <text x="0" y="35" font-size="46" font-weight="900" fill="url(#ink)" textLength="374" lengthAdjust="spacingAndGlyphs">Run a pub quiz</text>
+    <text x="0" y="85" font-size="18" font-weight="500" fill="#fbbf24" opacity=".95" textLength="279" lengthAdjust="spacingAndGlyphs">Tables, rounds and a big screen</text>
+    <rect x="0" y="115" width="96" height="5" rx="2.5" fill="#f472b6"/>
   </g>
 
   <g transform="translate(56,392)" font-size="13" font-weight="700" fill="#cbd5e1" opacity=".75">
