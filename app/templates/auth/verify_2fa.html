@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Two-Factor Authentication - {{ system_settings.company_name or 'Portal' }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Inter', sans-serif; }</style>
+    <title>Two-Factor Authentication &mdash; Quizmondo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.min.css') }}">
 </head>
 <body class="bg-slate-50 min-h-screen flex items-center justify-center p-6">
     <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100">
@@ -43,15 +41,20 @@
                     </p>
                 </div>
 
-                <button type="submit" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-4 rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0">
-                    Verify & Access System
+                <button type="submit" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-4 rounded-xl shadow-lg transition-all">
+                    Verify &amp; Access System
                 </button>
             </form>
 
             <div class="mt-6 pt-4 border-t border-slate-100 flex flex-col items-center gap-3 text-xs">
-                {% if can_send_email %}
+                {% if can_send_email and method != 'email' %}
                 <a href="{{ url_for('auth.send_email_2fa') }}" class="font-bold text-blue-600 hover:text-blue-800 transition">
                     ✉️ Send code by email instead
+                </a>
+                {% endif %}
+                {% if not has_totp %}
+                <a href="{{ url_for('auth.setup_2fa') }}" class="font-bold text-blue-600 hover:text-blue-800 transition">
+                    📱 Set up an Authenticator App instead
                 </a>
                 {% endif %}
                 <a href="{{ url_for('auth.login') }}" class="font-bold text-slate-400 hover:text-slate-600 transition uppercase tracking-widest">

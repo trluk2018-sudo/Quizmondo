@@ -46,6 +46,10 @@ class User(db.Model):
     totp_secret = db.Column(db.String(64), nullable=True)
     totp_enabled = db.Column(db.Boolean, default=False)
     totp_recovery_codes = db.Column(db.Text, nullable=True)
+    totp_grace_started_at = db.Column(db.DateTime, nullable=True)
+    two_factor_code = db.Column(db.String(6), nullable=True)
+    two_factor_expiry = db.Column(db.DateTime, nullable=True)
+    two_factor_attempts = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

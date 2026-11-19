@@ -80,5 +80,49 @@
       </a>
     </div>
   </form>
+
+  {% if user.role in ('admin', 'super_admin') %}
+  <!-- Two-Factor Authentication Card -->
+  <div class="mt-6 bg-white rounded-lg border border-slate-200 shadow-sm p-6">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 mb-4">
+      <div>
+        <h2 class="text-base font-semibold text-slate-900">Admin Two-Factor Authentication (Authenticator App)</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Required on Quizmondo administrator accounts (players remain frictionless).</p>
+      </div>
+      {% if user.totp_enabled %}
+      <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Active</span>
+      {% else %}
+      <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">Setup Required</span>
+      {% endif %}
+    </div>
+
+    {% if new_recovery_codes %}
+    <div class="mb-4 p-4 rounded-lg bg-amber-50 border border-amber-200">
+      <p class="text-xs font-bold text-amber-900 mb-2">New Backup Recovery Codes (save these now &mdash; shown once):</p>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 font-mono text-xs font-bold text-slate-800 bg-white p-2.5 rounded border border-amber-200">
+        {% for c in new_recovery_codes %}
+        <div class="text-center select-all p-1 bg-slate-50 rounded border border-slate-100">{{ c }}</div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if user.totp_enabled %}
+    <form method="POST" action="{{ url_for('auth.totp_regenerate_recovery') }}" class="flex flex-wrap items-center gap-3">
+      {% if not is_impersonation %}
+      <input type="password" name="password" placeholder="Current password to regenerate recovery codes" required
+             class="text-xs border border-slate-300 rounded px-3 py-2 flex-1 min-w-[220px]">
+      {% endif %}
+      <button type="submit" class="bg-slate-800 hover:bg-black text-white font-medium text-xs px-4 py-2 rounded shadow-sm transition">
+        Regenerate Recovery Codes
+      </button>
+    </form>
+    {% else %}
+    <a href="{{ url_for('auth.setup_2fa') }}" class="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs px-4 py-2 rounded shadow-sm transition">
+      Set Up Authenticator App
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

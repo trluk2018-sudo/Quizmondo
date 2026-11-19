@@ -3062,6 +3062,8 @@ def totp_confirm():
         u.totp_secret = sec
         u.totp_enabled = True
         u.totp_recovery_codes = json.dumps(hashed_codes)
+        u.totp_grace_started_at = None
+        u.is_2fa_enabled = True
         db.session.commit()
         session.pop('pending_totp_secret', None)
         session.pop('pending_totp_recovery', None)
@@ -3072,11 +3074,16 @@ def totp_confirm():
 @admin_bp.route('/totp/disable', methods=['POST'])
 @login_required
 def totp_disable():
+    from datetime import datetime
+    from ..utils import mail as qm_mail
     u = db.session.get(User, session.get('user_id'))
     if not u or u.role not in ('admin', 'super_admin'):
         return jsonify({'error': 'Unauthorized'}), 403
+    if not (qm_mail.mail_ready() and u.email):
+        return jsonify({'success': False, 'error': 'Configure SMTP and an email address on your account before removing your Authenticator App.'}), 400
     u.totp_enabled = False
     u.totp_secret = None
     u.totp_recovery_codes = None
+    u.totp_grace_started_at = datetime.utcnow()
     db.session.commit()
     return jsonify({'success': True})

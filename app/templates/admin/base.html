@@ -290,6 +290,21 @@
 
     <!-- Main Admin Workspace Area (High Contrast Dark Text on Clean Slate Surface) -->
     <main id="adminMainWorkspace" class="flex-1 overflow-y-auto p-6 sm:p-8 bg-slate-100 text-slate-900">
+      {% if totp_grace_banner %}
+      <div class="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 text-xs font-medium flex flex-wrap items-center justify-between gap-2">
+        <span>
+          🛡️ <b>Authenticator App recommended:</b>
+          {% if totp_grace_banner.days_left > 0 %}
+          Set up your admin Authenticator App within <b>{{ totp_grace_banner.days_left }} day{{ '' if totp_grace_banner.days_left == 1 else 's' }}</b> &mdash; after that, setup will be required at next admin sign-in.
+          {% else %}
+          Your 5-day Email 2FA window has ended &mdash; set up your Authenticator App now to keep signing in smoothly.
+          {% endif %}
+        </span>
+        <a href="{{ url_for('auth.setup_2fa') }}" class="inline-flex items-center px-3 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[11px] transition">
+          Set up Authenticator App
+        </a>
+      </div>
+      {% endif %}
       <!-- Flash Notices -->
       {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}

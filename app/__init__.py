@@ -221,6 +221,19 @@ def create_app(test_config=None):
         except Exception:
             return f"#{hex_code}"
 
+    @app.template_filter('mask_email')
+    def mask_email_filter(email):
+        if not email or '@' not in email:
+            return email or ''
+        name, domain = email.split('@', 1)
+        masked_name = (name[0] + '*' * (len(name) - 2) + name[-1]) if len(name) > 2 else (name[0] + '*')
+        parts = domain.split('.')
+        if len(parts) > 1:
+            masked_domain = parts[0][0] + '*' * max(0, len(parts[0]) - 1) + '.' + parts[-1]
+        else:
+            masked_domain = domain[0] + '*' * max(0, len(domain) - 1)
+        return f"{masked_name}@{masked_domain}"
+
     # Database setup & initial seed
     with app.app_context():
         db.create_all()
@@ -230,12 +243,30 @@ def create_app(test_config=None):
     
     @app.context_processor
     def inject_support_access():
+        totp_grace_banner = None
+        try:
+            from datetime import datetime as _dt, timedelta as _td
+            if session.get('user_id') and not session.get('impersonation') and session.get('user_role') in ('admin', 'super_admin'):
+                _u = db.session.get(User, session['user_id'])
+                if _u and not getattr(_u, 'totp_enabled', False):
+                    _started = getattr(_u, 'totp_grace_started_at', None)
+                    if _started is not None:
+                        _secs = (_started + _td(days=5) - _dt.utcnow()).total_seconds()
+                        _days = max(0, int((_secs + 86399) // 86400)) if _secs > 0 else 0
+                        totp_grace_banner = {'days_left': _days, 'expired': _secs <= 0}
+                    else:
+                        totp_grace_banner = {'days_left': 5, 'expired': False}
+        except Exception:
+            pass
         try:
             from .utils.support_access import get_support_access_status
             is_qm = True
-            return {'support_access_status': get_support_access_status(db, is_quizmondo=is_qm)}
+            return {
+                'support_access_status': get_support_access_status(db, is_quizmondo=is_qm),
+                'totp_grace_banner': totp_grace_banner,
+            }
         except Exception:
-            return {'support_access_status': None}
+            return {'support_access_status': None, 'totp_grace_banner': totp_grace_banner}
 
     return app
 
@@ -260,6 +291,14 @@ def _ensure_schema():
                 db.session.execute(text("ALTER TABLE users ADD COLUMN totp_enabled BOOLEAN DEFAULT 0"))
             if 'totp_recovery_codes' not in cols_users:
                 db.session.execute(text("ALTER TABLE users ADD COLUMN totp_recovery_codes TEXT"))
+            if 'totp_grace_started_at' not in cols_users:
+                db.session.execute(text("ALTER TABLE users ADD COLUMN totp_grace_started_at DATETIME"))
+            if 'two_factor_code' not in cols_users:
+                db.session.execute(text("ALTER TABLE users ADD COLUMN two_factor_code VARCHAR(6)"))
+            if 'two_factor_expiry' not in cols_users:
+                db.session.execute(text("ALTER TABLE users ADD COLUMN two_factor_expiry DATETIME"))
+            if 'two_factor_attempts' not in cols_users:
+                db.session.execute(text("ALTER TABLE users ADD COLUMN two_factor_attempts INTEGER DEFAULT 0"))
 
         # How many of today's Climber questions were right, so a bad day
         # costs height instead of carrying you up anyway.
