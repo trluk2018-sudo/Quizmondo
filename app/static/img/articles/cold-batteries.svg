@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140a2e"/>
+      <stop offset="55%" stop-color="#0a0620"/>
+      <stop offset="100%" stop-color="#05030f"/>
+    </linearGradient>
+    <radialGradient id="glowA"><stop offset="0%" stop-color="#38bdf8" stop-opacity=".40"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB"><stop offset="0%" stop-color="#fb7185" stop-opacity=".38"/><stop offset="100%" stop-color="#fb7185" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <ellipse cx="120" cy="70" rx="300" ry="210" fill="url(#glowA)"/>
+  <ellipse cx="690" cy="390" rx="320" ry="220" fill="url(#glowB)"/>
+  <text x="400" y="74" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="34" font-weight="bold" fill="#f8fafc">Cold Batteries</text>
+  <text x="400" y="104" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" fill="#94a3b8">Why your phone drops from 40% to 0% in winter</text>
+  <rect x="190" y="185" width="380" height="130" rx="18" fill="#0f172a" stroke="#38bdf8" stroke-width="3"/>
+  <rect x="570" y="222" width="24" height="56" rx="6" fill="#38bdf8"/>
+  <rect x="208" y="203" width="84" height="94" rx="8" fill="#fb7185"/>
+  <rect x="304" y="203" width="84" height="94" rx="8" fill="#334155" opacity=".45"/>
+  <rect x="400" y="203" width="84" height="94" rx="8" fill="#334155" opacity=".45"/>
+  <text x="400" y="366" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="18" font-weight="bold" fill="#38bdf8">0°C slows lithium ions to a crawl</text>
+  <text x="400" y="394" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="14" fill="#94a3b8">Warm the phone up and the charge comes back</text>
+</svg>

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140a2e"/>
+      <stop offset="55%" stop-color="#0a0620"/>
+      <stop offset="100%" stop-color="#05030f"/>
+    </linearGradient>
+    <radialGradient id="glowA"><stop offset="0%" stop-color="#22d3ee" stop-opacity=".40"/><stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB"><stop offset="0%" stop-color="#f472b6" stop-opacity=".38"/><stop offset="100%" stop-color="#f472b6" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <ellipse cx="120" cy="70" rx="300" ry="210" fill="url(#glowA)"/>
+  <ellipse cx="690" cy="390" rx="320" ry="220" fill="url(#glowB)"/>
+  <text x="400" y="74" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="34" font-weight="bold" fill="#f8fafc">Unusual Instruments</text>
+  <text x="400" y="104" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" fill="#94a3b8">Seven real instruments you play without touching — or with fire</text>
+  <rect x="190" y="295" width="220" height="62" rx="10" fill="#1e1b4b" stroke="#22d3ee" stroke-width="3"/>
+  <line x1="370" y1="295" x2="370" y2="165" stroke="#f8fafc" stroke-width="5" stroke-linecap="round"/>
+  <path d="M 190 326 Q 130 326 130 285 Q 130 250 185 250" fill="none" stroke="#f8fafc" stroke-width="4"/>
+  <circle cx="370" cy="210" r="28" fill="none" stroke="#22d3ee" stroke-width="2" stroke-dasharray="5 5"/>
+  <circle cx="370" cy="210" r="52" fill="none" stroke="#f472b6" stroke-width="2" stroke-dasharray="5 5"/>
+  <text x="465" y="220" font-family="Verdana,DejaVu Sans,sans-serif" font-size="24" font-weight="bold" fill="#f8fafc">The Theremin</text>
+  <text x="465" y="250" font-family="Verdana,DejaVu Sans,sans-serif" font-size="14" fill="#94a3b8">Pitch in one hand, volume in the other</text>
+  <text x="465" y="295" font-family="Verdana,DejaVu Sans,sans-serif" font-size="14" fill="#22d3ee">Plus glass armonicas, sea organs</text>
+  <text x="465" y="318" font-family="Verdana,DejaVu Sans,sans-serif" font-size="14" fill="#22d3ee">&amp; the Swedish nyckelharpa</text>
+</svg>

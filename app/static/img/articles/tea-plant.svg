@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140a2e"/>
+      <stop offset="55%" stop-color="#0a0620"/>
+      <stop offset="100%" stop-color="#05030f"/>
+    </linearGradient>
+    <radialGradient id="glowA"><stop offset="0%" stop-color="#34d399" stop-opacity=".40"/><stop offset="100%" stop-color="#34d399" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB"><stop offset="0%" stop-color="#f59e0b" stop-opacity=".38"/><stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <ellipse cx="120" cy="70" rx="300" ry="210" fill="url(#glowA)"/>
+  <ellipse cx="690" cy="390" rx="320" ry="220" fill="url(#glowB)"/>
+  <text x="400" y="74" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="34" font-weight="bold" fill="#f8fafc">One Plant, Every Tea</text>
+  <text x="400" y="104" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" fill="#94a3b8">White, green, oolong and black are all Camellia sinensis</text>
+  <g font-family="Verdana,DejaVu Sans,sans-serif" text-anchor="middle">
+    <rect x="85" y="185" width="140" height="145" rx="14" fill="#0f172a" stroke="#e2e8f0" stroke-width="2.5"/>
+    <text x="155" y="235" font-size="20" font-weight="bold" fill="#f8fafc">White</text>
+    <text x="155" y="268" font-size="13" fill="#94a3b8">~5% oxidised</text>
+    <text x="155" y="298" font-size="12" fill="#cbd5e1">Dried buds</text>
+
+    <rect x="248" y="185" width="140" height="145" rx="14" fill="#0f172a" stroke="#34d399" stroke-width="2.5"/>
+    <text x="318" y="235" font-size="20" font-weight="bold" fill="#34d399">Green</text>
+    <text x="318" y="268" font-size="13" fill="#94a3b8">0% oxidised</text>
+    <text x="318" y="298" font-size="12" fill="#cbd5e1">Steamed / fired</text>
+
+    <rect x="412" y="185" width="140" height="145" rx="14" fill="#0f172a" stroke="#fbbf24" stroke-width="2.5"/>
+    <text x="482" y="235" font-size="20" font-weight="bold" fill="#fbbf24">Oolong</text>
+    <text x="482" y="268" font-size="13" fill="#94a3b8">15–80%</text>
+    <text x="482" y="298" font-size="12" fill="#cbd5e1">Bruised &amp; rolled</text>
+
+    <rect x="575" y="185" width="140" height="145" rx="14" fill="#0f172a" stroke="#f97316" stroke-width="2.5"/>
+    <text x="645" y="235" font-size="20" font-weight="bold" fill="#fb923c">Black</text>
+    <text x="645" y="268" font-size="13" fill="#94a3b8">100% oxidised</text>
+    <text x="645" y="298" font-size="12" fill="#cbd5e1">Full air exposure</text>
+  </g>
+</svg>

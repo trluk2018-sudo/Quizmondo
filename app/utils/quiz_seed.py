@@ -1631,6 +1631,13 @@ def seed_quizmondo_full_environment():
     except Exception as e:
         print('Error importing fact articles:', e)
 
+    # 4c-2. Wave 2 curated articles (tech, music, nature, food & world curiosities).
+    try:
+        from .articles_wave2 import ARTICLES_WAVE2, ARTICLE_CATEGORIES_WAVE2
+        _sync_articles(ARTICLES_WAVE2, ARTICLE_CATEGORIES_WAVE2, 1, 'wave2 articles')
+    except Exception as e:
+        print('Error importing wave2 articles:', e)
+
     # 4d. The Never Pay To Play page, and one footer link to it.
     # The page is kept in code and matched on slug, so the wording keeps
     # improving on each deploy. The footer link is added once and marked, so

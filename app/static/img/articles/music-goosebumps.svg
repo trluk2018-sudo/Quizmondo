@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140a2e"/>
+      <stop offset="55%" stop-color="#0a0620"/>
+      <stop offset="100%" stop-color="#05030f"/>
+    </linearGradient>
+    <radialGradient id="glowA"><stop offset="0%" stop-color="#a78bfa" stop-opacity=".40"/><stop offset="100%" stop-color="#a78bfa" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB"><stop offset="0%" stop-color="#f472b6" stop-opacity=".38"/><stop offset="100%" stop-color="#f472b6" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <ellipse cx="120" cy="70" rx="300" ry="210" fill="url(#glowA)"/>
+  <ellipse cx="690" cy="390" rx="320" ry="220" fill="url(#glowB)"/>
+  <text x="400" y="74" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="34" font-weight="bold" fill="#f8fafc">Musical Chills</text>
+  <text x="400" y="104" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" fill="#94a3b8">Why a single chord change raises hairs on your arm</text>
+  <path d="M 70 285 Q 130 245 190 285 T 310 285 T 430 220 T 550 285 T 670 265 T 740 285" fill="none" stroke="#a78bfa" stroke-width="5"/>
+  <path d="M 70 285 Q 130 265 190 285 T 310 285 T 430 165 T 550 285 T 670 275 T 740 285" fill="none" stroke="#f472b6" stroke-width="3.5" opacity=".9"/>
+  <circle cx="430" cy="165" r="10" fill="#fbbf24"/>
+  <text x="430" y="148" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="14" font-weight="bold" fill="#fbbf24">DOPAMINE SPIKE</text>
+  <text x="400" y="378" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" fill="#cbd5e1">Frisson: your brain rewarded for predicting — and being surprised</text>
+</svg>

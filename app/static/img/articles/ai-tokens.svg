@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140a2e"/>
+      <stop offset="55%" stop-color="#0a0620"/>
+      <stop offset="100%" stop-color="#05030f"/>
+    </linearGradient>
+    <radialGradient id="glowA"><stop offset="0%" stop-color="#a78bfa" stop-opacity=".40"/><stop offset="100%" stop-color="#a78bfa" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB"><stop offset="0%" stop-color="#22d3ee" stop-opacity=".38"/><stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <ellipse cx="120" cy="70" rx="300" ry="210" fill="url(#glowA)"/>
+  <ellipse cx="690" cy="390" rx="320" ry="220" fill="url(#glowB)"/>
+  <text x="400" y="74" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="34" font-weight="bold" fill="#f8fafc">How AI Reads Words</text>
+  <text x="400" y="104" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" fill="#94a3b8">Not letter by letter — in chunks called tokens</text>
+  <g font-family="Verdana,DejaVu Sans,sans-serif" font-weight="bold" font-size="26" text-anchor="middle">
+    <rect x="130" y="185" width="145" height="72" rx="12" fill="#1e1b4b" stroke="#a78bfa" stroke-width="2.5"/>
+    <text x="202" y="230" fill="#f8fafc">str</text>
+    <rect x="295" y="185" width="165" height="72" rx="12" fill="#1e1b4b" stroke="#22d3ee" stroke-width="2.5"/>
+    <text x="377" y="230" fill="#22d3ee">aw</text>
+    <rect x="480" y="185" width="190" height="72" rx="12" fill="#1e1b4b" stroke="#f472b6" stroke-width="2.5"/>
+    <text x="575" y="230" fill="#f472b6">berry</text>
+  </g>
+  <text x="202" y="286" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="14" fill="#94a3b8">token #1</text>
+  <text x="377" y="286" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="14" fill="#94a3b8">token #2</text>
+  <text x="575" y="286" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="14" fill="#94a3b8">token #3</text>
+  <text x="400" y="352" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="18" fill="#cbd5e1">3 tokens in, 3 Rs hidden inside</text>
+</svg>

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140a2e"/>
+      <stop offset="55%" stop-color="#0a0620"/>
+      <stop offset="100%" stop-color="#05030f"/>
+    </linearGradient>
+    <radialGradient id="glowA"><stop offset="0%" stop-color="#fb7185" stop-opacity=".40"/><stop offset="100%" stop-color="#fb7185" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB"><stop offset="0%" stop-color="#fbbf24" stop-opacity=".38"/><stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <ellipse cx="120" cy="70" rx="300" ry="210" fill="url(#glowA)"/>
+  <ellipse cx="690" cy="390" rx="320" ry="220" fill="url(#glowB)"/>
+  <text x="400" y="74" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="34" font-weight="bold" fill="#f8fafc">The Scoville Scale</text>
+  <text x="400" y="104" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" fill="#94a3b8">Why chilli feels like fire when nothing is burning</text>
+  <defs>
+    <linearGradient id="heat" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="45%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#ef4444"/>
+    </linearGradient>
+  </defs>
+  <rect x="90" y="235" width="620" height="34" rx="17" fill="url(#heat)"/>
+  <g font-family="Verdana,DejaVu Sans,sans-serif" text-anchor="middle" font-size="13">
+    <text x="115" y="216" fill="#34d399" font-weight="bold">0</text>
+    <text x="115" y="298" fill="#cbd5e1">Bell pepper</text>
+    <text x="290" y="216" fill="#fbbf24" font-weight="bold">5,000</text>
+    <text x="290" y="298" fill="#cbd5e1">Jalapeño</text>
+    <text x="495" y="216" fill="#fb923c" font-weight="bold">350,000</text>
+    <text x="495" y="298" fill="#cbd5e1">Habanero</text>
+    <text x="680" y="216" fill="#fb7185" font-weight="bold">2,693,000</text>
+    <text x="680" y="298" fill="#cbd5e1">Pepper X</text>
+  </g>
+  <text x="400" y="372" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="15" fill="#94a3b8">Capsaicin trips your TRPV1 heat receptors — birds cannot feel it at all</text>
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140a2e"/>
+      <stop offset="55%" stop-color="#0a0620"/>
+      <stop offset="100%" stop-color="#05030f"/>
+    </linearGradient>
+    <radialGradient id="glowA"><stop offset="0%" stop-color="#34d399" stop-opacity=".40"/><stop offset="100%" stop-color="#34d399" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB"><stop offset="0%" stop-color="#fbbf24" stop-opacity=".38"/><stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <ellipse cx="120" cy="70" rx="300" ry="210" fill="url(#glowA)"/>
+  <ellipse cx="690" cy="390" rx="320" ry="220" fill="url(#glowB)"/>
+  <text x="400" y="74" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="34" font-weight="bold" fill="#f8fafc">Oldest Living Things</text>
+  <text x="400" y="104" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" fill="#94a3b8">Alive before the pyramids — and still growing</text>
+  <line x1="95" y1="275" x2="705" y2="275" stroke="#475569" stroke-width="4"/>
+  <g font-family="Verdana,DejaVu Sans,sans-serif" text-anchor="middle">
+    <circle cx="150" cy="275" r="12" fill="#fbbf24"/>
+    <text x="150" y="242" font-size="15" font-weight="bold" fill="#fbbf24">~4,850 yrs</text>
+    <text x="150" y="314" font-size="13" fill="#cbd5e1">Methuselah pine</text>
+    <circle cx="400" cy="275" r="12" fill="#34d399"/>
+    <text x="400" y="242" font-size="15" font-weight="bold" fill="#34d399">~500 yrs</text>
+    <text x="400" y="314" font-size="13" fill="#cbd5e1">Ocean quahog clam</text>
+    <circle cx="650" cy="275" r="12" fill="#22d3ee"/>
+    <text x="650" y="242" font-size="15" font-weight="bold" fill="#22d3ee">~400 yrs</text>
+    <text x="650" y="314" font-size="13" fill="#cbd5e1">Greenland shark</text>
+  </g>
+  <text x="400" y="380" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="14" fill="#94a3b8">Plus clonal colonies measured in tens of thousands of years</text>
+</svg>

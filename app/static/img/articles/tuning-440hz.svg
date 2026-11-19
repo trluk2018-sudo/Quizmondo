@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140a2e"/>
+      <stop offset="55%" stop-color="#0a0620"/>
+      <stop offset="100%" stop-color="#05030f"/>
+    </linearGradient>
+    <radialGradient id="glowA"><stop offset="0%" stop-color="#34d399" stop-opacity=".40"/><stop offset="100%" stop-color="#34d399" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB"><stop offset="0%" stop-color="#22d3ee" stop-opacity=".38"/><stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <ellipse cx="120" cy="70" rx="300" ry="210" fill="url(#glowA)"/>
+  <ellipse cx="690" cy="390" rx="320" ry="220" fill="url(#glowB)"/>
+  <text x="400" y="74" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="34" font-weight="bold" fill="#f8fafc">A = 440 Hz</text>
+  <text x="400" y="104" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" fill="#94a3b8">How the whole world agreed on one musical note</text>
+  <path d="M 80 275 Q 120 195 160 275 T 240 275 T 320 275 T 400 275 T 480 275 T 560 275 T 640 275 T 720 275" fill="none" stroke="#34d399" stroke-width="4"/>
+  <line x1="80" y1="275" x2="720" y2="275" stroke="#475569" stroke-width="1.5" stroke-dasharray="6 6"/>
+  <rect x="270" y="325" width="260" height="64" rx="12" fill="#0f172a" stroke="#34d399" stroke-width="2"/>
+  <text x="400" y="355" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="22" font-weight="bold" fill="#f8fafc">440 cycles / sec</text>
+  <text x="400" y="378" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="12" fill="#94a3b8">ISO 16 standard — adopted 1955</text>
+</svg>

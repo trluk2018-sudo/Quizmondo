@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140a2e"/>
+      <stop offset="55%" stop-color="#0a0620"/>
+      <stop offset="100%" stop-color="#05030f"/>
+    </linearGradient>
+    <radialGradient id="glowA"><stop offset="0%" stop-color="#fb7185" stop-opacity=".40"/><stop offset="100%" stop-color="#fb7185" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB"><stop offset="0%" stop-color="#fbbf24" stop-opacity=".38"/><stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <ellipse cx="120" cy="70" rx="300" ry="210" fill="url(#glowA)"/>
+  <ellipse cx="690" cy="390" rx="320" ry="220" fill="url(#glowB)"/>
+  <text x="400" y="74" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="34" font-weight="bold" fill="#f8fafc">The Loudest Animals</text>
+  <text x="400" y="104" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" fill="#94a3b8">When a five-centimetre shrimp beats a jet engine</text>
+  <g font-family="Verdana,DejaVu Sans,sans-serif" font-size="15" font-weight="bold">
+    <text x="110" y="192" fill="#cbd5e1">Lion roar</text>
+    <rect x="275" y="174" width="205" height="24" rx="6" fill="#94a3b8"/>
+    <text x="492" y="192" fill="#94a3b8">114 dB</text>
+    <text x="110" y="242" fill="#cbd5e1">Jet takeoff</text>
+    <rect x="275" y="224" width="260" height="24" rx="6" fill="#38bdf8"/>
+    <text x="547" y="242" fill="#38bdf8">140 dB</text>
+    <text x="110" y="292" fill="#cbd5e1">Blue whale</text>
+    <rect x="275" y="274" width="340" height="24" rx="6" fill="#fbbf24"/>
+    <text x="627" y="292" fill="#fbbf24">188 dB</text>
+    <text x="110" y="342" fill="#f8fafc">Pistol shrimp</text>
+    <rect x="275" y="324" width="390" height="24" rx="6" fill="#fb7185"/>
+    <text x="677" y="342" fill="#fb7185">210 dB</text>
+  </g>
+</svg>
