@@ -28,18 +28,88 @@
     .cr-pop { animation: crPop 1.1s ease-out forwards; pointer-events: none; }
     .cr-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
     .cr-scroll::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.45); border-radius: 999px; }
+
+    /* True orientation-driven layout: OPTIONS ON LEFT, GRAPHICS ON RIGHT in landscape (phones & desktop!) */
+    #crMain {
+      display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow: hidden;
+    }
+    #crControls { order: 2; }
+    #crHabitat { order: 1; }
+
+    @media (orientation: landscape) {
+      #crMain { flex-direction: row !important; }
+      #crControls {
+        order: 1 !important;
+        width: 44%;
+        max-width: 460px;
+        height: 100%;
+        border-top: 0 !important;
+        border-left: 0 !important;
+        border-right: 1px solid rgba(168,85,247,0.35);
+      }
+      #crHabitat {
+        order: 2 !important;
+        width: 56%;
+        flex: 1 1 auto;
+        height: 100%;
+      }
+    }
+
+    /* Compact phone-landscape fit (e.g. 360px–430px tall) so every bar & button fits 100% with zero scroll */
+    @media (orientation: landscape) and (max-height: 480px) {
+      #crHeader { height: 2.3rem !important; padding: 0 0.75rem !important; }
+      #crControls { padding: 0.4rem 0.65rem !important; gap: 0.32rem !important; }
+      #crBarsBox { gap: 0.22rem !important; }
+      #crStageWrap { width: 8.5rem !important; height: 8.5rem !important; }
+      #crSpeechWrap { margin-bottom: 0.25rem !important; max-width: 92% !important; }
+      #crSpeechBubble { padding: 0.4rem 0.85rem !important; }
+      #crQuizBox { padding: 0.45rem 0.6rem !important; gap: 0.25rem !important; }
+      #crStudyBox { padding: 0.4rem 0.6rem !important; }
+      .cr-btn { padding-top: 0.35rem !important; padding-bottom: 0.35rem !important; font-size: 10px !important; }
+    }
+
+    /* Full-screen "Rotate to Landscape" prompt on upright phones (matches Quizmondo's _rotate_hint style) */
+    #crRotateToLandscape {
+      display: none; position: fixed; inset: 0; z-index: 70;
+      background: rgba(7, 3, 20, 0.97); backdrop-filter: blur(8px);
+      align-items: center; justify-content: center;
+    }
+    @media (orientation: portrait) and (pointer: coarse) {
+      #crRotateToLandscape:not(.cr-rot-dismissed) { display: flex; }
+    }
+    @keyframes crTipSideways {
+      0%, 55%, 100% { transform: rotate(0deg); }
+      75%, 90% { transform: rotate(-90deg); }
+    }
+    .cr-tip-sideways { display: inline-block; animation: crTipSideways 1.9s ease-in-out infinite; }
   </style>
 </head>
 <body class="select-none">
 
-<!-- Full-Screen Landscape Layout (Gracefully stacks on narrow portrait) -->
+<!-- Full-Screen Rotate-to-Landscape Prompt (Portrait Phones Only) -->
+<div id="crRotateToLandscape">
+  <div class="text-center space-y-4 px-8 max-w-sm">
+    <div class="text-6xl cr-tip-sideways">📱</div>
+    <h2 class="text-xl font-black text-white">Turn your device sideways</h2>
+    <p class="text-xs text-slate-300 leading-relaxed">
+      <strong>Mondo Critters</strong> is a full-screen landscape game — controls on the left, your animated critter habitat on the right!
+    </p>
+    <button type="button" onclick="document.getElementById('crRotateToLandscape').classList.add('cr-rot-dismissed')"
+            class="px-5 py-2.5 rounded-2xl border border-purple-500/40 text-slate-300 hover:text-white hover:border-cyan-400 font-bold text-[11px] uppercase tracking-wider transition">
+      Carry on upright anyway
+    </button>
+  </div>
+</div>
+
+<!-- Full-Screen Landscape Layout -->
 <div class="h-full w-full flex flex-col">
 
   <!-- Slim Top Arcade HUD -->
-  <header class="shrink-0 h-12 px-3 sm:px-5 bg-slate-950/90 border-b border-purple-500/30 flex items-center justify-between gap-2 z-20">
+  <header id="crHeader" class="shrink-0 h-11 px-3 sm:px-5 bg-slate-950/90 border-b border-purple-500/30 flex items-center justify-between gap-2 z-20">
     <div class="flex items-center gap-2 min-w-0">
-      <a href="{{ url_for('arena.dashboard') }}" class="px-2.5 py-1 rounded-lg bg-slate-900 border border-purple-500/35 hover:border-cyan-400 text-[11px] font-bold text-cyan-300 shrink-0">
-        &larr; Arena
+      <a href="{{ url_for('arena.dashboard') }}" onclick="try{sessionStorage.removeItem('qm_rotate_dismissed');}catch(e){}"
+         class="px-2.5 py-1 rounded-lg bg-slate-900 border border-purple-500/35 hover:border-cyan-400 text-[11px] font-bold text-cyan-300 shrink-0">
+        &larr; Exit
       </a>
       <span class="text-xs sm:text-sm font-black text-white truncate">
         ✨ MONDO CRITTERS
@@ -63,11 +133,11 @@
     </div>
   </header>
 
-  <!-- Main Landscape Arena (Left Habitat + Right Control Deck) -->
-  <main class="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
+  <!-- Main Landscape Arena (Options/Controls on LEFT, Animated Habitat Graphics on RIGHT) -->
+  <main id="crMain">
 
-    <!-- LEFT: Living Animated Habitat (60%) -->
-    <section id="crHabitat" class="relative flex-1 md:w-[60%] min-h-[220px] overflow-hidden flex flex-col items-center justify-center bg-gradient-to-b from-[#0b0628] via-[#150c3d] to-[#0d1f33]">
+    <!-- GRAPHICS: Living Animated Habitat (RIGHT in Landscape) -->
+    <section id="crHabitat" class="relative flex-1 min-h-[200px] overflow-hidden flex flex-col items-center justify-center bg-gradient-to-b from-[#0b0628] via-[#150c3d] to-[#0d1f33]">
       <!-- Animated Sky & Hills -->
       <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 900 500" preserveAspectRatio="xMidYMid slice">
         <defs>
@@ -116,14 +186,9 @@
         </div>
       </div>
 
-      <!-- Portrait Hint Pill (Only visible on narrow portrait phones) -->
-      <div class="absolute top-3 right-3 z-10 sm:hidden px-2.5 py-1 rounded-full bg-slate-950/80 border border-cyan-400/40 text-[10px] text-cyan-300 font-bold">
-        📱 Rotate for full landscape
-      </div>
-
       <!-- Thought Bubble coming from the Critter's head -->
       <div id="crSpeechWrap" class="relative z-20 mb-4 max-w-[88%] sm:max-w-md flex flex-col items-center">
-        <div class="px-5 py-3 rounded-[2rem] bg-slate-950/92 border-2 border-cyan-300/65 shadow-[0_8px_30px_rgba(34,211,238,0.22)] text-center backdrop-blur">
+        <div id="crSpeechBubble" class="px-5 py-3 rounded-[2rem] bg-slate-950/92 border-2 border-cyan-300/65 shadow-[0_8px_30px_rgba(34,211,238,0.22)] text-center backdrop-blur">
           <p id="crSpeechText" class="text-[11px] sm:text-xs font-bold text-white leading-snug">
             Hi! Thanks for looking after me! 💖
           </p>
@@ -160,55 +225,55 @@
       </div>
     </section>
 
-    <!-- RIGHT: Control Deck (40%) -->
-    <aside class="shrink-0 md:w-[40%] bg-slate-950/95 border-t md:border-t-0 md:border-l border-purple-500/30 p-3 sm:p-4 flex flex-col justify-between gap-3 overflow-y-auto cr-scroll">
+    <!-- CONTROLS / OPTIONS (LEFT in Landscape, matching National Lottery & Climber layout) -->
+    <aside id="crControls" class="shrink-0 bg-slate-950/95 border-t border-purple-500/30 p-3 sm:p-4 flex flex-col justify-between gap-2.5 overflow-y-auto cr-scroll">
 
-      <!-- 3 Core Health Bars (Keep above 20!) -->
-      <div class="space-y-2.5">
+      <!-- 5 Core Health Bars (Keep all above 20!) -->
+      <div id="crBarsBox" class="flex flex-col gap-2">
         <div class="flex items-center justify-between text-[10px] uppercase tracking-wider">
           <span class="text-slate-400 font-bold">Core Health Stats</span>
           <span class="text-rose-300 font-bold">Keep all &gt; 20!</span>
         </div>
 
         <!-- Hunger -->
-        <div class="space-y-1">
-          <div class="flex justify-between text-[11px] font-bold">
+        <div class="space-y-0.5">
+          <div class="flex justify-between text-[10px] font-bold">
             <span class="text-emerald-300">🍎 Hunger</span>
             <span id="valHunger" class="text-white">80/100</span>
           </div>
-          <div class="h-3 rounded-full bg-slate-900 border border-slate-700 overflow-hidden relative">
+          <div class="h-2.5 rounded-full bg-slate-900 border border-slate-700 overflow-hidden relative">
             <div class="absolute top-0 bottom-0 left-[20%] w-0.5 bg-rose-500/70 z-10"></div>
             <div id="barHunger" class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500" style="width:80%"></div>
           </div>
         </div>
 
         <!-- Fitness -->
-        <div class="space-y-1">
-          <div class="flex justify-between text-[11px] font-bold">
+        <div class="space-y-0.5">
+          <div class="flex justify-between text-[10px] font-bold">
             <span class="text-cyan-300">💪 Fitness</span>
             <span id="valFitness" class="text-white">80/100</span>
           </div>
-          <div class="h-3 rounded-full bg-slate-900 border border-slate-700 overflow-hidden relative">
+          <div class="h-2.5 rounded-full bg-slate-900 border border-slate-700 overflow-hidden relative">
             <div class="absolute top-0 bottom-0 left-[20%] w-0.5 bg-rose-500/70 z-10"></div>
             <div id="barFitness" class="h-full bg-gradient-to-r from-cyan-500 to-blue-400 transition-all duration-500" style="width:80%"></div>
           </div>
         </div>
 
         <!-- Happiness -->
-        <div class="space-y-1">
-          <div class="flex justify-between text-[11px] font-bold">
+        <div class="space-y-0.5">
+          <div class="flex justify-between text-[10px] font-bold">
             <span class="text-pink-300">🎮 Happiness</span>
             <span id="valHappiness" class="text-white">80/100</span>
           </div>
-          <div class="h-3 rounded-full bg-slate-900 border border-slate-700 overflow-hidden relative">
+          <div class="h-2.5 rounded-full bg-slate-900 border border-slate-700 overflow-hidden relative">
             <div class="absolute top-0 bottom-0 left-[20%] w-0.5 bg-rose-500/70 z-10"></div>
             <div id="barHappiness" class="h-full bg-gradient-to-r from-pink-500 to-purple-400 transition-all duration-500" style="width:80%"></div>
           </div>
         </div>
 
         <!-- Education / Curiosity (Starts at 30 — read articles + bonus questions!) -->
-        <div class="space-y-1">
-          <div class="flex justify-between text-[11px] font-bold">
+        <div class="space-y-0.5">
+          <div class="flex justify-between text-[10px] font-bold">
             <span class="text-amber-300">📚 Education</span>
             <span id="valEducation" class="text-white">30/100</span>
           </div>
@@ -219,8 +284,8 @@
         </div>
 
         <!-- Attention (Tap critter to pet — over-poking lowers it!) -->
-        <div class="space-y-1">
-          <div class="flex justify-between text-[11px] font-bold">
+        <div class="space-y-0.5">
+          <div class="flex justify-between text-[10px] font-bold">
             <span class="text-fuchsia-300">💖 Attention <span class="text-[9px] text-slate-500 font-normal">(tap pet)</span></span>
             <span id="valAttention" class="text-white">75/100</span>
           </div>
@@ -231,66 +296,66 @@
         </div>
 
         <!-- Cascading Neglect Warning -->
-        <div id="crCascadeWarn" class="hidden p-2 rounded-xl bg-rose-950/70 border border-rose-400/50 text-[10px] font-bold text-rose-200"></div>
+        <div id="crCascadeWarn" class="hidden p-1.5 rounded-xl bg-rose-950/70 border border-rose-400/50 text-[10px] font-bold text-rose-200"></div>
       </div>
 
       <!-- Daily 5-Question Unique-Category Quiz CTA -->
-      <div class="p-3 rounded-2xl bg-gradient-to-r from-purple-950/80 to-indigo-950/80 border border-purple-400/40 space-y-2">
+      <div id="crQuizBox" class="p-2.5 rounded-2xl bg-gradient-to-r from-purple-950/80 to-indigo-950/80 border border-purple-400/40 flex flex-col gap-1.5">
         <div class="flex items-center justify-between text-[10px] font-black uppercase">
           <span class="text-amber-300">⚡ Daily 5-Category Quiz</span>
           <span id="crQuizProgress" class="text-cyan-300">0/5 Today</span>
         </div>
         <button type="button" id="crQuizBtn" onclick="openDailyQuiz()"
-                class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition active:scale-95">
+                class="cr-btn w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition active:scale-95">
           🧠 Play Daily 5 Questions &rarr;
         </button>
-        <div id="crNextDayCountdown" class="hidden text-center text-[11px] text-cyan-300 font-bold">
+        <div id="crNextDayCountdown" class="hidden text-center text-[10px] text-cyan-300 font-bold">
           ⏰ Next 5 questions unlock in <span id="crCountdownTxt">--h --m --s</span>
         </div>
       </div>
 
       <!-- Care Actions (Once per day each, 1 Care Token = +25) -->
-      <div class="space-y-1.5">
+      <div class="space-y-1">
         <div class="flex items-center justify-between text-[10px] uppercase text-slate-400 font-bold">
           <span>Daily Care (1×/day each)</span>
           <span class="text-emerald-300">1 🎟️ = +25</span>
         </div>
-        <div class="grid grid-cols-3 gap-2">
+        <div class="grid grid-cols-3 gap-1.5">
           <button type="button" id="btnCareFeed" onclick="doCare('feed')"
-                  class="py-2.5 px-2 rounded-xl bg-emerald-950/70 hover:bg-emerald-900/70 border border-emerald-400/50 text-emerald-200 font-black text-[11px] transition active:scale-95">
+                  class="cr-btn py-2 px-1.5 rounded-xl bg-emerald-950/70 hover:bg-emerald-900/70 border border-emerald-400/50 text-emerald-200 font-black text-[11px] transition active:scale-95">
             🍎 Feed
           </button>
           <button type="button" id="btnCareExercise" onclick="doCare('exercise')"
-                  class="py-2.5 px-2 rounded-xl bg-cyan-950/70 hover:bg-cyan-900/70 border border-cyan-400/50 text-cyan-200 font-black text-[11px] transition active:scale-95">
+                  class="cr-btn py-2 px-1.5 rounded-xl bg-cyan-950/70 hover:bg-cyan-900/70 border border-cyan-400/50 text-cyan-200 font-black text-[11px] transition active:scale-95">
             💪 Train
           </button>
           <button type="button" id="btnCarePlay" onclick="doCare('play')"
-                  class="py-2.5 px-2 rounded-xl bg-pink-950/70 hover:bg-pink-900/70 border border-pink-400/50 text-pink-200 font-black text-[11px] transition active:scale-95">
+                  class="cr-btn py-2 px-1.5 rounded-xl bg-pink-950/70 hover:bg-pink-900/70 border border-pink-400/50 text-pink-200 font-black text-[11px] transition active:scale-95">
             🎮 Play
           </button>
         </div>
       </div>
 
       <!-- Education / Article Reading Bonus (Max 3/day, +5 Edu each) -->
-      <div class="p-2.5 rounded-2xl bg-slate-900/90 border border-amber-400/35 flex items-center justify-between gap-2">
+      <div id="crStudyBox" class="p-2 rounded-2xl bg-slate-900/90 border border-amber-400/35 flex items-center justify-between gap-2">
         <div class="min-w-0">
-          <div class="text-[10px] font-black uppercase text-amber-300">📚 Study Bonus (+5 Edu &bull; <span id="crStudyCount">0/3</span> today)</div>
+          <div class="text-[10px] font-black uppercase text-amber-300">📚 Study Bonus (+5 Edu &bull; <span id="crStudyCount">0/3</span>)</div>
           <div id="crArticleStatus" class="text-[10px] text-slate-400 truncate">Read an article to unlock bonus questions!</div>
         </div>
         <button type="button" id="crStudyBtn" onclick="openArticleBonus()"
-                class="shrink-0 px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] uppercase">
-          📖 Read / Claim
+                class="cr-btn shrink-0 px-2.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] uppercase">
+          📖 Read
         </button>
       </div>
 
       <!-- Customise (Critter Style Area) + Coin Health Shop -->
-      <div class="grid grid-cols-2 gap-2">
+      <div class="grid grid-cols-2 gap-1.5">
         <button type="button" onclick="openModal('customModal')"
-                class="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-purple-500/40 text-purple-200 font-black text-[11px] uppercase transition">
+                class="cr-btn py-2 px-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-purple-500/40 text-purple-200 font-black text-[11px] uppercase transition">
           🎨 Critter Style Area
         </button>
         <button type="button" onclick="openModal('shopModal')"
-                class="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-amber-500/40 text-amber-300 font-black text-[11px] uppercase transition">
+                class="cr-btn py-2 px-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-amber-500/40 text-amber-300 font-black text-[11px] uppercase transition">
           🛒 Health Shop
         </button>
       </div>
