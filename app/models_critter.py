@@ -28,11 +28,12 @@ class CritterCompanion(db.Model):
     name = db.Column(db.String(40), default='Nova')
     appearance_json = db.Column(db.Text, default=lambda: json.dumps(DEFAULT_APPEARANCE))
 
-    # 4 core health stats (0..100). Keep all above 20 or neglect cascades!
+    # 5 core health stats (0..100). Education starts at 30 so neglecting reading soon cascades!
     hunger = db.Column(db.Integer, default=80)
     fitness = db.Column(db.Integer, default=80)
     happiness = db.Column(db.Integer, default=80)
-    education = db.Column(db.Integer, default=80)
+    education = db.Column(db.Integer, default=30)
+    attention = db.Column(db.Integer, default=75)
 
     status = db.Column(db.String(20), default='healthy')  # healthy | warning | sick | fainted
     cascade_warning = db.Column(db.String(200), default='')
@@ -43,6 +44,10 @@ class CritterCompanion(db.Model):
     # Once-per-day care lock ('feed', 'exercise', 'play')
     care_used_date = db.Column(db.Date, nullable=True)
     care_used_json = db.Column(db.Text, default='[]')
+
+    # Study bonus cap: max 3 per UTC day (+5 Education each)
+    study_bonus_date = db.Column(db.Date, nullable=True)
+    study_bonus_count = db.Column(db.Integer, default=0)
 
     # Article reading & comprehension bonus tracking
     articles_read_json = db.Column(db.Text, default='[]')
@@ -101,6 +106,20 @@ class CritterCompanion(db.Model):
         self.care_used_date = today
         self.care_used_json = json.dumps(cur)
 
+    def get_study_bonuses_today(self) -> int:
+        today = datetime.utcnow().date()
+        if self.study_bonus_date != today:
+            return 0
+        return int(self.study_bonus_count or 0)
+
+    def increment_study_bonus_today(self):
+        today = datetime.utcnow().date()
+        if self.study_bonus_date != today:
+            self.study_bonus_date = today
+            self.study_bonus_count = 1
+        else:
+            self.study_bonus_count = int(self.study_bonus_count or 0) + 1
+
     def get_articles_read(self) -> list:
         try:
             return list(json.loads(self.articles_read_json or '[]'))
@@ -133,13 +152,15 @@ class CritterCompanion(db.Model):
         self.hunger = max(0, min(100, int(self.hunger if self.hunger is not None else 80)))
         self.fitness = max(0, min(100, int(self.fitness if self.fitness is not None else 80)))
         self.happiness = max(0, min(100, int(self.happiness if self.happiness is not None else 80)))
-        self.education = max(0, min(100, int(self.education if self.education is not None else 80)))
+        self.education = max(0, min(100, int(self.education if self.education is not None else 30)))
+        self.attention = max(0, min(100, int(self.attention if self.attention is not None else 75)))
 
         stats = {
             'Hunger': self.hunger,
             'Fitness': self.fitness,
             'Happiness': self.happiness,
             'Education': self.education,
+            'Attention': self.attention,
         }
         low_bars = [k for k, v in stats.items() if v <= 20]
         if low_bars:
@@ -171,20 +192,21 @@ class CritterCompanion(db.Model):
             eff_days = min(delta, 4)
             base_drop = eff_days * 14
 
-            # Check if any bar was already neglected (<= 20) — if so, cascade extra -10 to other bars!
             h = self.hunger if self.hunger is not None else 80
             f = self.fitness if self.fitness is not None else 80
             p = self.happiness if self.happiness is not None else 80
-            e = self.education if self.education is not None else 80
+            e = self.education if self.education is not None else 30
+            a = self.attention if self.attention is not None else 75
 
-            low_h, low_f, low_p, low_e = (h <= 20), (f <= 20), (p <= 20), (e <= 20)
-            neglect_count = sum([low_h, low_f, low_p, low_e])
+            low_h, low_f, low_p, low_e, low_a = (h <= 20), (f <= 20), (p <= 20), (e <= 20), (a <= 20)
+            neglect_count = sum([low_h, low_f, low_p, low_e, low_a])
             cascade_extra = (10 * eff_days) if neglect_count > 0 else 0
 
             self.hunger = max(0, h - base_drop - (cascade_extra if not low_h else 0))
             self.fitness = max(0, f - base_drop - (cascade_extra if not low_f else 0))
             self.happiness = max(0, p - base_drop - (cascade_extra if not low_p else 0))
-            self.education = max(0, e - (eff_days * 10) - (cascade_extra if not low_e else 0))
+            self.education = max(0, e - (eff_days * 8) - (cascade_extra if not low_e else 0))
+            self.attention = max(0, a - (eff_days * 12) - (cascade_extra if not low_a else 0))
 
             self.days_alive = (self.days_alive or 1) + delta
         self.last_decay_date = today
@@ -203,11 +225,14 @@ class CritterCompanion(db.Model):
             'hunger': self.hunger if self.hunger is not None else 80,
             'fitness': self.fitness if self.fitness is not None else 80,
             'happiness': self.happiness if self.happiness is not None else 80,
-            'education': self.education if self.education is not None else 80,
+            'education': self.education if self.education is not None else 30,
+            'attention': self.attention if self.attention is not None else 75,
             'status': self.status,
             'cascade_warning': self.cascade_warning or '',
             'care_tokens': self.care_tokens or 0,
             'care_used_today': self.get_care_used_today(),
+            'study_bonuses_today': self.get_study_bonuses_today(),
+            'study_bonus_limit': 3,
             'days_alive': self.days_alive or 1,
             'total_correct': self.total_correct or 0,
             'quiz_done_today': quiz_done_today,

@@ -76,7 +76,7 @@
       <div class="space-y-1">
         <div class="text-[10px] font-black uppercase tracking-wider text-emerald-300">🐾 MONDO CRITTERS · EDUCATION BONUS</div>
         <div id="critterReadMsg" class="text-xs text-slate-300">
-          Keep reading &amp; scrolling for <strong id="critterReadSec" class="text-amber-300">15</strong>s to unlock a bonus question on this article (+25 📚 Education &amp; +20 🪙)!
+          Keep reading &amp; scrolling for <strong id="critterReadSec" class="text-amber-300">15</strong>s to unlock a bonus question on this article (+5 📚 Education &amp; +10 🪙, max 3/day)!
         </div>
       </div>
       <a id="critterReadBtn" href="{{ url_for('critter.critter_home') }}?study={{ post.slug }}"
@@ -109,8 +109,10 @@
           .then(function(d) {
             var m = document.getElementById('critterReadMsg');
             var btn = document.getElementById('critterReadBtn');
-            if (d && d.bonus_ready) {
-              if (m) m.innerHTML = '<span class="text-emerald-300 font-bold">✓ Article read! Claim +25 📚 Education &amp; +20 🪙 by answering a quick bonus question!</span>';
+            if (d && d.limit_reached) {
+              if (m) m.innerHTML = '<span class="text-amber-300 font-bold">✓ Article logged! Daily Study Bonus limit reached today (3/3) — keep reading and come back tomorrow for more bonus points!</span>';
+            } else if (d && d.bonus_ready) {
+              if (m) m.innerHTML = '<span class="text-emerald-300 font-bold">✓ Article read! Claim +5 📚 Education &amp; +10 🪙 by answering a quick bonus question!</span>';
               if (btn) btn.classList.remove('hidden');
             } else {
               if (m) m.innerHTML = '<span class="text-slate-400">✓ You already claimed the Study Bonus for this article.</span>';

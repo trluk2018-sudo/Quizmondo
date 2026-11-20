@@ -121,14 +121,30 @@
         📱 Rotate for full landscape
       </div>
 
-      <!-- Speech / Toast Bubble -->
-      <div id="crToast" class="hidden absolute top-14 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-2xl bg-slate-950/95 border-2 border-cyan-400/60 text-xs font-bold text-cyan-200 shadow-2xl whitespace-nowrap max-w-[90%] truncate"></div>
+      <!-- Thought Bubble coming from the Critter's head -->
+      <div id="crSpeechWrap" class="relative z-20 mb-4 max-w-[88%] sm:max-w-md flex flex-col items-center">
+        <div class="px-5 py-3 rounded-[2rem] bg-slate-950/92 border-2 border-cyan-300/65 shadow-[0_8px_30px_rgba(34,211,238,0.22)] text-center backdrop-blur">
+          <p id="crSpeechText" class="text-[11px] sm:text-xs font-bold text-white leading-snug">
+            Hi! Thanks for looking after me! 💖
+          </p>
+          <div id="crSpeechLinkWrap" class="hidden mt-1.5">
+            <a id="crSpeechLink" href="/posts" class="inline-block px-2.5 py-1 rounded-full bg-amber-400/20 hover:bg-amber-400/30 border border-amber-400/50 text-amber-300 text-[10px] font-black transition">
+              📖 Read Suggested Article &rarr;
+            </a>
+          </div>
+        </div>
+        <!-- Classic Thought-Bubble Dots trailing down to Critter's Brain -->
+        <div class="flex flex-col items-center -mt-1 pointer-events-none">
+          <span class="w-3.5 h-3.5 rounded-full bg-slate-950/95 border-2 border-cyan-300/65 shadow"></span>
+          <span class="w-2 h-2 rounded-full bg-slate-950/95 border border-cyan-300/65 mt-1 ml-3"></span>
+        </div>
+      </div>
 
       <!-- Floating Particles Layer -->
       <div id="crParticles" class="absolute inset-0 pointer-events-none z-20 flex items-center justify-center"></div>
 
-      <!-- The Animated Critter SVG Stage -->
-      <div id="crStageWrap" class="relative z-10 w-48 h-48 sm:w-64 sm:h-64 flex items-center justify-center cursor-pointer" onclick="petCritter()">
+      <!-- The Animated Critter SVG Stage (Tap to pet / pay attention!) -->
+      <div id="crStageWrap" class="relative z-10 w-44 h-44 sm:w-56 sm:h-56 flex items-center justify-center cursor-pointer" onclick="petCritter()" title="Tap to pet! (Not too fast!)">
         <div id="crSvgHost" class="w-full h-full cr-idle"></div>
       </div>
 
@@ -190,15 +206,27 @@
           </div>
         </div>
 
-        <!-- Education / Curiosity (Maintained by reading articles + bonus questions!) -->
+        <!-- Education / Curiosity (Starts at 30 — read articles + bonus questions!) -->
         <div class="space-y-1">
           <div class="flex justify-between text-[11px] font-bold">
             <span class="text-amber-300">📚 Education</span>
-            <span id="valEducation" class="text-white">80/100</span>
+            <span id="valEducation" class="text-white">30/100</span>
           </div>
-          <div class="h-3 rounded-full bg-slate-900 border border-slate-700 overflow-hidden relative">
+          <div class="h-2.5 rounded-full bg-slate-900 border border-slate-700 overflow-hidden relative">
             <div class="absolute top-0 bottom-0 left-[20%] w-0.5 bg-rose-500/70 z-10"></div>
-            <div id="barEducation" class="h-full bg-gradient-to-r from-amber-400 to-yellow-300 transition-all duration-500" style="width:80%"></div>
+            <div id="barEducation" class="h-full bg-gradient-to-r from-amber-400 to-yellow-300 transition-all duration-500" style="width:30%"></div>
+          </div>
+        </div>
+
+        <!-- Attention (Tap critter to pet — over-poking lowers it!) -->
+        <div class="space-y-1">
+          <div class="flex justify-between text-[11px] font-bold">
+            <span class="text-fuchsia-300">💖 Attention <span class="text-[9px] text-slate-500 font-normal">(tap pet)</span></span>
+            <span id="valAttention" class="text-white">75/100</span>
+          </div>
+          <div class="h-2.5 rounded-full bg-slate-900 border border-slate-700 overflow-hidden relative">
+            <div class="absolute top-0 bottom-0 left-[20%] w-0.5 bg-rose-500/70 z-10"></div>
+            <div id="barAttention" class="h-full bg-gradient-to-r from-fuchsia-500 to-pink-400 transition-all duration-500" style="width:75%"></div>
           </div>
         </div>
 
@@ -243,10 +271,10 @@
         </div>
       </div>
 
-      <!-- Education / Article Reading Bonus -->
+      <!-- Education / Article Reading Bonus (Max 3/day, +5 Edu each) -->
       <div class="p-2.5 rounded-2xl bg-slate-900/90 border border-amber-400/35 flex items-center justify-between gap-2">
         <div class="min-w-0">
-          <div class="text-[10px] font-black uppercase text-amber-300">📚 Study Bonus (+25 Edu)</div>
+          <div class="text-[10px] font-black uppercase text-amber-300">📚 Study Bonus (+5 Edu &bull; <span id="crStudyCount">0/3</span> today)</div>
           <div id="crArticleStatus" class="text-[10px] text-slate-400 truncate">Read an article to unlock bonus questions!</div>
         </div>
         <button type="button" id="crStudyBtn" onclick="openArticleBonus()"
@@ -370,8 +398,12 @@
 (function () {
   var critter = {{ critter|tojson }};
   var secondsLeft = {{ seconds_until_midnight }};
+  var lastReadArticle = {{ last_read_article|tojson }};
+  var suggestedArticle = {{ suggested_article|tojson }};
   var currentQuizQ = null;
   var quizLocked = false;
+  var petTapTimes = [];
+  var petBusy = false;
 
   var SPECIES = [
     { id: 'fox', label: 'Nova Fox' }, { id: 'cat', label: 'Cosmic Cat' },
@@ -493,12 +525,42 @@
     '</svg>';
   }
 
+  function showSpeech(msg, linkObj) {
+    var t = document.getElementById('crSpeechText');
+    if (t) t.textContent = msg;
+    var lw = document.getElementById('crSpeechLinkWrap');
+    var lnk = document.getElementById('crSpeechLink');
+    if (lw && lnk) {
+      if (linkObj && linkObj.slug) {
+        lnk.href = '/posts/' + linkObj.slug;
+        lnk.textContent = '📖 Read: ' + linkObj.title + ' →';
+        lw.classList.remove('hidden');
+      } else {
+        lw.classList.add('hidden');
+      }
+    }
+  }
+
   function showToast(msg) {
-    var t = document.getElementById('crToast');
-    t.textContent = msg;
-    t.classList.remove('hidden');
-    clearTimeout(window._crToastTimer);
-    window._crToastTimer = setTimeout(function () { t.classList.add('hidden'); }, 2800);
+    showSpeech(msg, null);
+  }
+
+  function showGreeting() {
+    if (critter.status === 'fainted') {
+      showSpeech('…zzZ… I need a Phoenix Elixir or a fresh hatch!', null);
+      return;
+    }
+    if (critter.status === 'sick' || critter.status === 'warning') {
+      showSpeech("I'm not feeling great — could you feed, train or study with me?", suggestedArticle);
+      return;
+    }
+    if (lastReadArticle && suggestedArticle) {
+      showSpeech('Hi! I loved reading "' + lastReadArticle.title + '" with you! Fancy reading this one next?', suggestedArticle);
+    } else if (suggestedArticle) {
+      showSpeech('Hi! Thanks for looking after me! Want to read something cool together?', suggestedArticle);
+    } else {
+      showSpeech('Hi! Thanks for looking after me! Tap me for a pet or play today\'s 5 questions!', null);
+    }
   }
 
   function spawnParticle(emoji) {
@@ -542,9 +604,10 @@
       Hunger: 'from-emerald-500 to-teal-400',
       Fitness: 'from-cyan-500 to-blue-400',
       Happiness: 'from-pink-500 to-purple-400',
-      Education: 'from-amber-400 to-yellow-300'
+      Education: 'from-amber-400 to-yellow-300',
+      Attention: 'from-fuchsia-500 to-pink-400'
     };
-    ['Hunger', 'Fitness', 'Happiness', 'Education'].forEach(function (k) {
+    ['Hunger', 'Fitness', 'Happiness', 'Education', 'Attention'].forEach(function (k) {
       var val = critter[k.toLowerCase()];
       document.getElementById('val' + k).textContent = val + '/100';
       var bar = document.getElementById('bar' + k);
@@ -577,15 +640,23 @@
       btn.classList.toggle('cursor-not-allowed', done);
     });
 
-    // Article reading bonus status
+    // Article reading bonus status (max 3/day, +5 Edu each)
+    var usedBonuses = critter.study_bonuses_today || 0;
+    var bonusLimit = critter.study_bonus_limit || 3;
+    var scEl = document.getElementById('crStudyCount');
+    if (scEl) scEl.textContent = usedBonuses + '/' + bonusLimit;
+
     var pending = critter.pending_article_bonuses || [];
     var artStatus = document.getElementById('crArticleStatus');
     var studyBtn = document.getElementById('crStudyBtn');
-    if (pending.length > 0) {
-      artStatus.textContent = pending.length + ' article bonus question' + (pending.length > 1 ? 's' : '') + ' ready!';
+    if (usedBonuses >= bonusLimit) {
+      artStatus.textContent = 'Bonus limit reached today (3/3) — you can still read articles!';
+      studyBtn.textContent = '📖 Read More';
+    } else if (pending.length > 0) {
+      artStatus.textContent = pending.length + ' article bonus question' + (pending.length > 1 ? 's' : '') + ' ready (+5 Edu)!';
       studyBtn.textContent = '✨ Claim (' + pending.length + ')';
     } else {
-      artStatus.textContent = (critter.articles_read_count || 0) + ' read · Read an article (15s) to earn +25 Edu!';
+      artStatus.textContent = (critter.articles_read_count || 0) + ' read · Read an article (15s) for +5 Edu!';
       studyBtn.textContent = '📖 Read Articles';
     }
 
@@ -618,11 +689,35 @@
   }
 
   window.petCritter = function () {
-    if (critter.status === 'fainted') return;
-    animateCritter('cr-jump');
-    spawnParticle('💖');
-    if (window.qmPlaySound) window.qmPlaySound('climbStep');
-    showToast(critter.name + ' loves the attention!');
+    if (critter.status === 'fainted' || petBusy) return;
+    petBusy = true;
+    var now = Date.now();
+    petTapTimes = petTapTimes.filter(function (ts) { return (now - ts) < 12000; });
+    petTapTimes.push(now);
+    var annoyed = (petTapTimes.length > 5) || ((critter.attention || 0) >= 96);
+
+    fetch('/arena/critter/pet', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ annoyed: annoyed })
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      petBusy = false;
+      if (!data.success) return;
+      critter = data.critter;
+      syncUI();
+      if (data.mood === 'annoyed') {
+        animateCritter('cr-shiver');
+        spawnParticle('😤');
+        if (window.qmPlaySound) window.qmPlaySound('slip');
+      } else {
+        animateCritter('cr-jump');
+        spawnParticle('💖');
+        if (window.qmPlaySound) window.qmPlaySound('climbStep');
+      }
+      showSpeech(data.message, null);
+    })
+    .catch(function () { petBusy = false; });
   };
 
   window.doCare = function (action) {
@@ -855,8 +950,12 @@
     if (el) el.textContent = (h < 10 ? '0' : '') + h + 'h ' + (m < 10 ? '0' : '') + m + 'm ' + (s < 10 ? '0' : '') + s + 's';
   }, 1000);
 
-  // ARTICLE READING BONUS QUESTION
+  // ARTICLE READING BONUS QUESTION (Max 3/day, +5 Edu each)
   window.openArticleBonus = function (targetSlug) {
+    if ((critter.study_bonuses_today || 0) >= (critter.study_bonus_limit || 3)) {
+      showSpeech('Bonus limit reached today (3/3)! You can still read articles — come back tomorrow for more Study Bonus points!', suggestedArticle);
+      return;
+    }
     var pending = critter.pending_article_bonuses || [];
     if (!targetSlug && !pending.length) {
       window.location.href = '/posts';
@@ -872,12 +971,12 @@
       .then(function (data) {
         if (!data.success) {
           closeModal('quizModal');
-          showToast('📖 ' + data.error);
+          showSpeech(data.error, suggestedArticle);
           return;
         }
         document.getElementById('qzCatBadge').textContent = '📚 STUDY BONUS · ' + data.article_title;
-        document.getElementById('qzCount').textContent = 'BONUS';
-        document.getElementById('qzWrongWarn').textContent = '+25 Edu & +20 🪙';
+        document.getElementById('qzCount').textContent = ((data.study_bonuses_today || 0) + 1) + '/3 TODAY';
+        document.getElementById('qzWrongWarn').textContent = '+5 Edu & +10 🪙';
         document.getElementById('qzPrompt').textContent = data.prompt;
         var optsEl = document.getElementById('qzOptions');
         optsEl.innerHTML = '';
@@ -903,7 +1002,12 @@
     })
     .then(function (r) { return r.json(); })
     .then(function (data) {
-      if (!data.success) { quizLocked = false; return; }
+      if (!data.success) {
+        quizLocked = false;
+        closeModal('quizModal');
+        showSpeech(data.error || 'Bonus limit reached today!', suggestedArticle);
+        return;
+      }
       critter = data.critter;
       document.getElementById('crWallet').textContent = data.wallet_coins;
       syncUI();
@@ -915,12 +1019,12 @@
         animateCritter('cr-jump');
         btn.className = 'p-3.5 rounded-2xl bg-emerald-950/70 border-2 border-emerald-400 text-left text-xs font-black text-emerald-200 flex items-center gap-2.5';
         fb.className = 'p-3 rounded-2xl border text-xs font-bold bg-emerald-950/60 border-emerald-400 text-emerald-200';
-        fb.textContent = '✓ Brilliant recall! +25 📚 Education & +' + data.coins_won + ' 🪙! ' + (data.explanation || '');
+        fb.textContent = '✓ Brilliant recall! +5 📚 Education & +' + data.coins_won + ' 🪙 (' + data.study_bonuses_today + '/3 today)! ' + (data.explanation || '');
       } else {
         if (window.qmPlaySound) window.qmPlaySound('slip');
         btn.className = 'p-3.5 rounded-2xl bg-rose-950/70 border-2 border-rose-400 text-left text-xs font-black text-rose-200 flex items-center gap-2.5';
         fb.className = 'p-3 rounded-2xl border text-xs font-bold bg-amber-950/60 border-amber-400 text-amber-200';
-        fb.textContent = 'Nice try (+5 📚 Education for reading). Correct: ' + data.correct_option + '. ' + (data.explanation || '');
+        fb.textContent = 'Good effort (+2 📚 Education for reading). Correct: ' + data.correct_option + '. ' + (data.explanation || '');
       }
       var nextBtn = document.getElementById('qzNextBtn');
       nextBtn.textContent = 'Back to ' + critter.name + ' →';
@@ -930,6 +1034,7 @@
   }
 
   syncUI();
+  showGreeting();
   // Auto-launch Study Bonus if arriving from an article's "Claim Reading Bonus" button
   var params = new URLSearchParams(window.location.search);
   if (params.get('study')) {

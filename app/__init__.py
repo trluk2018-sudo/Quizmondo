@@ -439,13 +439,19 @@ def _ensure_schema():
         cols_cr = [row[1] for row in db.session.execute(text("PRAGMA table_info(critter_companions)")).fetchall()]
         if cols_cr:
             if 'education' not in cols_cr:
-                db.session.execute(text("ALTER TABLE critter_companions ADD COLUMN education INTEGER DEFAULT 80"))
+                db.session.execute(text("ALTER TABLE critter_companions ADD COLUMN education INTEGER DEFAULT 30"))
+            if 'attention' not in cols_cr:
+                db.session.execute(text("ALTER TABLE critter_companions ADD COLUMN attention INTEGER DEFAULT 75"))
             if 'cascade_warning' not in cols_cr:
                 db.session.execute(text("ALTER TABLE critter_companions ADD COLUMN cascade_warning VARCHAR(200) DEFAULT ''"))
             if 'care_used_date' not in cols_cr:
                 db.session.execute(text("ALTER TABLE critter_companions ADD COLUMN care_used_date DATE"))
             if 'care_used_json' not in cols_cr:
                 db.session.execute(text("ALTER TABLE critter_companions ADD COLUMN care_used_json TEXT DEFAULT '[]'"))
+            if 'study_bonus_date' not in cols_cr:
+                db.session.execute(text("ALTER TABLE critter_companions ADD COLUMN study_bonus_date DATE"))
+            if 'study_bonus_count' not in cols_cr:
+                db.session.execute(text("ALTER TABLE critter_companions ADD COLUMN study_bonus_count INTEGER DEFAULT 0"))
             if 'articles_read_json' not in cols_cr:
                 db.session.execute(text("ALTER TABLE critter_companions ADD COLUMN articles_read_json TEXT DEFAULT '[]'"))
             if 'articles_quizzed_json' not in cols_cr:

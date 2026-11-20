@@ -42,6 +42,8 @@ def _get_or_create_critter(player):
             hunger=80,
             fitness=80,
             happiness=80,
+            education=30,
+            attention=75,
             care_tokens=2,
             days_alive=1,
             last_decay_date=datetime.utcnow().date(),
@@ -109,12 +111,28 @@ def critter_home():
     midnight = (now_utc + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
     seconds_until_midnight = max(0, int((midnight - now_utc).total_seconds()))
 
+    # Ultra-lightweight article memory: last read + 1 unread recommendation
+    read_slugs = critter.get_articles_read()
+    last_read_article = None
+    if read_slugs:
+        lp = Post.query.filter_by(slug=read_slugs[-1], status='publish').first()
+        if lp:
+            last_read_article = {'slug': lp.slug, 'title': lp.title}
+
+    q_sug = Post.query.filter_by(status='publish')
+    if read_slugs:
+        q_sug = q_sug.filter(~Post.slug.in_(read_slugs[-50:]))
+    sp = q_sug.order_by(func.random()).first()
+    suggested_article = {'slug': sp.slug, 'title': sp.title} if sp else None
+
     return render_template(
         'themes/quizhub/arena_critter.html',
         player=player,
         critter=critter.to_dict(),
         seconds_until_midnight=seconds_until_midnight,
         shop_items=SHOP_ITEMS,
+        last_read_article=last_read_article,
+        suggested_article=suggested_article,
     )
 
 
@@ -300,7 +318,8 @@ def critter_shop():
         critter.hunger = 70
         critter.fitness = 70
         critter.happiness = 70
-        critter.education = 70
+        critter.education = 30
+        critter.attention = 70
         critter.sick_penalty_applied = False
         msg = f'✨ Phoenix Elixir worked! {critter.name} is back and glowing!'
     else:
@@ -310,9 +329,10 @@ def critter_shop():
             critter.hunger = min(100, (critter.hunger or 0) + 25)
             critter.fitness = min(100, (critter.fitness or 0) + 25)
             critter.happiness = min(100, (critter.happiness or 0) + 25)
-            critter.education = min(100, (critter.education or 0) + 25)
+            critter.education = min(100, (critter.education or 0) + 15)
+            critter.attention = min(100, (critter.attention or 0) + 25)
             critter.sick_penalty_applied = False
-            msg = f'🧪 Health Tonic boosted all 4 stats +25 and cured sickness!'
+            msg = f'🧪 Health Tonic boosted all stats and cured sickness!'
         elif item_key == 'feast':
             critter.hunger = min(100, (critter.hunger or 0) + 40)
             msg = f'🍖 Gourmet Feast! +40 Hunger!'
@@ -338,7 +358,8 @@ def critter_hatch():
     critter.hunger = 80
     critter.fitness = 80
     critter.happiness = 80
-    critter.education = 80
+    critter.education = 30
+    critter.attention = 75
     critter.care_tokens = 2
     critter.days_alive = 1
     critter.sick_penalty_applied = False
@@ -347,6 +368,45 @@ def critter_hatch():
     critter.last_decay_date = datetime.utcnow().date()
     db.session.commit()
     return jsonify({'success': True, 'message': '🥚 A fresh Mondo Critter hatched!', 'critter': critter.to_dict()})
+
+
+@critter_bp.route('/pet', methods=['POST'])
+def critter_pet():
+    """Pay attention to your critter (unlimited, but over-petting annoys them!)."""
+    if not session.get('user_id'):
+        return jsonify({'success': False, 'error': 'Please sign in first.'}), 401
+    player = get_current_player(persist=True)
+    critter = _get_or_create_critter(player)
+    if critter.status == 'fainted':
+        return jsonify({'success': False, 'error': 'Your critter has fainted — revive or hatch first.'}), 400
+
+    data = request.get_json(silent=True) or {}
+    annoyed = bool(data.get('annoyed'))
+    cur_att = critter.attention if critter.attention is not None else 75
+
+    if annoyed or cur_att >= 98:
+        critter.attention = max(0, cur_att - 12)
+        quips = [
+            f"Hey! Too much poking — give {critter.name} a breather! 😤",
+            "Okay okay, personal space please! 😅",
+            "Whoa, easy on the pats! My fur is getting ruffled!",
+        ]
+        msg = random.choice(quips)
+        mood = 'annoyed'
+    else:
+        critter.attention = min(100, cur_att + 8)
+        quips = [
+            "Ahh, that's nice! 💖",
+            "Thanks for looking after me!",
+            "Hehe, right behind the ears!",
+            f"Hi! {critter.name} is so happy to see you!",
+        ]
+        msg = random.choice(quips)
+        mood = 'happy'
+
+    critter.recalc_status()
+    db.session.commit()
+    return jsonify({'success': True, 'mood': mood, 'message': msg, 'critter': critter.to_dict()})
 
 
 @critter_bp.route('/article-read', methods=['POST'])
@@ -367,10 +427,13 @@ def critter_article_read():
     critter.add_article_read(slug)
     db.session.commit()
     already_quizzed = slug in critter.get_articles_quizzed()
+    limit_reached = critter.get_study_bonuses_today() >= 3
     return jsonify({
         'success': True,
         'slug': slug,
-        'bonus_ready': not already_quizzed,
+        'bonus_ready': (not already_quizzed) and (not limit_reached),
+        'limit_reached': limit_reached,
+        'study_bonuses_today': critter.get_study_bonuses_today(),
         'pending_count': len(critter.pending_article_bonuses()),
     })
 
@@ -387,7 +450,6 @@ def _resolve_article_bonus_question(slug):
             'correct': q['correct'],
             'explanation': q['explanation'],
         }
-    # Smart fallback for any other article: pick a deterministic QuizQuestion seeded by slug
     q = QuizQuestion.query.filter_by(status='approved').order_by(QuizQuestion.id.asc()).all()
     if not q:
         return None
@@ -406,11 +468,18 @@ def _resolve_article_bonus_question(slug):
 
 @critter_bp.route('/article-bonus', methods=['GET'])
 def critter_article_bonus():
-    """Fetch a bonus comprehension question for a recently read article."""
+    """Fetch a bonus comprehension question (max 3 Study Bonuses per UTC day, +5 Edu each)."""
     if not session.get('user_id'):
         return jsonify({'success': False, 'error': 'Please sign in first.'}), 401
     player = get_current_player(persist=True)
     critter = _get_or_create_critter(player)
+
+    if critter.get_study_bonuses_today() >= 3:
+        return jsonify({
+            'success': False,
+            'limit_reached': True,
+            'error': 'Bonus limit reached today (3/3)! You can still read more articles — come back tomorrow for more Study Bonus points!',
+        })
 
     requested_slug = (request.args.get('slug') or '').strip()
     pending = critter.pending_article_bonuses()
@@ -429,17 +498,26 @@ def critter_article_bonus():
         'article_title': post.title if post else slug.replace('-', ' ').title(),
         'prompt': q_data['prompt'],
         'options': q_data['options'],
+        'study_bonuses_today': critter.get_study_bonuses_today(),
         'pending_count': len(pending),
     })
 
 
 @critter_bp.route('/article-bonus/answer', methods=['POST'])
 def critter_article_bonus_answer():
-    """Grade an article comprehension bonus question (+25 Education, +20 Coins)."""
+    """Grade an article comprehension bonus question (+5 Education, +10 Coins; max 3/day)."""
     if not session.get('user_id'):
         return jsonify({'success': False, 'error': 'Please sign in first.'}), 401
     player = get_current_player(persist=True)
     critter = _get_or_create_critter(player)
+
+    if critter.get_study_bonuses_today() >= 3:
+        return jsonify({
+            'success': False,
+            'limit_reached': True,
+            'error': 'Bonus limit reached today (3/3)! Come back tomorrow for more Study Bonus points.',
+        }), 400
+
     data = request.get_json(silent=True) or {}
     slug = (data.get('slug') or '').strip()
     selected = (data.get('selected') or '').strip().upper()
@@ -453,15 +531,15 @@ def critter_article_bonus_answer():
 
     is_correct = (selected == (q_data['correct'] or '').strip().upper())
     critter.add_article_quizzed(slug)
+    critter.increment_study_bonus_today()
     coins_won = 0
     if is_correct:
-        critter.education = min(100, (critter.education or 0) + 25)
-        coins_won = 20
+        critter.education = min(100, (critter.education if critter.education is not None else 30) + 5)
+        coins_won = 10
         player.coins = (player.coins or 0) + coins_won
-        player.xp = (player.xp or 0) + 20
+        player.xp = (player.xp or 0) + 15
     else:
-        # Even a small study attempt gives +5 Education so reading still feels rewarding
-        critter.education = min(100, (critter.education or 0) + 5)
+        critter.education = min(100, (critter.education if critter.education is not None else 30) + 2)
 
     critter.recalc_status()
     db.session.commit()
@@ -472,5 +550,6 @@ def critter_article_bonus_answer():
         'explanation': q_data['explanation'],
         'coins_won': coins_won,
         'wallet_coins': player.coins or 0,
+        'study_bonuses_today': critter.get_study_bonuses_today(),
         'critter': critter.to_dict(),
     })
