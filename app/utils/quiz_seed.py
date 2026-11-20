@@ -1913,6 +1913,19 @@ def seed_quizmondo_full_environment():
         ))
         db.session.commit()
 
+    if not FeaturedGame.query.filter_by(link_url='/arena/critter').first():
+        db.session.add(FeaturedGame(
+            label='DAILY COMPANION',
+            title='Mondo Critters: 100 Animated Pets',
+            image_url='/static/img/critter_hero_bg.svg',
+            link_url='/arena/critter',
+            cta_text='MEET YOUR CRITTER',
+            category_slug='general-knowledge',
+            sort_order=0,
+            is_active=True
+        ))
+        db.session.commit()
+
     _restore_game_arcade_module()
 
     print("QUIZMONDO_SEED_SYNCHRONIZED_SUCCESSFULLY")

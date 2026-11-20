@@ -436,6 +436,22 @@ def _ensure_schema():
                 db.session.execute(text("ALTER TABLE game_challenges ADD COLUMN opponent_double_game VARCHAR(40)"))
             db.session.commit()
 
+        cols_cr = [row[1] for row in db.session.execute(text("PRAGMA table_info(critter_companions)")).fetchall()]
+        if cols_cr:
+            if 'education' not in cols_cr:
+                db.session.execute(text("ALTER TABLE critter_companions ADD COLUMN education INTEGER DEFAULT 80"))
+            if 'cascade_warning' not in cols_cr:
+                db.session.execute(text("ALTER TABLE critter_companions ADD COLUMN cascade_warning VARCHAR(200) DEFAULT ''"))
+            if 'care_used_date' not in cols_cr:
+                db.session.execute(text("ALTER TABLE critter_companions ADD COLUMN care_used_date DATE"))
+            if 'care_used_json' not in cols_cr:
+                db.session.execute(text("ALTER TABLE critter_companions ADD COLUMN care_used_json TEXT DEFAULT '[]'"))
+            if 'articles_read_json' not in cols_cr:
+                db.session.execute(text("ALTER TABLE critter_companions ADD COLUMN articles_read_json TEXT DEFAULT '[]'"))
+            if 'articles_quizzed_json' not in cols_cr:
+                db.session.execute(text("ALTER TABLE critter_companions ADD COLUMN articles_quizzed_json TEXT DEFAULT '[]'"))
+            db.session.commit()
+
         # High-concurrency composite indexes for matchmaking, round lookup, and visual question selection
         db.session.execute(text("CREATE INDEX IF NOT EXISTS ix_qq_cat_type_diff ON quiz_questions (category_slug, question_type, difficulty)"))
         db.session.execute(text("CREATE INDEX IF NOT EXISTS ix_am_p1_status ON arena_matches (player1_session, status)"))
@@ -952,10 +968,10 @@ def _seed_defaults():
     try:
         from .models import QuizPack
         current_seed_ver = SiteSetting.get('quizmondo_seed_version')
-        if current_seed_ver != '2026.11.20.v4' or QuizPack.query.count() < 15:
+        if current_seed_ver != '2026.11.20.v5' or QuizPack.query.count() < 15:
             from .utils.quiz_seed import seed_quizmondo_full_environment
             seed_quizmondo_full_environment()
-            SiteSetting.set('quizmondo_seed_version', '2026.11.20.v4')
+            SiteSetting.set('quizmondo_seed_version', '2026.11.20.v5')
     except Exception as e:
         import logging
         logging.getLogger(__name__).warning(f"Could not synchronize quizmondo seed environment: {e}")

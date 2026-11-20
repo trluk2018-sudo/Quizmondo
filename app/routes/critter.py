@@ -5,8 +5,9 @@ from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, redirect, render_template, request, session, url_for
 from sqlalchemy.sql.expression import func
 
-from ..models import db, QuizQuestion
+from ..models import db, QuizQuestion, Post
 from ..models_critter import CritterCompanion
+from ..utils.article_quiz_bank import ARTICLE_BONUS_QUESTIONS
 from .arena import get_current_player
 from .public import inject_global_data
 
@@ -249,24 +250,32 @@ def critter_care():
     critter = _get_or_create_critter(player)
     if critter.status == 'fainted':
         return jsonify({'success': False, 'error': 'Your critter has fainted — revive it in the Coin Shop or hatch a new one.'}), 400
+
+    action = ((request.get_json(silent=True) or {}).get('action') or '').strip().lower()
+    if action not in ('feed', 'exercise', 'play'):
+        return jsonify({'success': False, 'error': 'Invalid care action.'}), 400
+
+    # Once-per-day / turn lock for each care action
+    if action in critter.get_care_used_today():
+        label = {'feed': 'fed', 'exercise': 'trained', 'play': 'played with'}[action]
+        return jsonify({'success': False, 'error': f"You already {label} {critter.name} today! Come back tomorrow or visit the Coin Shop."}), 400
+
     if (critter.care_tokens or 0) <= 0:
         return jsonify({'success': False, 'error': 'No Care Tokens left! Answer daily questions or visit the Coin Shop.'}), 400
 
-    action = ((request.get_json(silent=True) or {}).get('action') or '').strip().lower()
     if action == 'feed':
         critter.hunger = min(100, (critter.hunger or 0) + 25)
         msg = f'{critter.name} munched a cosmic snack! (+25 Hunger)'
     elif action == 'exercise':
         critter.fitness = min(100, (critter.fitness or 0) + 25)
         msg = f'{critter.name} crushed a workout sprint! (+25 Fitness)'
-    elif action == 'play':
+    else:
         critter.happiness = min(100, (critter.happiness or 0) + 25)
         msg = f'{critter.name} had a blast playing! (+25 Happiness)'
-    else:
-        return jsonify({'success': False, 'error': 'Invalid care action.'}), 400
 
     critter.care_tokens -= 1
-    if min(critter.hunger, critter.fitness, critter.happiness) > 45:
+    critter.mark_care_used_today(action)
+    if min(critter.hunger, critter.fitness, critter.happiness, critter.education or 80) > 45:
         critter.sick_penalty_applied = False
     critter.recalc_status()
     db.session.commit()
@@ -291,6 +300,7 @@ def critter_shop():
         critter.hunger = 70
         critter.fitness = 70
         critter.happiness = 70
+        critter.education = 70
         critter.sick_penalty_applied = False
         msg = f'✨ Phoenix Elixir worked! {critter.name} is back and glowing!'
     else:
@@ -300,8 +310,9 @@ def critter_shop():
             critter.hunger = min(100, (critter.hunger or 0) + 25)
             critter.fitness = min(100, (critter.fitness or 0) + 25)
             critter.happiness = min(100, (critter.happiness or 0) + 25)
+            critter.education = min(100, (critter.education or 0) + 25)
             critter.sick_penalty_applied = False
-            msg = f'🧪 Health Tonic boosted all stats +25 and cured sickness!'
+            msg = f'🧪 Health Tonic boosted all 4 stats +25 and cured sickness!'
         elif item_key == 'feast':
             critter.hunger = min(100, (critter.hunger or 0) + 40)
             msg = f'🍖 Gourmet Feast! +40 Hunger!'
@@ -327,10 +338,139 @@ def critter_hatch():
     critter.hunger = 80
     critter.fitness = 80
     critter.happiness = 80
+    critter.education = 80
     critter.care_tokens = 2
     critter.days_alive = 1
     critter.sick_penalty_applied = False
     critter.status = 'healthy'
+    critter.cascade_warning = ''
     critter.last_decay_date = datetime.utcnow().date()
     db.session.commit()
     return jsonify({'success': True, 'message': '🥚 A fresh Mondo Critter hatched!', 'critter': critter.to_dict()})
+
+
+@critter_bp.route('/article-read', methods=['POST'])
+def critter_article_read():
+    """Record a genuinely read article (>=15s dwell + scroll on /posts/<slug>)."""
+    if not session.get('user_id'):
+        return jsonify({'success': False, 'logged_in': False}), 200
+    player = get_current_player(persist=True)
+    critter = _get_or_create_critter(player)
+    slug = ((request.get_json(silent=True) or {}).get('slug') or '').strip()[:120]
+    if not slug:
+        return jsonify({'success': False, 'error': 'Missing slug'}), 400
+
+    post = Post.query.filter_by(slug=slug, status='publish').first()
+    if not post:
+        return jsonify({'success': False, 'error': 'Article not found'}), 404
+
+    critter.add_article_read(slug)
+    db.session.commit()
+    already_quizzed = slug in critter.get_articles_quizzed()
+    return jsonify({
+        'success': True,
+        'slug': slug,
+        'bonus_ready': not already_quizzed,
+        'pending_count': len(critter.pending_article_bonuses()),
+    })
+
+
+def _resolve_article_bonus_question(slug):
+    """Return a comprehension question for this slug (bespoke bank or smart fallback)."""
+    if slug in ARTICLE_BONUS_QUESTIONS:
+        q = ARTICLE_BONUS_QUESTIONS[slug]
+        return {
+            'source': 'bank',
+            'slug': slug,
+            'prompt': q['prompt'],
+            'options': q['options'],
+            'correct': q['correct'],
+            'explanation': q['explanation'],
+        }
+    # Smart fallback for any other article: pick a deterministic QuizQuestion seeded by slug
+    q = QuizQuestion.query.filter_by(status='approved').order_by(QuizQuestion.id.asc()).all()
+    if not q:
+        return None
+    idx = sum(ord(ch) for ch in slug) % len(q)
+    picked = q[idx]
+    return {
+        'source': 'db',
+        'slug': slug,
+        'question_id': picked.id,
+        'prompt': picked.prompt,
+        'options': picked.get_options(),
+        'correct': picked.correct_option,
+        'explanation': picked.explanation or '',
+    }
+
+
+@critter_bp.route('/article-bonus', methods=['GET'])
+def critter_article_bonus():
+    """Fetch a bonus comprehension question for a recently read article."""
+    if not session.get('user_id'):
+        return jsonify({'success': False, 'error': 'Please sign in first.'}), 401
+    player = get_current_player(persist=True)
+    critter = _get_or_create_critter(player)
+
+    requested_slug = (request.args.get('slug') or '').strip()
+    pending = critter.pending_article_bonuses()
+    slug = requested_slug if (requested_slug and requested_slug in pending) else (pending[-1] if pending else None)
+    if not slug:
+        return jsonify({'success': False, 'error': 'Read an article on Guides & Facts for at least 15 seconds first to unlock a Study Bonus!'})
+
+    q_data = _resolve_article_bonus_question(slug)
+    if not q_data:
+        return jsonify({'success': False, 'error': 'No bonus question available right now.'}), 404
+
+    post = Post.query.filter_by(slug=slug).first()
+    return jsonify({
+        'success': True,
+        'slug': slug,
+        'article_title': post.title if post else slug.replace('-', ' ').title(),
+        'prompt': q_data['prompt'],
+        'options': q_data['options'],
+        'pending_count': len(pending),
+    })
+
+
+@critter_bp.route('/article-bonus/answer', methods=['POST'])
+def critter_article_bonus_answer():
+    """Grade an article comprehension bonus question (+25 Education, +20 Coins)."""
+    if not session.get('user_id'):
+        return jsonify({'success': False, 'error': 'Please sign in first.'}), 401
+    player = get_current_player(persist=True)
+    critter = _get_or_create_critter(player)
+    data = request.get_json(silent=True) or {}
+    slug = (data.get('slug') or '').strip()
+    selected = (data.get('selected') or '').strip().upper()
+
+    if slug not in critter.pending_article_bonuses():
+        return jsonify({'success': False, 'error': 'This article bonus has already been claimed or not yet read.'}), 400
+
+    q_data = _resolve_article_bonus_question(slug)
+    if not q_data:
+        return jsonify({'success': False, 'error': 'Question not found.'}), 404
+
+    is_correct = (selected == (q_data['correct'] or '').strip().upper())
+    critter.add_article_quizzed(slug)
+    coins_won = 0
+    if is_correct:
+        critter.education = min(100, (critter.education or 0) + 25)
+        coins_won = 20
+        player.coins = (player.coins or 0) + coins_won
+        player.xp = (player.xp or 0) + 20
+    else:
+        # Even a small study attempt gives +5 Education so reading still feels rewarding
+        critter.education = min(100, (critter.education or 0) + 5)
+
+    critter.recalc_status()
+    db.session.commit()
+    return jsonify({
+        'success': True,
+        'correct': is_correct,
+        'correct_option': q_data['correct'],
+        'explanation': q_data['explanation'],
+        'coins_won': coins_won,
+        'wallet_coins': player.coins or 0,
+        'critter': critter.to_dict(),
+    })

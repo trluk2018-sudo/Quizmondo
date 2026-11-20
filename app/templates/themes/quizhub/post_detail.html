@@ -70,6 +70,58 @@
       {{ post.content|safe }}
     </div>
 
+    {% if session.get('user_id') %}
+    <!-- Mondo Critters Article Reading Bonus Card -->
+    <div id="critterReadCard" class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950/60 via-slate-900 to-purple-950/60 border border-emerald-400/40 font-mono flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="space-y-1">
+        <div class="text-[10px] font-black uppercase tracking-wider text-emerald-300">🐾 MONDO CRITTERS · EDUCATION BONUS</div>
+        <div id="critterReadMsg" class="text-xs text-slate-300">
+          Keep reading &amp; scrolling for <strong id="critterReadSec" class="text-amber-300">15</strong>s to unlock a bonus question on this article (+25 📚 Education &amp; +20 🪙)!
+        </div>
+      </div>
+      <a id="critterReadBtn" href="{{ url_for('critter.critter_home') }}?study={{ post.slug }}"
+         class="hidden shrink-0 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition">
+        📚 Answer Bonus Question &rarr;
+      </a>
+    </div>
+    <script>
+    (function() {
+      var secs = 15, scrolled = false, logged = false;
+      window.addEventListener('scroll', function() { if (window.scrollY > 120) scrolled = true; }, { passive: true });
+      var t = setInterval(function() {
+        if (document.hidden) return;
+        if (secs > 0) secs--;
+        var secEl = document.getElementById('critterReadSec');
+        if (secEl) secEl.textContent = secs;
+        if (secs <= 0 && !logged) {
+          if (!scrolled && document.body.scrollHeight > window.innerHeight + 180) {
+            var m = document.getElementById('critterReadMsg');
+            if (m) m.textContent = 'Scroll down through the article to unlock your Mondo Critters Study Bonus!';
+            return;
+          }
+          logged = true;
+          clearInterval(t);
+          fetch('/arena/critter/article-read', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ slug: {{ post.slug|tojson }} })
+          })
+          .then(function(r) { return r.json(); })
+          .then(function(d) {
+            var m = document.getElementById('critterReadMsg');
+            var btn = document.getElementById('critterReadBtn');
+            if (d && d.bonus_ready) {
+              if (m) m.innerHTML = '<span class="text-emerald-300 font-bold">✓ Article read! Claim +25 📚 Education &amp; +20 🪙 by answering a quick bonus question!</span>';
+              if (btn) btn.classList.remove('hidden');
+            } else {
+              if (m) m.innerHTML = '<span class="text-slate-400">✓ You already claimed the Study Bonus for this article.</span>';
+            }
+          }).catch(function(){});
+        }
+      }, 1000);
+    })();
+    </script>
+    {% endif %}
+
     <div class="pt-8 border-t border-purple-500/20 flex items-center justify-between text-xs font-mono">
       <a href="{{ url_for('public.posts') }}" class="text-amber-400 hover:text-amber-300 font-bold">&larr; Back to Dispatches</a>
       <a href="{{ url_for('public.home') }}" class="text-cyan-400 hover:text-cyan-300 font-bold">Arena Home &rarr;</a>

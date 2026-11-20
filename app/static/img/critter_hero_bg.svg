@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#130833"/>
+      <stop offset="55%" stop-color="#0b1030"/>
+      <stop offset="100%" stop-color="#062129"/>
+    </linearGradient>
+    <radialGradient id="g1"><stop offset="0%" stop-color="#34d399" stop-opacity=".42"/><stop offset="100%" stop-color="#34d399" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g2"><stop offset="0%" stop-color="#f472b6" stop-opacity=".38"/><stop offset="100%" stop-color="#f472b6" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <ellipse cx="180" cy="120" rx="280" ry="200" fill="url(#g1)"/>
+  <ellipse cx="640" cy="340" rx="300" ry="200" fill="url(#g2)"/>
+  <path d="M0 360 Q220 310 460 355 T800 340 L800 450 L0 450 Z" fill="#064e3b" opacity=".55"/>
+  <path d="M0 390 Q300 350 600 390 T800 380 L800 450 L0 450 Z" fill="#052e16" opacity=".85"/>
+  <!-- Stars -->
+  <circle cx="95" cy="70" r="2.5" fill="#fde047"/><circle cx="280" cy="48" r="2" fill="#e2e8f0"/>
+  <circle cx="620" cy="65" r="2.5" fill="#22d3ee"/><circle cx="720" cy="115" r="2" fill="#f472b6"/>
+  <!-- Three Cute Neon Critters -->
+  <!-- Left: Cosmic Cat -->
+  <g transform="translate(150,175) scale(1.1)">
+    <polygon points="44,54 32,20 66,42" fill="#a78bfa"/><polygon points="116,54 128,20 94,42" fill="#a78bfa"/>
+    <ellipse cx="80" cy="92" rx="44" ry="46" fill="#a78bfa"/>
+    <ellipse cx="80" cy="108" rx="28" ry="26" fill="#ffffff" opacity=".28"/>
+    <polygon points="56,38 62,16 74,30 80,14 86,30 98,16 104,38" fill="#fbbf24"/>
+    <circle cx="62" cy="75" r="7.5" fill="#0f172a"/><circle cx="98" cy="75" r="7.5" fill="#0f172a"/>
+    <circle cx="65" cy="72" r="2.6" fill="#fff"/><circle cx="101" cy="72" r="2.6" fill="#fff"/>
+    <path d="M70 89 Q80 99 90 89" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <!-- Center: Nova Fox (Hero) -->
+  <g transform="translate(300,135) scale(1.35)">
+    <polygon points="44,54 32,20 66,42" fill="#22d3ee"/><polygon points="116,54 128,20 94,42" fill="#22d3ee"/>
+    <ellipse cx="80" cy="92" rx="44" ry="46" fill="#22d3ee"/>
+    <ellipse cx="80" cy="108" rx="28" ry="26" fill="#ffffff" opacity=".3"/>
+    <path d="M52 40 C54 18 106 18 108 40 Z" fill="#ec4899"/><circle cx="80" cy="14" r="6" fill="#f8fafc"/>
+    <rect x="48" y="104" width="64" height="13" rx="6" fill="#f43f5e"/><rect x="64" y="104" width="10" height="13" fill="#fbbf24"/>
+    <circle cx="62" cy="75" r="7.5" fill="#0f172a"/><circle cx="98" cy="75" r="7.5" fill="#0f172a"/>
+    <circle cx="65" cy="72" r="2.6" fill="#fff"/><circle cx="101" cy="72" r="2.6" fill="#fff"/>
+    <path d="M70 89 Q80 99 90 89" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <!-- Right: Ember Dragon -->
+  <g transform="translate(495,180) scale(1.08)">
+    <polygon points="50,42 40,18 62,36" fill="#fbbf24"/><polygon points="110,42 120,18 98,36" fill="#fbbf24"/>
+    <ellipse cx="80" cy="92" rx="44" ry="46" fill="#34d399"/>
+    <ellipse cx="80" cy="108" rx="28" ry="26" fill="#ffffff" opacity=".28"/>
+    <ellipse cx="80" cy="16" rx="26" ry="7" fill="none" stroke="#fde047" stroke-width="4"/>
+    <circle cx="62" cy="75" r="7.5" fill="#0f172a"/><circle cx="98" cy="75" r="7.5" fill="#0f172a"/>
+    <circle cx="65" cy="72" r="2.6" fill="#fff"/><circle cx="101" cy="72" r="2.6" fill="#fff"/>
+    <path d="M70 89 Q80 99 90 89" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <!-- Top Header -->
+  <text x="400" y="66" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="38" font-weight="bold" fill="#f8fafc">MONDO CRITTERS</text>
+  <text x="400" y="96" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="16" fill="#67e8f9">100 Animated Pets • Daily 5-Category Quiz • Read Articles to Level Up</text>
+</svg>
