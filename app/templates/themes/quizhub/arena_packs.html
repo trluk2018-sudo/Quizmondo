@@ -35,16 +35,33 @@
       </div>
     </div>
 
-    <!-- Category Filter Chips (Touch Friendly on Mobile) -->
-    <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none font-mono text-xs">
-      <button type="button" onclick="filterCategory('all', this)" class="cat-pill active px-4 py-2.5 rounded-xl bg-cyan-500 text-slate-950 font-bold border border-cyan-400 shadow transition whitespace-nowrap active:scale-95 cursor-pointer" style="touch-action: manipulation;">
-        🌟 All Decks ({{ packs|length }})
-      </button>
-      {% for p in packs %}
-      <button type="button" onclick="filterCategory('{{ p.category_slug }}', this)" class="cat-pill px-3.5 py-2.5 rounded-xl bg-slate-900 border border-purple-500/30 text-slate-300 hover:text-white hover:border-cyan-400 transition whitespace-nowrap active:scale-95 cursor-pointer" style="touch-action: manipulation;">
-        {{ p.icon }} {{ p.title }}
-      </button>
-      {% endfor %}
+    <!-- Category Filter Chips (Cleanly Wrapped Across All Devices — Zero Cut-off) -->
+    <div class="space-y-3 font-mono text-xs">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div class="relative w-full sm:w-72">
+          <input type="text" id="packSearchInput" oninput="searchPacks(this.value)" placeholder="🔍 Search decks &amp; categories..."
+                 class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-purple-500/35 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-cyan-400">
+        </div>
+        {% if packs|length > 7 %}
+        <button type="button" id="toggleMoreCatsBtn" onclick="toggleMoreCategories()"
+                class="self-start sm:self-auto px-3.5 py-2 rounded-xl bg-slate-900 border border-cyan-500/40 text-cyan-300 hover:bg-slate-800 text-[11px] font-bold transition cursor-pointer">
+          ▾ Show All {{ packs|length }} Categories
+        </button>
+        {% endif %}
+      </div>
+
+      <div id="catPillsContainer" class="flex flex-wrap items-center gap-2">
+        <button type="button" onclick="filterCategory('all', this)" class="cat-pill active px-3.5 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold border border-cyan-400 shadow transition active:scale-95 cursor-pointer" style="touch-action: manipulation;">
+          🌟 All Decks ({{ packs|length }})
+        </button>
+        {% for p in packs %}
+        <button type="button" onclick="filterCategory('{{ p.category_slug }}', this)"
+                class="cat-pill {% if loop.index > 7 %}extra-cat-pill hidden{% endif %} px-3 py-2 rounded-xl bg-slate-900 border border-purple-500/30 text-slate-300 hover:text-white hover:border-cyan-400 transition active:scale-95 cursor-pointer"
+                style="touch-action: manipulation;">
+          {{ p.icon }} {{ p.title }}
+        </button>
+        {% endfor %}
+      </div>
     </div>
 
     <!-- Packs Grid -->
@@ -110,11 +127,40 @@
 </div>
 
 <script>
-function filterCategory(catSlug, btn) {
-  document.querySelectorAll('.cat-pill').forEach(function(p) {
-    p.className = 'cat-pill px-3.5 py-2.5 rounded-xl bg-slate-900 border border-purple-500/30 text-slate-300 hover:text-white hover:border-cyan-400 transition whitespace-nowrap active:scale-95 cursor-pointer';
+var showingAllCats = false;
+
+function toggleMoreCategories() {
+  showingAllCats = !showingAllCats;
+  document.querySelectorAll('.extra-cat-pill').forEach(function(p) {
+    p.classList.toggle('hidden', !showingAllCats);
   });
-  btn.className = 'cat-pill active px-4 py-2.5 rounded-xl bg-cyan-500 text-slate-950 font-bold border border-cyan-400 shadow transition whitespace-nowrap active:scale-95 cursor-pointer';
+  var btn = document.getElementById('toggleMoreCatsBtn');
+  if (btn) {
+    btn.textContent = showingAllCats ? '▴ Show Fewer Categories' : '▾ Show All {{ packs|length }} Categories';
+  }
+}
+
+function searchPacks(query) {
+  var q = (query || '').trim().toLowerCase();
+  var cards = document.querySelectorAll('.pack-card');
+  cards.forEach(function(card) {
+    var txt = (card.textContent || '').toLowerCase();
+    card.style.display = (!q || txt.indexOf(q) !== -1) ? 'flex' : 'none';
+  });
+}
+
+function filterCategory(catSlug, btn) {
+  var searchEl = document.getElementById('packSearchInput');
+  if (searchEl) searchEl.value = '';
+  document.querySelectorAll('.cat-pill').forEach(function(p) {
+    var isExtra = p.classList.contains('extra-cat-pill');
+    var isHidden = isExtra && !showingAllCats;
+    p.className = 'cat-pill ' + (isExtra ? 'extra-cat-pill ' : '') + (isHidden ? 'hidden ' : '') +
+      'px-3 py-2 rounded-xl bg-slate-900 border border-purple-500/30 text-slate-300 hover:text-white hover:border-cyan-400 transition active:scale-95 cursor-pointer';
+  });
+  var btnExtra = btn.classList.contains('extra-cat-pill');
+  btn.className = 'cat-pill active ' + (btnExtra ? 'extra-cat-pill ' : '') +
+    'px-3.5 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold border border-cyan-400 shadow transition active:scale-95 cursor-pointer';
 
   var cards = document.querySelectorAll('.pack-card');
   cards.forEach(function(card) {
