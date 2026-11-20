@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Mondo Critters • Quizmondo Arena</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="{{ url_for('static', filename='js/qm_arcade_audio.js') }}" defer></script>
@@ -56,9 +56,21 @@
     }
 
     /* Compact phone-landscape fit (e.g. 360px–430px tall) so every bar & button fits 100% with zero scroll */
+    #crHeaderCritterPill { display: none; }
     @media (orientation: landscape) and (max-height: 480px) {
-      #crHeader { height: 2.3rem !important; padding: 0 0.75rem !important; }
-      #crControls { padding: 0.4rem 0.65rem !important; gap: 0.32rem !important; }
+      #crHeader {
+        height: 2.85rem !important;
+        padding-left: max(0.85rem, env(safe-area-inset-left)) !important;
+        padding-right: max(0.85rem, env(safe-area-inset-right)) !important;
+      }
+      #crHeaderTitle { display: none !important; }
+      #crHeaderCritterPill { display: inline-flex !important; }
+      #crHabitatNamePill { display: none !important; }
+      #crControls {
+        padding: 0.4rem 0.65rem !important;
+        padding-left: max(0.65rem, env(safe-area-inset-left)) !important;
+        gap: 0.32rem !important;
+      }
       #crBarsBox { gap: 0.22rem !important; }
       #crStageWrap { width: 8.5rem !important; height: 8.5rem !important; }
       #crSpeechWrap { margin-bottom: 0.25rem !important; max-width: 92% !important; }
@@ -105,16 +117,23 @@
 <div class="h-full w-full flex flex-col">
 
   <!-- Slim Top Arcade HUD -->
-  <header id="crHeader" class="shrink-0 h-11 px-3 sm:px-5 bg-slate-950/90 border-b border-purple-500/30 flex items-center justify-between gap-2 z-20">
+  <header id="crHeader" class="relative shrink-0 h-12 px-3 sm:px-5 bg-slate-950/95 border-b border-purple-500/30 flex items-center justify-between gap-2 z-30">
     <div class="flex items-center gap-2 min-w-0">
       <a href="{{ url_for('arena.dashboard') }}" onclick="try{sessionStorage.removeItem('qm_rotate_dismissed');}catch(e){}"
-         class="px-2.5 py-1 rounded-lg bg-slate-900 border border-purple-500/35 hover:border-cyan-400 text-[11px] font-bold text-cyan-300 shrink-0">
+         class="min-h-[36px] min-w-[68px] px-3.5 py-1.5 rounded-xl bg-slate-900 active:bg-slate-800 border border-purple-500/45 hover:border-cyan-400 text-xs font-black text-cyan-300 inline-flex items-center justify-center shrink-0 transition active:scale-95 touch-manipulation">
         &larr; Exit
       </a>
-      <span class="text-xs sm:text-sm font-black text-white truncate">
+      <span id="crHeaderTitle" class="text-xs sm:text-sm font-black text-white truncate">
         ✨ MONDO CRITTERS
       </span>
-      <span id="crDaysPill" class="hidden sm:inline-block px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-400/30 text-[10px] font-bold text-purple-200">
+      <!-- Mobile-landscape Critter Name & Status Pill (replaces floating habitat badge so thought bubble never overlaps) -->
+      <div id="crHeaderCritterPill" class="items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900/90 border border-purple-400/40 min-w-0">
+        <span id="crNameLabelMob" class="text-xs font-black text-white truncate max-w-[110px]">{{ critter.name }}</span>
+        <span id="crStatusBadgeMob" class="px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shrink-0">
+          HEALTHY
+        </span>
+      </div>
+      <span id="crDaysPill" class="hidden sm:inline-block px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-400/30 text-[10px] font-bold text-purple-200 shrink-0">
         Day {{ critter.days_alive }}
       </span>
     </div>
@@ -127,7 +146,7 @@
         🎟️ <span id="crTokens">{{ critter.care_tokens }}</span> Care
       </span>
       <button type="button" onclick="toggleFullScreen()" title="Fullscreen"
-              class="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-400 text-xs text-slate-300">
+              class="min-h-[36px] min-w-[36px] px-2.5 py-1 rounded-xl bg-slate-900 active:bg-slate-800 border border-slate-700 hover:border-cyan-400 text-sm text-slate-300 inline-flex items-center justify-center transition active:scale-95 touch-manipulation">
         ⛶
       </button>
     </div>
@@ -176,8 +195,8 @@
         <ellipse cx="450" cy="415" rx="92" ry="18" fill="#020617" opacity=".55"/>
       </svg>
 
-      <!-- Name & Status Pill (Top-Left of Habitat) -->
-      <div class="absolute top-3 left-3 z-10 flex items-center gap-2">
+      <!-- Name & Status Pill (Top-Left of Habitat on Desktop/Tablet; moved to top bar on Mobile Landscape) -->
+      <div id="crHabitatNamePill" class="absolute top-3 left-3 z-10 flex items-center gap-2">
         <div class="px-3 py-1.5 rounded-2xl bg-slate-950/80 border border-purple-400/40 backdrop-blur flex items-center gap-2 shadow-lg">
           <span id="crNameLabel" class="text-sm font-black text-white">{{ critter.name }}</span>
           <span id="crStatusBadge" class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
@@ -196,6 +215,12 @@
             <a id="crSpeechLink" href="/posts" class="inline-block px-2.5 py-1 rounded-full bg-amber-400/20 hover:bg-amber-400/30 border border-amber-400/50 text-amber-300 text-[10px] font-black transition">
               📖 Read Suggested Article &rarr;
             </a>
+          </div>
+          <div id="crSpeechActionWrap" class="hidden mt-1.5">
+            <button type="button" id="crSpeechActionBtn" onclick="openStyleForNaming()"
+                    class="px-3 py-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-purple-500 text-slate-950 text-[10px] sm:text-[11px] font-black uppercase tracking-wide shadow transition active:scale-95">
+              ✨ Name &amp; Style Me &rarr;
+            </button>
           </div>
         </div>
         <!-- Classic Thought-Bubble Dots trailing down to Critter's Brain -->
@@ -462,6 +487,7 @@
 <script>
 (function () {
   var critter = {{ critter|tojson }};
+  var playerName = {{ (player.display_name or 'Player')|tojson }};
   var secondsLeft = {{ seconds_until_midnight }};
   var lastReadArticle = {{ last_read_article|tojson }};
   var suggestedArticle = {{ suggested_article|tojson }};
@@ -590,7 +616,7 @@
     '</svg>';
   }
 
-  function showSpeech(msg, linkObj) {
+  function showSpeech(msg, linkObj, showNameBtn) {
     var t = document.getElementById('crSpeechText');
     if (t) t.textContent = msg;
     var lw = document.getElementById('crSpeechLinkWrap');
@@ -604,27 +630,53 @@
         lw.classList.add('hidden');
       }
     }
+    var aw = document.getElementById('crSpeechActionWrap');
+    if (aw) {
+      if (showNameBtn) aw.classList.remove('hidden');
+      else aw.classList.add('hidden');
+    }
   }
 
+  window.openStyleForNaming = function () {
+    openModal('customModal');
+    setTimeout(function () {
+      var inp = document.getElementById('custName');
+      if (inp) { inp.focus(); inp.select(); }
+    }, 80);
+  };
+
   function showToast(msg) {
-    showSpeech(msg, null);
+    showSpeech(msg, null, false);
+  }
+
+  function needsFirstTimeName() {
+    if (!critter || critter.name !== 'Nova') return false;
+    try {
+      return !localStorage.getItem('qm_critter_named_' + (critter.id || '0'));
+    } catch (e) {
+      return false;
+    }
   }
 
   function showGreeting() {
     if (critter.status === 'fainted') {
-      showSpeech('…zzZ… I need a Phoenix Elixir or a fresh hatch!', null);
+      showSpeech('…zzZ… I need a Phoenix Elixir or a fresh hatch!', null, false);
+      return;
+    }
+    if (needsFirstTimeName()) {
+      showSpeech('Hi ' + playerName + '! 👋 I\'m brand new — want to give me a name and pick my style?', null, true);
       return;
     }
     if (critter.status === 'sick' || critter.status === 'warning') {
-      showSpeech("I'm not feeling great — could you feed, train or study with me?", suggestedArticle);
+      showSpeech("I'm not feeling great — could you feed, train or study with me?", suggestedArticle, false);
       return;
     }
     if (lastReadArticle && suggestedArticle) {
-      showSpeech('Hi! I loved reading "' + lastReadArticle.title + '" with you! Fancy reading this one next?', suggestedArticle);
+      showSpeech('Hi ' + playerName + '! I loved reading "' + lastReadArticle.title + '" with you! Fancy reading this one next?', suggestedArticle, false);
     } else if (suggestedArticle) {
-      showSpeech('Hi! Thanks for looking after me! Want to read something cool together?', suggestedArticle);
+      showSpeech('Hi ' + playerName + '! Thanks for looking after me! Want to read something cool together?', suggestedArticle, false);
     } else {
-      showSpeech('Hi! Thanks for looking after me! Tap me for a pet or play today\'s 5 questions!', null);
+      showSpeech('Hi ' + playerName + '! Thanks for looking after me! Tap me for a pet or play today\'s 5 questions!', null, false);
     }
   }
 
@@ -647,22 +699,36 @@
 
   function syncUI() {
     document.getElementById('crNameLabel').textContent = critter.name;
+    var mobName = document.getElementById('crNameLabelMob');
+    if (mobName) mobName.textContent = critter.name;
     document.getElementById('crDaysPill').textContent = 'Day ' + critter.days_alive;
     document.getElementById('crTokens').textContent = critter.care_tokens;
 
     var badge = document.getElementById('crStatusBadge');
+    var mobBadge = document.getElementById('crStatusBadgeMob');
+    var bText = 'HEALTHY';
+    var bCls = 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-400/40';
+    var mText = 'HEALTHY';
+    var mCls = 'px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shrink-0';
     if (critter.status === 'fainted') {
-      badge.textContent = 'FAINTED';
-      badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-500/30 text-rose-200 border border-rose-400';
+      bText = mText = 'FAINTED';
+      bCls = 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-500/30 text-rose-200 border border-rose-400';
+      mCls = 'px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-rose-500/30 text-rose-200 border border-rose-400 shrink-0';
     } else if (critter.status === 'sick') {
-      badge.textContent = 'SICK — HEAL SOON!';
-      badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-500/25 text-rose-300 border border-rose-400 animate-pulse';
+      bText = 'SICK — HEAL SOON!';
+      mText = 'SICK!';
+      bCls = 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-500/25 text-rose-300 border border-rose-400 animate-pulse';
+      mCls = 'px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-rose-500/25 text-rose-300 border border-rose-400 animate-pulse shrink-0';
     } else if (critter.status === 'warning') {
-      badge.textContent = 'LOW HEALTH';
-      badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-500/25 text-amber-300 border border-amber-400';
-    } else {
-      badge.textContent = 'HEALTHY';
-      badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-400/40';
+      bText = mText = 'LOW HEALTH';
+      bCls = 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-500/25 text-amber-300 border border-amber-400';
+      mCls = 'px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-500/25 text-amber-300 border border-amber-400 shrink-0';
+    }
+    badge.textContent = bText;
+    badge.className = bCls;
+    if (mobBadge) {
+      mobBadge.textContent = mText;
+      mobBadge.className = mCls;
     }
 
     var barGrad = {
@@ -984,11 +1050,12 @@
     .then(function (data) {
       if (!data.success) return;
       critter = data.critter;
+      try { localStorage.setItem('qm_critter_named_' + (critter.id || '0'), '1'); } catch (e) {}
       closeModal('customModal');
       syncUI();
       animateCritter('cr-jump');
       spawnParticle('✨');
-      showToast('✨ ' + critter.name + ' looks awesome!');
+      showSpeech('✨ Yay! I love being called ' + critter.name + '! Thanks ' + playerName + '!', suggestedArticle, false);
     });
   };
 
