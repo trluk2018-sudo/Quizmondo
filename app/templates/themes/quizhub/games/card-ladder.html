@@ -1,0 +1,375 @@
+{% extends "themes/quizhub/games/_shell.html" %}
+
+{% block hud_mid_label %}Row{% endblock %}
+{% block hud_mid_value %}1/3{% endblock %}
+
+{% block game_stage %}
+<style>
+  .cl-card-wrap { perspective: 800px; }
+  .cl-card-inner {
+    position: relative; width: 100%; aspect-ratio: 5 / 7;
+    transform-style: preserve-3d; transition: transform 0.48s cubic-bezier(.22,.9,.36,1);
+  }
+  .cl-card-inner.flipped { transform: rotateY(180deg); }
+  .cl-face {
+    position: absolute; inset: 0; backface-visibility: hidden;
+    border-radius: 0.9rem; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .cl-back {
+    background: linear-gradient(135deg, #312e81 0%, #1e1b4b 55%, #0f172a 100%);
+    border: 2px solid rgba(168,85,247,0.45);
+  }
+  .cl-front {
+    transform: rotateY(180deg);
+    background: linear-gradient(160deg, #ffffff 0%, #f1f5f9 100%);
+    border: 2px solid #cbd5e1;
+  }
+  .cl-active-ring { box-shadow: 0 0 0 3px #22d3ee, 0 0 22px rgba(34,211,238,0.45); border-radius: 0.95rem; }
+  @keyframes clHostBob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+  .cl-host-bob { animation: clHostBob 2.4s ease-in-out infinite; }
+</style>
+
+<div class="space-y-4 font-mono">
+  <!-- Animated Game Show Host + Live Speech Bubble -->
+  <div class="p-3.5 sm:p-4 rounded-3xl bg-gradient-to-r from-indigo-950/90 via-slate-950 to-purple-950/80 border-2 border-purple-500/40 shadow-xl flex items-center gap-3.5">
+    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-slate-900 border-2 border-amber-400/60 flex items-center justify-center shrink-0 overflow-hidden cl-host-bob">
+      <svg viewBox="0 0 80 80" class="w-full h-full">
+        <rect width="80" height="80" fill="#13092b"/>
+        <!-- Suit & Bowtie -->
+        <path d="M16 80 C18 58 62 58 64 80 Z" fill="#312e81"/>
+        <polygon points="32,62 40,67 32,72" fill="#f43f5e"/>
+        <polygon points="48,62 40,67 48,72" fill="#f43f5e"/>
+        <circle cx="40" cy="67" r="3" fill="#fbbf24"/>
+        <!-- Head -->
+        <circle cx="40" cy="36" r="18" fill="#fed7aa"/>
+        <!-- Hair -->
+        <path d="M22 33 C22 14 58 14 58 33 C52 24 28 24 22 33 Z" fill="#fbbf24"/>
+        <!-- Eyes -->
+        <circle cx="34" cy="36" r="2.5" fill="#0f172a"/>
+        <circle cx="46" cy="36" r="2.5" fill="#0f172a"/>
+        <!-- Smile -->
+        <path id="clHostMouth" d="M33 44 Q40 50 47 44" fill="none" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="min-w-0 flex-1 space-y-1">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-[10px] font-black uppercase tracking-widest text-amber-300">🎙️ MONDO HOST</span>
+        <span class="text-[11px] font-black text-cyan-300" id="clClock">00:00.0</span>
+      </div>
+      <p id="clSpeech" class="text-xs sm:text-sm text-white font-bold leading-snug">
+        Welcome to Card Ladder! Three rows of five — call Higher or Lower on the next card!
+      </p>
+    </div>
+  </div>
+
+  <!-- 3 Rows of 5 Cards -->
+  <div id="clBoard" class="space-y-2.5"></div>
+
+  <!-- Controls -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+    <button type="button" id="clBtnHigher" onclick="window._clGuess('higher')"
+            class="py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-sm uppercase tracking-wider shadow-lg transition active:scale-95">
+      ▲ Higher
+    </button>
+    <button type="button" id="clBtnLower" onclick="window._clGuess('lower')"
+            class="py-3.5 px-4 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400 text-slate-950 font-black text-sm uppercase tracking-wider shadow-lg transition active:scale-95">
+      ▼ Lower
+    </button>
+    <button type="button" id="clBtnSwap" onclick="window._clSwap()"
+            class="col-span-2 sm:col-span-1 py-3.5 px-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border-2 border-amber-400/50 text-amber-300 font-black text-xs uppercase tracking-wider transition active:scale-95">
+      🔄 Swap Base (1)
+    </button>
+  </div>
+
+  <!-- Live Stats Bar -->
+  <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 rounded-2xl bg-slate-950/85 border border-purple-500/25 text-[11px]">
+    <span class="text-slate-400">Row Mult: <strong id="clMult" class="text-amber-300">3×</strong></span>
+    <span class="text-slate-400">Guesses: <strong id="clGuesses" class="text-cyan-300">0</strong></span>
+    <span class="text-slate-400">Slips: <strong id="clSlips" class="text-rose-300">0</strong></span>
+    <span class="text-slate-400">Streak: <strong id="clStreak" class="text-emerald-300">0</strong></span>
+  </div>
+
+  <!-- Global Leaderboard Preview (Always visible below board) -->
+  <div class="p-4 rounded-2xl bg-slate-950/85 border border-purple-500/25 space-y-2.5">
+    <div class="flex items-center justify-between">
+      <span class="text-[11px] font-black uppercase tracking-wider text-amber-300">🏆 Global Card Ladder Leaderboard</span>
+      <span class="text-[10px] text-slate-500">Top Scores</span>
+    </div>
+    <div id="clLeaderboard" class="space-y-1.5 text-xs text-slate-400">Loading leaderboard…</div>
+  </div>
+</div>
+{% endblock %}
+
+{% block how_extra %}
+<p class="mt-2">Clear all three rows of five cards (Aces are high!). You get 1 free base-card swap per row. A wrong call resets your current row with fresh cards and steps down that row's multiplier (3× → 2× → 1×). Equal cards count as a push and let you keep going!</p>
+{% endblock %}
+
+{% block game_js %}
+<script>
+(function () {
+  var SUITS = [
+    { sym: '♠', red: false },
+    { sym: '♥', red: true },
+    { sym: '♦', red: true },
+    { sym: '♣', red: false }
+  ];
+  var RANKS = [
+    { label: '2', val: 2 }, { label: '3', val: 3 }, { label: '4', val: 4 },
+    { label: '5', val: 5 }, { label: '6', val: 6 }, { label: '7', val: 7 },
+    { label: '8', val: 8 }, { label: '9', val: 9 }, { label: '10', val: 10 },
+    { label: 'J', val: 11 }, { label: 'Q', val: 12 }, { label: 'K', val: 13 },
+    { label: 'A', val: 14 }
+  ];
+  var ROW_NAMES = ['Row 1 · Warm-Up', 'Row 2 · High Stakes', 'Row 3 · Grand Finale'];
+  var ROW_BASE_PTS = [100, 150, 220];
+
+  var deck = [];
+  var rows = []; // 3 arrays of 5 cards
+  var activeRow = 0;
+  var activeCol = 0; // last revealed card index (0..4)
+  var rowMult = 3;
+  var swapsLeft = 1;
+  var guesses = 0, correct = 0, slips = 0, streak = 0, bestStreak = 0;
+  var locked = false;
+  var startTs = 0, timerHandle = null, finished = false;
+
+  var boardEl = document.getElementById('clBoard');
+  var speechEl = document.getElementById('clSpeech');
+  var clockEl = document.getElementById('clClock');
+  var multEl = document.getElementById('clMult');
+  var guessesEl = document.getElementById('clGuesses');
+  var slipsEl = document.getElementById('clSlips');
+  var streakEl = document.getElementById('clStreak');
+  var swapBtn = document.getElementById('clBtnSwap');
+  var mouthEl = document.getElementById('clHostMouth');
+
+  function freshDeck() {
+    var d = [];
+    SUITS.forEach(function (s) {
+      RANKS.forEach(function (r) {
+        d.push({ label: r.label, val: r.val, sym: s.sym, red: s.red });
+      });
+    });
+    return QMG.shuffle(d);
+  }
+
+  function drawCard() {
+    if (deck.length < 5) deck = freshDeck();
+    return deck.pop();
+  }
+
+  function formatTime(ms) {
+    var totalSec = ms / 1000;
+    var m = Math.floor(totalSec / 60);
+    var s = Math.floor(totalSec % 60);
+    var t = Math.floor((ms % 1000) / 100);
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s + '.' + t;
+  }
+
+  function startClock() {
+    stopClock();
+    startTs = Date.now();
+    timerHandle = setInterval(function () {
+      if (!finished) clockEl.textContent = formatTime(Date.now() - startTs);
+    }, 100);
+  }
+
+  function stopClock() {
+    if (timerHandle) { clearInterval(timerHandle); timerHandle = null; }
+  }
+
+  function say(text, mood) {
+    speechEl.textContent = text;
+    if (mood === 'win') mouthEl.setAttribute('d', 'M31 43 Q40 53 49 43');
+    else if (mood === 'oops') mouthEl.setAttribute('d', 'M33 48 Q40 42 47 48');
+    else mouthEl.setAttribute('d', 'M33 44 Q40 50 47 44');
+  }
+
+  function renderBoard() {
+    boardEl.innerHTML = '';
+    rows.forEach(function (rowCards, rIdx) {
+      var wrap = document.createElement('div');
+      var isCurrent = (rIdx === activeRow && !finished);
+      var isDone = (rIdx < activeRow || finished);
+      wrap.className = 'p-3 rounded-2xl border transition ' + (
+        isCurrent ? 'bg-slate-900/90 border-cyan-400/55 shadow-lg' :
+        isDone ? 'bg-emerald-950/25 border-emerald-500/35' :
+        'bg-slate-950/60 border-purple-500/20 opacity-60'
+      );
+
+      var hdr = document.createElement('div');
+      hdr.className = 'flex items-center justify-between text-[10px] font-black uppercase tracking-wider mb-2';
+      hdr.innerHTML =
+        '<span class="' + (isCurrent ? 'text-cyan-300' : (isDone ? 'text-emerald-300' : 'text-slate-500')) + '">' + ROW_NAMES[rIdx] + '</span>' +
+        '<span class="text-slate-400">' + (isDone ? '✓ CLEARED' : (isCurrent ? ('MULT ' + rowMult + '×') : 'LOCKED')) + '</span>';
+      wrap.appendChild(hdr);
+
+      var grid = document.createElement('div');
+      grid.className = 'grid grid-cols-5 gap-2';
+      rowCards.forEach(function (card, cIdx) {
+        var flipped = (rIdx < activeRow) || (rIdx === activeRow && cIdx <= activeCol) || finished;
+        var isNextTarget = (isCurrent && cIdx === activeCol + 1);
+        var cell = document.createElement('div');
+        cell.className = 'cl-card-wrap ' + (isNextTarget ? 'cl-active-ring' : '');
+        var colorCls = card.red ? 'text-rose-600' : 'text-slate-900';
+        cell.innerHTML =
+          '<div class="cl-card-inner ' + (flipped ? 'flipped' : '') + '">' +
+            '<div class="cl-face cl-back">' +
+              '<span class="text-lg sm:text-xl opacity-80">' + (isNextTarget ? '❓' : '🃏') + '</span>' +
+            '</div>' +
+            '<div class="cl-face cl-front ' + colorCls + '">' +
+              '<span class="text-base sm:text-2xl font-black leading-none">' + card.label + '</span>' +
+              '<span class="text-lg sm:text-2xl leading-none mt-0.5">' + card.sym + '</span>' +
+            '</div>' +
+          '</div>';
+        grid.appendChild(cell);
+      });
+      wrap.appendChild(grid);
+      boardEl.appendChild(wrap);
+    });
+
+    multEl.textContent = rowMult + '×';
+    guessesEl.textContent = guesses;
+    slipsEl.textContent = slips;
+    streakEl.textContent = streak;
+    swapBtn.disabled = (swapsLeft <= 0 || activeCol > 0 || locked || finished);
+    swapBtn.textContent = '🔄 Swap Base (' + swapsLeft + ')';
+    swapBtn.classList.toggle('opacity-40', swapBtn.disabled);
+    QMG.setMid((Math.min(activeRow + 1, 3)) + '/3');
+    QMG.setMidBar((activeRow * 4 + activeCol) / 12);
+  }
+
+  window._clSwap = function () {
+    if (locked || finished || swapsLeft <= 0 || activeCol > 0) return;
+    swapsLeft -= 1;
+    var oldLabel = rows[activeRow][0].label + rows[activeRow][0].sym;
+    rows[activeRow][0] = drawCard();
+    QMG.audio.tone(580, 90, 'sine');
+    say('Swapped ' + oldLabel + ' for ' + rows[activeRow][0].label + rows[activeRow][0].sym + '! Higher or Lower?', 'neutral');
+    renderBoard();
+  };
+
+  window._clGuess = function (dir) {
+    if (locked || finished) return;
+    locked = true;
+    guesses += 1;
+    var cur = rows[activeRow][activeCol];
+    var nxt = rows[activeRow][activeCol + 1];
+    activeCol += 1;
+    renderBoard();
+    QMG.audio.tone(520, 60, 'triangle');
+
+    setTimeout(function () {
+      var isTie = (nxt.val === cur.val);
+      var isRight = isTie || (dir === 'higher' ? nxt.val > cur.val : nxt.val < cur.val);
+
+      if (isRight) {
+        correct += 1;
+        streak += 1;
+        if (streak > bestStreak) bestStreak = streak;
+        var pts = Math.round((ROW_BASE_PTS[activeRow] * rowMult) / (isTie ? 2 : 1));
+        QMG.addScore(pts);
+        QMG.audio.tone(780, 120, 'sine');
+
+        if (activeCol === 4) {
+          // Row cleared!
+          var rowBonus = 150 * rowMult;
+          QMG.addScore(rowBonus);
+          if (activeRow === 2) {
+            finished = true;
+            stopClock();
+            var elapsed = Date.now() - startTs;
+            var speedBonus = Math.max(0, Math.round((90 - elapsed / 1000) * 6));
+            if (speedBonus > 0) QMG.addScore(speedBonus);
+            var acc = guesses ? Math.round((correct / guesses) * 100) : 100;
+            say('🏆 ALL THREE ROWS CLEARED! What a run!', 'win');
+            renderBoard();
+            setTimeout(function () {
+              QMG.finish({
+                win: true,
+                icon: slips === 0 ? '👑' : '🃏',
+                title: slips === 0 ? 'Clean Sweep Champion!' : 'Ladder Conquered!',
+                sub: 'Cleared all 3 rows in ' + formatTime(elapsed) + ' (' + guesses + ' guesses, ' + acc + '% accuracy).',
+                detail: ['Slips: ' + slips, 'Best streak: ' + bestStreak, 'Speed bonus: +' + speedBonus + ' pts']
+              });
+              setTimeout(loadLeaderboard, 900);
+            }, 900);
+            return;
+          } else {
+            say('Row ' + (activeRow + 1) + ' CLEARED! +' + rowBonus + ' bonus! Stepping up to ' + ROW_NAMES[activeRow + 1] + '!', 'win');
+            activeRow += 1;
+            activeCol = 0;
+            rowMult = 3;
+            swapsLeft = 1;
+            locked = false;
+            setTimeout(renderBoard, 700);
+            return;
+          }
+        } else {
+          say(isTie ? ('Pair of ' + nxt.label + 's — lucky push! Keep rolling!') : ('Spot on! ' + nxt.label + nxt.sym + ' (+' + pts + ' pts). Next call?'), 'win');
+          locked = false;
+          renderBoard();
+        }
+      } else {
+        slips += 1;
+        streak = 0;
+        rowMult = Math.max(1, rowMult - 1);
+        QMG.audio.tone(210, 220, 'sawtooth');
+        say('Ouch! ' + nxt.label + nxt.sym + ' breaks the row! Resetting Row ' + (activeRow + 1) + ' (multiplier now ' + rowMult + '×).', 'oops');
+        setTimeout(function () {
+          rows[activeRow] = [drawCard(), drawCard(), drawCard(), drawCard(), drawCard()];
+          activeCol = 0;
+          swapsLeft = 1;
+          locked = false;
+          renderBoard();
+        }, 1200);
+      }
+    }, 350);
+  };
+
+  function loadLeaderboard() {
+    var lbEl = document.getElementById('clLeaderboard');
+    fetch('/games/api/leaderboard/card-ladder')
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var list = (data && data.leaderboard) || [];
+        if (!list.length) {
+          lbEl.innerHTML = '<div class="text-slate-500">No scores yet — claim the #1 spot!</div>';
+          return;
+        }
+        lbEl.innerHTML = list.slice(0, 8).map(function (row, i) {
+          var medal = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : ('#' + (i + 1))));
+          return '<div class="flex items-center justify-between px-3 py-1.5 rounded-xl bg-slate-900/80 border border-purple-500/20">' +
+            '<span class="text-white font-bold">' + medal + ' ' + row.name + '</span>' +
+            '<span class="text-amber-300 font-black">' + row.score + ' pts</span>' +
+          '</div>';
+        }).join('');
+      })
+      .catch(function () {
+        lbEl.innerHTML = '<div class="text-slate-500">Leaderboard unavailable right now.</div>';
+      });
+  }
+
+  function start() {
+    deck = freshDeck();
+    rows = [
+      [drawCard(), drawCard(), drawCard(), drawCard(), drawCard()],
+      [drawCard(), drawCard(), drawCard(), drawCard(), drawCard()],
+      [drawCard(), drawCard(), drawCard(), drawCard(), drawCard()]
+    ];
+    activeRow = 0; activeCol = 0; rowMult = 3; swapsLeft = 1;
+    guesses = 0; correct = 0; slips = 0; streak = 0; bestStreak = 0;
+    locked = false; finished = false;
+    QMG.setMidLabel('Row');
+    say('Welcome to Card Ladder! Row 1 base card is ' + rows[0][0].label + rows[0][0].sym + ' — Higher or Lower?', 'neutral');
+    startClock();
+    renderBoard();
+    loadLeaderboard();
+  }
+
+  QMG.onReplay(start);
+  start();
+})();
+</script>
+{% endblock %}

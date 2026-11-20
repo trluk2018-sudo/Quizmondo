@@ -131,6 +131,7 @@ def create_app(test_config=None):
     from .routes.games import games_bp
     from .routes.account import account_bp
     from .routes.ads import ads_bp
+    from .routes.critter import critter_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
@@ -139,6 +140,7 @@ def create_app(test_config=None):
     app.register_blueprint(games_bp)
     app.register_blueprint(account_bp)
     app.register_blueprint(ads_bp)
+    app.register_blueprint(critter_bp)
 
     # Only the requests worth reading about: the ones that broke, and the ones
     # that took long enough for somebody to notice. An access log of every hit

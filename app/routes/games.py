@@ -311,6 +311,13 @@ GAMES = [
         'xp_rate': 0.22, 'score_unit': 'pts',
         'how': 'Common answers score low, obscure answers score up to 100 (Pointless!), and the decoy scores zero.',
     },
+    {
+        'key': 'card-ladder', 'title': 'Card Ladder', 'icon': '🃏', 'group': 'trivia',
+        'blurb': 'Three rows of five cards with a live host — call Higher or Lower to clear the ladder!',
+        'accent': 'from-rose-500 to-indigo-700', 'border': 'border-rose-500/40',
+        'xp_rate': 0.04, 'score_unit': 'pts',
+        'how': 'Clear all three rows of five cards. You get 1 free base-card swap per row; a wrong call resets your current row and drops its multiplier.',
+    },
 ]
 
 GAME_BY_KEY = {g['key']: g for g in GAMES}
@@ -623,6 +630,11 @@ def four_clues():
 def rare_answer():
     rng = random.Random()
     return _render_game('rare-answer', rounds=gd.rare_answer_rounds(rng, count=6))
+
+
+@games_bp.route('/card-ladder')
+def card_ladder():
+    return _render_game('card-ladder')
 
 
 # ---------------------------------------------------------------------------
