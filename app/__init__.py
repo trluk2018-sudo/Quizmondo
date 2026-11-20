@@ -934,10 +934,10 @@ def _seed_defaults():
     try:
         from .models import QuizPack
         current_seed_ver = SiteSetting.get('quizmondo_seed_version')
-        if current_seed_ver != '2026.10.26.v3' or QuizPack.query.count() < 15:
+        if current_seed_ver != '2026.11.20.v4' or QuizPack.query.count() < 15:
             from .utils.quiz_seed import seed_quizmondo_full_environment
             seed_quizmondo_full_environment()
-            SiteSetting.set('quizmondo_seed_version', '2026.10.26.v3')
+            SiteSetting.set('quizmondo_seed_version', '2026.11.20.v4')
     except Exception as e:
         import logging
         logging.getLogger(__name__).warning(f"Could not synchronize quizmondo seed environment: {e}")

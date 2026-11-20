@@ -1638,6 +1638,175 @@ def seed_quizmondo_full_environment():
     except Exception as e:
         print('Error importing wave2 articles:', e)
 
+    # 4c-3. Canonical 8-category organization & legacy category cleanup.
+    # Consolidates all 89 articles into 8 clean, balanced categories and removes
+    # empty/legacy orphan categories so the blog sidebar stays tidy.
+    try:
+        CANONICAL_CATEGORIES = [
+            ('Getting Started', 'getting-started'),
+            ('Quiz Reference', 'quiz-reference'),
+            ('Quiz Craft & Culture', 'quiz-craft-and-culture'),
+            ('Tech & Science', 'tech-and-science'),
+            ('Music & Entertainment', 'music-and-entertainment'),
+            ('Nature & Wildlife', 'nature-and-wildlife'),
+            ('Food & Drink', 'food-and-drink'),
+            ('Strange But True & World', 'strange-but-true-and-world'),
+        ]
+        canon_ids = {}
+        canon_slugs = set()
+        for cname, cslug in CANONICAL_CATEGORIES:
+            canon_slugs.add(cslug)
+            cobj = Category.query.filter_by(slug=cslug).first() or \
+                Category.query.filter_by(name=cname).first()
+            if not cobj:
+                cobj = Category(name=cname, slug=cslug)
+                db.session.add(cobj)
+                db.session.flush()
+            else:
+                cobj.name = cname
+                cobj.slug = cslug
+            canon_ids[cname] = cobj.id
+
+        SLUG_TO_CATEGORY = {
+            # Getting Started (5)
+            'how-to-create-a-quizmondo-account': 'Getting Started',
+            'how-to-play-trivia-duels-against-friends': 'Getting Started',
+            'how-to-play-trivia-against-the-bot': 'Getting Started',
+            'how-to-play-pub-quiz-games': 'Getting Started',
+            'how-quizmondo-scoring-and-ranks-work': 'Getting Started',
+
+            # Quiz Reference (14)
+            'capital-cities-of-europe': 'Quiz Reference',
+            'greek-gods-and-their-roman-names': 'Quiz Reference',
+            'chemical-symbols-that-dont-match': 'Quiz Reference',
+            'collective-nouns-for-animals': 'Quiz Reference',
+            'longest-rivers-in-the-world': 'Quiz Reference',
+            'roman-numerals-explained': 'Quiz Reference',
+            'every-shakespeare-play': 'Quiz Reference',
+            'nato-phonetic-alphabet': 'Quiz Reference',
+            'zodiac-signs-and-symbols': 'Quiz Reference',
+            'seven-wonders-ancient-and-new': 'Quiz Reference',
+            'what-money-is-called-around-the-world': 'Quiz Reference',
+            'first-twenty-elements': 'Quiz Reference',
+            'what-flags-are-telling-you': 'Quiz Reference',
+            'the-oldest-living-things-on-earth': 'Quiz Reference',
+
+            # Quiz Craft & Culture (9)
+            'how-to-win-a-pub-quiz': 'Quiz Craft & Culture',
+            'how-to-solve-a-cryptic-crossword-clue': 'Quiz Craft & Culture',
+            'how-to-write-a-quiz-round-worth-playing': 'Quiz Craft & Culture',
+            'memory-tricks-that-work-for-trivia': 'Quiz Craft & Culture',
+            'a-short-history-of-the-quiz-show': 'Quiz Craft & Culture',
+            'tricks-crossword-setters-reuse': 'Quiz Craft & Culture',
+            'the-10-commandments-of-running-a-legend-tier-pub-quiz-night': 'Quiz Craft & Culture',
+            'history-of-the-pub-quiz': 'Quiz Craft & Culture',
+            'why-turn-based-quiz-duels-are-the-future': 'Quiz Craft & Culture',
+
+            # Tech & Science (18)
+            'how-the-internet-actually-crosses-the-ocean': 'Tech & Science',
+            'why-ai-models-still-get-simple-things-wrong': 'Tech & Science',
+            'the-worlds-smallest-and-strangest-satellites': 'Tech & Science',
+            'why-batteries-still-die-in-the-cold': 'Tech & Science',
+            'how-gps-needs-einstein-to-work': 'Tech & Science',
+            'the-first-things-ever-put-on-the-internet': 'Tech & Science',
+            'how-modern-weather-forecasts-actually-work': 'Tech & Science',
+            'why-pluto-stopped-being-a-planet': 'Tech & Science',
+            'why-pluto-is-not-a-planet': 'Tech & Science',
+            'which-planet-has-the-most-moons-saturn-jupiter': 'Tech & Science',
+            'space-facts-that-sound-impossible': 'Tech & Science',
+            'the-human-body-in-numbers': 'Tech & Science',
+            'maths-that-feels-wrong': 'Tech & Science',
+            'your-senses-are-lying-to-you': 'Tech & Science',
+            'experiments-that-are-still-running': 'Tech & Science',
+            'why-your-keyboard-says-qwerty': 'Tech & Science',
+            'why-aeroplane-windows-are-round': 'Tech & Science',
+            'why-bridges-are-built-with-gaps': 'Tech & Science',
+
+            # Music & Entertainment (8)
+            'why-vinyl-records-still-outsell-cds': 'Music & Entertainment',
+            'famous-songs-written-in-under-an-hour': 'Music & Entertainment',
+            'why-music-gives-you-goosebumps': 'Music & Entertainment',
+            'the-strangest-instruments-ever-invented': 'Music & Entertainment',
+            'how-the-440hz-tuning-standard-happened': 'Music & Entertainment',
+            'songs-that-were-originally-written-for-someone-else': 'Music & Entertainment',
+            'evolution-of-speedruns-breaking-impossible-video-game-records': 'Music & Entertainment',
+            'chiptunes-waveforms-how-8-bit-audio-boosts-trivia-recall': 'Music & Entertainment',
+
+            # Nature & Wildlife (10)
+            'how-trees-talk-through-the-wood-wide-web': 'Nature & Wildlife',
+            'the-loudest-animals-on-earth': 'Nature & Wildlife',
+            'why-autumn-leaves-change-colour': 'Nature & Wildlife',
+            'birds-that-sleep-while-flying': 'Nature & Wildlife',
+            'why-cats-always-land-on-their-feet': 'Nature & Wildlife',
+            'animal-facts-that-sound-made-up': 'Nature & Wildlife',
+            'animals-that-break-the-rules': 'Nature & Wildlife',
+            'the-deep-sea-in-numbers': 'Nature & Wildlife',
+            'why-is-the-sea-salty': 'Nature & Wildlife',
+            'weirdest-weather-on-record': 'Nature & Wildlife',
+
+            # Food & Drink (10)
+            'how-coffee-took-over-the-world': 'Food & Drink',
+            'why-chilli-peppers-feel-hot': 'Food & Drink',
+            'the-strange-history-of-spices-worth-more-than-gold': 'Food & Drink',
+            'why-bread-crusts-and-seared-steaks-taste-so-good': 'Food & Drink',
+            'how-tea-is-all-the-same-plant': 'Food & Drink',
+            'why-chocolate-melts-at-body-temperature': 'Food & Drink',
+            'foods-not-from-where-you-think': 'Food & Drink',
+            'food-facts-worth-knowing': 'Food & Drink',
+            'why-honey-never-goes-off': 'Food & Drink',
+            'why-honey-never-spoils': 'Food & Drink',
+
+            # Strange But True & World (15)
+            'historical-events-that-sound-like-jokes': 'Strange But True & World',
+            'strange-places-that-really-exist': 'Strange But True & World',
+            'things-older-than-you-think': 'Strange But True & World',
+            'strangest-moments-in-sport': 'Strange But True & World',
+            'inventions-that-started-as-accidents': 'Strange But True & World',
+            'why-time-zones-make-no-geographical-sense': 'Strange But True & World',
+            'how-shipping-containers-shrunk-the-world': 'Strange But True & World',
+            'what-everyday-objects-are-for': 'Strange But True & World',
+            'how-long-things-really-take': 'Strange But True & World',
+            'where-everyday-phrases-come-from': 'Strange But True & World',
+            'how-the-days-of-the-week-got-their-names': 'Strange But True & World',
+            'how-leap-years-actually-work': 'Strange But True & World',
+            'why-sixty-seconds-in-a-minute': 'Strange But True & World',
+            'ancient-enigmas-7-historical-trivia-facts-that-sound-fake': 'Strange But True & World',
+            'chad-romania-identical-flags': 'Strange But True & World',
+        }
+
+        LEGACY_FALLBACK = {
+            'Pub Quiz Culture': 'Quiz Craft & Culture',
+            'Quiz Craft': 'Quiz Craft & Culture',
+            'Game Design & TV Lore': 'Quiz Craft & Culture',
+            'Science & Cosmos': 'Tech & Science',
+            'Astronomy & Physics': 'Tech & Science',
+            'Audio & Science': 'Music & Entertainment',
+            'Gaming & Esports': 'Music & Entertainment',
+            'World Food & Culinary Traditions': 'Food & Drink',
+            'Facts & Curiosities': 'Strange But True & World',
+            'Strange But True': 'Strange But True & World',
+            'World History & Lore': 'Strange But True & World',
+            'World Trivia': 'Strange But True & World',
+        }
+
+        for p in Post.query.all():
+            target_cat = SLUG_TO_CATEGORY.get(p.slug)
+            if not target_cat and p.category and p.category.name in LEGACY_FALLBACK:
+                target_cat = LEGACY_FALLBACK[p.category.name]
+            if target_cat and target_cat in canon_ids:
+                p.category_id = canon_ids[target_cat]
+        db.session.flush()
+
+        # Remove empty legacy categories so only clean canonical categories remain
+        for cobj in Category.query.all():
+            if cobj.slug not in canon_slugs:
+                if Post.query.filter_by(category_id=cobj.id).count() == 0:
+                    db.session.delete(cobj)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print('Error normalizing canonical categories:', e)
+
     # 4d. The Never Pay To Play page, and one footer link to it.
     # The page is kept in code and matched on slug, so the wording keeps
     # improving on each deploy. The footer link is added once and marked, so
