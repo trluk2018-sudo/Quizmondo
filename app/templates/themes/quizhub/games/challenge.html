@@ -29,6 +29,20 @@
           {{ days_left }} day{{ '' if days_left == 1 else 's' }} left
         </span>
         {% endif %}
+
+        {% if (challenge.wager_coins or 0) > 0 %}
+        <div class="pt-1">
+          <span class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-gradient-to-r from-amber-500/25 to-yellow-500/20 text-amber-300 border border-amber-400/50 text-[11px] font-black uppercase tracking-wider">
+            🪙 {{ challenge.wager_coins * 2 }} COIN POT &bull; WINNER TAKES ALL
+          </span>
+        </div>
+        {% endif %}
+
+        {% if h2h and h2h.total > 0 %}
+        <div class="pt-0.5 text-[11px] text-cyan-300 font-bold">
+          ⚔️ All-Time Rivalry: {{ h2h.a_wins }} &ndash; {{ h2h.b_wins }}{% if h2h.ties %} ({{ h2h.ties }} tied){% endif %}
+        </div>
+        {% endif %}
       </div>
 
       <!-- Who is winning -->
@@ -93,7 +107,12 @@
           <div class="flex items-center gap-3 min-w-0">
             <span class="text-xl shrink-0">{{ row.meta.icon }}</span>
             <div class="min-w-0">
-              <div class="text-xs font-bold text-white truncate">{{ row.meta.title }}</div>
+              <div class="text-xs font-bold text-white truncate flex items-center gap-1.5">
+                <span>{{ row.meta.title }}</span>
+                {% if (is_creator and row.creator_doubled) or (is_player and not is_creator and row.opponent_doubled) %}
+                <span class="px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/50 text-[9px] font-black">⚡ 2× ARMED</span>
+                {% endif %}
+              </div>
               <div class="text-[11px] text-slate-400">
                 {% if is_player %}
                   You: {% if mine is not none %}<strong class="text-cyan-300">{{ mine }}</strong>{% else %}—{% endif %}
@@ -108,12 +127,21 @@
             </div>
           </div>
           {% if is_player and mine is none and challenge.status != 'complete' %}
-          {# Each game is its own route at /games/<key>; there is no single
-             play view to url_for. #}
-          <a href="/games/{{ row.game_key }}"
-             class="shrink-0 px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-purple-600 text-slate-950 font-black text-[11px] uppercase tracking-wider">
-            Play
-          </a>
+          <div class="flex items-center gap-1.5 shrink-0">
+            {% if not my_double %}
+            <form method="POST" action="{{ url_for('games.challenge_double_down', code=challenge.code) }}">
+              <input type="hidden" name="game_key" value="{{ row.game_key }}">
+              <button type="submit" title="Use your 1× Double Down power-up to double your score on this game!"
+                      class="px-2.5 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-400/30 border border-amber-400/50 text-amber-300 font-black text-[10px] uppercase transition">
+                ⚡ 2×
+              </button>
+            </form>
+            {% endif %}
+            <a href="/games/{{ row.game_key }}"
+               class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-purple-600 text-slate-950 font-black text-[11px] uppercase tracking-wider">
+              Play
+            </a>
+          </div>
           {% elif row.winner == 'tie' %}
           <span class="shrink-0 text-[11px] font-black text-slate-300">Tied</span>
           {% elif row.winner %}
@@ -126,7 +154,7 @@
       </div>
 
       {% if challenge.status == 'complete' %}
-      <div class="p-5 rounded-2xl bg-slate-900/80 border border-amber-500/40 text-center font-mono space-y-1">
+      <div class="p-5 rounded-2xl bg-slate-900/80 border border-amber-500/40 text-center font-mono space-y-3">
         <div class="text-3xl">🏆</div>
         <div class="text-sm font-black text-white">
           {% if leader == 'creator' %}{{ challenge.creator_name }} wins
@@ -134,6 +162,34 @@
           {% else %}Dead heat{% endif %}
         </div>
         <div class="text-[11px] text-slate-400">{{ table.creator_wins }} &ndash; {{ table.opponent_wins }}</div>
+
+        {% if badges %}
+        <div class="flex flex-wrap items-center justify-center gap-1.5 pt-1">
+          {% for b_icon, b_label in badges %}
+          <span class="px-2.5 py-1 rounded-full bg-purple-500/20 border border-purple-400/40 text-purple-200 text-[10px] font-black">
+            {{ b_icon }} {{ b_label }}
+          </span>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if is_player %}
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
+          <form method="POST" action="{{ url_for('games.challenge_rematch', code=challenge.code) }}" class="w-full sm:w-auto">
+            <button type="submit"
+                    class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow">
+              🔁 Rematch
+            </button>
+          </form>
+          <form method="POST" action="{{ url_for('games.challenge_rematch', code=challenge.code) }}" class="w-full sm:w-auto">
+            <input type="hidden" name="double_pot" value="1">
+            <button type="submit"
+                    class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow">
+              🔥 Double or Nothing
+            </button>
+          </form>
+        </div>
+        {% endif %}
       </div>
       {% endif %}
 

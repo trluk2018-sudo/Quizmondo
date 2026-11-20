@@ -128,6 +128,7 @@ GROUPS = [
     ('word', 'Word Games', '🔤', 'Letters, clues and quick thinking'),
     ('puzzle', 'Puzzles & Tiles', '🧩', 'Slide, swap and solve'),
     ('memory', 'Memory & Reflex', '🧠', 'How much can you hold in your head?'),
+    ('trivia', 'Trivia Arcade', '🎯', 'Facts, timelines, connections and obscure picks'),
 ]
 
 GAMES = [
@@ -280,6 +281,35 @@ GAMES = [
         'accent': 'from-slate-500 to-purple-800', 'border': 'border-slate-500/40',
         'xp_rate': 0.22, 'score_unit': 'pts',
         'how': 'One extra digit every round. Most people stall somewhere between seven and nine — see where you land.',
+    },
+    # ---- Trivia Arcade ----------------------------------------------------
+    {
+        'key': 'higher-lower', 'title': 'Higher or Lower', 'icon': '📈', 'group': 'trivia',
+        'blurb': 'Compare real-world heights, years, speeds and populations on a rising streak.',
+        'accent': 'from-emerald-500 to-cyan-700', 'border': 'border-emerald-500/40',
+        'xp_rate': 0.06, 'score_unit': 'pts',
+        'how': 'Guess whether the second card is higher or lower than the first. Consecutive hits climb your multiplier up to 4×.',
+    },
+    {
+        'key': 'timeline-sort', 'title': 'Timeline Sort', 'icon': '⏳', 'group': 'trivia',
+        'blurb': 'Arrange four historical events, albums or inventions from earliest to latest.',
+        'accent': 'from-cyan-500 to-indigo-700', 'border': 'border-cyan-500/40',
+        'xp_rate': 0.08, 'score_unit': 'pts',
+        'how': 'Tap any two cards to swap their positions, then lock in your order to reveal the exact dates.',
+    },
+    {
+        'key': 'four-clues', 'title': '4 Clues, 1 Link', 'icon': '🔗', 'group': 'trivia',
+        'blurb': 'Clues reveal one by one — buzz in early for 500 pts before it gets obvious.',
+        'accent': 'from-fuchsia-500 to-purple-700', 'border': 'border-fuchsia-500/40',
+        'xp_rate': 0.07, 'score_unit': 'pts',
+        'how': 'Crack the link after Clue 1 for 500 points, or reveal more clues at lower value.',
+    },
+    {
+        'key': 'rare-answer', 'title': 'Beat the Crowd', 'icon': '🎯', 'group': 'trivia',
+        'blurb': 'Pick the most obscure valid answer for 100 pts — and dodge the fake trap!',
+        'accent': 'from-amber-500 to-rose-700', 'border': 'border-amber-500/40',
+        'xp_rate': 0.22, 'score_unit': 'pts',
+        'how': 'Common answers score low, obscure answers score up to 100 (Pointless!), and the decoy scores zero.',
     },
 ]
 
@@ -571,6 +601,30 @@ def digit_span():
     return _render_game('digit-span')
 
 
+@games_bp.route('/higher-lower')
+def higher_lower():
+    rng = random.Random()
+    return _render_game('higher-lower', deck=gd.higher_lower_deck(rng, count=14))
+
+
+@games_bp.route('/timeline-sort')
+def timeline_sort():
+    rng = random.Random()
+    return _render_game('timeline-sort', rounds=gd.timeline_sort_rounds(rng, count=5))
+
+
+@games_bp.route('/four-clues')
+def four_clues():
+    rng = random.Random()
+    return _render_game('four-clues', rounds=gd.four_clues_rounds(rng, count=6))
+
+
+@games_bp.route('/rare-answer')
+def rare_answer():
+    rng = random.Random()
+    return _render_game('rare-answer', rounds=gd.rare_answer_rounds(rng, count=6))
+
+
 # ---------------------------------------------------------------------------
 # API
 # ---------------------------------------------------------------------------
@@ -685,6 +739,10 @@ def _record_challenge_run(player_key, game_key, score):
         if not GameChallengeScore.record(ch, player_key, game_key, score):
             continue        # already had their go at this one
         table = ch.standings()
+        if ch.opponent_key and table['rows'] and all(r['played_by_both'] for r in table['rows']):
+            ch.status = 'complete'
+            db.session.commit()
+            _settle_challenge_pot(ch, {g['key']: g.get('xp_rate', 0.1) for g in GAMES})
         mine_wins = table['creator_wins'] if player_key == ch.creator_key else table['opponent_wins']
         their_wins = table['opponent_wins'] if player_key == ch.creator_key else table['creator_wins']
         done = len(ch.scores_for(player_key))
@@ -700,14 +758,62 @@ def _record_challenge_run(player_key, game_key, score):
     return noted
 
 
+def _settle_challenge_pot(ch, rates):
+    """Credit the coin pot once a wagered challenge completes."""
+    wager = int(ch.wager_coins or 0)
+    if wager <= 0 or ch.pot_settled or ch.status != 'complete':
+        return
+    winner_side = ch.leader(rates)
+    if winner_side == 'creator':
+        p = PlayerProfile.query.filter_by(session_key=ch.creator_key).first()
+        if p:
+            p.coins = (p.coins or 0) + (wager * 2)
+    elif winner_side == 'opponent' and ch.opponent_key:
+        p = PlayerProfile.query.filter_by(session_key=ch.opponent_key).first()
+        if p:
+            p.coins = (p.coins or 0) + (wager * 2)
+    else:
+        # Dead heat: refund each player's stake
+        for sk in (ch.creator_key, ch.opponent_key):
+            if not sk:
+                continue
+            p = PlayerProfile.query.filter_by(session_key=sk).first()
+            if p:
+                p.coins = (p.coins or 0) + wager
+    ch.pot_settled = True
+    db.session.commit()
+
+
+def _pick_challenge_games(mode='random', category_filter=None, custom_keys=None):
+    """Select 5 games for a challenge while preserving Classic Random as default."""
+    all_keys = [g['key'] for g in built_games()]
+    if mode == 'custom' and custom_keys:
+        valid = [k for k in custom_keys if k in GAME_BY_KEY]
+        # Preserve order, deduplicate
+        picked = list(dict.fromkeys(valid))[:GAMES_PER_CHALLENGE]
+        if len(picked) < GAMES_PER_CHALLENGE:
+            rem = [k for k in all_keys if k not in picked]
+            random.shuffle(rem)
+            picked.extend(rem[:GAMES_PER_CHALLENGE - len(picked)])
+        return picked
+    if mode == 'category' and category_filter:
+        cat_keys = [g['key'] for g in built_games() if g.get('group') == category_filter]
+        random.shuffle(cat_keys)
+        picked = cat_keys[:GAMES_PER_CHALLENGE]
+        if len(picked) < GAMES_PER_CHALLENGE:
+            rem = [k for k in all_keys if k not in picked]
+            random.shuffle(rem)
+            picked.extend(rem[:GAMES_PER_CHALLENGE - len(picked)])
+        return picked
+    # Default Classic Random
+    keys = list(all_keys)
+    random.shuffle(keys)
+    return keys[:GAMES_PER_CHALLENGE]
+
+
 @games_bp.route('/challenge/<code>/cancel', methods=['POST'])
 def challenge_cancel(code):
-    """Call off a challenge nobody has taken up yet.
-
-    Only the person who opened it, and only while it is still waiting: once
-    someone has taken the other seat they have started playing games for it,
-    and it is no longer one person's to cancel.
-    """
+    """Call off a challenge nobody has taken up yet (refunds any wager stake)."""
     ch = GameChallenge.query.filter_by(code=code.upper()).first_or_404()
     player = get_current_player(persist=False)
     me = player.session_key if player else None
@@ -719,27 +825,45 @@ def challenge_cancel(code):
         flash('Someone has already taken that challenge on, so it has to play out.', 'error')
         return redirect(url_for('games.challenge', code=ch.code))
 
+    if (ch.wager_coins or 0) > 0 and not ch.pot_settled:
+        creator_p = PlayerProfile.query.filter_by(session_key=ch.creator_key).first()
+        if creator_p:
+            creator_p.coins = (creator_p.coins or 0) + int(ch.wager_coins)
+
     GameChallengeScore.query.filter_by(challenge_id=ch.id).delete()
     db.session.delete(ch)
     db.session.commit()
-    flash('Challenge called off.', 'success')
+    flash('Challenge called off (any staked coins refunded).', 'success')
     return redirect(url_for('games.hub'))
 
 
 @games_bp.route('/challenge/new', methods=['POST'])
 def challenge_new():
-    """Open a challenge: five games drawn at random, a week on the clock."""
+    """Open a challenge: Classic Random 5, Category Filter, or Custom Hand-Picked + optional Coin Wager."""
     if not _has_account():
         return redirect(url_for('arena.player_register', next=url_for('games.hub')))
     player = get_current_player()
-    keys = [g['key'] for g in GAMES]
-    random.shuffle(keys)
-    picked = keys[:GAMES_PER_CHALLENGE]
 
-    # Who it is meant for, if they said. Only a label until somebody actually
-    # takes the seat, at which point their real name replaces it -- but it
-    # makes the invite and the waiting state read like a person rather than a
-    # blank. Anyone with the link can still accept; this is not a lock.
+    mode = (request.form.get('challenge_mode') or 'random').strip().lower()
+    if mode not in ('random', 'category', 'custom'):
+        mode = 'random'
+    cat_filter = (request.form.get('category_filter') or '').strip().lower() or None
+    custom_keys = request.form.getlist('custom_games')
+
+    try:
+        wager = int(request.form.get('wager_coins') or 0)
+    except (TypeError, ValueError):
+        wager = 0
+    if wager not in (0, 25, 50, 100):
+        wager = 0
+    if wager > 0:
+        if (player.coins or 0) < wager:
+            flash(f'Not enough coins for a {wager}-coin wager — opened as a friendly challenge instead.', 'info')
+            wager = 0
+        else:
+            player.coins = (player.coins or 0) - wager
+
+    picked = _pick_challenge_games(mode=mode, category_filter=cat_filter, custom_keys=custom_keys)
     friend = (request.form.get('friend_name') or '').strip()[:30]
 
     challenge = GameChallenge(
@@ -749,18 +873,99 @@ def challenge_new():
         creator_name=player.display_name,
         creator_avatar=player.avatar_key,
         opponent_name=friend or None,
+        challenge_mode=mode,
+        category_filter=cat_filter if mode == 'category' else None,
+        wager_coins=wager,
     )
     challenge.set_games(picked)
     db.session.add(challenge)
     db.session.commit()
-    # share=1 tells the page to open the invite straight away, since inviting
-    # is the whole reason they pressed the button.
     return redirect(url_for('games.challenge', code=challenge.code, share=1))
+
+
+@games_bp.route('/challenge/<code>/double-down', methods=['POST'])
+def challenge_double_down(code):
+    """Activate a player's 1x Double Down (2x score) power-up on an unplayed game."""
+    ch = GameChallenge.query.filter_by(code=code.upper()).first_or_404()
+    if not _has_account():
+        return redirect(url_for('arena.player_register', next=url_for('games.challenge', code=ch.code)))
+    player = get_current_player()
+    me = player.session_key
+    if not ch.is_player(me) or ch.status == 'complete':
+        flash('Double Down can only be used on an active challenge.', 'error')
+        return redirect(url_for('games.challenge', code=ch.code))
+
+    game_key = (request.form.get('game_key') or '').strip()
+    if game_key not in ch.games():
+        flash('That game is not in this challenge.', 'error')
+        return redirect(url_for('games.challenge', code=ch.code))
+
+    already_played = GameChallengeScore.query.filter_by(
+        challenge_id=ch.id, player_key=me, game_key=game_key).first()
+    if already_played:
+        flash('You must activate Double Down BEFORE playing that game!', 'error')
+        return redirect(url_for('games.challenge', code=ch.code))
+
+    if me == ch.creator_key:
+        if ch.creator_double_game:
+            flash('You already used your Double Down power-up on this challenge.', 'info')
+            return redirect(url_for('games.challenge', code=ch.code))
+        ch.creator_double_game = game_key
+    else:
+        if ch.opponent_double_game:
+            flash('You already used your Double Down power-up on this challenge.', 'info')
+            return redirect(url_for('games.challenge', code=ch.code))
+        ch.opponent_double_game = game_key
+
+    db.session.commit()
+    gmeta = GAME_BY_KEY.get(game_key, {})
+    flash(f"⚡ Double Down armed on {gmeta.get('title', game_key)}! Your score will count 2×!", 'success')
+    return redirect(url_for('games.challenge', code=ch.code))
+
+
+@games_bp.route('/challenge/<code>/rematch', methods=['POST'])
+def challenge_rematch(code):
+    """1-click Rematch or Double-or-Nothing rematch from a completed challenge."""
+    old = GameChallenge.query.filter_by(code=code.upper()).first_or_404()
+    if not _has_account():
+        return redirect(url_for('arena.player_register', next=url_for('games.challenge', code=old.code)))
+    player = get_current_player()
+    me = player.session_key
+
+    double_pot = (request.form.get('double_pot') == '1')
+    base_wager = int(old.wager_coins or 0)
+    wager = min(100, base_wager * 2 if (double_pot and base_wager > 0) else (25 if double_pot else base_wager))
+    if wager not in (0, 25, 50, 100):
+        wager = 50 if wager > 25 else 0
+    if wager > 0:
+        if (player.coins or 0) < wager:
+            wager = 0
+        else:
+            player.coins = (player.coins or 0) - wager
+
+    other_name = old.opponent_name if me == old.creator_key else old.creator_name
+    picked = _pick_challenge_games(mode=old.challenge_mode or 'random', category_filter=old.category_filter)
+
+    new_ch = GameChallenge(
+        code=new_challenge_code(),
+        status='waiting',
+        creator_key=me,
+        creator_name=player.display_name,
+        creator_avatar=player.avatar_key,
+        opponent_name=other_name,
+        challenge_mode=old.challenge_mode or 'random',
+        category_filter=old.category_filter,
+        wager_coins=wager,
+    )
+    new_ch.set_games(picked)
+    db.session.add(new_ch)
+    db.session.commit()
+    return redirect(url_for('games.challenge', code=new_ch.code, share=1))
 
 
 @games_bp.route('/challenge/<code>')
 def challenge(code):
-    """The challenge itself: who is winning, and what you have left to play."""
+    """The challenge itself: who is winning, power-ups, coin pot, rivalry & games."""
     ch = GameChallenge.query.filter_by(code=code.upper()).first_or_404()
     player = get_current_player(persist=False)
     me = player.session_key if player else None
@@ -770,6 +975,17 @@ def challenge(code):
             and not ch.expired):
         player = get_current_player()
         me = player.session_key
+        wager = int(ch.wager_coins or 0)
+        if wager > 0:
+            if (player.coins or 0) >= wager:
+                player.coins = (player.coins or 0) - wager
+            else:
+                # Refund creator and convert to friendly so nobody is blocked from playing
+                creator_p = PlayerProfile.query.filter_by(session_key=ch.creator_key).first()
+                if creator_p:
+                    creator_p.coins = (creator_p.coins or 0) + wager
+                ch.wager_coins = 0
+                flash('Converted to a friendly challenge (not enough coins to match the pot).', 'info')
         ch.opponent_key = me
         ch.opponent_name = player.display_name
         ch.opponent_avatar = player.avatar_key
@@ -781,19 +997,35 @@ def challenge(code):
         db.session.commit()
 
     rates = {g['key']: g.get('xp_rate', 0.1) for g in GAMES}
+    if ch.status == 'complete':
+        _settle_challenge_pot(ch, rates)
+
     table = ch.standings()
     for row in table['rows']:
         row['meta'] = GAME_BY_KEY.get(row['game_key'], {'title': row['game_key'], 'icon': '🎮'})
+
+    leader_side = ch.leader(rates)
+    is_creator = (me == ch.creator_key)
+    my_double = ch.creator_double_game if is_creator else (ch.opponent_double_game if ch.is_player(me) else None)
+    h2h = GameChallenge.h2h_record(
+        me if ch.is_player(me) else ch.creator_key,
+        (ch.opponent_key if is_creator else ch.creator_key) if ch.is_player(me) else ch.opponent_key,
+        rates
+    )
+    badges = ch.badges(leader_side, table) if ch.status == 'complete' else []
 
     return render_template(
         'themes/quizhub/games/challenge.html',
         challenge=ch,
         table=table,
-        leader=ch.leader(rates),
+        leader=leader_side,
         me=me,
-        is_creator=(me == ch.creator_key),
+        is_creator=is_creator,
         is_player=ch.is_player(me),
         my_scores=ch.scores_for(me) if me else {},
+        my_double=my_double,
+        h2h=h2h,
+        badges=badges,
         days_left=ch.days_left(),
         has_account=_has_account(),
     )

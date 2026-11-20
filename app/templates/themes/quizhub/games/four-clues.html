@@ -1,0 +1,150 @@
+{% extends "themes/quizhub/games/_shell.html" %}
+
+{% block hud_mid_label %}Value{% endblock %}
+{% block hud_mid_value %}500{% endblock %}
+
+{% block game_stage %}
+<div class="space-y-4 font-mono">
+  <!-- Clues stack -->
+  <div class="p-4 sm:p-5 rounded-3xl bg-slate-950/95 border-2 border-purple-500/40 shadow-2xl space-y-2.5">
+    <div class="flex items-center justify-between text-[10px] uppercase tracking-wider">
+      <span class="text-cyan-400 font-black">What links these clues?</span>
+      <span id="fcWorth" class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 font-black">500 PTS</span>
+    </div>
+    <div id="fcClues" class="space-y-2"></div>
+    <button type="button" id="fcNextClueBtn" onclick="window._fcReveal()"
+            class="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-cyan-500/40 text-cyan-300 font-bold text-xs uppercase tracking-wider transition">
+      💡 Reveal Next Clue (drops value)
+    </button>
+  </div>
+
+  <!-- 4 Options -->
+  <div id="fcOptions" class="grid grid-cols-2 gap-2.5 qmg-nosel"></div>
+
+  <div id="fcFeedback" class="hidden p-3 rounded-2xl text-center text-xs font-bold border"></div>
+
+  <div class="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-slate-950/80 border border-purple-500/20 text-[11px]">
+    <span class="text-slate-400">Round: <strong id="fcRound" class="text-cyan-300">1</strong>/{{ rounds|length }}</span>
+    <span class="text-slate-400">Solved: <strong id="fcSolved" class="text-emerald-300">0</strong></span>
+  </div>
+</div>
+{% endblock %}
+
+{% block how_extra %}
+<p class="mt-2">Clues get easier as you reveal them — buzz in after Clue 1 for 500 pts, Clue 2 for 350 pts, Clue 3 for 200 pts, or Clue 4 for 100 pts!</p>
+{% endblock %}
+
+{% block game_js %}
+<script>
+(function () {
+  var ROUNDS = {{ rounds|tojson }};
+  var VALUES = [500, 350, 200, 100];
+  var rIdx = 0, revealed = 1, solved = 0, locked = false;
+
+  var cluesEl = document.getElementById('fcClues');
+  var worthEl = document.getElementById('fcWorth');
+  var nextBtn = document.getElementById('fcNextClueBtn');
+  var optsEl = document.getElementById('fcOptions');
+  var fbEl = document.getElementById('fcFeedback');
+  var roundEl = document.getElementById('fcRound');
+  var solvedEl = document.getElementById('fcSolved');
+
+  function renderClues() {
+    var r = ROUNDS[rIdx];
+    cluesEl.innerHTML = '';
+    for (var i = 0; i < 4; i++) {
+      var div = document.createElement('div');
+      if (i < revealed) {
+        div.className = 'p-3 rounded-xl bg-slate-900/90 border border-cyan-500/35 text-xs sm:text-sm text-white flex items-start gap-2.5';
+        div.innerHTML = '<span class="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[10px] font-black shrink-0">' + (i + 1) + '</span><span>' + r.clues[i] + '</span>';
+      } else {
+        div.className = 'p-2.5 rounded-xl bg-slate-900/40 border border-slate-800 text-[11px] text-slate-600 flex items-center gap-2';
+        div.innerHTML = '<span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-500 text-[10px] font-black">' + (i + 1) + '</span><span>Locked clue</span>';
+      }
+      cluesEl.appendChild(div);
+    }
+    var val = VALUES[revealed - 1];
+    worthEl.textContent = val + ' PTS';
+    QMG.setMid(val);
+    nextBtn.classList.toggle('hidden', revealed >= 4 || locked);
+  }
+
+  function renderOptions() {
+    var r = ROUNDS[rIdx];
+    optsEl.innerHTML = '';
+    r.options.forEach(function (opt) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'p-3.5 rounded-2xl bg-slate-950/90 hover:bg-purple-950/60 border-2 border-purple-500/35 hover:border-cyan-400 text-xs sm:text-sm font-bold text-white transition active:scale-95';
+      btn.textContent = opt;
+      btn.onclick = function () { guess(opt, btn); };
+      optsEl.appendChild(btn);
+    });
+  }
+
+  window._fcReveal = function () {
+    if (locked || revealed >= 4) return;
+    revealed++;
+    QMG.audio.tone(480, 70, 'sine');
+    renderClues();
+  };
+
+  function guess(choice, btn) {
+    if (locked) return;
+    locked = true;
+    var r = ROUNDS[rIdx];
+    var val = VALUES[revealed - 1];
+    if (choice === r.answer) {
+      solved++;
+      QMG.addScore(val);
+      QMG.audio.tone(820, 140, 'sine');
+      btn.className = 'p-3.5 rounded-2xl bg-emerald-950/70 border-2 border-emerald-400 text-xs sm:text-sm font-black text-emerald-200';
+      fbEl.textContent = '✓ Correct on Clue ' + revealed + '! +' + val + ' pts';
+      fbEl.className = 'p-3 rounded-2xl text-center text-xs font-bold border bg-emerald-950/60 border-emerald-400 text-emerald-300';
+    } else {
+      QMG.audio.tone(220, 180, 'sawtooth');
+      btn.className = 'p-3.5 rounded-2xl bg-rose-950/70 border-2 border-rose-400 text-xs sm:text-sm font-black text-rose-200';
+      fbEl.textContent = '✗ Not quite — the answer was ' + r.answer;
+      fbEl.className = 'p-3 rounded-2xl text-center text-xs font-bold border bg-rose-950/60 border-rose-400 text-rose-300';
+    }
+    revealed = 4;
+    renderClues();
+    solvedEl.textContent = solved;
+    setTimeout(function () {
+      rIdx++;
+      if (rIdx >= ROUNDS.length) {
+        QMG.finish({
+          win: solved >= 4,
+          icon: solved === ROUNDS.length ? '🧠' : '🔗',
+          title: solved === ROUNDS.length ? 'Master Connector!' : 'Round Complete',
+          sub: solved + ' of ' + ROUNDS.length + ' connections cracked.',
+          detail: ['Buzz in early for maximum points']
+        });
+      } else {
+        loadRound();
+      }
+    }, 1600);
+  }
+
+  function loadRound() {
+    locked = false;
+    revealed = 1;
+    fbEl.classList.add('hidden');
+    roundEl.textContent = rIdx + 1;
+    QMG.setMidBar(rIdx / ROUNDS.length);
+    renderClues();
+    renderOptions();
+  }
+
+  function start() {
+    rIdx = 0; solved = 0;
+    solvedEl.textContent = '0';
+    QMG.setMidLabel('Value');
+    loadRound();
+  }
+
+  QMG.onReplay(start);
+  start();
+})();
+</script>
+{% endblock %}

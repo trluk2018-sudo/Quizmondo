@@ -1,0 +1,139 @@
+{% extends "themes/quizhub/games/_shell.html" %}
+
+{% block hud_mid_label %}Round{% endblock %}
+{% block hud_mid_value %}1{% endblock %}
+
+{% block game_stage %}
+<div class="space-y-4 font-mono">
+  <div class="p-5 rounded-3xl bg-gradient-to-br from-amber-950/40 via-slate-950 to-purple-950/50 border-2 border-amber-400/45 shadow-xl text-center space-y-1.5">
+    <div class="text-[10px] uppercase tracking-widest text-amber-300 font-black">Beat the Crowd &bull; Obscure Wins</div>
+    <h3 id="raPrompt" class="text-base sm:text-lg font-black text-white leading-snug"></h3>
+    <p class="text-[11px] text-slate-400">Pick the rarest valid answer for up to 100 pts — watch out for the fake decoy!</p>
+  </div>
+
+  <div id="raChoices" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 qmg-nosel"></div>
+
+  <div id="raFeedback" class="hidden p-3.5 rounded-2xl text-center text-xs font-bold border"></div>
+
+  <div class="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-slate-950/80 border border-purple-500/20 text-[11px]">
+    <span class="text-slate-400">Round: <strong id="raRound" class="text-cyan-300">1</strong>/{{ rounds|length }}</span>
+    <span class="text-slate-400">Pointless Hits (100): <strong id="raPointless" class="text-amber-300">0</strong></span>
+  </div>
+</div>
+{% endblock %}
+
+{% block how_extra %}
+<p class="mt-2">Every round has five real answers (worth 15 to 100 points depending on how obscure they are) and one trap decoy worth zero. Go deep to beat the crowd!</p>
+{% endblock %}
+
+{% block game_js %}
+<script>
+(function () {
+  var ROUNDS = {{ rounds|tojson }};
+  var rIdx = 0, pointlessHits = 0, locked = false;
+
+  var promptEl = document.getElementById('raPrompt');
+  var choicesEl = document.getElementById('raChoices');
+  var fbEl = document.getElementById('raFeedback');
+  var roundEl = document.getElementById('raRound');
+  var pointlessEl = document.getElementById('raPointless');
+
+  function renderChoices(revealedIdx) {
+    var r = ROUNDS[rIdx];
+    choicesEl.innerHTML = '';
+    r.choices.forEach(function (ch, i) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      var revealed = (revealedIdx !== null);
+      var cls = 'p-3.5 rounded-2xl border-2 text-left transition flex items-center justify-between gap-2 ';
+      if (!revealed) {
+        cls += 'bg-slate-950/90 hover:bg-purple-950/60 border-purple-500/35 hover:border-amber-400 text-white active:scale-95';
+      } else if (i === revealedIdx) {
+        if (!ch.valid) {
+          cls += 'bg-rose-950/70 border-rose-400 text-rose-200';
+        } else if (ch.points >= 90) {
+          cls += 'bg-amber-950/70 border-amber-400 text-amber-200 shadow-lg';
+        } else {
+          cls += 'bg-emerald-950/60 border-emerald-400 text-emerald-200';
+        }
+      } else if (ch.valid && ch.points >= 90) {
+        cls += 'bg-slate-900/90 border-amber-400/50 text-amber-300';
+      } else {
+        cls += 'bg-slate-900/50 border-slate-800 text-slate-400';
+      }
+      btn.className = cls;
+      var badge = '';
+      if (revealed) {
+        badge = ch.valid
+          ? '<span class="px-2 py-0.5 rounded-lg text-[11px] font-black ' + (ch.points >= 90 ? 'bg-amber-400 text-slate-950' : 'bg-slate-800 text-cyan-300') + '">+' + ch.points + '</span>'
+          : '<span class="px-2 py-0.5 rounded-lg text-[11px] font-black bg-rose-500/30 text-rose-300">TRAP</span>';
+      }
+      btn.innerHTML = '<span class="text-xs sm:text-sm font-bold">' + ch.label + '</span>' + badge;
+      if (!revealed) {
+        btn.onclick = function () { pick(i); };
+      }
+      choicesEl.appendChild(btn);
+    });
+  }
+
+  function pick(i) {
+    if (locked) return;
+    locked = true;
+    var ch = ROUNDS[rIdx].choices[i];
+    if (ch.valid) {
+      QMG.addScore(ch.points);
+      if (ch.points >= 100) {
+        pointlessHits++;
+        QMG.audio.tone(920, 180, 'sine');
+        fbEl.textContent = '🌟 POINTLESS ANSWER! +' + ch.points + ' pts — ' + ch.note;
+        fbEl.className = 'p-3.5 rounded-2xl text-center text-xs font-bold border bg-amber-950/70 border-amber-400 text-amber-200';
+      } else {
+        QMG.audio.tone(660, 120, 'sine');
+        fbEl.textContent = '✓ Valid! +' + ch.points + ' pts — ' + ch.note;
+        fbEl.className = 'p-3.5 rounded-2xl text-center text-xs font-bold border bg-emerald-950/60 border-emerald-400 text-emerald-300';
+      }
+    } else {
+      QMG.audio.tone(200, 200, 'sawtooth');
+      fbEl.textContent = '✗ Trap decoy! 0 pts — ' + ch.note;
+      fbEl.className = 'p-3.5 rounded-2xl text-center text-xs font-bold border bg-rose-950/60 border-rose-400 text-rose-300';
+    }
+    pointlessEl.textContent = pointlessHits;
+    renderChoices(i);
+    setTimeout(function () {
+      rIdx++;
+      if (rIdx >= ROUNDS.length) {
+        QMG.finish({
+          win: pointlessHits >= 2,
+          icon: pointlessHits >= 3 ? '🏆' : '🎯',
+          title: pointlessHits >= 3 ? 'Crowd Beater!' : 'Round Complete',
+          sub: pointlessHits + ' pointless 100-pt picks across ' + ROUNDS.length + ' rounds.',
+          detail: ['Obscurity pays off']
+        });
+      } else {
+        loadRound();
+      }
+    }, 2000);
+  }
+
+  function loadRound() {
+    locked = false;
+    fbEl.classList.add('hidden');
+    promptEl.textContent = ROUNDS[rIdx].prompt;
+    roundEl.textContent = rIdx + 1;
+    QMG.setMid((rIdx + 1) + '/' + ROUNDS.length);
+    QMG.setMidBar(rIdx / ROUNDS.length);
+    renderChoices(null);
+  }
+
+  function start() {
+    rIdx = 0; pointlessHits = 0;
+    pointlessEl.textContent = '0';
+    QMG.setMidLabel('Round');
+    loadRound();
+  }
+
+  QMG.onReplay(start);
+  start();
+})();
+</script>
+{% endblock %}

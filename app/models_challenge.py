@@ -56,6 +56,12 @@ class GameChallenge(db.Model):
     opponent_avatar = db.Column(db.String(40), default='quizzy')
 
     game_keys_json = db.Column(db.Text, default='[]')
+    challenge_mode = db.Column(db.String(20), default='random')  # random | category | custom
+    category_filter = db.Column(db.String(40), nullable=True)    # words | puzzles | memory | trivia
+    wager_coins = db.Column(db.Integer, default=0)               # optional stake per player (0, 25, 50, 100)
+    pot_settled = db.Column(db.Boolean, default=False)
+    creator_double_game = db.Column(db.String(40), nullable=True)   # 1x Double Down power-up
+    opponent_double_game = db.Column(db.String(40), nullable=True)  # 1x Double Down power-up
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     expires_at = db.Column(db.DateTime,
                            default=lambda: datetime.utcnow() + timedelta(days=CHALLENGE_DAYS))
@@ -90,9 +96,19 @@ class GameChallenge(db.Model):
         return key and key in (self.creator_key, self.opponent_key)
 
     def scores_for(self, key):
-        """{game_key: score} for one player."""
+        """{game_key: effective_score} for one player (applying 2x Double Down if active)."""
         rows = GameChallengeScore.query.filter_by(challenge_id=self.id, player_key=key).all()
-        return {r.game_key: (r.score or 0) for r in rows}
+        doubled_key = (
+            self.creator_double_game if key == self.creator_key
+            else (self.opponent_double_game if key == self.opponent_key else None)
+        )
+        out = {}
+        for r in rows:
+            sc = r.score or 0
+            if doubled_key and r.game_key == doubled_key:
+                sc = sc * 2
+            out[r.game_key] = sc
+        return out
 
     def standings(self):
         """Who won each game, and therefore the challenge.
@@ -117,12 +133,19 @@ class GameChallenge(db.Model):
                 c_wins += 1
             elif winner == 'opponent':
                 o_wins += 1
-            rows.append({'game_key': key, 'creator_score': a, 'opponent_score': b,
-                         'winner': winner, 'played_by_both': a is not None and b is not None})
+            rows.append({
+                'game_key': key,
+                'creator_score': a,
+                'opponent_score': b,
+                'creator_doubled': (self.creator_double_game == key),
+                'opponent_doubled': (self.opponent_double_game == key),
+                'winner': winner,
+                'played_by_both': a is not None and b is not None,
+            })
         return {'rows': rows, 'creator_wins': c_wins, 'opponent_wins': o_wins}
 
     def leader(self, xp_rates=None):
-        """'creator', 'opponent' or None, counting games won then XP."""
+        """'creator', 'opponent' or None, counting games won then XP tiebreaker."""
         table = self.standings()
         if table['creator_wins'] != table['opponent_wins']:
             return 'creator' if table['creator_wins'] > table['opponent_wins'] else 'opponent'
@@ -135,6 +158,56 @@ class GameChallenge(db.Model):
         if abs(cx - ox) < 0.5:
             return None
         return 'creator' if cx > ox else 'opponent'
+
+    @staticmethod
+    def h2h_record(key_a, key_b, xp_rates=None):
+        """All-time head-to-head completed challenge record between two players."""
+        if not key_a or not key_b:
+            return {'a_wins': 0, 'b_wins': 0, 'ties': 0, 'total': 0}
+        past = GameChallenge.query.filter(
+            GameChallenge.status == 'complete',
+            db.or_(
+                db.and_(GameChallenge.creator_key == key_a, GameChallenge.opponent_key == key_b),
+                db.and_(GameChallenge.creator_key == key_b, GameChallenge.opponent_key == key_a),
+            )
+        ).all()
+        a_wins = b_wins = ties = 0
+        for ch in past:
+            w = ch.leader(xp_rates)
+            if w == 'creator':
+                if ch.creator_key == key_a:
+                    a_wins += 1
+                else:
+                    b_wins += 1
+            elif w == 'opponent':
+                if ch.opponent_key == key_a:
+                    a_wins += 1
+                else:
+                    b_wins += 1
+            else:
+                ties += 1
+        return {'a_wins': a_wins, 'b_wins': b_wins, 'ties': ties, 'total': len(past)}
+
+    def badges(self, leader_side, table):
+        """Earnable arcade badges shown on completed challenges."""
+        out = []
+        if not leader_side:
+            return out
+        w_wins = table['creator_wins'] if leader_side == 'creator' else table['opponent_wins']
+        l_wins = table['opponent_wins'] if leader_side == 'creator' else table['creator_wins']
+        if w_wins >= len(self.games()) and l_wins == 0:
+            out.append(('🔥', 'CLEAN SWEEP 5-0'))
+        if w_wins == l_wins:
+            out.append(('⚖️', 'TIEBREAKER VICTORY'))
+        if (self.wager_coins or 0) >= 50:
+            out.append(('🪙', f'HIGH ROLLER (+{self.wager_coins * 2} COINS)'))
+        doubled = self.creator_double_game if leader_side == 'creator' else self.opponent_double_game
+        if doubled:
+            for r in table['rows']:
+                if r['game_key'] == doubled and r['winner'] == leader_side:
+                    out.append(('⚡', 'DOUBLE DOWN MASTER'))
+                    break
+        return out
 
 
 class GameChallengeScore(db.Model):

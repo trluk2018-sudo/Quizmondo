@@ -873,3 +873,388 @@ def wheel_puzzle(rng=None):
         'outer': letters[1:],
         'solutions': sorted(set(solutions), key=lambda w: (-len(w), w)),
     }
+
+
+# ==============================================================================
+# NEW ARCADE MINI-GAMES DATA (Higher/Lower, Timeline Sort, 4 Clues, Beat the Crowd)
+# ==============================================================================
+
+HIGHER_LOWER_CARDS = [
+    # Mixed comparable real-world trivia metrics grouped by unit so every pair makes sense!
+    {'group': 'height', 'unit': 'metres', 'label': 'Mount Everest', 'value': 8848, 'hint': 'Nepal / Tibet'},
+    {'group': 'height', 'unit': 'metres', 'label': 'K2', 'value': 8611, 'hint': 'Karakoram'},
+    {'group': 'height', 'unit': 'metres', 'label': 'Mount Kilimanjaro', 'value': 5895, 'hint': 'Tanzania'},
+    {'group': 'height', 'unit': 'metres', 'label': 'Mont Blanc', 'value': 4808, 'hint': 'Alps'},
+    {'group': 'height', 'unit': 'metres', 'label': 'Mount Fuji', 'value': 3776, 'hint': 'Japan'},
+    {'group': 'height', 'unit': 'metres', 'label': 'Ben Nevis', 'value': 1345, 'hint': 'Scotland'},
+    {'group': 'height', 'unit': 'metres', 'label': 'Burj Khalifa', 'value': 828, 'hint': 'Dubai'},
+    {'group': 'height', 'unit': 'metres', 'label': 'Eiffel Tower', 'value': 330, 'hint': 'Paris'},
+    {'group': 'height', 'unit': 'metres', 'label': 'The Shard', 'value': 310, 'hint': 'London'},
+    {'group': 'height', 'unit': 'metres', 'label': 'Great Pyramid of Giza', 'value': 138, 'hint': 'Egypt'},
+
+    {'group': 'year', 'unit': 'year', 'label': 'Oxford University teaching begins', 'value': 1096, 'hint': 'England'},
+    {'group': 'year', 'unit': 'year', 'label': 'Magna Carta signed', 'value': 1215, 'hint': 'Runnymede'},
+    {'group': 'year', 'unit': 'year', 'label': 'Machu Picchu built', 'value': 1450, 'hint': 'Inca Empire'},
+    {'group': 'year', 'unit': 'year', 'label': 'Gutenberg printing press', 'value': 1440, 'hint': 'Mainz'},
+    {'group': 'year', 'unit': 'year', 'label': 'London Underground opens', 'value': 1863, 'hint': 'Metropolitan Line'},
+    {'group': 'year', 'unit': 'year', 'label': 'Nintendo founded', 'value': 1889, 'hint': 'Kyoto (playing cards)'},
+    {'group': 'year', 'unit': 'year', 'label': 'First powered Wright flight', 'value': 1903, 'hint': 'Kitty Hawk'},
+    {'group': 'year', 'unit': 'year', 'label': 'Titanic sinks', 'value': 1912, 'hint': 'North Atlantic'},
+    {'group': 'year', 'unit': 'year', 'label': 'Penicillin discovered', 'value': 1928, 'hint': 'Alexander Fleming'},
+    {'group': 'year', 'unit': 'year', 'label': 'Apollo 11 Moon landing', 'value': 1969, 'hint': 'Sea of Tranquillity'},
+    {'group': 'year', 'unit': 'year', 'label': 'Pac-Man released', 'value': 1980, 'hint': 'Arcade'},
+    {'group': 'year', 'unit': 'year', 'label': 'Tetris created', 'value': 1984, 'hint': 'Alexey Pajitnov'},
+    {'group': 'year', 'unit': 'year', 'label': 'World Wide Web proposed', 'value': 1989, 'hint': 'Tim Berners-Lee'},
+    {'group': 'year', 'unit': 'year', 'label': 'First iPhone launched', 'value': 2007, 'hint': 'Apple'},
+
+    {'group': 'speed', 'unit': 'km/h', 'label': 'Peregrine falcon dive', 'value': 389, 'hint': 'Fastest bird'},
+    {'group': 'speed', 'unit': 'km/h', 'label': 'Formula 1 top speed', 'value': 372, 'hint': 'Monza'},
+    {'group': 'speed', 'unit': 'km/h', 'label': 'Shinkansen bullet train', 'value': 320, 'hint': 'Japan'},
+    {'group': 'speed', 'unit': 'km/h', 'label': 'Cheetah sprint', 'value': 120, 'hint': 'Fastest land animal'},
+    {'group': 'speed', 'unit': 'km/h', 'label': 'Sailfish burst speed', 'value': 110, 'hint': 'Ocean'},
+    {'group': 'speed', 'unit': 'km/h', 'label': 'Usain Bolt peak speed', 'value': 45, 'hint': '100m record'},
+    {'group': 'speed', 'unit': 'km/h', 'label': 'Sound in air (sea level)', 'value': 1235, 'hint': 'Mach 1'},
+    {'group': 'speed', 'unit': 'km/h', 'label': 'Concorde cruise speed', 'value': 2179, 'hint': 'Mach 2.04'},
+
+    {'group': 'pop', 'unit': 'million', 'label': 'Tokyo Metro population', 'value': 37, 'hint': 'Japan'},
+    {'group': 'pop', 'unit': 'million', 'label': 'Australia population', 'value': 27, 'hint': 'Country'},
+    {'group': 'pop', 'unit': 'million', 'label': 'Canada population', 'value': 41, 'hint': 'Country'},
+    {'group': 'pop', 'unit': 'million', 'label': 'United Kingdom population', 'value': 68, 'hint': 'Country'},
+    {'group': 'pop', 'unit': 'million', 'label': 'California population', 'value': 39, 'hint': 'US State'},
+    {'group': 'pop', 'unit': 'million', 'label': 'New Zealand population', 'value': 5, 'hint': 'Country'},
+    {'group': 'pop', 'unit': 'million', 'label': 'Brazil population', 'value': 212, 'hint': 'Country'},
+    {'group': 'pop', 'unit': 'million', 'label': 'Japan population', 'value': 124, 'hint': 'Country'},
+]
+
+
+def higher_lower_deck(rng=None, count=14):
+    """Build a deck of same-unit comparison pairs so every round is fair & fun."""
+    rng = rng or random
+    by_group = {}
+    for c in HIGHER_LOWER_CARDS:
+        by_group.setdefault(c['group'], []).append(c)
+    pairs = []
+    groups = list(by_group.keys())
+    for _ in range(count * 3):
+        g = rng.choice(groups)
+        pool = by_group[g]
+        if len(pool) < 2:
+            continue
+        a, b = rng.sample(pool, 2)
+        if a['value'] == b['value']:
+            continue
+        key = (a['label'], b['label'])
+        if any((p['a']['label'], p['b']['label']) == key for p in pairs):
+            continue
+        pairs.append({'group': g, 'unit': a['unit'], 'a': a, 'b': b})
+        if len(pairs) >= count:
+            break
+    return pairs
+
+
+TIMELINE_ROUNDS = [
+    {
+        'theme': 'Inventions That Changed the World',
+        'events': [
+            {'label': 'Printing Press (Gutenberg)', 'year': 1440},
+            {'label': 'Steam Engine (James Watt)', 'year': 1776},
+            {'label': 'First Telephone Call', 'year': 1876},
+            {'label': 'First Powered Flight', 'year': 1903},
+        ],
+    },
+    {
+        'theme': 'Music Milestones',
+        'events': [
+            {'label': 'The Beatles release Sgt. Pepper', 'year': 1967},
+            {'label': 'Queen release Bohemian Rhapsody', 'year': 1975},
+            {'label': 'Michael Jackson releases Thriller', 'year': 1982},
+            {'label': 'Oasis release What\'s the Story (Morning Glory)?', 'year': 1995},
+        ],
+    },
+    {
+        'theme': 'Space Exploration',
+        'events': [
+            {'label': 'Sputnik 1 launched', 'year': 1957},
+            {'label': 'Yuri Gagarin orbits Earth', 'year': 1961},
+            {'label': 'Apollo 11 Moon landing', 'year': 1969},
+            {'label': 'Hubble Space Telescope launched', 'year': 1990},
+        ],
+    },
+    {
+        'theme': 'Computing & The Internet',
+        'events': [
+            {'label': 'First ARPANET message ("LO")', 'year': 1969},
+            {'label': 'World Wide Web proposed', 'year': 1989},
+            {'label': 'Google founded', 'year': 1998},
+            {'label': 'First YouTube video uploaded', 'year': 2005},
+        ],
+    },
+    {
+        'theme': 'Iconic Films',
+        'events': [
+            {'label': 'Jaws', 'year': 1975},
+            {'label': 'Back to the Future', 'year': 1985},
+            {'label': 'Jurassic Park', 'year': 1993},
+            {'label': 'The Matrix', 'year': 1999},
+        ],
+    },
+    {
+        'theme': 'British Landmarks & Firsts',
+        'events': [
+            {'label': 'London Underground opens', 'year': 1863},
+            {'label': 'Tower Bridge opens', 'year': 1894},
+            {'label': 'BBC begins television broadcasts', 'year': 1936},
+            {'label': 'Channel Tunnel opens', 'year': 1994},
+        ],
+    },
+    {
+        'theme': 'Video Game Consoles',
+        'events': [
+            {'label': 'Atari 2600', 'year': 1977},
+            {'label': 'Nintendo Game Boy', 'year': 1989},
+            {'label': 'Sony PlayStation', 'year': 1994},
+            {'label': 'Nintendo Switch', 'year': 2017},
+        ],
+    },
+    {
+        'theme': 'World History Moments',
+        'events': [
+            {'label': 'Magna Carta signed', 'year': 1215},
+            {'label': 'French Revolution begins', 'year': 1789},
+            {'label': 'Berlin Wall falls', 'year': 1989},
+            {'label': 'Euro currency launches in cash', 'year': 2002},
+        ],
+    },
+]
+
+
+def timeline_sort_rounds(rng=None, count=5):
+    rng = rng or random
+    picked = rng.sample(TIMELINE_ROUNDS, min(count, len(TIMELINE_ROUNDS)))
+    out = []
+    for r in picked:
+        evs = list(r['events'])
+        correct_order = [e['label'] for e in sorted(evs, key=lambda x: x['year'])]
+        shuffled = list(evs)
+        for _ in range(8):
+            rng.shuffle(shuffled)
+            if [e['label'] for e in shuffled] != correct_order:
+                break
+        out.append({
+            'theme': r['theme'],
+            'events': shuffled,
+            'correct': sorted(evs, key=lambda x: x['year']),
+        })
+    return out
+
+
+FOUR_CLUES_ROUNDS = [
+    {
+        'clues': [
+            'Invented around 1700 by Bartolomeo Cristofori',
+            'Its Italian name literally means "soft-loud"',
+            'A standard concert model has 88 keys',
+            'Played by Frédéric Chopin and Elton John',
+        ],
+        'answer': 'Piano',
+        'options': ['Piano', 'Harpsichord', 'Accordion', 'Pipe Organ'],
+    },
+    {
+        'clues': [
+            'Its chemical symbol comes from the Latin "aurum"',
+            'Atomic number 79 on the periodic table',
+            'So malleable one gram can be beaten into a square metre sheet',
+            'Given to first-place finishers at the Olympics',
+        ],
+        'answer': 'Gold',
+        'options': ['Gold', 'Silver', 'Copper', 'Platinum'],
+    },
+    {
+        'clues': [
+            'Has three hearts and blue copper-based blood',
+            'Two-thirds of its neurons live in its arms',
+            'Can squeeze through any gap wider than its beak',
+            'Eight-armed master of underwater camouflage',
+        ],
+        'answer': 'Octopus',
+        'options': ['Octopus', 'Cuttlefish', 'Giant Squid', 'Nautilus'],
+    },
+    {
+        'clues': [
+            'Takes 243 Earth days to spin once on its axis',
+            'Spins backwards compared with almost every other planet',
+            'Its runaway greenhouse atmosphere hits 465°C',
+            'The brightest planet in Earth\'s night sky',
+        ],
+        'answer': 'Venus',
+        'options': ['Venus', 'Mercury', 'Mars', 'Jupiter'],
+    },
+    {
+        'clues': [
+            'Originally grew wild only in the Ethiopian highlands',
+            'Its bitter compound evolved as an insect defence',
+            '17th-century London shops serving it were called "penny universities"',
+            'Arabica and Robusta are its two main commercial beans',
+        ],
+        'answer': 'Coffee',
+        'options': ['Coffee', 'Cocoa', 'Tea', 'Nutmeg'],
+    },
+    {
+        'clues': [
+            'Grows up to 15 cm taller in summer heat',
+            'Built as a temporary entrance arch for the 1889 World\'s Fair',
+            'Repainted roughly every seven years with 60 tonnes of paint',
+            'Iron lattice landmark overlooking the Champ de Mars in Paris',
+        ],
+        'answer': 'Eiffel Tower',
+        'options': ['Eiffel Tower', 'Big Ben', 'Colosseum', 'Statue of Liberty'],
+    },
+    {
+        'clues': [
+            'Invented in 1920 by a Russian physicist',
+            'Has two metal antennas — one for pitch, one for volume',
+            'Used on the Beach Boys\' "Good Vibrations"',
+            'Played entirely in mid-air without touching it',
+        ],
+        'answer': 'Theremin',
+        'options': ['Theremin', 'Synthesizer', 'Glass Armonica', 'Ondes Martenot'],
+    },
+    {
+        'clues': [
+            'Its 1956 debut cut cargo loading costs by over 90%',
+            'Measured globally in TEUs (twenty-foot equivalent units)',
+            'Uses standardised corner twist-locks for ships, trains and lorries',
+            'The corrugated steel box stacked on mega-freighters',
+        ],
+        'answer': 'Shipping Container',
+        'options': ['Shipping Container', 'Forklift Pallet', 'Rail Tanker', 'Cargo Crane'],
+    },
+    {
+        'clues': [
+            'Its name comes from a 10th-century Danish king',
+            'Its logo combines two Nordic runes: Hagall and Berkanan',
+            'Operates in the 2.4 GHz short-range radio band',
+            'Connects your wireless headphones to your phone',
+        ],
+        'answer': 'Bluetooth',
+        'options': ['Bluetooth', 'Wi-Fi', 'NFC', 'Infrared'],
+    },
+    {
+        'clues': [
+            'Found still edible in 3,000-year-old Egyptian tombs',
+            'Naturally acidic with almost no free water for bacteria',
+            'Contains trace hydrogen peroxide produced by an enzyme',
+            'Sweet golden syrup made by bees from flower nectar',
+        ],
+        'answer': 'Honey',
+        'options': ['Honey', 'Maple Syrup', 'Molasses', 'Agave Nectar'],
+    },
+]
+
+
+def four_clues_rounds(rng=None, count=6):
+    rng = rng or random
+    picked = rng.sample(FOUR_CLUES_ROUNDS, min(count, len(FOUR_CLUES_ROUNDS)))
+    out = []
+    for r in picked:
+        opts = list(r['options'])
+        rng.shuffle(opts)
+        out.append({
+            'clues': list(r['clues']),
+            'answer': r['answer'],
+            'options': opts,
+        })
+    return out
+
+
+RARE_ANSWER_ROUNDS = [
+    {
+        'prompt': 'Pick the MOST OBSCURE valid European Capital City',
+        'choices': [
+            {'label': 'Paris', 'valid': True, 'points': 15, 'note': 'Very common (85% pick)'},
+            {'label': 'Rome', 'valid': True, 'points': 25, 'note': 'Common'},
+            {'label': 'Prague', 'valid': True, 'points': 50, 'note': 'Mid-table'},
+            {'label': 'Podgorica', 'valid': True, 'points': 85, 'note': 'Montenegro — rare!'},
+            {'label': 'Vaduz', 'valid': True, 'points': 100, 'note': 'Liechtenstein — POINTLESS!'},
+            {'label': 'Zurich', 'valid': False, 'points': 0, 'note': 'Trap! Bern is Switzerland\'s federal city'},
+        ],
+    },
+    {
+        'prompt': 'Pick the MOST OBSCURE real Chemical Element',
+        'choices': [
+            {'label': 'Oxygen', 'valid': True, 'points': 15, 'note': 'Everyone knows it'},
+            {'label': 'Gold', 'valid': True, 'points': 25, 'note': 'Very common'},
+            {'label': 'Tungsten', 'valid': True, 'points': 65, 'note': 'Symbol W — nice pick!'},
+            {'label': 'Praseodymium', 'valid': True, 'points': 100, 'note': 'Element 59 — POINTLESS!'},
+            {'label': 'Krypton', 'valid': True, 'points': 45, 'note': 'Real noble gas'},
+            {'label': 'Vibranium', 'valid': False, 'points': 0, 'note': 'Trap! Marvel fiction'},
+        ],
+    },
+    {
+        'prompt': 'Pick the MOST OBSCURE official James Bond Film',
+        'choices': [
+            {'label': 'Skyfall', 'valid': True, 'points': 15, 'note': 'Huge blockbuster'},
+            {'label': 'Goldfinger', 'valid': True, 'points': 25, 'note': 'Classic'},
+            {'label': 'Moonraker', 'valid': True, 'points': 55, 'note': '1979 Roger Moore'},
+            {'label': 'The Living Daylights', 'valid': True, 'points': 85, 'note': '1987 Timothy Dalton'},
+            {'label': 'For Your Eyes Only', 'valid': True, 'points': 100, 'note': '1981 — rarest pick!'},
+            {'label': 'Golden Bullet', 'valid': False, 'points': 0, 'note': 'Trap! Not a real Bond title'},
+        ],
+    },
+    {
+        'prompt': 'Pick the MOST OBSCURE Country That Borders France (including overseas)',
+        'choices': [
+            {'label': 'Spain', 'valid': True, 'points': 15, 'note': 'Obvious neighbour'},
+            {'label': 'Italy', 'valid': True, 'points': 25, 'note': 'Obvious neighbour'},
+            {'label': 'Andorra', 'valid': True, 'points': 60, 'note': 'Pyrenees microstate'},
+            {'label': 'Brazil', 'valid': True, 'points': 85, 'note': 'France\'s longest border (French Guiana)!'},
+            {'label': 'Suriname', 'valid': True, 'points': 100, 'note': 'Via French Guiana — POINTLESS!'},
+            {'label': 'Austria', 'valid': False, 'points': 0, 'note': 'Trap! No border with France'},
+        ],
+    },
+    {
+        'prompt': 'Pick the MOST OBSCURE Real Planet or Dwarf Planet in Our Solar System',
+        'choices': [
+            {'label': 'Mars', 'valid': True, 'points': 15, 'note': 'Everyone knows Mars'},
+            {'label': 'Pluto', 'valid': True, 'points': 30, 'note': 'Famous dwarf planet'},
+            {'label': 'Ceres', 'valid': True, 'points': 65, 'note': 'Asteroid belt dwarf planet'},
+            {'label': 'Haumea', 'valid': True, 'points': 90, 'note': 'Egg-shaped Kuiper object'},
+            {'label': 'Makemake', 'valid': True, 'points': 100, 'note': 'Rarest dwarf planet — POINTLESS!'},
+            {'label': 'Nibiru', 'valid': False, 'points': 0, 'note': 'Trap! Mythical/fictional'},
+        ],
+    },
+    {
+        'prompt': 'Pick the MOST OBSCURE Real Shakespeare Play',
+        'choices': [
+            {'label': 'Hamlet', 'valid': True, 'points': 15, 'note': 'Most famous'},
+            {'label': 'Macbeth', 'valid': True, 'points': 20, 'note': 'Very common'},
+            {'label': 'The Tempest', 'valid': True, 'points': 45, 'note': 'Well-known late play'},
+            {'label': 'Cymbeline', 'valid': True, 'points': 85, 'note': 'Rarely named!'},
+            {'label': 'Timon of Athens', 'valid': True, 'points': 100, 'note': 'Deep-cut tragedy — POINTLESS!'},
+            {'label': 'Duke of Verona', 'valid': False, 'points': 0, 'note': 'Trap! Invented title'},
+        ],
+    },
+    {
+        'prompt': 'Pick the MOST OBSCURE Real Musical Instrument',
+        'choices': [
+            {'label': 'Violin', 'valid': True, 'points': 15, 'note': 'Everyday classic'},
+            {'label': 'Bassoon', 'valid': True, 'points': 45, 'note': 'Orchestra woodwind'},
+            {'label': 'Theremin', 'valid': True, 'points': 70, 'note': 'Hands-free electronic'},
+            {'label': 'Nyckelharpa', 'valid': True, 'points': 100, 'note': 'Swedish keyed fiddle — POINTLESS!'},
+            {'label': 'Ocarina', 'valid': True, 'points': 55, 'note': 'Ancient vessel flute'},
+            {'label': 'Bramophone', 'valid': False, 'points': 0, 'note': 'Trap! Not a real instrument'},
+        ],
+    },
+]
+
+
+def rare_answer_rounds(rng=None, count=6):
+    rng = rng or random
+    picked = rng.sample(RARE_ANSWER_ROUNDS, min(count, len(RARE_ANSWER_ROUNDS)))
+    out = []
+    for r in picked:
+        choices = list(r['choices'])
+        rng.shuffle(choices)
+        out.append({'prompt': r['prompt'], 'choices': choices})
+    return out
+

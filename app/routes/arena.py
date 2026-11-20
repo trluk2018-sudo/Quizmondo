@@ -935,8 +935,11 @@ def dashboard():
     # Top leaderboards
     top_players = PlayerProfile.query.filter_by(is_paused=False).order_by(PlayerProfile.xp.desc()).limit(5).all()
 
-    # Available Packs
+    # Available Packs & Trivia Categories for optional custom duel creation
     packs = QuizPack.query.order_by(QuizPack.created_at.desc()).limit(6).all()
+    trivia_categories = db.session.query(
+        QuizQuestion.category_slug, QuizQuestion.category_name
+    ).filter(QuizQuestion.status == 'approved').distinct().order_by(QuizQuestion.category_name.asc()).all()
 
     # Completed Battles & Duels Summary (Only for logged-in players with finished games)
     completed_battles_summary = _dashboard_completed(player)
@@ -957,6 +960,7 @@ def dashboard():
         group_lobbies=group_lobbies,
         top_players=top_players,
         packs=packs,
+        trivia_categories=trivia_categories,
         avatars=AVATAR_PRESETS
     )
 

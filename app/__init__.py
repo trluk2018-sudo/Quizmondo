@@ -418,6 +418,22 @@ def _ensure_schema():
                 db.session.execute(text("ALTER TABLE quiz_questions ADD COLUMN is_community BOOLEAN DEFAULT 0"))
             db.session.commit()
 
+        cols_gch = [row[1] for row in db.session.execute(text("PRAGMA table_info(game_challenges)")).fetchall()]
+        if cols_gch:
+            if 'challenge_mode' not in cols_gch:
+                db.session.execute(text("ALTER TABLE game_challenges ADD COLUMN challenge_mode VARCHAR(20) DEFAULT 'random'"))
+            if 'category_filter' not in cols_gch:
+                db.session.execute(text("ALTER TABLE game_challenges ADD COLUMN category_filter VARCHAR(40)"))
+            if 'wager_coins' not in cols_gch:
+                db.session.execute(text("ALTER TABLE game_challenges ADD COLUMN wager_coins INTEGER DEFAULT 0"))
+            if 'pot_settled' not in cols_gch:
+                db.session.execute(text("ALTER TABLE game_challenges ADD COLUMN pot_settled BOOLEAN DEFAULT 0"))
+            if 'creator_double_game' not in cols_gch:
+                db.session.execute(text("ALTER TABLE game_challenges ADD COLUMN creator_double_game VARCHAR(40)"))
+            if 'opponent_double_game' not in cols_gch:
+                db.session.execute(text("ALTER TABLE game_challenges ADD COLUMN opponent_double_game VARCHAR(40)"))
+            db.session.commit()
+
         # High-concurrency composite indexes for matchmaking, round lookup, and visual question selection
         db.session.execute(text("CREATE INDEX IF NOT EXISTS ix_qq_cat_type_diff ON quiz_questions (category_slug, question_type, difficulty)"))
         db.session.execute(text("CREATE INDEX IF NOT EXISTS ix_am_p1_status ON arena_matches (player1_session, status)"))
