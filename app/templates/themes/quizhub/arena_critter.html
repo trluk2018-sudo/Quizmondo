@@ -59,7 +59,7 @@
     #crHeaderCritterPill { display: none; }
     @media (orientation: landscape) and (max-height: 480px) {
       #crHeader {
-        height: 2.85rem !important;
+        height: 2.65rem !important;
         padding-left: max(0.85rem, env(safe-area-inset-left)) !important;
         padding-right: max(0.85rem, env(safe-area-inset-right)) !important;
       }
@@ -67,17 +67,19 @@
       #crHeaderCritterPill { display: inline-flex !important; }
       #crHabitatNamePill { display: none !important; }
       #crControls {
-        padding: 0.4rem 0.65rem !important;
-        padding-left: max(0.65rem, env(safe-area-inset-left)) !important;
-        gap: 0.32rem !important;
+        padding: 0.3rem 0.6rem !important;
+        padding-left: max(0.6rem, env(safe-area-inset-left)) !important;
+        gap: 0.18rem !important;
       }
-      #crBarsBox { gap: 0.22rem !important; }
-      #crStageWrap { width: 8.5rem !important; height: 8.5rem !important; }
-      #crSpeechWrap { margin-bottom: 0.25rem !important; max-width: 92% !important; }
-      #crSpeechBubble { padding: 0.4rem 0.85rem !important; }
-      #crQuizBox { padding: 0.45rem 0.6rem !important; gap: 0.25rem !important; }
-      #crStudyBox { padding: 0.4rem 0.6rem !important; }
-      .cr-btn { padding-top: 0.35rem !important; padding-bottom: 0.35rem !important; font-size: 10px !important; }
+      #crBarsBox { gap: 0.1rem !important; }
+      #crBarsBox .space-y-0\.5 > :not([hidden]) ~ :not([hidden]) { margin-top: 1px !important; }
+      #crBarsBox .h-2\.5 { height: 0.42rem !important; }
+      #crStageWrap { width: 8.25rem !important; height: 8.25rem !important; }
+      #crSpeechWrap { margin-bottom: 0.2rem !important; width: 290px !important; max-width: 78% !important; }
+      #crSpeechBubble { padding: 0.5rem 0.9rem !important; border-radius: 1.35rem !important; }
+      #crQuizBox { padding: 0.3rem 0.55rem !important; gap: 0.15rem !important; }
+      #crStudyBox { padding: 0.26rem 0.55rem !important; }
+      .cr-btn { padding-top: 0.25rem !important; padding-bottom: 0.25rem !important; font-size: 10px !important; }
     }
 
     /* Full-screen "Rotate to Landscape" prompt on upright phones (matches Quizmondo's _rotate_hint style) */
@@ -206,27 +208,27 @@
       </div>
 
       <!-- Thought Bubble coming from the Critter's head -->
-      <div id="crSpeechWrap" class="relative z-20 mb-4 max-w-[88%] sm:max-w-md flex flex-col items-center">
-        <div id="crSpeechBubble" class="px-5 py-3 rounded-[2rem] bg-slate-950/92 border-2 border-cyan-300/65 shadow-[0_8px_30px_rgba(34,211,238,0.22)] text-center backdrop-blur">
+      <div id="crSpeechWrap" class="relative z-20 mb-3 w-[290px] sm:w-[340px] max-w-[82%] flex flex-col items-center">
+        <div id="crSpeechBubble" class="w-full px-4 py-2.5 sm:px-5 sm:py-3 rounded-3xl bg-slate-950/95 border-2 border-cyan-300/70 shadow-[0_8px_28px_rgba(34,211,238,0.22)] text-center backdrop-blur">
           <p id="crSpeechText" class="text-[11px] sm:text-xs font-bold text-white leading-snug">
             Hi! Thanks for looking after me! 💖
           </p>
-          <div id="crSpeechLinkWrap" class="hidden mt-1.5">
-            <a id="crSpeechLink" href="/posts" class="inline-block px-2.5 py-1 rounded-full bg-amber-400/20 hover:bg-amber-400/30 border border-amber-400/50 text-amber-300 text-[10px] font-black transition">
+          <div id="crSpeechLinkWrap" class="hidden mt-1.5 w-full overflow-hidden">
+            <a id="crSpeechLink" href="/posts" class="block max-w-full truncate px-3 py-1 rounded-full bg-amber-400/20 hover:bg-amber-400/30 border border-amber-400/50 text-amber-300 text-[10px] font-black transition">
               📖 Read Suggested Article &rarr;
             </a>
           </div>
           <div id="crSpeechActionWrap" class="hidden mt-1.5">
             <button type="button" id="crSpeechActionBtn" onclick="openStyleForNaming()"
-                    class="px-3 py-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-purple-500 text-slate-950 text-[10px] sm:text-[11px] font-black uppercase tracking-wide shadow transition active:scale-95">
+                    class="px-3.5 py-1 rounded-full bg-gradient-to-r from-cyan-400 to-purple-500 text-slate-950 text-[10px] sm:text-[11px] font-black uppercase tracking-wide shadow transition active:scale-95">
               ✨ Name &amp; Style Me &rarr;
             </button>
           </div>
         </div>
         <!-- Classic Thought-Bubble Dots trailing down to Critter's Brain -->
-        <div class="flex flex-col items-center -mt-1 pointer-events-none">
-          <span class="w-3.5 h-3.5 rounded-full bg-slate-950/95 border-2 border-cyan-300/65 shadow"></span>
-          <span class="w-2 h-2 rounded-full bg-slate-950/95 border border-cyan-300/65 mt-1 ml-3"></span>
+        <div class="flex flex-col items-center mt-1 pointer-events-none">
+          <span class="w-3 h-3 rounded-full bg-slate-950/95 border-2 border-cyan-300/70 shadow"></span>
+          <span class="w-2 h-2 rounded-full bg-slate-950/95 border border-cyan-300/70 mt-1 ml-3"></span>
         </div>
       </div>
 
