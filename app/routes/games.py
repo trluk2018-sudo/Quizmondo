@@ -689,10 +689,20 @@ def submit_score():
         row.best_at = datetime.utcnow()
 
     xp = min(XP_CAP, int(score * meta.get('xp_rate', 0.1)))
-    coins = xp // 10
+    raw_coins = min(4, max(1, xp // 25)) if xp > 0 else 0
+    # Ad-backed Coin Economy (1,000 Coins = £1.00): cap daily Arcade coins at 20/day
+    today_iso = datetime.utcnow().date().isoformat()
+    if session.get('arcade_coin_date') != today_iso:
+        session['arcade_coin_date'] = today_iso
+        session['arcade_coins_today'] = 0
+    earned_today = int(session.get('arcade_coins_today') or 0)
+    ARCADE_DAILY_COIN_CAP = 20
+    coins = max(0, min(raw_coins, ARCADE_DAILY_COIN_CAP - earned_today))
     if xp > 0 and player.id:
         player.add_xp(xp)
-        player.coins = (player.coins or 0) + coins
+        if coins > 0:
+            player.coins = (player.coins or 0) + coins
+            session['arcade_coins_today'] = earned_today + coins
         player.last_active_at = datetime.utcnow()
 
     db.session.commit()

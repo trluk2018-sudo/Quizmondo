@@ -68,16 +68,25 @@ class CritterCompanion(db.Model):
         try:
             data = json.loads(self.appearance_json or '{}')
             merged = dict(DEFAULT_APPEARANCE)
-            merged.update({k: v for k, v in data.items() if v is not None})
+            merged.update({k: v for k, v in data.items() if v is not None and not str(k).startswith('_')})
             return merged
         except Exception:
             return dict(DEFAULT_APPEARANCE)
 
     def set_appearance(self, data: dict):
+        raw = {}
+        try:
+            raw = json.loads(self.appearance_json or '{}')
+        except Exception:
+            raw = {}
         cur = self.get_appearance()
         for k in ('species', 'preset_id', 'color', 'accent', 'hair', 'hat', 'scarf'):
             if k in data:
                 cur[k] = data[k]
+        # Preserve internal decay tick timestamps stored in appearance_json
+        for meta_k in ('_decay_ts', '_edu_tick'):
+            if meta_k in raw:
+                cur[meta_k] = raw[meta_k]
         self.appearance_json = json.dumps(cur)
 
     def get_today_q_ids(self) -> list:
@@ -179,38 +188,108 @@ class CritterCompanion(db.Model):
             self.status = 'healthy'
         return self.status
 
+    @staticmethod
+    def _tiered_tick_loss(val: int, tick_num: int) -> int:
+        """Tiered stat loss per tick:
+        - < 30: loses 3 points
+        - < 60: loses 2 points
+        - < 90: loses 1 point
+        - >= 90: loses 1 point every 2nd tick (grace buffer so 90-100 still gently drifts below 90)
+        """
+        if val < 30:
+            return 3
+        if val < 60:
+            return 2
+        if val < 90:
+            return 1
+        return 1 if (tick_num % 2 == 0) else 0
+
+    def reset_decay_clock(self):
+        """Reset the 3-hour tiered decay clock (called on creation or fresh hatch)."""
+        try:
+            raw = json.loads(self.appearance_json or '{}')
+        except Exception:
+            raw = dict(DEFAULT_APPEARANCE)
+        raw['_decay_ts'] = int(datetime.utcnow().timestamp())
+        raw['_edu_tick'] = 0
+        self.appearance_json = json.dumps(raw)
+        self.last_decay_date = datetime.utcnow().date()
+
     def apply_daily_decay(self):
-        """Daily stat decay + cascading neglect penalty when any bar is <= 20."""
-        today = datetime.utcnow().date()
+        """Tiered 3-hour stat decay (<90: -1, <60: -2, <30: -3) + half-speed Education decay (every 6h)
+        + cascading neglect penalty when any bar is <= 20.
+        """
+        now_utc = datetime.utcnow()
+        today = now_utc.date()
+        now_ts = int(now_utc.timestamp())
+        changed = False
+
+        # Calendar-day survival counter & daily sickness reset
         if not self.last_decay_date:
             self.last_decay_date = today
-            return False
-        delta = (today - self.last_decay_date).days
-        if delta <= 0:
-            return False
-        if self.status != 'fainted':
-            eff_days = min(delta, 4)
-            base_drop = eff_days * 14
+            changed = True
+        else:
+            day_delta = (today - self.last_decay_date).days
+            if day_delta > 0:
+                if self.status != 'fainted':
+                    self.days_alive = (self.days_alive or 1) + day_delta
+                self.last_decay_date = today
+                self.sick_penalty_applied = False
+                changed = True
 
+        try:
+            raw = json.loads(self.appearance_json or '{}')
+        except Exception:
+            raw = dict(DEFAULT_APPEARANCE)
+
+        last_ts = raw.get('_decay_ts')
+        edu_tick = int(raw.get('_edu_tick') or 0)
+        if not isinstance(last_ts, (int, float)) or last_ts <= 0:
+            raw['_decay_ts'] = now_ts
+            raw['_edu_tick'] = edu_tick
+            self.appearance_json = json.dumps(raw)
+            if changed:
+                self.recalc_status()
+            return True
+
+        # 1 tick = 3 hours (10,800 seconds). Education ticks at half speed (every 2nd tick = 6 hours).
+        TICK_SECONDS = 10800
+        elapsed_ticks = int((now_ts - int(last_ts)) // TICK_SECONDS)
+        if elapsed_ticks <= 0:
+            if changed:
+                self.recalc_status()
+            return changed
+
+        if self.status != 'fainted':
+            eff_ticks = min(elapsed_ticks, 24)  # Cap catch-up at 72 hours (24 ticks)
             h = self.hunger if self.hunger is not None else 80
             f = self.fitness if self.fitness is not None else 80
             p = self.happiness if self.happiness is not None else 80
             e = self.education if self.education is not None else 30
             a = self.attention if self.attention is not None else 75
 
-            low_h, low_f, low_p, low_e, low_a = (h <= 20), (f <= 20), (p <= 20), (e <= 20), (a <= 20)
-            neglect_count = sum([low_h, low_f, low_p, low_e, low_a])
-            cascade_extra = (10 * eff_days) if neglect_count > 0 else 0
+            for _ in range(eff_ticks):
+                edu_tick = (edu_tick + 1) % 2
+                low_h, low_f, low_p, low_e, low_a = (h <= 20), (f <= 20), (p <= 20), (e <= 20), (a <= 20)
+                has_neglect = any((low_h, low_f, low_p, low_e, low_a))
 
-            self.hunger = max(0, h - base_drop - (cascade_extra if not low_h else 0))
-            self.fitness = max(0, f - base_drop - (cascade_extra if not low_f else 0))
-            self.happiness = max(0, p - base_drop - (cascade_extra if not low_p else 0))
-            self.education = max(0, e - (eff_days * 8) - (cascade_extra if not low_e else 0))
-            self.attention = max(0, a - (eff_days * 12) - (cascade_extra if not low_a else 0))
+                h = max(0, h - self._tiered_tick_loss(h, edu_tick) - (1 if (has_neglect and not low_h) else 0))
+                f = max(0, f - self._tiered_tick_loss(f, edu_tick) - (1 if (has_neglect and not low_f) else 0))
+                p = max(0, p - self._tiered_tick_loss(p, edu_tick) - (1 if (has_neglect and not low_p) else 0))
+                a = max(0, a - self._tiered_tick_loss(a, edu_tick) - (1 if (has_neglect and not low_a) else 0))
 
-            self.days_alive = (self.days_alive or 1) + delta
-        self.last_decay_date = today
-        self.sick_penalty_applied = False
+                # Education decays at HALF speed (every 6 hours = every 2nd 3-hour tick)
+                if edu_tick == 0:
+                    e = max(0, e - self._tiered_tick_loss(e, 0) - (1 if (has_neglect and not low_e) else 0))
+
+                if min(h, f, p, e, a) <= 0:
+                    break
+
+            self.hunger, self.fitness, self.happiness, self.education, self.attention = h, f, p, e, a
+
+        raw['_decay_ts'] = int(last_ts) + (elapsed_ticks * TICK_SECONDS)
+        raw['_edu_tick'] = edu_tick
+        self.appearance_json = json.dumps(raw)
         self.recalc_status()
         return True
 

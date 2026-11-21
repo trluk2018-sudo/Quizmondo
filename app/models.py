@@ -516,7 +516,7 @@ class PlayerProfile(db.Model):
     avatar_key = db.Column(db.String(40), default='quizzy')  # quizzy, nova, pixel, sage, cyber_fox, brain_bot
     level = db.Column(db.Integer, default=1)
     xp = db.Column(db.Integer, default=0)
-    coins = db.Column(db.Integer, default=250)
+    coins = db.Column(db.Integer, default=10)
     streak_days = db.Column(db.Integer, default=1)
     matches_played = db.Column(db.Integer, default=0)
     matches_won = db.Column(db.Integer, default=0)

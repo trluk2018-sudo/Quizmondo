@@ -25,11 +25,11 @@ VALID_HATS = ('none', 'crown', 'beanie', 'tophat', 'wizard', 'cap', 'cowboy', 'h
 VALID_SCARVES = ('none', 'striped', 'bowtie', 'cape', 'bandana', 'chain')
 
 SHOP_ITEMS = {
-    'tonic':  {'cost': 50,  'label': 'Health Tonic (+25 All & Cure)'},
-    'feast':  {'cost': 30,  'label': 'Gourmet Feast (+40 Hunger)'},
-    'gym':    {'cost': 30,  'label': 'Mega Gym (+40 Fitness)'},
-    'party':  {'cost': 30,  'label': 'Arcade Party (+40 Happiness)'},
-    'revive': {'cost': 150, 'label': 'Phoenix Elixir (Full Revive)'},
+    'tonic':  {'cost': 10, 'label': 'Health Tonic (+25 All & Cure)'},
+    'feast':  {'cost': 6,  'label': 'Gourmet Feast (+40 Hunger)'},
+    'gym':    {'cost': 6,  'label': 'Mega Gym (+40 Fitness)'},
+    'party':  {'cost': 6,  'label': 'Arcade Party (+40 Happiness)'},
+    'revive': {'cost': 25, 'label': 'Phoenix Elixir (Full Revive)'},
 }
 
 
@@ -44,10 +44,11 @@ def _get_or_create_critter(player):
             happiness=80,
             education=30,
             attention=75,
-            care_tokens=2,
+            care_tokens=0,
             days_alive=1,
             last_decay_date=datetime.utcnow().date(),
         )
+        critter.reset_decay_clock()
         db.session.add(critter)
         db.session.commit()
     else:
@@ -231,7 +232,7 @@ def critter_answer():
         critter.today_correct = (critter.today_correct or 0) + 1
         critter.total_correct = (critter.total_correct or 0) + 1
         critter.care_tokens = (critter.care_tokens or 0) + 1
-        coins_won = 15
+        coins_won = 1
         player.coins = (player.coins or 0) + coins_won
         player.xp = (player.xp or 0) + 15
     else:
@@ -272,6 +273,16 @@ def critter_care():
     action = ((request.get_json(silent=True) or {}).get('action') or '').strip().lower()
     if action not in ('feed', 'exercise', 'play'):
         return jsonify({'success': False, 'error': 'Invalid care action.'}), 400
+
+    # Jeopardy rule: Feed, Train, and Play are locked until today's 5-Category Quiz is finished!
+    today = datetime.utcnow().date()
+    quiz_done_today = bool(critter.last_quiz_date == today and (critter.today_q_index or 0) >= 5)
+    if not quiz_done_today:
+        q_done = (critter.today_q_index or 0) if critter.last_quiz_date == today else 0
+        return jsonify({
+            'success': False,
+            'error': f"Finish today's 5-Category Quiz first ({q_done}/5 answered) to unlock Feed, Train & Play!",
+        }), 400
 
     # Once-per-day / turn lock for each care action
     if action in critter.get_care_used_today():
@@ -360,12 +371,12 @@ def critter_hatch():
     critter.happiness = 80
     critter.education = 30
     critter.attention = 75
-    critter.care_tokens = 2
+    critter.care_tokens = 0
     critter.days_alive = 1
     critter.sick_penalty_applied = False
     critter.status = 'healthy'
     critter.cascade_warning = ''
-    critter.last_decay_date = datetime.utcnow().date()
+    critter.reset_decay_clock()
     db.session.commit()
     return jsonify({'success': True, 'message': '🥚 A fresh Mondo Critter hatched!', 'critter': critter.to_dict()})
 
@@ -535,7 +546,7 @@ def critter_article_bonus_answer():
     coins_won = 0
     if is_correct:
         critter.education = min(100, (critter.education if critter.education is not None else 30) + 5)
-        coins_won = 10
+        coins_won = 3
         player.coins = (player.coins or 0) + coins_won
         player.xp = (player.xp or 0) + 15
     else:

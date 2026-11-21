@@ -1656,7 +1656,8 @@ def submit_round(match_code):
 
     # Award player XP and coins
     player.add_xp(round_score)
-    player.coins = (player.coins or 0) + (round_score // 10)
+    duel_coins = min(5, max(1, round_score // 40)) if round_score > 0 else 0
+    player.coins = (player.coins or 0) + duel_coins
     player.last_active_at = datetime.utcnow()
 
     # ONLY simulate bot round if this match was explicitly created as a Bot Match (never overwrite a Friend Duel!)
@@ -4121,7 +4122,7 @@ def create_question():
 
         # Reward player for contributing
         player.add_xp(150)
-        player.coins = (player.coins or 0) + 50
+        player.coins = (player.coins or 0) + 5
         db.session.commit()
 
         if is_safe:
@@ -4224,14 +4225,14 @@ def packs_directory():
 # ==============================================================================
 
 WHEEL_SLICES = [
-    {'index': 0, 'label': '50 Coins', 'type': 'coins', 'amount': 50, 'weight': 30, 'icon': '🪙', 'color': '#ec4899'},
+    {'index': 0, 'label': '2 Coins', 'type': 'coins', 'amount': 2, 'weight': 30, 'icon': '🪙', 'color': '#ec4899'},
     {'index': 1, 'label': 'Climber Shield', 'type': 'shield', 'amount': 1, 'weight': 15, 'icon': '🛡️', 'color': '#06b6d4'},
-    {'index': 2, 'label': '100 Coins', 'type': 'coins', 'amount': 100, 'weight': 25, 'icon': '🪙', 'color': '#8b5cf6'},
+    {'index': 2, 'label': '5 Coins', 'type': 'coins', 'amount': 5, 'weight': 25, 'icon': '🪙', 'color': '#8b5cf6'},
     {'index': 3, 'label': '150 XP Boost', 'type': 'xp', 'amount': 150, 'weight': 15, 'icon': '⚡', 'color': '#f59e0b'},
-    {'index': 4, 'label': '250 Coins', 'type': 'coins', 'amount': 250, 'weight': 8, 'icon': '💰', 'color': '#10b981'},
+    {'index': 4, 'label': '10 Coins', 'type': 'coins', 'amount': 10, 'weight': 8, 'icon': '💰', 'color': '#10b981'},
     {'index': 5, 'label': 'Safety Shield', 'type': 'shield', 'amount': 1, 'weight': 10, 'icon': '🛡️', 'color': '#3b82f6'},
-    {'index': 6, 'label': 'JACKPOT 1,000 Coins', 'type': 'jackpot', 'amount': 1000, 'weight': 3, 'icon': '🌟', 'color': '#eab308'},
-    {'index': 7, 'label': '75 Coins', 'type': 'coins', 'amount': 75, 'weight': 20, 'icon': '🪙', 'color': '#f43f5e'}
+    {'index': 6, 'label': 'JACKPOT 50 Coins', 'type': 'jackpot', 'amount': 50, 'weight': 3, 'icon': '🌟', 'color': '#eab308'},
+    {'index': 7, 'label': '3 Coins', 'type': 'coins', 'amount': 3, 'weight': 20, 'icon': '🪙', 'color': '#f43f5e'}
 ]
 
 
@@ -4323,7 +4324,7 @@ EXPEDITION_STAGES = [
         'max_alt': 2500,
         'days': 'Days 1–5',
         'diff': 'easy',
-        'coins_per_step': 50,
+        'coins_per_step': 5,
         'clue': 'Trek through pine forests and rhododendron valleys. Acclimatize and prepare supplies.',
         'icon': '🌲'
     },
@@ -4336,7 +4337,7 @@ EXPEDITION_STAGES = [
         'max_alt': 4000,
         'days': 'Days 6–10',
         'diff': 'medium',
-        'coins_per_step': 75,
+        'coins_per_step': 5,
         'clue': 'Cross bottomless crevasses and dodging unstable seracs on tied aluminum ladders.',
         'icon': '🪜'
     },
@@ -4349,7 +4350,7 @@ EXPEDITION_STAGES = [
         'max_alt': 5500,
         'days': 'Days 11–15',
         'diff': 'medium',
-        'coins_per_step': 100,
+        'coins_per_step': 10,
         'clue': 'Navigate the Valley of Silence under the blazing reflection of Nuptse and Everest.',
         'icon': '☀️'
     },
@@ -4362,7 +4363,7 @@ EXPEDITION_STAGES = [
         'max_alt': 7000,
         'days': 'Days 16–20',
         'diff': 'hard',
-        'coins_per_step': 150,
+        'coins_per_step': 10,
         'clue': 'Ascend the 1,125m wall of sheer blue ice and cross the prehistoric Yellow Band.',
         'icon': '🧗'
     },
@@ -4375,7 +4376,7 @@ EXPEDITION_STAGES = [
         'max_alt': 8000,
         'days': 'Days 21–25',
         'diff': 'hard',
-        'coins_per_step': 200,
+        'coins_per_step': 15,
         'clue': 'Sub-zero hurricane winds in the Death Zone. Oxygen levels drop to one-third.',
         'icon': '☠️'
     },
@@ -4388,7 +4389,7 @@ EXPEDITION_STAGES = [
         'max_alt': 8848,
         'days': 'Days 26–30',
         'diff': 'hard',
-        'coins_per_step': 300,
+        'coins_per_step': 15,
         'clue': 'Traverse the knife-edge ridge, conquer the Hillary Step, and touch the sky at 8,848m!',
         'icon': '👑'
     }
@@ -4405,7 +4406,7 @@ CAMP_MISSIONS = {
         'instruction': 'Match all 4 pairs of alpine shelter gear before the storm hits!',
         'reward_desc': 'Basecamp secure! +1 Climber Shield & Health Restored.',
         'bonus_shield': 1,
-        'bonus_coins': 50
+        'bonus_coins': 5
     },
     10: {
         'title': 'Secure Khumbu Icefall Ladders',
@@ -4416,7 +4417,7 @@ CAMP_MISSIONS = {
         'instruction': 'Link the 4 ladder anchoring safety steps in the correct numerical order!',
         'reward_desc': 'Icefall ladder route secured! Camp Safe Haven locked.',
         'bonus_shield': 0,
-        'bonus_coins': 75
+        'bonus_coins': 8
     },
     15: {
         'title': 'Melt Glacial Snow & Cook Rations',
@@ -4427,7 +4428,7 @@ CAMP_MISSIONS = {
         'instruction': 'Tap the 3 essential ration supplies to complete the expedition meal!',
         'reward_desc': 'Vital calories & hydration restored! Stamina refreshed.',
         'bonus_shield': 0,
-        'bonus_coins': 100
+        'bonus_coins': 10
     },
     20: {
         'title': 'Lhotse Face Medical Reflex Check',
@@ -4438,7 +4439,7 @@ CAMP_MISSIONS = {
         'instruction': 'Memorize and tap the 4-cell green pulse sequence to pass the medical check!',
         'reward_desc': 'Cognitive health & vital stamina cleared for the Death Zone! +1 Shield.',
         'bonus_shield': 1,
-        'bonus_coins': 150
+        'bonus_coins': 15
     },
     25: {
         'title': 'Inspect South Col Oxygen Regulators',
@@ -4449,7 +4450,7 @@ CAMP_MISSIONS = {
         'instruction': 'Tap LOCK VALVE when the oxygen pressure needle enters the target green zone!',
         'reward_desc': 'High-pressure oxygen system online! Ready for the Hillary Step.',
         'bonus_shield': 1,
-        'bonus_coins': 200
+        'bonus_coins': 20
     },
     30: {
         'title': 'The Hillary Step & Plant Summit Flag',
@@ -4460,7 +4461,7 @@ CAMP_MISSIONS = {
         'instruction': 'Final summit sprint! Stand atop the roof of the world at 8,848m!',
         'reward_desc': 'Mount Everest Conquered! Master mountaineer status unlocked!',
         'bonus_shield': 0,
-        'bonus_coins': 1500
+        'bonus_coins': 100
     }
 }
 
@@ -4897,7 +4898,7 @@ def climber_answer():
             })
         else:
             # ALL 5 QUESTIONS COMPLETED!
-            speed_bonus = seconds_left
+            speed_bonus = min(3, seconds_left // 10)
             if speed_bonus > 0:
                 progress.unbanked_coins += speed_bonus
 
@@ -4919,7 +4920,7 @@ def climber_answer():
                 progress.total_summits += 1
                 progress.highest_altitude = 8848
 
-                summit_bonus = 1500
+                summit_bonus = 100
                 total_awarded = coins_won_today + summit_bonus
                 player.coins = (player.coins or 0) + summit_bonus
                 progress.banked_coins = (progress.banked_coins or 0) + summit_bonus

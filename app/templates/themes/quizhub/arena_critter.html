@@ -244,9 +244,9 @@
       <div id="crFaintedOverlay" class="hidden absolute inset-0 z-20 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center space-y-3">
         <div class="text-4xl">💫</div>
         <h2 class="text-lg font-black text-rose-300"><span id="crFaintedName"></span> has fainted!</h2>
-        <p class="text-xs text-slate-300 max-w-xs">A core health stat hit zero. Revive instantly with 150 coins or hatch a brand-new critter for free.</p>
+        <p class="text-xs text-slate-300 max-w-xs">A core health stat hit zero. Revive instantly with {{ shop_items.revive.cost }} coins or hatch a brand-new critter for free.</p>
         <div class="flex flex-wrap justify-center gap-2 pt-1">
-          <button type="button" onclick="buyShopItem('revive')" class="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs uppercase">✨ Phoenix Elixir (150 🪙)</button>
+          <button type="button" onclick="buyShopItem('revive')" class="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs uppercase">✨ Phoenix Elixir ({{ shop_items.revive.cost }} 🪙)</button>
           <button type="button" onclick="hatchNewCritter()" class="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs uppercase">🥚 Hatch New (Free)</button>
         </div>
       </div>
@@ -258,8 +258,8 @@
       <!-- 5 Core Health Bars (Keep all above 20!) -->
       <div id="crBarsBox" class="flex flex-col gap-2">
         <div class="flex items-center justify-between text-[10px] uppercase tracking-wider">
-          <span class="text-slate-400 font-bold">Core Health Stats</span>
-          <span class="text-rose-300 font-bold">Keep all &gt; 20!</span>
+          <span class="text-slate-400 font-bold" title="Every 3h (Edu every 6h): <90 loses 1, <60 loses 2, <30 loses 3">Core Health Stats</span>
+          <span class="text-rose-300 font-bold">&lt;90:-1 &bull; &lt;60:-2 &bull; &lt;30:-3</span>
         </div>
 
         <!-- Hunger -->
@@ -341,11 +341,11 @@
         </div>
       </div>
 
-      <!-- Care Actions (Once per day each, 1 Care Token = +25) -->
+      <!-- Care Actions (Unlocked ONLY after completing today's 5/5 questions; 1×/day each, 1 Care Token = +25) -->
       <div class="space-y-1">
         <div class="flex items-center justify-between text-[10px] uppercase text-slate-400 font-bold">
           <span>Daily Care (1×/day each)</span>
-          <span class="text-emerald-300">1 🎟️ = +25</span>
+          <span id="crCareHint" class="text-amber-300">🔒 Answer 5/5 Quiz First</span>
         </div>
         <div class="grid grid-cols-3 gap-1.5">
           <button type="button" id="btnCareFeed" onclick="doCare('feed')"
@@ -756,21 +756,34 @@
       cw.classList.add('hidden');
     }
 
-    // Once-per-day care button locks
+    // Care buttons: LOCKED until today's 5/5 quiz is completed, then once-per-day each
+    var quizDone = !!critter.quiz_done_today;
+    var careHint = document.getElementById('crCareHint');
+    if (careHint) {
+      if (!quizDone) {
+        careHint.textContent = '🔒 Finish 5/5 Quiz First';
+        careHint.className = 'text-amber-300 font-black';
+      } else {
+        careHint.textContent = '🔓 Unlocked • 1 🎟️ = +25';
+        careHint.className = 'text-emerald-300 font-black';
+      }
+    }
     var used = critter.care_used_today || [];
     var careMap = [
-      ['feed', 'btnCareFeed', '🍎 Feed', '✓ Fed'],
-      ['exercise', 'btnCareExercise', '💪 Train', '✓ Trained'],
-      ['play', 'btnCarePlay', '🎮 Play', '✓ Played']
+      ['feed', 'btnCareFeed', '🍎 Feed', '✓ Fed', '🔒 Feed'],
+      ['exercise', 'btnCareExercise', '💪 Train', '✓ Trained', '🔒 Train'],
+      ['play', 'btnCarePlay', '🎮 Play', '✓ Played', '🔒 Play']
     ];
     careMap.forEach(function (row) {
       var btn = document.getElementById(row[1]);
       if (!btn) return;
       var done = used.indexOf(row[0]) !== -1;
-      btn.disabled = done;
-      btn.textContent = done ? row[3] : row[2];
-      btn.classList.toggle('opacity-45', done);
-      btn.classList.toggle('cursor-not-allowed', done);
+      var locked = !quizDone || done;
+      btn.disabled = locked;
+      btn.textContent = done ? row[3] : (!quizDone ? row[4] : row[2]);
+      btn.title = !quizDone ? "Complete today's 5-Category Quiz first to unlock Daily Care!" : (done ? 'Already used today' : '');
+      btn.classList.toggle('opacity-45', locked);
+      btn.classList.toggle('cursor-not-allowed', locked);
     });
 
     // Article reading bonus status (max 3/day, +5 Edu each)
@@ -1110,7 +1123,7 @@
         }
         document.getElementById('qzCatBadge').textContent = '📚 STUDY BONUS · ' + data.article_title;
         document.getElementById('qzCount').textContent = ((data.study_bonuses_today || 0) + 1) + '/3 TODAY';
-        document.getElementById('qzWrongWarn').textContent = '+5 Edu & +10 🪙';
+        document.getElementById('qzWrongWarn').textContent = '+5 Edu & +3 🪙';
         document.getElementById('qzPrompt').textContent = data.prompt;
         var optsEl = document.getElementById('qzOptions');
         optsEl.innerHTML = '';
